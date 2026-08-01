@@ -1,55 +1,43 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { Header } from "~/components/Header";
 
 export const Route = createFileRoute("/pricing")({
   component: Pricing,
 });
 
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    cadence: "forever",
-    description: "Everything you need to build your first AI profile.",
-    features: [
-      "1 AI profile",
-      "3 guided interviews",
-      "All 19 personal knowledge domains",
-      "No credit card required",
-    ],
-    cta: "Start free",
-    href: "/app",
-  },
-  {
-    name: "Pro",
-    price: "$20",
-    cadence: "/month",
-    description: "For people who want their profile to keep growing with them.",
-    features: [
-      "Unlimited interviews",
-      "Multiple profiles",
-      "Markdown and JSON exports",
-      "Version history",
-      "Continuous profile updates",
-    ],
-    cta: "Get Pro",
-    href: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
-    featured: true,
-  },
-  {
-    name: "Lifetime",
-    price: "$199",
-    cadence: "one-time",
-    description: "A permanent home for your personal AI context.",
-    features: [
-      "Everything in Pro",
-      "Permanent profile — no subscription",
-      "Priority access to new features",
-    ],
-    cta: "Go Lifetime",
-    href: "https://buy.stripe.com/cNi6oH7xUbWr5jb2Zmf7i03",
-  },
-] as const;
+const STRIPE_MONTHLY = "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02";
+// TODO: replace with real annual Stripe payment link once owner creates the product
+const STRIPE_ANNUAL = "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02";
+
+const freePlan = {
+  name: "Free",
+  price: "$0",
+  cadence: "forever",
+  description: "Everything you need to build your first AI profile.",
+  features: [
+    "1 AI profile",
+    "3 guided interviews",
+    "All 19 personal knowledge domains",
+    "No credit card required",
+  ],
+  cta: "Start free",
+  href: "/app",
+} as const;
+
+const lifetimePlan = {
+  name: "Lifetime",
+  price: "$199",
+  cadence: "one-time",
+  description: "A permanent home for your personal AI context.",
+  features: [
+    "Everything in Pro",
+    "Permanent profile — no subscription",
+    "Priority access to new features",
+  ],
+  cta: "Go Lifetime",
+  href: "https://buy.stripe.com/cNi6oH7xUbWr5jb2Zmf7i03",
+} as const;
 
 const faqs = [
   ["Can I switch plans?", "Yes. Upgrade or downgrade anytime."],
@@ -68,6 +56,28 @@ const faqs = [
 ] as const;
 
 function Pricing() {
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+
+  const proPlan = {
+    name: "Pro",
+    price: billing === "annual" ? "$192" : "$20",
+    cadence: billing === "annual" ? "/year" : "/month",
+    description: "For people who want their profile to keep growing with them.",
+    features: [
+      "Unlimited interviews",
+      "Multiple profiles",
+      "Markdown and JSON exports",
+      "Version history",
+      "Continuous profile updates",
+    ],
+    cta: "Get Pro",
+    href: billing === "annual" ? STRIPE_ANNUAL : STRIPE_MONTHLY,
+    featured: true,
+    annual: billing === "annual",
+  };
+
+  const plans = [freePlan, proPlan, lifetimePlan];
+
   return (
     <div className="min-h-dvh bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <Header />
@@ -93,7 +103,33 @@ function Pricing() {
               </p>
             </div>
 
-            <div className="mt-12 grid items-stretch gap-5 md:grid-cols-3">
+            {/* Billing toggle */}
+            <div className="mt-10 flex justify-center">
+              <div className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
+                <button
+                  onClick={() => setBilling("monthly")}
+                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors ${
+                    billing === "monthly"
+                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBilling("annual")}
+                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors ${
+                    billing === "annual"
+                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  Annual
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 grid items-stretch gap-5 md:grid-cols-3">
               {plans.map((plan) => (
                 <article
                   key={plan.name}
@@ -114,6 +150,11 @@ function Pricing() {
                       <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
                       <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{plan.cadence}</span>
                     </div>
+                    {"annual" in plan && plan.annual && (
+                      <span className="mt-2 inline-block font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                        Save 20% — $16/mo equivalent
+                      </span>
+                    )}
                     <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
                   </div>
                   <ul className="mt-8 flex-1 space-y-3 border-t border-gray-200 pt-6 text-sm dark:border-gray-800">

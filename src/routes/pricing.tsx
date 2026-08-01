@@ -1,0 +1,171 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { Header } from "~/components/Header";
+
+export const Route = createFileRoute("/pricing")({
+  component: Pricing,
+});
+
+const plans = [
+  {
+    name: "Free",
+    price: "$0",
+    cadence: "forever",
+    description: "Everything you need to build your first AI profile.",
+    features: [
+      "1 AI profile",
+      "3 guided interviews",
+      "All 19 personal knowledge domains",
+      "No credit card required",
+    ],
+    cta: "Start free",
+    href: "/app",
+  },
+  {
+    name: "Pro",
+    price: "$20",
+    cadence: "/month",
+    description: "For people who want their profile to keep growing with them.",
+    features: [
+      "Unlimited interviews",
+      "Multiple profiles",
+      "Markdown and JSON exports",
+      "Version history",
+      "Continuous profile updates",
+    ],
+    cta: "Get Pro",
+    href: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
+    featured: true,
+  },
+  {
+    name: "Lifetime",
+    price: "$199",
+    cadence: "one-time",
+    description: "A permanent home for your personal AI context.",
+    features: [
+      "Everything in Pro",
+      "Permanent profile — no subscription",
+      "Priority access to new features",
+    ],
+    cta: "Go Lifetime",
+    href: "https://buy.stripe.com/cNi6oH7xUbWr5jb2Zmf7i03",
+  },
+] as const;
+
+const faqs = [
+  ["Can I switch plans?", "Yes. Upgrade or downgrade anytime."],
+  [
+    "What happens to my profiles if I cancel?",
+    "You keep everything. Your Markdown files are yours forever.",
+  ],
+  [
+    "Is there a team plan?",
+    "ALVIRA Team is coming soon. Join the waitlist for early access.",
+  ],
+  [
+    "What's the difference between Pro and Lifetime?",
+    "Pro is a monthly subscription. Lifetime is a one-time payment — you never pay again.",
+  ],
+] as const;
+
+function Pricing() {
+  return (
+    <div className="min-h-dvh bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+      <Header />
+      <main>
+        <section className="px-6 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
+          <div className="mx-auto max-w-6xl">
+            <div className="max-w-3xl">
+              <span className="inline-block rounded-md border border-emerald-200 px-3 py-1.5 font-mono text-xs tracking-wide text-emerald-700 dark:border-emerald-800 dark:text-emerald-400">
+                &lt;pricing /&gt;
+              </span>
+              <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+                Simple, transparent pricing.
+              </h1>
+              <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+                Start free. Upgrade when ALVIRA becomes part of how you work.
+              </p>
+            </div>
+
+            <div className="mt-12 grid items-stretch gap-5 md:grid-cols-3">
+              {plans.map((plan) => (
+                <article
+                  key={plan.name}
+                  className={`relative flex h-full flex-col border p-6 sm:p-8 ${
+                    plan.featured
+                      ? "border-emerald-600 bg-emerald-50/50 shadow-lg shadow-emerald-950/10 dark:border-emerald-500 dark:bg-emerald-950/20 dark:shadow-black/20"
+                      : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40"
+                  }`}
+                >
+                  {plan.featured && (
+                    <span className="absolute -top-3 left-6 bg-emerald-600 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-emerald-500 dark:text-gray-950">
+                      Most popular
+                    </span>
+                  )}
+                  <div>
+                    <h2 className="font-mono text-lg font-semibold">{plan.name}</h2>
+                    <div className="mt-5 flex items-baseline gap-2">
+                      <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+                      <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{plan.cadence}</span>
+                    </div>
+                    <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
+                  </div>
+                  <ul className="mt-8 flex-1 space-y-3 border-t border-gray-200 pt-6 text-sm dark:border-gray-800">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex gap-3 leading-relaxed">
+                        <span className="font-mono text-emerald-700 dark:text-emerald-400" aria-hidden="true">✓</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href={plan.href}
+                    {...(plan.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
+                    className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 ${
+                      plan.featured
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-gray-950 dark:hover:bg-emerald-400"
+                        : "border border-gray-300 bg-gray-900 text-white hover:bg-gray-800 dark:border-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200"
+                    }`}
+                  >
+                    {plan.cta}<span aria-hidden="true" className="ml-2">→</span>
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-4xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">FAQ</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Questions, answered.</h2>
+            <div className="mt-10 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+              {faqs.map(([question, answer]) => (
+                <details key={question} className="group py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 [&::-webkit-details-marker]:hidden">
+                    {question}
+                    <span className="font-mono text-xl font-normal text-emerald-700 transition-transform group-open:rotate-45 dark:text-emerald-400" aria-hidden="true">+</span>
+                  </summary>
+                  <p className="mt-3 max-w-2xl pr-8 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-6 py-20 text-center sm:px-8 sm:py-28">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to stop repeating yourself?</h2>
+            <p className="mt-4 text-base text-gray-600 dark:text-gray-400">Build once. Bring your context everywhere.</p>
+            <a
+              href="/app"
+              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
+            >
+              Build my AI profile <span aria-hidden="true" className="ml-2">→</span>
+            </a>
+            <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">Free to start · No credit card · Portable Markdown</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

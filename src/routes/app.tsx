@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 
 import { Header } from "~/components/Header";
+import { MeOSCTA } from "~/components/MeOSCTA";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
 import {
   getKnowledgeGraph,
@@ -862,6 +863,10 @@ function AppPage() {
                 <div className="p-5 max-h-[500px] overflow-y-auto">
                   <MarkdownPreview content={activeContent} />
                 </div>
+              </div>
+
+              <div className="mt-8">
+                <MeOSCTA placement="post-interview" />
               </div>
             </div>
           </div>

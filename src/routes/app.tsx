@@ -16,11 +16,13 @@ import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
+import { getMeosGraph, getMeosPlaybook } from "./-meosGraph";
+import { compileMeosKnowledge } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, loadProfile, trackInterview, fetchUserLimits } from "./-auth";
 
 // ── Initialize empty interview state ──
-function createInitialState(tier: Tier, topic: string): InterviewState {
-  const graph = getKnowledgeGraph(tier);
+function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context"): InterviewState {
+  const graph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(tier);
   const domains: InterviewState["domains"] = {};
   for (const d of graph) {
     domains[d.id] = { answers: [], confidence: 0, covered: false };
@@ -191,6 +193,7 @@ function AppPage() {
   // Start screen state
   const [topic, setTopic] = useState("");
   const [tier, setTier] = useState<Tier>("personal");
+  const [offering, setOffering] = useState<"context" | "meos" | null>(null);
 
   // Interview state (the single source of truth)
   const [state, setState] = useState<InterviewState | null>(null);
@@ -219,8 +222,8 @@ function AppPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Computed values
-  const graph = state ? getKnowledgeGraph(state.tier) : [];
-  const playbook = state ? getPlaybook(state.tier) : getPlaybook("personal");
+  const graph = state ? (offering === "meos" ? getMeosGraph() : getKnowledgeGraph(state.tier)) : [];
+  const playbook = offering === "meos" ? getMeosPlaybook() : (state ? getPlaybook(state.tier) : getPlaybook("personal"));
   const confThreshold = playbook.completion.minimumConfidence;
   const coveredCount = state ? countCovered(graph, state, confThreshold) : 0;
   const totalDomains = graph.length;
@@ -283,8 +286,8 @@ function AppPage() {
 
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
   const askNextQuestion = async (currentState: InterviewState, isClarification = false) => {
-    const currentGraph = getKnowledgeGraph(currentState.tier);
-    const currentPlaybook = getPlaybook(currentState.tier);
+    const currentGraph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(currentState.tier);
+    const currentPlaybook = offering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
     const currentGaps = detectGaps(currentGraph, currentState, currentPlaybook.completion.minimumConfidence);
     if (currentGaps.length === 0) return null;
 
@@ -360,7 +363,7 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(tier, topic.trim());
+    const initialState = createInitialState(tier, topic.trim(), offering === "meos" ? "meos" : "context");
 
     try {
       const result = await askNextQuestion(initialState);
@@ -585,10 +588,12 @@ function AppPage() {
     }
 
     setCompiling(true);
-    const currentGraph = getKnowledgeGraph(state.tier);
-    const files = compileKnowledge(state, currentGraph);
+    const currentGraph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(state.tier);
+    const files = offering === "meos"
+      ? compileMeosKnowledge(state, currentGraph).allFiles
+      : compileKnowledge(state, currentGraph);
     setGenerated(files);
-    setActiveTab("overview");
+    setActiveTab(offering === "meos" ? "portrait.md" : "overview");
     setScreen("output");
     setCompiling(false);
   };
@@ -607,13 +612,9 @@ function AppPage() {
   const downloadZip = async () => {
     if (!generated) return;
     const zip = new JSZip();
-    const fileMap: [string, string][] = [
-      ["overview.md", generated.overview],
-      ["requirements.md", generated.requirements],
-      ["constraints.md", generated.constraints],
-      ["business-rules.md", generated.businessRules],
-      ["workflows.md", generated.workflows],
-    ];
+    const fileMap: [string, string][] = offering === "meos"
+      ? Object.entries(generated).map(([name, content]) => [name, content] as [string, string])
+      : [["overview.md", generated.overview], ["requirements.md", generated.requirements], ["constraints.md", generated.constraints], ["business-rules.md", generated.businessRules], ["workflows.md", generated.workflows]];
     for (const [name, content] of fileMap) {
       zip.file(name, content);
     }
@@ -684,6 +685,9 @@ function AppPage() {
 
   // ── Render: Output Screen ──
   if (screen === "output" && generated) {
+    const outputFiles = offering === "meos"
+      ? Object.keys(generated).map((key) => ({ key, label: key }))
+      : FILES;
     const activeContent = generated[activeTab] || "";
     return (
       <div className="min-h-dvh flex flex-col">
@@ -714,7 +718,7 @@ function AppPage() {
 
               {/* Tabs */}
               <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
-                {FILES.map((f) => (
+                {outputFiles.map((f) => (
                   <button
                     key={f.key}
                     type="button"
@@ -734,11 +738,11 @@ function AppPage() {
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-hidden">
                 <div className="flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
                   <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
-                    {FILES.find((f) => f.key === activeTab)?.label}
+                    {outputFiles.find((f) => f.key === activeTab)?.label}
                   </span>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(activeContent, FILES.find((f) => f.key === activeTab)?.label || "")}
+                    onClick={() => copyToClipboard(activeContent, outputFiles.find((f) => f.key === activeTab)?.label || "")}
                     className="text-xs font-mono text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                   >
                     {copyMsg || "Copy"}
@@ -930,11 +934,26 @@ function AppPage() {
             </p>
           </div>
 
+          {/* Offering selection */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {[
+              { key: "context" as const, title: "AI Context Profile", label: "<ai-context-profile />", description: "Captures communication, decision-making, workflows, relationships, goals, values, and boundaries for use across AI agents." },
+              { key: "meos" as const, title: "MeOS — Personal Alignment System", label: "<me-os />", description: "Creates an integrated portrait and private interactive companion for personal and professional alignment." },
+            ].map((item) => (
+              <button key={item.key} type="button" onClick={() => { setOffering(item.key); setStartError(""); }} className={`text-left rounded-lg border p-4 transition-colors ${offering === item.key ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30" : item.key === "context" ? "border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-800 hover:border-emerald-400" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600"}`}>
+                <div className="font-semibold text-gray-900 dark:text-gray-100">{item.title}</div>
+                <div className="mt-2 font-mono text-xs text-emerald-700 dark:text-emerald-400">{item.label}</div>
+                <div className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">{item.description}</div>
+              </button>
+            ))}
+          </div>
+          {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
+
           {/* Topic input */}
-          <div className="space-y-5">
+          {offering && <div className="space-y-5">
             <div>
               <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
-                Knowledge to capture
+                {offering === "meos" ? "What chapter are you in?" : "Knowledge to capture"}
               </label>
               <input
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
@@ -984,8 +1003,8 @@ function AppPage() {
             </div>
 
             {/* Tier selector */}
-            <div>
-              <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-2">Scope</label>
+            {offering === "context" && <div>
+            <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-2">Scope</label>
               <div className="grid grid-cols-3 gap-2">
                 {TIERS.map((t) => (
                   <button
@@ -1003,7 +1022,7 @@ function AppPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </div>}
 
             {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline">Or resume a saved profile →</a></div>}
 
@@ -1016,7 +1035,7 @@ function AppPage() {
             >
               Start interview
             </button>
-          </div>
+          </div>}
         </div>
       </main>
     </div>

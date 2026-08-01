@@ -79,10 +79,17 @@ function Pricing() {
                 &lt;pricing /&gt;
               </span>
               <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-                Simple, transparent pricing.
+                AI Profile Pricing
               </h1>
               <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
                 Start free. Upgrade when ALVIRA becomes part of how you work.
+              </p>
+              <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">
+                For MeOS pricing, see the{" "}
+                <a href="/meos" className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
+                  MeOS page
+                </a>
+                .
               </p>
             </div>
 

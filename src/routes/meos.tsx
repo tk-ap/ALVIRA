@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "~/components/Header";
 import { getMeosProfiles } from "./-auth";
 import { getCurrentUser } from "./-auth";
-import type { MeosPortrait } from "./-meosCompiler";
+import { compileMeosKnowledge, type MeosPortrait } from "./-meosCompiler";
+import { getMeosGraph } from "./-meosGraph";
 
 export const Route = createFileRoute("/meos")({ component: MeosPage });
 type Profile = { id: string; topic: string; state: unknown; portrait: MeosPortrait | null; updated_at: string };
@@ -28,6 +29,10 @@ function MeosPage() {
   }, [navigate]);
   const profile = useMemo(() => profiles.find(p => p.id === selected), [profiles, selected]);
   const portrait = profile?.portrait;
+  const markdownFiles = useMemo(() => {
+    if (!profile?.state) return {};
+    return compileMeosKnowledge(profile.state as Parameters<typeof compileMeosKnowledge>[0], getMeosGraph()).allFiles;
+  }, [profile]);
   const download = (name: string, content: string) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([content], { type: "text/plain" })); a.download = name; a.click(); URL.revokeObjectURL(a.href); };
   if (loading) return <><Header /><main className="mx-auto max-w-4xl px-6 py-20 text-gray-500">Loading your MeOS...</main></>;
   return <div className="min-h-dvh"><Header /><main className="mx-auto max-w-4xl px-6 py-14">
@@ -42,7 +47,7 @@ function MeosPage() {
         {tab === "Compass" && <div><h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Decision compass</h2><p className="whitespace-pre-line">{portrait.decisionCompass}</p></div>}
         {tab === "Daily" && <p className="italic">{portrait.dailyAlignment}</p>}
         {tab === "Cycles" && <div><h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Cycles & progression</h2><p>{portrait.cycles}</p></div>}
-        {tab === "Files" && <div><h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Your MeOS files</h2><p className="mb-5 text-sm">Download the source portrait and your interview state.</p><div className="flex flex-col items-start gap-3">{[["portrait.json", JSON.stringify(portrait, null, 2)], ["interview-state.json", JSON.stringify(profile.state, null, 2)]].map(([name, body]) => <button key={name} onClick={() => download(name, body)} className="font-mono text-sm text-emerald-500 hover:text-emerald-400">↓ {name}</button>)}</div></div>}
+        {tab === "Files" && <div><h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Your MeOS files</h2><p className="mb-5 text-sm">Download the source portrait and your interview state.</p><div className="flex flex-col items-start gap-3">{[["portrait.json", JSON.stringify(portrait, null, 2)], ["interview-state.json", JSON.stringify(profile.state, null, 2)], ...Object.entries(markdownFiles)].map(([name, body]) => <button key={name} onClick={() => download(name, body)} className="font-mono text-sm text-emerald-500 hover:text-emerald-400">↓ {name}</button>)}</div></div>}
       </section>}
     </>}
   </main></div>;

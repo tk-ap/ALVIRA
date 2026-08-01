@@ -18,7 +18,7 @@ const emptyPortrait = (): MeosPortrait => ({
 });
 
 /** Generate a reflective portrait strictly from interview evidence. */
-export async function generatePortrait(state: InterviewState): Promise<MeosPortrait> {
+export async function generatePortrait(state: InterviewState): Promise<MeosPortrait | { error: string }> {
   const a = (id: string) => state.domains[id]?.answers ?? [];
   const source = Object.fromEntries(["currentChapter", "desiredOutcomes", "values", "boundaries", "goals", "decisionPatterns", "workHistory", "definitionOfSuccess", "frameworks", "birthData", "review", "validation"].map(id => [id, a(id)]));
   try {
@@ -31,7 +31,7 @@ export async function generatePortrait(state: InterviewState): Promise<MeosPortr
     return { ...emptyPortrait(), ...parsed, purposeStatements: { ...emptyPortrait().purposeStatements, ...(parsed.purposeStatements || {}) }, sourceConfidence: { ...emptyPortrait().sourceConfidence, ...(parsed.sourceConfidence || {}) } };
   } catch (error) {
     console.error("MeOS portrait generation failed", error);
-    return emptyPortrait();
+    return { error: "Portrait generation failed" };
   }
 }
 

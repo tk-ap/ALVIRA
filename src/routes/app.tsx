@@ -18,8 +18,8 @@ import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPlaybook } from "./-meosGraph";
-import { compileMeosKnowledge } from "./-meosCompiler";
-import { getCurrentUser, saveProfile, loadProfile, trackInterview, fetchUserLimits } from "./-auth";
+import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
+import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits } from "./-auth";
 
 // ── Initialize empty interview state ──
 function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context"): InterviewState {
@@ -212,6 +212,8 @@ function AppPage() {
   const [copyMsg, setCopyMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedProfileId, setSavedProfileId] = useState<string | null>(null);
+  const [meosPortrait, setMeosPortrait] = useState<MeosPortrait | null>(null);
+  const [portraitError, setPortraitError] = useState(false);
 
   // Auth state
   const [authUser, setAuthUser] = useState<{ id: string; email: string; tier: string } | null | undefined>(undefined);
@@ -330,7 +332,7 @@ function AppPage() {
     if (!state || !authUser || saving) return;
     setSaving(true);
     try {
-      const result = await saveProfile({ data: { topic: state.topic, tier: state.tier, state } });
+      const result = await saveProfile({ data: { topic: state.topic, tier: state.tier, state, portrait: offering === "meos" ? meosPortrait : undefined } });
       // Check for limit_reached error
       const r = result as { id?: string; error?: string; limit?: string };
       if (r.error === "limit_reached") {
@@ -340,6 +342,9 @@ function AppPage() {
         return;
       }
       setSavedProfileId(r.id ?? null);
+      if (offering === "meos" && r.id && meosPortrait) {
+        await saveMeosPortrait({ data: { profileId: r.id, portrait: meosPortrait } });
+      }
     } catch (err) {
       setInterviewError(err instanceof Error ? err.message : "Unable to save profile.");
     } finally { setSaving(false); }
@@ -625,9 +630,26 @@ function AppPage() {
 
     setCompiling(true);
     const currentGraph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(compileState.tier);
-    const files = offering === "meos"
-      ? compileMeosKnowledge(compileState, currentGraph).allFiles
-      : compileKnowledge(compileState, currentGraph);
+    let files: Record<string, string>;
+    if (offering === "meos") {
+      files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
+      setPortraitError(false);
+      try {
+        const result = await generatePortrait(compileState);
+        if ("error" in result) {
+          setMeosPortrait(null);
+          setPortraitError(true);
+        } else {
+          setMeosPortrait(result);
+          files["portrait.json"] = JSON.stringify(result, null, 2);
+        }
+      } catch {
+        setMeosPortrait(null);
+        setPortraitError(true);
+      }
+    } else {
+      files = compileKnowledge(compileState, currentGraph);
+    }
     setGenerated(files);
     setActiveTab(offering === "meos" ? "portrait.md" : "overview");
     setScreen("output");
@@ -673,6 +695,8 @@ function AppPage() {
     setState(null);
     setAnswer("");
     setGenerated(null);
+    setMeosPortrait(null);
+    setPortraitError(false);
     setInterviewError("");
     setScreen("start");
     setSavedProfileId(null);
@@ -748,11 +772,14 @@ function AppPage() {
                     <span className="font-mono text-xs">⬇ Download .zip</span>
                   </button>
                   {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Save Profile"}</button>)}
+                  {offering === "meos" && <a href="/meos" className={btnSecondary}>View your MeOS →</a>}
                   <button type="button" onClick={startNew} className={btnPrimary}>
                     + Start new
                   </button>
                 </div>
               </div>
+
+              {offering === "meos" && portraitError && <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">Portrait generation encountered an issue. Your knowledge files are ready, and you can regenerate your portrait from your MeOS dashboard.</p>}
 
               {/* Tabs */}
               <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">

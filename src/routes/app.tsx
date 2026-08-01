@@ -1263,7 +1263,7 @@ function AppPage() {
                   <div>
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">requirements.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— What you need to know</span></div>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Domain knowledge, specialized terminology, and frequently asked questions. Helps AI use the right vocabulary and understand your field.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “How our support team handles customer escalations”; “Our team’s development standards and code review process”</p>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “Key concepts and terminology from my field of work”; “Our team’s development standards and code review process”</p>
                   </div>
                   <div>
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">constraints.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— What won’t change</span></div>

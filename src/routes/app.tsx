@@ -220,6 +220,10 @@ function AppPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
   const [tier, setTier] = useState<Tier>("personal");
+  // A single active topic group locks the other group. Enterprise selects both,
+  // so both groups remain available for that scope.
+  const selectedGroups = TOPIC_GROUPS.filter((group) => group.topics.some((topicOption) => selectedTopics.includes(topicOption)));
+  const activeGroup = selectedGroups.length === 1 ? selectedGroups[0] : null;
   const [offering, setOffering] = useState<"context" | "meos" | null>(null);
   type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
   const [meosPhase, setMeosPhase] = useState<MeosPhase>("core");
@@ -1111,15 +1115,18 @@ function AppPage() {
                   <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Examples of what ALVIRA helps you uncover (select all that apply)
                   </legend>
-                  {TOPIC_GROUPS.map((group) => (
+                  {TOPIC_GROUPS.map((group) => {
+                    const groupLocked = Boolean(activeGroup && activeGroup.label !== group.label);
+                    return (
                     <div key={group.label} className="space-y-1.5">
                       <p className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{group.label}</p>
                       <div className="space-y-1">
                         {group.topics.map((topicOption) => (
-                          <label key={topicOption} className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                          <label key={topicOption} className={`flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 ${groupLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"}`}>
                             <input
                               type="checkbox"
                               checked={selectedTopics.includes(topicOption)}
+                              disabled={groupLocked}
                               onChange={(e) => {
                                 const nextTopics = e.target.checked
                                   ? [...selectedTopics, topicOption]
@@ -1137,8 +1144,9 @@ function AppPage() {
                         ))}
                       </div>
                     </div>
-                  ))}
-                  <label className="flex items-center gap-2 pt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
+                    );
+                    })}
+                    <label className="flex items-center gap-2 pt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
                     <span className="text-emerald-600 dark:text-emerald-400">+</span>
                     <input
                       type="text"

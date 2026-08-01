@@ -218,6 +218,7 @@ function AppPage() {
   // Start screen state
   const [topic, setTopic] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [customTopic, setCustomTopic] = useState("");
   const [tier, setTier] = useState<Tier>("personal");
   const [offering, setOffering] = useState<"context" | "meos" | null>(null);
   type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
@@ -714,6 +715,8 @@ function AppPage() {
 
   const startNew = () => {
     setTopic("");
+    setSelectedTopics([]);
+    setCustomTopic("");
     setTier("personal");
     setOffering(null);
     setMeosPhase("core");
@@ -1051,14 +1054,14 @@ function AppPage() {
               <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
                 {offering === "meos" ? "What chapter are you in?" : "Knowledge to capture"}
               </label>
-              <input
+              {offering === "meos" && <input
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
-                placeholder={offering === "meos" ? 'e.g. "I\'m navigating a career transition and need clarity on my direction"' : 'e.g. "My communication style and decision-making process", "How our support team handles escalations"'}
+                placeholder={'e.g. "I\'m navigating a career transition and need clarity on my direction"'}
                 value={topic}
                 onChange={(e) => { setTopic(e.target.value); setStartError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
                 autoFocus
-              />
+              />}
               {startError && (
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">{startError}</p>
               )}
@@ -1076,12 +1079,14 @@ function AppPage() {
                         if (t.value === "enterprise") {
                           const allTopics = TOPIC_GROUPS.flatMap(g => [...g.topics]);
                           setSelectedTopics(allTopics);
+                          setCustomTopic("");
                           setTopic(allTopics.join(", "));
                         } else {
                           const group = TOPIC_GROUPS.find(g => g.tier === t.value);
                           if (group) {
                             const topics = [...group.topics];
                             setSelectedTopics(topics);
+                            setCustomTopic("");
                             setTopic(topics.join(", "));
                           }
                         }
@@ -1120,7 +1125,7 @@ function AppPage() {
                                   ? [...selectedTopics, topicOption]
                                   : selectedTopics.filter((item) => item !== topicOption);
                                 setSelectedTopics(nextTopics);
-                                setTopic(nextTopics.join(", "));
+                                setTopic([...nextTopics, ...(customTopic.trim() ? [customTopic.trim()] : [])].join(", "));
                                 setStartError("");
                                 const selectedGroups = TOPIC_GROUPS.filter((candidate) => candidate.topics.some((item) => nextTopics.includes(item)));
                                 if (selectedGroups.length === 1) setTier(selectedGroups[0].tier);
@@ -1133,6 +1138,22 @@ function AppPage() {
                       </div>
                     </div>
                   ))}
+                  <label className="flex items-center gap-2 pt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-emerald-600 dark:text-emerald-400">+</span>
+                    <input
+                      type="text"
+                      value={customTopic}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCustomTopic(value);
+                        setTopic([...selectedTopics, ...(value.trim() ? [value.trim()] : [])].join(", "));
+                        setStartError("");
+                      }}
+                      placeholder="Add your own topic..."
+                      autoFocus
+                      className="min-w-0 flex-1 border-b border-gray-200 bg-transparent py-1 text-xs text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-emerald-400"
+                    />
+                  </label>
                 </fieldset>
               )}
             </div>

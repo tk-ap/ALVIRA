@@ -54,6 +54,8 @@ export function Header() {
         </a>
 
         <div className="flex items-center gap-4">
+          <a href="/why-alvira" className="font-mono text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Why ALVIRA</a>
+          <a href="/pricing" className="font-mono text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Pricing</a>
           <a href="/meos" className="font-mono text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">MeOS</a>
           {user === undefined ? (
             <div className="h-8 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />

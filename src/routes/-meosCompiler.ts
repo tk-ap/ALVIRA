@@ -20,7 +20,11 @@ function section(title: string, answers: string[], empty = "_No information gath
 /** Deterministic MeOS compiler. It never calls an LLM. */
 export function compileMeosKnowledge(state: InterviewState, graph: Domain[]): MeosOutput {
   const answers = (id: string) => state.domains[id]?.answers ?? [];
-  const portrait = `# Integrated Portrait: ${state.topic || "My Personal Operating System"}\n\n${section("Current Chapter", answers("currentChapter"))}\n${section("Desired Outcomes", answers("desiredOutcomes"))}\n${section("Values", answers("values"))}\n\n> [inferred] The portrait is grounded in the user's stated chapter, outcomes, and values. Confidence: recorded interview evidence.\n`;
+  const frameworkValues = answers("frameworks");
+  const birthValues = answers("birthData");
+  const reviewValues = answers("review");
+  const validationValues = answers("validation");
+  const portrait = `# Integrated Portrait: ${state.topic || "My Personal Operating System"}\n\n${section("Frameworks", frameworkValues)}\n${birthValues.length ? section("Birth Data", birthValues.map(v => { try { const d = JSON.parse(v); return `Natal chart data recorded: ${d.date || "date not supplied"}, ${d.unknownTime ? "time unknown" : d.time || "time not supplied"}, ${d.location || "location not supplied"}`; } catch { return v; } })) : ""}\n${section("Review Results", reviewValues)}\n${section("Validation Notes", validationValues)}\n${section("Current Chapter", answers("currentChapter"))}\n${section("Desired Outcomes", answers("desiredOutcomes"))}\n${section("Values", answers("values"))}\n\n> [inferred] The portrait is grounded in the user's stated chapter, outcomes, and values. Confidence: recorded interview evidence.\n`;
   const purposeStatements = `# Purpose Statements\n\n${section("Personal and Professional Purpose", answers("desiredOutcomes"))}`;
   const boundaries = `# Boundaries\n\n${section("Aligned / Not Aligned", answers("boundaries"))}`;
   const definitionOfSuccess = `# Definition of Success\n\n${section("Personal Definition", answers("definitionOfSuccess"))}`;

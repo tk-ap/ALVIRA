@@ -249,6 +249,9 @@ function AppPage() {
   const [waiting, setWaiting] = useState(false);
   const [interviewError, setInterviewError] = useState("");
   const [startError, setStartError] = useState("");
+  // The inline MeOS nudge is shown once after the user's third meaningful answer.
+  const meaningfulAnswerCountRef = useRef(0);
+  const [showInsightCTA, setShowInsightCTA] = useState(false);
 
   // Output state
   const [generated, setGenerated] = useState<Record<string, string> | null>(null);
@@ -412,6 +415,8 @@ function AppPage() {
     }
 
     setStartError("");
+    meaningfulAnswerCountRef.current = 0;
+    setShowInsightCTA(false);
     setScreen("interview");
     setWaiting(true);
     setInterviewError("");
@@ -446,6 +451,7 @@ function AppPage() {
 
     let updatedDomains = { ...state.domains };
     let needsClarify = false;
+    let meaningfulAnswer = false;
 
     if (currentDomain) {
       const existing = updatedDomains[currentDomain]?.answers ?? [];
@@ -531,6 +537,7 @@ function AppPage() {
         };
       }
       else {
+        meaningfulAnswer = true;
         updatedDomains = {
           ...updatedDomains,
           [currentDomain]: {
@@ -553,6 +560,10 @@ function AppPage() {
 
     setState(updatedState);
     setAnswer("");
+    if (meaningfulAnswer && offering !== "meos" && !showInsightCTA) {
+      meaningfulAnswerCountRef.current += 1;
+      if (meaningfulAnswerCountRef.current >= 3) setShowInsightCTA(true);
+    }
     // MeOS special flow begins once the eight required core domains are confidently covered.
     if (offering === "meos" && meosPhase === "core") {
       const coreIds = ["currentChapter", "desiredOutcomes", "values", "boundaries", "goals", "decisionPatterns", "workHistory", "definitionOfSuccess"];
@@ -745,6 +756,8 @@ function AppPage() {
     setMeosPortrait(null);
     setPortraitError(false);
     setInterviewError("");
+    meaningfulAnswerCountRef.current = 0;
+    setShowInsightCTA(false);
     setScreen("start");
     setSavedProfileId(null);
   };
@@ -923,6 +936,12 @@ function AppPage() {
 
               <div ref={chatEndRef} />
             </div>
+
+            {showInsightCTA && (
+              <div className="mb-4 border-t border-gray-100 dark:border-gray-800 pt-3">
+                <MeOSCTA placement="post-insight" variant="inline" />
+              </div>
+            )}
 
             {/* Progress indicator — pinned above input */}
             <div className="mb-3">

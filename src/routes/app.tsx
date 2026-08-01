@@ -402,16 +402,19 @@ function AppPage() {
     const trimmed = topic.trim();
     if (!trimmed) return;
 
-    const validation = validateAnswer("start", trimmed, []);
-    const wordCount = trimmed.split(/\s+/).length;
-    if (validation.needsClarification || wordCount < 3 || validation.confidence < 0.7) {
-      const msg = wordCount < 2
-        ? "Please describe what you want to capture in more detail — at least a few words. For example: \"My communication style and decision-making preferences.\""
-        : validation.insufficientKnowledge
-          ? "Please describe what knowledge you want to capture more specifically. What themes, context, or understanding should your AI have?"
-          : "That doesn't look like a real description. Try something like \"My communication preferences and values\" or \"How our team handles customer escalations.\"";
-      setStartError(msg);
-      return;
+    // MeOS topics are introspective/philosophical — skip the context-oriented validation
+    if (offering !== "meos") {
+      const validation = validateAnswer("start", trimmed, []);
+      const wordCount = trimmed.split(/\s+/).length;
+      if (validation.needsClarification || wordCount < 3 || validation.confidence < 0.7) {
+        const msg = wordCount < 2
+          ? "Please describe what you want to capture in more detail — at least a few words. For example: \"My communication style and decision-making preferences.\""
+          : validation.insufficientKnowledge
+            ? "Please describe what knowledge you want to capture more specifically. What themes, context, or understanding should your AI have?"
+            : "That doesn't look like a real description. Try something like \"My communication preferences and values\" or \"How our team handles customer escalations.\"";
+        setStartError(msg);
+        return;
+      }
     }
 
     setStartError("");

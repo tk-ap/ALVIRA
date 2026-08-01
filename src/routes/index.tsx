@@ -69,44 +69,45 @@ function Home() {
       <Header />
 
       {/* --- Hero --- */}
-      <section className="flex-1 flex flex-col items-center justify-center px-8 py-36 md:py-44 bg-white dark:bg-gray-950">
-        <div className="mx-auto max-w-3xl text-center w-full">
-          {/* Badge */}
-          <div className="inline-block mb-12">
+      <section className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-8 sm:py-16 bg-white dark:bg-gray-950">
+        <div className="mx-auto max-w-4xl text-center w-full">
+          {/* Technical eyebrow */}
+          <div className="inline-block mb-6 sm:mb-8">
             <span className="font-mono text-xs text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-md px-3 py-1.5 tracking-wide">
-              &lt;knowledge-elicitation-engine /&gt;
+              &lt;personal-ai-knowledge-system /&gt;
             </span>
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl md:text-6xl lg:text-7xl leading-[1.1]">
-            Your AI can't know
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08]">
+            Build the context
             <br />
-            what you've never shared.
+            your AI is missing.
           </h1>
 
-          <p className="mt-10 text-lg leading-relaxed text-gray-600 dark:text-gray-400 sm:text-xl max-w-xl mx-auto">
-            <span className="font-mono text-sm bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5 text-gray-800 dark:text-gray-200">ALVIRA</span>{" "}
-            discovers the missing context through knowledge elicitation, then builds
-            AI-optimized knowledge documents you can use across models and agents.
+          <p className="mt-6 sm:mt-8 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg max-w-2xl mx-auto">
+            ALVIRA interviews you to uncover how you think, work, communicate, and decide—then turns that knowledge into a living AI profile you can use across ChatGPT, Claude, Gemini, Cursor, and future AI tools.
           </p>
 
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <a
               href="/app"
-              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 dark:bg-gray-100 dark:text-gray-900 px-8 py-4 text-base font-semibold text-white hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 dark:bg-gray-100 dark:text-gray-900 px-7 py-3.5 text-base font-semibold text-white hover:bg-gray-800 dark:hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 motion-reduce:transition-none transition-colors duration-200"
             >
-              Try it now
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              Build my AI profile
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
             </a>
             <a
-              href="#waitlist"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-8 py-4 text-base font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+              href="#how-it-works"
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-7 py-3.5 text-base font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 motion-reduce:transition-none transition-colors duration-200"
             >
-              Get early access
+              See how it works
             </a>
           </div>
+          <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">
+            Free to start · No credit card · Portable Markdown
+          </p>
         </div>
       </section>
 
@@ -228,7 +229,7 @@ function Home() {
       </section>
 
       {/* --- How It Works --- */}
-      <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+      <section id="how-it-works" className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 scroll-mt-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-20">
             <span className="font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase">Process</span>

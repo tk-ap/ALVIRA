@@ -1082,9 +1082,14 @@ function AppPage() {
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
           <div className="text-center mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">Build your AI profile</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+              {offering === "meos" ? "Build your personal operating system" : "Build your AI profile"}
+            </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              ALVIRA interviews you to capture themes, ideas, voice, and context — then compiles it into structured Markdown knowledge files transferrable between any AI model.
+              {offering === "meos"
+                ? "A guided interview that captures your values, patterns, goals, and direction — then compiles them into a private integrated portrait and decision companion."
+                : "ALVIRA interviews you to capture themes, ideas, voice, and context — then compiles it into structured Markdown knowledge files transferrable between any AI model."
+              }
             </p>
           </div>
 
@@ -1108,7 +1113,7 @@ function AppPage() {
             <div className="space-y-5">
             <div>
               <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
-                {offering === "meos" ? "What chapter are you in?" : "What should your AI know about you?"}
+                {offering === "meos" ? "Describe your current chapter in your own words" : "What should your AI know about you?"}
               </label>
               {offering === "meos" && <input
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
@@ -1126,7 +1131,7 @@ function AppPage() {
               {offering === "meos" && (
                 <fieldset className="mt-3 space-y-1">
                   <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                    What chapter are you in right now?
+                    Which themes apply? <span className="normal-case tracking-normal text-gray-400">(choose any)</span>
                   </legend>
                   {["Navigating a career pivot", "Starting something new", "Rebuilding after a setback", "Deep in a growth phase", "Feeling stuck and seeking direction"].map((suggestion) => (
                     <label key={suggestion} className="flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
@@ -1254,7 +1259,7 @@ function AppPage() {
               disabled={!topic.trim()}
               className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Start interview
+              {offering === "meos" ? "Start my MeOS interview" : "Start interview"}
             </button>
             </div>
 

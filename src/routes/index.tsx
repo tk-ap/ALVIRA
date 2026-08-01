@@ -87,7 +87,7 @@ function Home() {
           <p className="mt-10 text-lg leading-relaxed text-gray-600 dark:text-gray-400 sm:text-xl max-w-xl mx-auto">
             <span className="font-mono text-sm bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5 text-gray-800 dark:text-gray-200">ALVIRA</span>{" "}
             discovers the missing context through knowledge elicitation, then builds
-            AI-ready knowledge you can use across models and agents.
+            AI-optimized knowledge documents you can use across models and agents.
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">

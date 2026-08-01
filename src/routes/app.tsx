@@ -632,6 +632,7 @@ function AppPage() {
   const startNew = () => {
     setTopic("");
     setTier("personal");
+    setOffering(null);
     setState(null);
     setAnswer("");
     setGenerated(null);

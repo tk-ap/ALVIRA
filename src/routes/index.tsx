@@ -181,6 +181,81 @@ function Home() {
         </div>
       </section>
 
+      {/* --- Product demonstration --- */}
+      <section id="how-it-works" className="border-t border-gray-100 bg-gray-50 px-6 py-24 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How it works</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">See ALVIRA in action</h2>
+            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              A guided conversation uncovers what matters — then turns it into context your AI can use.
+            </p>
+          </div>
+
+          <ol className="mt-16 space-y-10 border-l border-gray-300 pl-6 dark:border-gray-700 sm:ml-4 sm:pl-10">
+            {[
+              {
+                title: "ALVIRA asks",
+                body: "An adaptive question targets what's missing:",
+                quote: '“When you\'re making a tough decision, what matters most to you — speed, certainty, consensus, or something else?”',
+              },
+              {
+                title: "You answer",
+                body: "You respond in your own words:",
+                quote: '“Speed matters most when the decision is reversible. For bigger calls, I want input from at least two people I trust before committing.”',
+              },
+              {
+                title: "ALVIRA follows up",
+                body: "It probes for context you wouldn't have volunteered:",
+                quote: '“Who are the people you typically consult for those bigger decisions, and what kind of input do you look for from each?”',
+              },
+              {
+                title: "Your profile builds",
+                body: "Your answers are validated, organized, and compiled into structured knowledge. You own the files — readable Markdown, portable anywhere.",
+              },
+              {
+                title: "Your AI improves",
+                body: "When you share your profile with ChatGPT or Claude, responses reflect your actual decision-making style instead of generic advice.",
+              },
+            ].map((step, index) => (
+              <li key={step.title} className="relative">
+                <span className="absolute -left-[2.15rem] flex h-8 w-8 items-center justify-center rounded-full border border-emerald-600 bg-gray-50 font-mono text-sm font-semibold text-emerald-700 dark:border-emerald-500 dark:bg-gray-900 dark:text-emerald-400 sm:-left-[3.15rem]" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{step.title}</h3>
+                <p className="mt-2 max-w-3xl text-base leading-relaxed text-gray-600 dark:text-gray-400">{step.body}</p>
+                {step.quote && (
+                  <p className="mt-4 max-w-3xl border-l-2 border-emerald-500 bg-white px-4 py-3 font-mono text-sm leading-relaxed text-gray-700 shadow-sm dark:bg-gray-950 dark:text-gray-300">
+                    {step.quote}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-20">
+            <h3 className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">The difference in practice</h3>
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <div className="border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-950">
+                <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Without your ALVIRA profile</p>
+                <blockquote className="mt-5 text-base leading-relaxed text-gray-700 dark:text-gray-300">
+                  “To make better decisions, try listing pros and cons. Consider asking a mentor for advice. Trust your gut.”
+                </blockquote>
+              </div>
+              <div className="border border-emerald-600 bg-emerald-50 p-6 dark:border-emerald-500 dark:bg-emerald-950/40">
+                <p className="font-mono text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-300">With your ALVIRA profile</p>
+                <blockquote className="mt-5 text-base leading-relaxed text-gray-800 dark:text-gray-200">
+                  “Since you've said speed is your priority for reversible decisions, I'll give you a quick recommendation: option A based on what you've shared. For the bigger call — given your preference for consulting two trusted people — here are the specific questions worth running by them before you commit.”
+                </blockquote>
+              </div>
+            </div>
+            <p className="mt-6 max-w-4xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+              ALVIRA builds this context through conversation. You don't write or organize it yourself. And because it's portable Markdown, it works across ChatGPT, Claude, Gemini, Cursor, and future AI tools.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* --- Your knowledge, preserved --- */}
       <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto max-w-6xl">

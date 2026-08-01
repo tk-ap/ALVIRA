@@ -1093,7 +1093,7 @@ function AppPage() {
           {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
 
           {/* Topic input */}
-          {offering && <div className={`grid grid-cols-1 gap-8 md:items-start ${offering === "context" ? "md:grid-cols-[3fr_2fr]" : "md:grid-cols-[1fr_1fr]"}`}>
+          {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>
             <div className="space-y-5">
             <div>
               <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
@@ -1276,34 +1276,36 @@ function AppPage() {
             )}
 
             {offering === "meos" && (
-              <aside className="rounded-xl border border-emerald-200/60 dark:border-emerald-800/40 bg-gradient-to-b from-emerald-50/40 to-white dark:from-emerald-950/20 dark:to-gray-800/50 p-6 shadow-sm">
+              <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
                 <div className="mb-5">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-0.5 font-mono text-[11px] font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                    output-files
-                  </span>
-                  <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">Your interview produces these files — a complete personal operating system.</p>
+                  <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">&lt;output-files /&gt;</span>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your interview produces these files — a complete personal operating system.</p>
                 </div>
-                <div className="space-y-0.5">
-                  {[
-                    { icon: "🧭", file: "portrait.md", tag: "Your integrated portrait", desc: "A cohesive narrative of who you are right now — your chapter, values, desired outcomes, and what drives you." },
-                    { icon: "🎯", file: "purpose-statements.md", tag: "Personal & professional purpose", desc: "Clear articulations of what you're here to do. Gives AI your \"why.\"" },
-                    { icon: "🛡️", file: "boundaries.md", tag: "Your non-negotiables", desc: "What you won't compromise on, your limits, and how you protect your energy." },
-                    { icon: "🧿", file: "decision-compass.md", tag: "How you decide", desc: "The questions to ask yourself when facing a crossroad. Your personal compass." },
-                    { icon: "⚒️", file: "career-tools.md", tag: "Career alignment", desc: "Insights about your professional path and how work aligns with your purpose." },
-                    { icon: "🔍", file: "source-trace.md", tag: "Where each claim came from", desc: "Full transparency: what you stated, what was inferred, what you self-validated." },
-                  ].map((item) => (
-                    <div key={item.file} className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/60 dark:hover:bg-gray-800/60">
-                      <span className="mt-0.5 text-base flex-shrink-0">{item.icon}</span>
-                      <div className="min-w-0">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">{item.file}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-500 font-sans italic">{item.tag}</span>
-                        </div>
-                        <p className="mt-0.5 text-xs leading-relaxed text-gray-500 dark:text-gray-500">{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="space-y-5">
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">portrait.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Your integrated portrait</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">A cohesive narrative of who you are right now — your current chapter, values, desired outcomes, and what drives you.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">purpose-statements.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Personal &amp; professional purpose</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Clear articulations of what you're here to do, both personally and professionally. Gives AI your "why."</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">boundaries.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Your non-negotiables</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">What you won't compromise on, your limits, and how you protect your energy and focus.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">decision-compass.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you decide</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your decision-making framework — the questions to ask yourself when facing a crossroad. Your personal compass.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">career-tools.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Career alignment</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Insights about your professional path, strengths, and how your work aligns with your purpose and values.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">source-trace.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Where each claim came from</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Full transparency: which statements came from you directly, which were inferred, and which you self-validated.</p>
+                  </div>
                 </div>
               </aside>
             )}

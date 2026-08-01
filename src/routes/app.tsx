@@ -147,7 +147,13 @@ function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; e
             ? "Free tier limit reached. Upgrade to Pro for unlimited interviews."
             : "Free tier limited to 1 saved profile. Upgrade to save more."}
         </p>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex gap-2 flex-shrink-0 items-center">
+          <a
+            href="/why-alvira"
+            className="font-mono text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2"
+          >
+            Why upgrade?
+          </a>
           <a
             href={STRIPE_LINKS.pro + prefilled}
             target="_blank"
@@ -183,6 +189,12 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
             : "Free accounts are limited to 3 interviews. Upgrade for unlimited interviews."}
         </p>
         <div className="space-y-3">
+          <a
+            href="/why-alvira"
+            className="block text-center font-mono text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2"
+          >
+            Why upgrade?
+          </a>
           <a
             href={STRIPE_LINKS.pro + prefilled}
             target="_blank"

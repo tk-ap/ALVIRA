@@ -117,6 +117,7 @@ const STRIPE_LINKS = {
 
 // ── Page ──
 export const Route = createFileRoute("/app")({
+  validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined }),
   component: AppPage,
 });
 
@@ -224,7 +225,8 @@ function AppPage() {
   // so both groups remain available for that scope.
   const selectedGroups = TOPIC_GROUPS.filter((group) => group.topics.some((topicOption) => selectedTopics.includes(topicOption)));
   const activeGroup = selectedGroups.length === 1 ? selectedGroups[0] : null;
-  const [offering, setOffering] = useState<"context" | "meos" | null>(null);
+  const { offering: offeringSearch } = Route.useSearch();
+  const [offering, setOffering] = useState<"context" | "meos" | null>(offeringSearch === "meos" ? "meos" : null);
   type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
   const [meosPhase, setMeosPhase] = useState<MeosPhase>("core");
 

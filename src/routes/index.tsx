@@ -564,6 +564,61 @@ function Home() {
         </div>
       </section>
 
+      {/* --- Free plan card --- */}
+      <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Start free</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              Everything you need to build your first AI profile.
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              Start free — no credit card, no time limit. When ALVIRA becomes part of how you work, upgrade for more profiles and continuous updates.
+            </p>
+          </div>
+
+          <div className="mt-12 max-w-md">
+            <div className="rounded-xl border-2 border-emerald-500/30 bg-emerald-50/40 p-6 shadow-sm dark:border-emerald-400/20 dark:bg-emerald-950/20 sm:p-8">
+              <h3 className="font-mono text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">$0</span>
+                <span className="font-mono text-xs text-gray-500 dark:text-gray-400">forever</span>
+              </div>
+              <ul className="mt-6 space-y-3 border-t border-emerald-200/60 pt-5 dark:border-emerald-800/40">
+                {[
+                  "1 AI profile",
+                  "3 guided interviews",
+                  "All 19 personal knowledge domains",
+                  "Portable Markdown output",
+                  "No credit card required",
+                ].map((feature) => (
+                  <li key={feature} className="flex gap-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/app"
+                className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 transition-colors duration-200 dark:bg-emerald-500 dark:text-gray-950 dark:hover:bg-emerald-400 dark:focus-visible:outline-emerald-400"
+              >
+                Start building — free
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+              </a>
+              <p className="mt-3 text-center">
+                <a href="/pricing" className="font-mono text-xs text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors">
+                  Compare plans →
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* --- Not sure what to capture? --- */}
       <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto max-w-6xl">

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 
 import { Header } from "~/components/Header";
+import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
 import {
   getKnowledgeGraph,
   getPlaybook,
@@ -194,6 +195,8 @@ function AppPage() {
   const [topic, setTopic] = useState("");
   const [tier, setTier] = useState<Tier>("personal");
   const [offering, setOffering] = useState<"context" | "meos" | null>(null);
+  type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
+  const [meosPhase, setMeosPhase] = useState<MeosPhase>("core");
 
   // Interview state (the single source of truth)
   const [state, setState] = useState<InterviewState | null>(null);
@@ -500,6 +503,15 @@ function AppPage() {
 
     setState(updatedState);
     setAnswer("");
+    // MeOS special flow begins once the eight required core domains are confidently covered.
+    if (offering === "meos" && meosPhase === "core") {
+      const coreIds = ["currentChapter", "desiredOutcomes", "values", "boundaries", "goals", "decisionPatterns", "workHistory", "definitionOfSuccess"];
+      const coreComplete = coreIds.every(id => updatedState.domains[id]?.confidence >= 0.85);
+      if (coreComplete) {
+        setMeosPhase("frameworks");
+        return;
+      }
+    }
     setWaiting(true);
     setInterviewError("");
 
@@ -562,8 +574,32 @@ function AppPage() {
     }
   };
 
-  const handleGenerate = async () => {
+  const meosClaims = useMemo(() => {
+    if (!state || offering !== "meos") return [];
+    const direct = ["values", "boundaries"].flatMap(id => (state.domains[id]?.answers || []).map(text => ({ text, source: "user-supplied" as const })));
+    const inferred = ["decisionPatterns", "goals", "workHistory"].flatMap(id => (state.domains[id]?.answers || []).map(text => ({ text, source: "inferred" as const })));
+    return [...direct, ...inferred];
+  }, [state, offering]);
+  const updateMeosDomain = (id: string, values: string[]) => {
     if (!state) return;
+    setState({ ...state, domains: { ...state.domains, [id]: { answers: values, confidence: 1, covered: true } } });
+  };
+  const handleFrameworks = (ids: FrameworkId[]) => {
+    updateMeosDomain("frameworks", [JSON.stringify(ids)]);
+    if (ids.some(id => FRAMEWORKS.find(f => f.id === id)?.birth)) setMeosPhase("birthData");
+    else setMeosPhase("review");
+  };
+  const handleBirthData = (data: object) => { updateMeosDomain("birthData", [JSON.stringify(data)]); setMeosPhase("review"); };
+  const handleReview = (results: object[]) => { updateMeosDomain("review", results.map(x => JSON.stringify(x))); setMeosPhase("validation"); };
+  const handleValidation = (note: string) => {
+    if (!state) return;
+    const next = { ...state, domains: { ...state.domains, validation: { answers: [note || "Validated by user."], confidence: 1, covered: true } } };
+    setState(next); setMeosPhase("compile"); handleGenerate(next);
+  };
+
+  const handleGenerate = async (stateOverride?: InterviewState) => {
+    const compileState = stateOverride || state;
+    if (!compileState) return;
 
     // Track interview count (for limits)
     if (authUser) {
@@ -588,10 +624,10 @@ function AppPage() {
     }
 
     setCompiling(true);
-    const currentGraph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(state.tier);
+    const currentGraph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(compileState.tier);
     const files = offering === "meos"
-      ? compileMeosKnowledge(state, currentGraph).allFiles
-      : compileKnowledge(state, currentGraph);
+      ? compileMeosKnowledge(compileState, currentGraph).allFiles
+      : compileKnowledge(compileState, currentGraph);
     setGenerated(files);
     setActiveTab(offering === "meos" ? "portrait.md" : "overview");
     setScreen("output");
@@ -633,6 +669,7 @@ function AppPage() {
     setTopic("");
     setTier("personal");
     setOffering(null);
+    setMeosPhase("core");
     setState(null);
     setAnswer("");
     setGenerated(null);
@@ -773,7 +810,7 @@ function AppPage() {
         {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main className="flex-1 flex flex-col px-6">
-          <div className="mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
+          <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
               {state?.history.map((msg, i) => (
@@ -828,6 +865,11 @@ function AppPage() {
                 />
               </div>
             </div>
+
+            {offering === "meos" && meosPhase === "frameworks" && state && <FrameworkSelector selected={(() => { try { return JSON.parse(state.domains.frameworks?.answers[0] || "[]"); } catch { return []; } })()} onContinue={handleFrameworks} />}
+            {offering === "meos" && meosPhase === "birthData" && state && <BirthDataForm onBack={() => setMeosPhase("frameworks")} onContinue={handleBirthData} />}
+            {offering === "meos" && meosPhase === "review" && <ReviewPanel claims={meosClaims} onBack={() => setMeosPhase("frameworks")} onContinue={handleReview} />}
+            {offering === "meos" && meosPhase === "validation" && <ValidationCard claims={meosClaims} onBack={() => setMeosPhase("review")} onComplete={handleValidation} />}
 
             {/* Input area */}
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
@@ -958,7 +1000,7 @@ function AppPage() {
               </label>
               <input
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
-                placeholder='e.g. "My communication style and decision-making process", "How our support team handles escalations"'
+                placeholder={offering === "meos" ? 'e.g. "I\'m navigating a career transition and need clarity on my direction"' : 'e.g. "My communication style and decision-making process", "How our support team handles escalations"'}
                 value={topic}
                 onChange={(e) => { setTopic(e.target.value); setStartError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}

@@ -43,6 +43,48 @@ function Home() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [activePreview, setActivePreview] = useState("overview.md");
+
+  const profilePreviews = [
+    {
+      filename: "overview.md",
+      label: "Profile overview",
+      lines: [
+        "# Alex Chen",
+        "",
+        "> Product designer focused on making complex tools feel clear and useful.",
+        "",
+        "## How I work",
+        "I look for the simplest path through a problem, then test it with real users.",
+        "I value thoughtful constraints, direct feedback, and decisions that stay reversible.",
+      ],
+    },
+    {
+      filename: "constraints.md",
+      label: "Boundaries & preferences",
+      lines: [
+        "# Constraints",
+        "",
+        "- Cannot use tools or deploy changes that require admin approval without notice.",
+        "- Prefers async communication over meetings; include context and a clear decision ask.",
+        "- Protects focused design time from 9:00–11:30 AM Pacific.",
+        "- Accessibility is a release requirement, not a follow-up improvement.",
+      ],
+    },
+    {
+      filename: "workflows.md",
+      label: "How work gets done",
+      lines: [
+        "# Workflows",
+        "",
+        "## How I approach design reviews",
+        "1. Share the decision to be made and the evidence behind it.",
+        "2. Ask reviewers for risks and unanswered questions before preferences.",
+        "3. Synthesize feedback, call out trade-offs, and document the decision.",
+        "4. Run a small usability check before handing off to engineering.",
+      ],
+    },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -423,6 +465,55 @@ function Home() {
           <p className="mt-12 max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">
             Platform memory features are designed to keep you on their platform. ALVIRA's Markdown knowledge files are designed to go wherever you go — into any AI tool, any editor, any workflow.{" "}
             <span className="text-gray-700 dark:text-gray-300">You own the files. You control the updates. You decide where they live.</span>
+          </p>
+        </div>
+      </section>
+
+      {/* --- Example profile preview --- */}
+      <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Example profile</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              See what your knowledge becomes.
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              ALVIRA turns a conversation into practical context your AI can actually use—not a vague personality summary.
+            </p>
+          </div>
+
+          <div className="mt-12 overflow-hidden rounded-xl border border-gray-200 bg-gray-950 shadow-sm dark:border-gray-700">
+            <div className="flex overflow-x-auto border-b border-gray-800 bg-gray-900" role="tablist" aria-label="Example profile files">
+              {profilePreviews.map((preview) => {
+                const isActive = preview.filename === activePreview;
+                return (
+                  <button
+                    key={preview.filename}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActivePreview(preview.filename)}
+                    className={`shrink-0 border-r border-gray-800 px-5 py-3 font-mono text-xs transition-colors ${
+                      isActive ? "bg-gray-950 text-emerald-400" : "text-gray-500 hover:bg-gray-800 hover:text-gray-300"
+                    }`}
+                  >
+                    {preview.filename}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="min-h-[16rem] p-5 sm:p-8" role="tabpanel" aria-label={profilePreviews.find((p) => p.filename === activePreview)?.filename}>
+              <div className="mb-5 flex items-center gap-2 font-mono text-xs text-gray-500">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                {profilePreviews.find((p) => p.filename === activePreview)?.label}
+              </div>
+              <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-xs leading-7 text-gray-300 sm:text-sm">
+                {profilePreviews.find((p) => p.filename === activePreview)?.lines.join("\n")}
+              </pre>
+            </div>
+          </div>
+          <p className="mt-4 text-center font-mono text-xs text-gray-500 dark:text-gray-400">
+            Sample profile — your results will reflect your unique knowledge.
           </p>
         </div>
       </section>

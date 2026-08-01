@@ -85,6 +85,30 @@ const TIERS: { value: Tier; label: string; description: string }[] = [
   { value: "team", label: "Team", description: "Department or small business" },
   { value: "enterprise", label: "Enterprise", description: "Organization-wide" },
 ];
+const TOPIC_GROUPS = [
+  {
+    label: "For individuals",
+    tier: "personal" as const,
+    topics: [
+      "My communication style and decision-making process",
+      "My daily routines, habits, and personal workflows",
+      "My values, boundaries, and what I won't compromise on",
+      "My key relationships and how I collaborate with others",
+      "My goals, priorities, and how I evaluate tradeoffs",
+    ],
+  },
+  {
+    label: "For teams",
+    tier: "team" as const,
+    topics: [
+      "How our support team handles customer escalations",
+      "Our team's development standards and code review process",
+      "Our department's approval chains and decision thresholds",
+      "Our organization's compliance rules and security policies",
+      "Our cross-department workflows and vendor relationships",
+    ],
+  },
+] as const;
 
 const STRIPE_LINKS = {
   pro: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
@@ -193,6 +217,7 @@ function AppPage() {
 
   // Start screen state
   const [topic, setTopic] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [tier, setTier] = useState<Tier>("personal");
   const [offering, setOffering] = useState<"context" | "meos" | null>(null);
   type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
@@ -1038,39 +1063,41 @@ function AppPage() {
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">{startError}</p>
               )}
 
-              {/* Pre-populated suggestions dropdown */}
-              <div className="mt-2">
-                <select
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors font-mono"
-                  value=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setTopic(e.target.value);
-                      setStartError("");
-                      const selectedOption = e.target.selectedOptions[0];
-                      const optgroup = selectedOption?.parentElement as HTMLOptGroupElement | null;
-                      if (optgroup?.label === "For individuals") setTier("personal");
-                      if (optgroup?.label === "For teams") setTier("team");
-                    }
-                  }}
-                >
-                  <option value="" disabled>— examples of what ALVIRA helps you uncover —</option>
-                  <optgroup label="For individuals">
-                    <option value="My communication style and decision-making process">My communication style and decision-making process</option>
-                    <option value="My daily routines, habits, and personal workflows">My daily routines, habits, and personal workflows</option>
-                    <option value="My values, boundaries, and what I won't compromise on">My values, boundaries, and what I won't compromise on</option>
-                    <option value="My key relationships and how I collaborate with others">My key relationships and how I collaborate with others</option>
-                    <option value="My goals, priorities, and how I evaluate tradeoffs">My goals, priorities, and how I evaluate tradeoffs</option>
-                  </optgroup>
-                  <optgroup label="For teams">
-                    <option value="How our support team handles customer escalations">How our support team handles customer escalations</option>
-                    <option value="Our team's development standards and code review process">Our team's development standards and code review process</option>
-                    <option value="Our department's approval chains and decision thresholds">Our department's approval chains and decision thresholds</option>
-                    <option value="Our organization's compliance rules and security policies">Our organization's compliance rules and security policies</option>
-                    <option value="Our cross-department workflows and vendor relationships">Our cross-department workflows and vendor relationships</option>
-                  </optgroup>
-                </select>
-              </div>
+              {/* Example topic suggestions */}
+              {offering === "context" && (
+                <fieldset className="mt-3 space-y-3">
+                  <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Examples of what ALVIRA helps you uncover (select all that apply)
+                  </legend>
+                  {TOPIC_GROUPS.map((group) => (
+                    <div key={group.label} className="space-y-1.5">
+                      <p className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{group.label}</p>
+                      <div className="space-y-1">
+                        {group.topics.map((topicOption) => (
+                          <label key={topicOption} className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <input
+                              type="checkbox"
+                              checked={selectedTopics.includes(topicOption)}
+                              onChange={(e) => {
+                                const nextTopics = e.target.checked
+                                  ? [...selectedTopics, topicOption]
+                                  : selectedTopics.filter((item) => item !== topicOption);
+                                setSelectedTopics(nextTopics);
+                                setTopic(nextTopics.join(", "));
+                                setStartError("");
+                                const selectedGroups = TOPIC_GROUPS.filter((candidate) => candidate.topics.some((item) => nextTopics.includes(item)));
+                                if (selectedGroups.length === 1) setTier(selectedGroups[0].tier);
+                              }}
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
+                            />
+                            <span>{topicOption}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </fieldset>
+              )}
             </div>
 
             {/* Tier selector */}

@@ -111,6 +111,76 @@ function Home() {
         </div>
       </section>
 
+      {/* --- Why ALVIRA --- */}
+      <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Why ALVIRA</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              Stop starting from scratch with AI.
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              Every new conversation begins with the same problem: your AI doesn't know how you think, what matters to you, or how you want it to help. ALVIRA learns that context through a guided conversation and turns it into a reusable AI profile. Bring it to your favorite AI tools so they can give you more relevant, consistent, and personal help.
+            </p>
+          </div>
+
+          <div className="mt-16 grid gap-x-12 gap-y-12 md:grid-cols-2">
+            {[
+              ["Spend less time explaining yourself", "Stop repeatedly typing your preferences, background, goals, working style, and instructions into every new conversation."],
+              ["Get answers that fit you", "Give AI the context it needs to tailor its writing, recommendations, plans, and decisions to your actual needs."],
+              ["Discover context you would have missed", "ALVIRA asks adaptive questions that uncover useful details most people would never think to include in a prompt."],
+              ["Use it with the AI tools you already have", "Your profile works across ChatGPT, Claude, Gemini, Cursor, and future AI tools. You are not locked into one platform."],
+              ["Keep it accurate as your life changes", "Update your profile when your priorities, work, routines, or preferences change instead of rebuilding everything from scratch."],
+              ["Own the knowledge—not just the account", "Your profile can be exported as readable Markdown. You can inspect it, edit it, save it, and take it with you."],
+            ].map(([headline, body], index) => (
+              <div key={headline} className="border-t border-gray-200 pt-5 dark:border-gray-800">
+                <p className="font-mono text-sm tabular-nums text-emerald-700 dark:text-emerald-400">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-3 text-xl font-bold text-gray-900 dark:text-gray-100">{headline}</h3>
+                <p className="mt-3 text-base leading-relaxed text-gray-600 dark:text-gray-400">{body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-20 overflow-x-auto border border-gray-200 dark:border-gray-800">
+            <table className="w-full min-w-[30rem] border-collapse text-left">
+              <thead>
+                <tr className="font-mono text-xs uppercase tracking-wide">
+                  <th scope="col" className="w-1/2 border-b border-r border-gray-200 bg-gray-50 px-5 py-4 text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">Without ALVIRA</th>
+                  <th scope="col" className="w-1/2 border-b border-gray-200 bg-emerald-50 px-5 py-4 text-emerald-800 dark:border-gray-800 dark:bg-emerald-950/40 dark:text-emerald-300">With ALVIRA</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                {[
+                  ["Re-explain yourself in every chat", "Create reusable context once"],
+                  ["Receive generic answers", "Receive answers shaped around you"],
+                  ["Keep instructions scattered across chats", "Maintain one organized AI profile"],
+                  ["Lose context when switching tools", "Bring your knowledge to any AI"],
+                  ["Guess what information AI needs", "Let adaptive interviews uncover it"],
+                ].map(([without, withAlvira]) => (
+                  <tr key={without}>
+                    <td className="border-b border-r border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-950">{without}</td>
+                    <td className="border-b border-gray-200 bg-emerald-50/60 px-5 py-4 dark:border-gray-800 dark:bg-emerald-950/20">{withAlvira}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-16 text-center">
+            <a
+              href="/app"
+              className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
+            >
+              Build my AI profile
+              <span aria-hidden="true" className="ml-2">→</span>
+            </a>
+            <p className="mt-4 font-mono text-xs text-gray-500 dark:text-gray-400">Free to start · No credit card required</p>
+          </div>
+        </div>
+      </section>
+
       {/* --- Your knowledge, preserved --- */}
       <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto max-w-6xl">

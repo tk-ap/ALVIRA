@@ -727,6 +727,66 @@ function Home() {
         </div>
       </section>
 
+      {/* --- Everyday use cases --- */}
+      <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Everyday use cases</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              ALVIRA in your daily workflow.
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              Whatever your work looks like, give your AI the context to make every interaction more useful.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2">
+            {[
+              {
+                icon: "💻",
+                title: "Developer",
+                body: "Paste your coding preferences, stack choices, and conventions into Cursor or Copilot. Get PR reviews and code suggestions that actually match how you work.",
+              },
+              {
+                icon: "🧭",
+                title: "Consultant / Freelancer",
+                body: "Share your methodologies, client communication style, and deliverable standards with Claude. Get proposals, emails, and analysis in your voice.",
+              },
+              {
+                icon: "🤝",
+                title: "Team Lead",
+                body: "Give your team's AI tools shared context about processes, decisions, and constraints. Every team member gets aligned AI assistance.",
+              },
+              {
+                icon: "✍️",
+                title: "Creator / Writer",
+                body: "Feed ChatGPT your voice, audience, and content philosophy. Drafts come back sounding like you, not generic AI.",
+              },
+            ].map((useCase) => (
+              <article key={useCase.title} className="border border-gray-200 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-900 sm:p-7">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl" aria-hidden="true">{useCase.icon}</span>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{useCase.title}</h3>
+                </div>
+                <p className="mt-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{useCase.body}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-12 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-base font-medium leading-relaxed text-gray-800 dark:text-gray-200 sm:text-lg">
+              Whatever you build, ALVIRA makes sure your AI knows how you work.
+            </p>
+            <a
+              href="/app"
+              className="inline-flex shrink-0 items-center justify-center rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
+            >
+              Build my AI profile <span aria-hidden="true" className="ml-2">→</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* --- Not sure what to capture? --- */}
       <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto max-w-6xl">

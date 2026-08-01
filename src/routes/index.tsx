@@ -256,8 +256,179 @@ function Home() {
         </div>
       </section>
 
+      {/* --- Platform memory comparison --- */}
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-24 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Comparison</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              Your knowledge, not their platform
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              Most AI platforms remember you in ways you can't see, edit, or take with you. ALVIRA builds knowledge you own — open Markdown files that work everywhere, stay current, and never lock you in.
+            </p>
+          </div>
+
+          {/* --- Desktop table --- */}
+          <div className="mt-14 hidden sm:block overflow-x-auto">
+            <table className="w-full min-w-[48rem] border-collapse text-left">
+              <thead>
+                <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                  <th scope="col" className="w-1/6 py-3 pr-4 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Dimension</th>
+                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/30">ALVIRA</th>
+                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">ChatGPT Memory</th>
+                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Claude Projects</th>
+                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Custom GPTs</th>
+                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Cursor Rules</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm leading-relaxed">
+                {[
+                  {
+                    dim: "Portability",
+                    alvira: { text: "Works with any AI tool", positive: true },
+                    gptMem: { text: "ChatGPT only", positive: false },
+                    claude: { text: "Claude only", positive: false },
+                    gpts: { text: "ChatGPT only", positive: false },
+                    cursor: { text: "Cursor IDE only", positive: false },
+                  },
+                  {
+                    dim: "File format",
+                    alvira: { text: "Open Markdown, you own it", positive: true },
+                    gptMem: { text: "Hidden, proprietary", positive: false },
+                    claude: { text: "Hidden project config", positive: false },
+                    gpts: { text: "Hidden GPT config", positive: false },
+                    cursor: { text: "Plain text, but dev-only", positive: false },
+                  },
+                  {
+                    dim: "Editability",
+                    alvira: { text: "Full control — edit anything", positive: true },
+                    gptMem: { text: "Cannot view or export", positive: false },
+                    claude: { text: "Limited to project UI", positive: false },
+                    gpts: { text: "Limited to builder UI", positive: false },
+                    cursor: { text: "Manual file edits", positive: false },
+                  },
+                  {
+                    dim: "Depth",
+                    alvira: { text: "19 domains, adaptive interviews", positive: true },
+                    gptMem: { text: "Surface memory from chats", positive: false },
+                    claude: { text: "Project-level context", positive: false },
+                    gpts: { text: "Single-purpose instructions", positive: false },
+                    cursor: { text: "Code-style rules only", positive: false },
+                  },
+                  {
+                    dim: "Updates",
+                    alvira: { text: "Continuous, versioned, you control", positive: true },
+                    gptMem: { text: "Automatic, unpredictable", positive: false },
+                    claude: { text: "Manual per project", positive: false },
+                    gpts: { text: "Static unless rebuilt", positive: false },
+                    cursor: { text: "Manual file edits", positive: false },
+                  },
+                  {
+                    dim: "Privacy",
+                    alvira: { text: "Your files, your storage", positive: true },
+                    gptMem: { text: "OpenAI servers", positive: false },
+                    claude: { text: "Anthropic servers", positive: false },
+                    gpts: { text: "OpenAI servers", positive: false },
+                    cursor: { text: "Local file on disk", positive: true },
+                  },
+                ].map((row) => (
+                  <tr key={row.dim} className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+                    <td className="py-3.5 pr-4 font-semibold text-gray-900 dark:text-gray-100">{row.dim}</td>
+                    {[row.alvira, row.gptMem, row.claude, row.gpts, row.cursor].map((cell, ci) => (
+                      <td
+                        key={ci}
+                        className={`py-3.5 px-3 ${ci === 0 ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""}`}
+                      >
+                        <span className="inline-flex items-center gap-1.5">
+                          {cell.positive ? (
+                            <svg className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                          ) : (
+                            <svg className="h-4 w-4 shrink-0 text-red-400 dark:text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          <span className={cell.positive ? "text-gray-800 dark:text-gray-200" : "text-gray-500 dark:text-gray-400"}>{cell.text}</span>
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* --- Mobile cards --- */}
+          <div className="mt-12 sm:hidden space-y-6">
+            {[
+              {
+                dim: "Portability",
+                alvira: "Works with any AI tool",
+                others: ["ChatGPT Memory: ChatGPT only", "Claude Projects: Claude only", "Custom GPTs: ChatGPT only", "Cursor Rules: Cursor IDE only"],
+              },
+              {
+                dim: "File format",
+                alvira: "Open Markdown, you own it",
+                others: ["ChatGPT Memory: Hidden, proprietary", "Claude Projects: Hidden project config", "Custom GPTs: Hidden GPT config", "Cursor Rules: Plain text, dev-only"],
+              },
+              {
+                dim: "Editability",
+                alvira: "Full control — edit anything",
+                others: ["ChatGPT Memory: Cannot view or export", "Claude Projects: Limited to project UI", "Custom GPTs: Limited to builder UI", "Cursor Rules: Manual file edits"],
+              },
+              {
+                dim: "Depth",
+                alvira: "19 domains, adaptive interviews",
+                others: ["ChatGPT Memory: Surface memory from chats", "Claude Projects: Project-level context", "Custom GPTs: Single-purpose instructions", "Cursor Rules: Code-style rules only"],
+              },
+              {
+                dim: "Updates",
+                alvira: "Continuous, versioned, you control",
+                others: ["ChatGPT Memory: Automatic, unpredictable", "Claude Projects: Manual per project", "Custom GPTs: Static unless rebuilt", "Cursor Rules: Manual file edits"],
+              },
+              {
+                dim: "Privacy",
+                alvira: "Your files, your storage",
+                others: ["ChatGPT Memory: OpenAI servers", "Claude Projects: Anthropic servers", "Custom GPTs: OpenAI servers", "Cursor Rules: Local file on disk"],
+              },
+            ].map((card) => (
+              <div key={card.dim} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div className="bg-emerald-50 dark:bg-emerald-950/40 px-5 py-3 border-b border-emerald-200 dark:border-emerald-900">
+                  <span className="font-mono text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-300">{card.dim}</span>
+                </div>
+                <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-emerald-50/30 dark:bg-emerald-950/10">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <svg className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    ALVIRA: {card.alvira}
+                  </span>
+                </div>
+                <div className="px-5 py-3 space-y-2.5">
+                  {card.others.map((o) => (
+                    <div key={o} className="flex items-start gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+                      <svg className="h-4 w-4 shrink-0 mt-0.5 text-red-400 dark:text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                      </svg>
+                      {o}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-12 max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+            Platform memory features are designed to keep you on their platform. ALVIRA's Markdown knowledge files are designed to go wherever you go — into any AI tool, any editor, any workflow.{" "}
+            <span className="text-gray-700 dark:text-gray-300">You own the files. You control the updates. You decide where they live.</span>
+          </p>
+        </div>
+      </section>
+
       {/* --- Your knowledge, preserved --- */}
-      <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+      <section className="py-32 px-8 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto max-w-6xl">
           <div className="mb-20">
             <span className="font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase">Artifacts</span>

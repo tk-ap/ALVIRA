@@ -619,6 +619,46 @@ function Home() {
         </div>
       </section>
 
+      {/* --- Privacy & trust --- */}
+      <section id="privacy" className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Privacy &amp; trust</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              Your knowledge stays yours.
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              You should never have to wonder where the most personal context about you goes. ALVIRA is designed around ownership and control from the start.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+            {[
+              ["01", "Local-first", "Your interviews and profiles are stored as Markdown files. You decide where they live — your computer, a private repo, or nowhere at all."],
+              ["02", "No training", "We never use your knowledge to train AI models. Your data is yours, period."],
+              ["03", "Portable format", "Open Markdown means no vendor lock-in. Read, edit, and use your files with any tool, forever."],
+              ["04", "You control sharing", "Share files with specific AI tools or team members, or keep them completely private. There is no opt-out because you are never opted in."],
+            ].map(([number, title, body]) => (
+              <div key={title} className="border-t border-gray-200 pt-5 dark:border-gray-800">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-600 font-mono text-xs font-semibold text-emerald-700 dark:border-emerald-500 dark:text-emerald-400" aria-hidden="true">
+                    {number}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{title}</h3>
+                    <p className="mt-2 text-base leading-relaxed text-gray-600 dark:text-gray-400">{body}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-12 max-w-3xl border-l-2 border-emerald-500 pl-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            ALVIRA is built on the belief that your knowledge should belong to you — not to us, and not to any AI platform.
+          </p>
+        </div>
+      </section>
+
       {/* --- Not sure what to capture? --- */}
       <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto max-w-6xl">

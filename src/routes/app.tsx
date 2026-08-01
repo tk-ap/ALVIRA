@@ -137,6 +137,20 @@ function AuthPromptBanner({ show }: { show: boolean }) {
   );
 }
 
+function SignupPromptBanner({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <div className="border-t border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-1.5">
+      <p className="text-xs text-emerald-800 dark:text-emerald-200 text-center">
+        Don't have an account?{" "}
+        <a href="/signup" className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
+          Create one →
+        </a>
+      </p>
+    </div>
+  );
+}
+
 // ── Upgrade banner (free tier limit) ──
 function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; email?: string }) {
   const prefilled = email ? `?prefilled_email=${encodeURIComponent(email)}` : "";
@@ -804,7 +818,9 @@ function AppPage() {
               ← Back to home
             </a>
           </div>
-        </main>
+          <SignupPromptBanner show={authUser === null} />
+          <SignupPromptBanner show={authUser === null} />
+      </main>
       </div>
     );
   }
@@ -887,7 +903,9 @@ function AppPage() {
               </div>
             </div>
           </div>
-        </main>
+          <SignupPromptBanner show={authUser === null} />
+          <SignupPromptBanner show={authUser === null} />
+      </main>
       </div>
     );
   }
@@ -1050,7 +1068,9 @@ function AppPage() {
               )}
             </div>
           </div>
-        </main>
+          <SignupPromptBanner show={authUser === null} />
+          <SignupPromptBanner show={authUser === null} />
+      </main>
       </div>
     );
   }
@@ -1313,6 +1333,7 @@ function AppPage() {
             )}
           </div>}
         </div>
+        <SignupPromptBanner show={authUser === null} />
       </main>
     </div>
   );

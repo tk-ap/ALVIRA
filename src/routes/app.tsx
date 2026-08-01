@@ -1063,6 +1063,43 @@ function AppPage() {
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">{startError}</p>
               )}
 
+              {/* Tier selector */}
+              {offering === "context" && <div>
+              <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-2">Scope</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {TIERS.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => {
+                        setTier(t.value);
+                        if (t.value === "enterprise") {
+                          const allTopics = TOPIC_GROUPS.flatMap(g => [...g.topics]);
+                          setSelectedTopics(allTopics);
+                          setTopic(allTopics.join(", "));
+                        } else {
+                          const group = TOPIC_GROUPS.find(g => g.tier === t.value);
+                          if (group) {
+                            const topics = [...group.topics];
+                            setSelectedTopics(topics);
+                            setTopic(topics.join(", "));
+                          }
+                        }
+                        setStartError("");
+                      }}
+                      className={`rounded-lg border px-3 py-3 text-center transition-colors ${
+                        tier === t.value
+                          ? "border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
+                      }`}
+                    >
+                      <div className="font-mono text-sm font-semibold">{t.label}</div>
+                      <div className="text-xs mt-0.5 opacity-70">{t.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>}
+
               {/* Example topic suggestions */}
               {offering === "context" && (
                 <fieldset className="mt-3 space-y-3">
@@ -1099,28 +1136,6 @@ function AppPage() {
                 </fieldset>
               )}
             </div>
-
-            {/* Tier selector */}
-            {offering === "context" && <div>
-            <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-2">Scope</label>
-              <div className="grid grid-cols-3 gap-2">
-                {TIERS.map((t) => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    onClick={() => setTier(t.value)}
-                    className={`rounded-lg border px-3 py-3 text-center transition-colors ${
-                      tier === t.value
-                        ? "border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
-                    }`}
-                  >
-                    <div className="font-mono text-sm font-semibold">{t.label}</div>
-                    <div className="text-xs mt-0.5 opacity-70">{t.description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>}
 
             {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline">Or resume a saved profile →</a></div>}
 

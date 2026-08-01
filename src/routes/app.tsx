@@ -233,6 +233,7 @@ function AppPage() {
   const [topic, setTopic] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
+  const [chapterSuggestions, setChapterSuggestions] = useState<string[]>([]);
   const [tier, setTier] = useState<Tier>("personal");
   // A single active topic group locks the other group. Enterprise selects both,
   // so both groups remain available for that scope.
@@ -1113,21 +1114,29 @@ function AppPage() {
 
               {/* Chapter suggestions */}
               {offering === "meos" && (
-                <div className="mt-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2.5">What chapter are you in right now?</p>
-                  <div className="flex flex-wrap gap-2">
-                    {["Navigating a career pivot", "Starting something new", "Rebuilding after a setback", "Deep in a growth phase", "Feeling stuck and seeking direction"].map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => { setTopic(suggestion); setStartError(""); }}
-                        className="rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs text-gray-600 dark:text-gray-400 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <fieldset className="mt-3 space-y-1">
+                  <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                    What chapter are you in right now?
+                  </legend>
+                  {["Navigating a career pivot", "Starting something new", "Rebuilding after a setback", "Deep in a growth phase", "Feeling stuck and seeking direction"].map((suggestion) => (
+                    <label key={suggestion} className="flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <input
+                        type="checkbox"
+                        checked={chapterSuggestions.includes(suggestion)}
+                        onChange={() => {
+                          const next = chapterSuggestions.includes(suggestion)
+                            ? chapterSuggestions.filter(s => s !== suggestion)
+                            : [...chapterSuggestions, suggestion];
+                          setChapterSuggestions(next);
+                          setTopic(next.join(", "));
+                          setStartError("");
+                        }}
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
+                      />
+                      <span>{suggestion}</span>
+                    </label>
+                  ))}
+                </fieldset>
               )}
 
               {/* Tier selector */}

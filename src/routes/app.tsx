@@ -126,8 +126,8 @@ export const Route = createFileRoute("/app")({
 function AuthPromptBanner({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <div className="border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-6 py-2.5">
-      <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-mono">
+    <div className="border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-4 py-1.5">
+      <p className="text-xs text-amber-800 dark:text-amber-200 text-center">
         Sign in to save your interview progress.{" "}
         <a href="/login" className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
           Sign in →

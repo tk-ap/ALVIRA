@@ -1093,7 +1093,7 @@ function AppPage() {
           {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
 
           {/* Topic input */}
-          {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-5"}>
+          {offering && <div className="grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start">
             <div className="space-y-5">
             <div>
               <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
@@ -1251,6 +1251,41 @@ function AppPage() {
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">workflows.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you work</span></div>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your processes, daily routines, tools, and recurring workflows. Helps AI understand your operational context.</p>
                     <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “My daily routines, habits, and personal workflows”; “Our cross-department workflows and vendor relationships”</p>
+                  </div>
+                </div>
+              </aside>
+            )}
+
+            {offering === "meos" && (
+              <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
+                <div className="mb-5">
+                  <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">&lt;output-files /&gt;</span>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Eight focused files form your integrated personal operating system.</p>
+                </div>
+                <div className="space-y-5">
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">portrait.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Your integrated portrait</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">A cohesive narrative of who you are right now — your current chapter, values, desired outcomes, and what drives you.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">purpose-statements.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Personal &amp; professional purpose</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Clear articulations of what you're here to do, both personally and professionally. Gives AI your "why."</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">boundaries.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Your boundaries &amp; non-negotiables</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">What you won't compromise on, your limits, and how you protect your energy and focus.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">decision-compass.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you decide</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your decision-making framework — the questions to ask yourself when facing a crossroad. Your personal compass.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">career-tools.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Career alignment</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Insights about your professional path, strengths, and how your work aligns with your purpose and values.</p>
+                  </div>
+                  <div>
+                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">source-trace.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Where each claim came from</span></div>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Full transparency: which statements came from you directly, which were inferred, and which you self-validated.</p>
                   </div>
                 </div>
               </aside>

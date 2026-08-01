@@ -51,6 +51,7 @@ export function getDb(): Database {
       topic TEXT NOT NULL,
       tier TEXT NOT NULL,
       state_json TEXT NOT NULL,
+      portrait_json TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -60,6 +61,11 @@ export function getDb(): Database {
   `);
 
   // ── Migration: add interview_count to existing users table ──
+  try {
+    db.exec("ALTER TABLE profiles ADD COLUMN portrait_json TEXT");
+  } catch {
+    // Column already exists — safe to ignore
+  }
   try {
     db.exec("ALTER TABLE users ADD COLUMN interview_count INTEGER NOT NULL DEFAULT 0");
   } catch {

@@ -142,9 +142,9 @@ async function requireUser() {
 
 export const saveProfile = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { topic?: string; tier?: string; state?: unknown };
+    const d = data as { topic?: string; tier?: string; state?: unknown; portrait?: unknown };
     if (!d.topic || typeof d.topic !== "string" || !d.tier || !d.state) throw new Error("Topic, tier, and state are required.");
-    return { topic: d.topic.trim(), tier: d.tier, state: d.state };
+    return { topic: d.topic.trim(), tier: d.tier, state: d.state, portrait: d.portrait };
   })
   .handler(async ({ data }) => {
     const user = await requireUser();
@@ -164,9 +164,9 @@ export const saveProfile = createServerFn({ method: "POST" })
     const id = existing?.id ?? crypto.randomUUID();
     d.run(
       existing
-        ? "UPDATE profiles SET tier = ?, state_json = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?"
-        : "INSERT INTO profiles (id, user_id, topic, tier, state_json) VALUES (?, ?, ?, ?, ?)",
-      existing ? [data.tier, JSON.stringify(data.state), id, user.id] : [id, user.id, data.topic, data.tier, JSON.stringify(data.state)],
+        ? "UPDATE profiles SET tier = ?, state_json = ?, portrait_json = COALESCE(?, portrait_json), updated_at = datetime('now') WHERE id = ? AND user_id = ?"
+        : "INSERT INTO profiles (id, user_id, topic, tier, state_json, portrait_json) VALUES (?, ?, ?, ?, ?, ?)",
+      existing ? [data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null, id, user.id] : [id, user.id, data.topic, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null],
     );
     return { id };
   });
@@ -175,6 +175,20 @@ export const listProfiles = createServerFn({ method: "GET" }).handler(async () =
   const user = await requireUser();
   return getDb().query("SELECT id, topic, tier, updated_at FROM profiles WHERE user_id = ? ORDER BY updated_at DESC").all(user.id);
 });
+
+export const getMeosProfiles = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireUser();
+  const rows = getDb().query("SELECT id, topic, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = ? AND (topic LIKE '%MeOS%' OR topic LIKE '%meos%') ORDER BY updated_at DESC").all(user.id) as Array<{ id: string; topic: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
+  return rows.map(row => ({ ...row, state: JSON.parse(row.state_json), portrait: row.portrait_json ? JSON.parse(row.portrait_json) : null }));
+});
+
+export const saveMeosPortrait = createServerFn({ method: "POST" })
+  .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait }))
+  .handler(async ({ data }) => {
+    const user = await requireUser();
+    getDb().run("UPDATE profiles SET portrait_json = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(data.portrait), data.profileId, user.id]);
+    return { success: true };
+  });
 
 export const loadProfile = createServerFn({ method: "POST" })
   .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? "") }))

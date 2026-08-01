@@ -659,6 +659,74 @@ function Home() {
         </div>
       </section>
 
+      {/* --- Continuous value lifecycle --- */}
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-24 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Continuous value</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              Not a one-time profile. A living knowledge system.
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              The interview is just the beginning. ALVIRA's real value is how your knowledge stays current, grows with you, and keeps making every AI interaction better.
+            </p>
+          </div>
+
+          <div className="mt-16">
+            {/* Desktop: horizontal 4-step flow */}
+            <div className="hidden sm:flex sm:items-start sm:justify-center">
+              {[
+                { title: "Interview", desc: "ALVIRA asks adaptive questions to discover your knowledge." },
+                { title: "Compile", desc: "Your answers become structured Markdown files you own." },
+                { title: "Use", desc: "Copy-paste into any AI tool — ChatGPT, Claude, Cursor, and beyond." },
+                { title: "Update", desc: "Return anytime. New interviews build on what you've already captured. Your knowledge stays current." },
+              ].map((step, i) => (
+                <div key={step.title} className="flex items-start">
+                  <div className="flex flex-col items-center text-center w-48 px-2">
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-600 bg-gray-50 dark:border-emerald-500 dark:bg-gray-900 font-mono text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                      {i + 1}
+                    </span>
+                    <h3 className="mt-5 text-lg font-bold text-gray-900 dark:text-gray-100">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{step.desc}</p>
+                  </div>
+                  {i < 3 && (
+                    <div className="flex items-center justify-center pt-8 shrink-0 w-10 sm:w-14" aria-hidden="true">
+                      <div className="h-px w-full bg-gray-300 dark:bg-gray-600 relative">
+                        <div className="absolute -right-0.5 -top-1 w-2.5 h-2.5 border-t-2 border-r-2 border-gray-300 dark:border-gray-600 rotate-45" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile: vertical stack */}
+            <div className="sm:hidden space-y-8">
+              {[
+                { title: "Interview", desc: "ALVIRA asks adaptive questions to discover your knowledge." },
+                { title: "Compile", desc: "Your answers become structured Markdown files you own." },
+                { title: "Use", desc: "Copy-paste into any AI tool — ChatGPT, Claude, Cursor, and beyond." },
+                { title: "Update", desc: "Return anytime. New interviews build on what you've already captured. Your knowledge stays current." },
+              ].map((step, i) => (
+                <div key={step.title} className="flex items-start gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600 bg-gray-50 dark:border-emerald-500 dark:bg-gray-900 font-mono text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{step.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="mt-14 max-w-3xl text-base leading-relaxed text-gray-700 dark:text-gray-300 font-medium">
+            The more you use it, the better your AI gets at working with you.
+          </p>
+        </div>
+      </section>
+
       {/* --- Not sure what to capture? --- */}
       <section className="py-32 px-8 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto max-w-6xl">

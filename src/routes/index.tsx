@@ -484,6 +484,8 @@ function Home() {
 
           <p className="mt-8 font-mono text-xs text-gray-500 dark:text-gray-400">
             // <a href="/app" className="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">Free tier available. Try it first — no credit card required.</a>
+            <span className="mx-2 text-gray-300 dark:text-gray-700">·</span>
+            <a href="/why-alvira" className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">Why upgrade?</a>
           </p>
         </div>
       </section>

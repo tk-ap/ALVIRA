@@ -1065,6 +1065,7 @@ function AppPage() {
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
           <div className="text-center mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">Build your AI profile</h2>
             <p className="text-gray-600 dark:text-gray-400">
               ALVIRA interviews you to capture themes, ideas, voice, and context — then compiles it into structured Markdown knowledge files transferrable between any AI model.
             </p>
@@ -1090,7 +1091,7 @@ function AppPage() {
             <div className="space-y-5">
             <div>
               <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
-                {offering === "meos" ? "What chapter are you in?" : "Knowledge to capture"}
+                {offering === "meos" ? "What chapter are you in?" : "What should your AI know about you?"}
               </label>
               {offering === "meos" && <input
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
@@ -1133,7 +1134,7 @@ function AppPage() {
 
               {/* Tier selector */}
               {offering === "context" && <div>
-              <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-2">Scope</label>
+              <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide mb-2">Scope</label>
                 <div className="grid grid-cols-3 gap-2">
                   {TIERS.map((t) => (
                     <button

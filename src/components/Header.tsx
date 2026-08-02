@@ -11,8 +11,8 @@ interface UserInfo {
 }
 
 const linkClass =
-  "text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors";
-const mobileLinkClass = `${linkClass} flex min-h-11 items-center border-b border-gray-200 dark:border-gray-800`;
+  "text-sm font-medium text-warm-gray hover:text-mineral-dark dark:hover:text-mineral transition-colors";
+const mobileLinkClass = `${linkClass} flex min-h-11 items-center border-b border-warm-gray/20`;
 
 export function Header() {
   const [user, setUser] = useState<UserInfo | null | undefined>(undefined); // undefined = loading
@@ -51,12 +51,12 @@ export function Header() {
   const mobileCtaLabel = user ? "Dashboard" : "Get Started";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/90 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/90">
+    <header className="sticky top-0 z-50 w-full border-b border-warm-gray/20 bg-ink-light/90 backdrop-blur-sm dark:bg-ink/90">
       <div className="mx-auto max-w-4xl px-6 py-3">
         <div className="flex items-center justify-between">
           <a
             href="/"
-            className="font-mono tracking-tight font-bold text-lg text-gray-900 dark:text-gray-100"
+            className="font-mono tracking-tight font-bold text-lg text-mineral-dark dark:text-mineral"
           >
             ALVIRA
           </a>
@@ -72,7 +72,7 @@ export function Header() {
             <a href="/why-alvira" className={linkClass}>
               Why ALVIRA
             </a>
-            <a href="/meos" className="font-mono text-sm text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors">
+            <a href="/meos" className="font-mono text-sm text-human dark:text-human hover:text-human-dark transition-colors">
               MeOS
             </a>
             {user === undefined ? (
@@ -106,7 +106,7 @@ export function Header() {
           <div className="flex items-center gap-2 md:hidden">
             <a
               href={mobileCtaHref}
-              className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-gray-600 underline decoration-gray-300 underline-offset-4 transition-colors hover:text-gray-900 dark:text-gray-400 dark:decoration-gray-600 dark:hover:text-gray-100"
+              className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:decoration-warm-gray/30 dark:hover:text-mineral"
             >
               {mobileCtaLabel}
             </a>
@@ -119,7 +119,7 @@ export function Header() {
                 menuOpen ? "Close navigation menu" : "Open navigation menu"
               }
               aria-controls="mobile-navigation"
-              className="flex min-h-11 min-w-11 items-center justify-center text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+              className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray hover:text-mineral-dark dark:hover:text-mineral"
             >
               <span className="sr-only">
                 {menuOpen ? "Close menu" : "Open menu"}
@@ -137,7 +137,7 @@ export function Header() {
           id="mobile-navigation"
           aria-label="Mobile navigation"
           role="navigation"
-          className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-gray-200/60 dark:border-gray-800/60 md:hidden`}
+          className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-warm-gray/20 md:hidden`}
         >
           <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>
             Interview
@@ -148,7 +148,7 @@ export function Header() {
           <a href="/why-alvira" onClick={closeMenu} className={mobileLinkClass}>
             Why ALVIRA
           </a>
-          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-amber-600 dark:text-amber-400`}>
+          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-human dark:text-human`}>
             MeOS
           </a>
           {user ? (

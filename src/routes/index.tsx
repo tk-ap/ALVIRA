@@ -61,29 +61,29 @@ function Home() {
       {/* ================================================================ */}
       {/* 1. Hero */}
       {/* ================================================================ */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-8 sm:py-16 bg-white dark:bg-gray-950">
+      <section className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-4xl text-center w-full">
           {/* Technical eyebrow */}
           <div className="inline-block mb-6 sm:mb-8">
-            <span className="font-mono text-xs text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-md px-3 py-1.5 tracking-wide">
+            <span className="font-mono text-xs text-system dark:text-system border border-system/30 dark:border-system/40 rounded-md px-3 py-1.5 tracking-wide">
               &lt;personal-ai-knowledge-system /&gt;
             </span>
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08]">
+          <h1 className="text-4xl font-bold tracking-tight text-mineral-dark dark:text-mineral sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08]">
             Build the context
             <br />
             your AI is missing.
           </h1>
 
-          <p className="mt-6 sm:mt-8 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg max-w-2xl mx-auto">
+          <p className="mt-6 sm:mt-8 text-base leading-relaxed text-warm-gray sm:text-lg max-w-2xl mx-auto">
             ALVIRA interviews you to uncover how you think, work, communicate, and decide—then turns that knowledge into a living AI profile you can use across ChatGPT, Claude, Gemini, Cursor, and future AI tools.
           </p>
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <a
               href="/app"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 dark:bg-gray-100 dark:text-gray-900 px-7 py-3.5 text-base font-semibold text-white hover:bg-gray-800 dark:hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 motion-reduce:transition-none transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-mineral-dark dark:bg-mineral text-ink-light dark:text-ink px-7 py-3.5 text-base font-semibold hover:bg-mineral-dark/90 dark:hover:bg-mineral/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system motion-reduce:transition-none transition-colors duration-200"
             >
               Build my AI profile
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
@@ -92,12 +92,12 @@ function Home() {
             </a>
             <a
               href="#how-it-works"
-              className="inline-flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-7 py-3.5 text-base font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 motion-reduce:transition-none transition-colors duration-200"
+              className="inline-flex items-center justify-center rounded-lg border border-warm-gray/30 dark:border-warm-gray/30 px-7 py-3.5 text-base font-semibold text-warm-gray hover:text-mineral-dark dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system motion-reduce:transition-none transition-colors duration-200"
             >
               See how it works
             </a>
           </div>
-          <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-5 font-mono text-xs text-warm-gray/60">
             Free to start · No credit card · Portable Markdown
           </p>
         </div>

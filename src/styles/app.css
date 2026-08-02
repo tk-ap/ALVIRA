@@ -1,15 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
+  /* Typography */
+  --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Backgrounds */
+  --color-ink: #0b0e14;
+  --color-ink-light: #f8f7f5;
+
+  /* Primary text */
+  --color-mineral: #e8e6e1;
+  --color-mineral-dark: #1a1a1a;
+
+  /* Secondary text */
+  --color-warm-gray: #9c9585;
+
+  /* System accent (knowledge, validation, structure) */
+  --color-system: #2d9b8c;
+  --color-system-soft: #e8f5f3;
+  --color-system-dark: #1f7a6d;
+
+  /* Human accent (ambiguity, reflection, insight) */
+  --color-human: #b0886c;
+  --color-human-soft: #faf5f0;
+  --color-human-dark: #8b6548;
 }
 
 @layer base {
   html,
   body {
-    @apply bg-white text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+    @apply bg-ink-light text-mineral-dark antialiased dark:bg-ink dark:text-mineral;
   }
 }

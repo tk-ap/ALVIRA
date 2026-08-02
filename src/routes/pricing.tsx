@@ -7,8 +7,7 @@ export const Route = createFileRoute("/pricing")({
 });
 
 const STRIPE_MONTHLY = "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02";
-// TODO: replace with real annual Stripe payment link once owner creates the product
-const STRIPE_ANNUAL = "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02";
+const STRIPE_ANNUAL = "https://buy.stripe.com/6oUaEX9G21hNfXP43qf7i06";
 
 const freePlan = {
   name: "Free",

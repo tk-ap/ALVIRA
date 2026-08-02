@@ -63,16 +63,16 @@ export function Header() {
 
           {/* Desktop navigation retains the existing horizontal layout. */}
           <div className="hidden items-center gap-5 md:flex">
-            <a href="/why-alvira" className={linkClass}>
-              Why ALVIRA
-            </a>
             <a href="/interview" className={linkClass}>
               Interview
             </a>
             <a href="/pricing" className={linkClass}>
               Pricing
             </a>
-            <a href="/meos" className={linkClass}>
+            <a href="/why-alvira" className={linkClass}>
+              Why ALVIRA
+            </a>
+            <a href="/meos" className="font-mono text-sm text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors">
               MeOS
             </a>
             {user === undefined ? (
@@ -139,16 +139,16 @@ export function Header() {
           role="navigation"
           className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-gray-200/60 dark:border-gray-800/60 md:hidden`}
         >
-          <a href="/why-alvira" onClick={closeMenu} className={mobileLinkClass}>
-            Why ALVIRA
-          </a>
           <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>
             Interview
           </a>
           <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>
             Pricing
           </a>
-          <a href="/meos" onClick={closeMenu} className={mobileLinkClass}>
+          <a href="/why-alvira" onClick={closeMenu} className={mobileLinkClass}>
+            Why ALVIRA
+          </a>
+          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-amber-600 dark:text-amber-400`}>
             MeOS
           </a>
           {user ? (

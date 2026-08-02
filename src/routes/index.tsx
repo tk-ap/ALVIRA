@@ -665,13 +665,8 @@ function Home() {
 
       {/* --- Footer --- */}
       <footer className="bg-gray-950 py-8 px-8 border-t border-gray-800">
-        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-5 w-5 items-center justify-center rounded bg-gray-700 text-white text-[10px] font-mono font-bold">
-              A
-            </span>
-            <span className="font-mono text-sm text-gray-400 tracking-tight">ALVIRA</span>
-          </div>
+        <div className="mx-auto max-w-7xl flex flex-col items-center gap-3">
+          <span className="font-mono text-sm text-gray-400 tracking-tight">ALVIRA</span>
           <p className="font-mono text-xs text-gray-600 tabular-nums">
             &copy; {new Date().getFullYear()}
           </p>

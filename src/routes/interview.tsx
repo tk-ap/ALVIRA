@@ -246,9 +246,6 @@ function InterviewPage() {
                     <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                       {description}
                     </p>
-                    <span className="mt-5 block font-mono text-xs text-emerald-600 dark:text-emerald-400">
-                      validated · ready
-                    </span>
                   </div>
                 ))}
               </div>

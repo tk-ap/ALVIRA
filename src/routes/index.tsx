@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
 import { HeroGraphic } from "~/components/HeroGraphic";
+import { ConversationToKnowledgeGraphic } from "~/components/ConversationToKnowledgeGraphic";
+import { VersionHistoryGraphic } from "~/components/VersionHistoryGraphic";
+import { PortabilityGraphic } from "~/components/PortabilityGraphic";
 import { MeOSCTA } from "~/components/MeOSCTA";
 
 export const Route = createFileRoute("/")({
@@ -194,6 +197,11 @@ function Home() {
             </p>
           </div>
 
+          <div className="mt-12 grid items-center gap-10 border-y border-gray-200 py-8 dark:border-gray-800 lg:grid-cols-[1fr_560px]">
+            <p className="max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Your words are not lost in the chat. ALVIRA compiles the conversation into clear, reusable files your AI can understand.</p>
+            <ConversationToKnowledgeGraphic />
+          </div>
+
           <ol className="mt-16 space-y-10 border-l border-gray-300 pl-6 dark:border-gray-700 sm:ml-4 sm:pl-10">
             {[
               {
@@ -306,6 +314,15 @@ function Home() {
           <p className="mt-4 text-center font-mono text-xs text-gray-500 dark:text-gray-400">
             Sample profile — your results will reflect your unique knowledge.
           </p>
+
+          <div className="mt-16 grid items-center gap-10 border-t border-gray-200 pt-10 dark:border-gray-800 lg:grid-cols-[1fr_560px]">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Living profile</span>
+              <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">Your AI profile grows with you.</h3>
+              <p className="mt-3 max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. Every update is a visible version you control.</p>
+            </div>
+            <VersionHistoryGraphic />
+          </div>
         </div>
       </section>
 
@@ -473,6 +490,15 @@ function Home() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-14 grid items-center gap-10 border-t border-gray-200 pt-10 dark:border-gray-800 lg:grid-cols-[1fr_560px]">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Works everywhere</span>
+              <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">One profile. Every AI tool.</h3>
+              <p className="mt-3 max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Open Markdown keeps your knowledge useful across the tools you already use — and the ones you have not met yet.</p>
+            </div>
+            <PortabilityGraphic />
           </div>
 
           <p className="mt-12 max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">

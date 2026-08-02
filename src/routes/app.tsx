@@ -299,6 +299,33 @@ function AppPage() {
   const hasGaps = gaps.length > 0;
   const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
 
+  // ── Knowledge quality check ──
+  // Warns when compiled files would be too thin to be useful.
+  const qualityWarnings: string[] = [];
+  if (state && graph.length > 0 && offering !== "meos") {
+    let totalChars = 0;
+    let domainsWithContent = 0;
+    for (const domain of graph) {
+      const ds = state.domains[domain.id];
+      if (ds?.answers) {
+        const domainChars = ds.answers.join(" ").length;
+        totalChars += domainChars;
+        if (domainChars >= 30) domainsWithContent++;
+      }
+    }
+    if (domainsWithContent < 3 || totalChars < 200) {
+      if (domainsWithContent === 0) {
+        qualityWarnings.push("You haven't provided enough detail yet — your knowledge files will be nearly empty.");
+      } else if (domainsWithContent < 3) {
+        qualityWarnings.push(`Only ${domainsWithContent} domain${domainsWithContent === 1 ? "" : "s"} with enough detail. Your knowledge files will be very thin.`);
+      }
+      if (totalChars < 200 && domainsWithContent > 0) {
+        qualityWarnings.push("Your answers are quite brief. More detailed responses produce more useful knowledge files that AI tools can actually work with.");
+      }
+    }
+  }
+  const hasQualityWarning = qualityWarnings.length > 0;
+
   // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1019,6 +1046,23 @@ function AppPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Knowledge quality warning — shown when answers are too thin to produce useful files */}
+              {hasQualityWarning && !waiting && (
+                <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-4 py-3">
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                    ⚠ Your knowledge files may not be very useful yet
+                  </p>
+                  <ul className="text-sm text-amber-700 dark:text-amber-300 list-disc list-inside space-y-0.5">
+                    {qualityWarnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                    You can still generate now, but consider continuing the interview with more detailed responses for better results.
+                  </p>
+                </div>
+              )}
 
               {/* Interview complete banner */}
               {!hasGaps && !waiting && (

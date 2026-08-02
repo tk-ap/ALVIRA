@@ -610,10 +610,10 @@ function Home() {
       {/* ================================================================ */}
       {/* 8. MeOS expansion card (cross-sell) */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-system-soft/40 px-6 py-28 dark:border-gray-800 dark:bg-system-dark/10 sm:px-8 sm:py-36">
+      <section className="border-t border-human/30 bg-human-soft/70 px-6 py-28 dark:border-human-dark/40 dark:bg-human-dark/10 sm:px-8 sm:py-36">
         <div className="mx-auto max-w-6xl text-center">
           <div className="mx-auto max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Go deeper</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-human-dark dark:text-human">Go deeper</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Beyond the AI profile.
             </h2>

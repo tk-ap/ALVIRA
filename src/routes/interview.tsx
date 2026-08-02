@@ -143,12 +143,87 @@ function InterviewPage() {
           </div>
         </section>
 
+        <section className="px-6 py-20 sm:px-8 sm:py-28">
+          <div className="mx-auto max-w-6xl">
+            <div className="max-w-2xl">
+              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                03 / Good answers
+              </span>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                Give your AI something to work with.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-400">
+                The more real detail you share, the more useful your profile becomes.
+                A single sentence with specifics beats a one-word answer every time.
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-6 lg:grid-cols-2">
+              {/* Bad examples */}
+              <div className="rounded-lg border border-red-200 bg-red-50/60 p-6 dark:border-red-800 dark:bg-red-950/20">
+                <p className="font-mono text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+                  Not very helpful
+                </p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-300">
+                  Too short for your AI to learn anything real.
+                </p>
+                <div className="mt-5 space-y-4">
+                  {[
+                    ["Q: How do you make decisions?", "A: I think about it."],
+                    ["Q: What matters most in your work?", "A: Getting it done."],
+                    ["Q: How do you prefer to communicate?", "A: Directly."],
+                    ["Q: What gives you energy?", "A: idk."],
+                  ].map(([q, a]) => (
+                    <div key={q} className="rounded border border-red-200 bg-white p-3 dark:border-red-800 dark:bg-gray-950">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{q}</p>
+                      <p className="mt-1 text-sm text-red-700 dark:text-red-300 line-through">{a}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Good examples */}
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-6 dark:border-emerald-800 dark:bg-emerald-950/20">
+                <p className="font-mono text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                  Much more useful
+                </p>
+                <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-300">
+                  Specific, honest, and personal — your AI can actually use this.
+                </p>
+                <div className="mt-5 space-y-4">
+                  {[
+                    ["Q: How do you make decisions?", "A: I list the trade-offs first, then sit with it overnight if it's reversible. For bigger calls, I talk to two or three people I trust before committing."],
+                    ["Q: What matters most in your work?", "A: Clarity of expectations and autonomy in how I get there. I do my best work when I know the destination but own the route."],
+                    ["Q: How do you prefer to communicate?", "A: Writing over meetings when I can. I like time to think before responding — especially if the topic is new or sensitive."],
+                    ["Q: What gives you energy?", "A: Solving a hard problem with someone who is just as invested. Also: a clean slate in the morning and a clear win before lunch."],
+                  ].map(([q, a]) => (
+                    <div key={q} className="rounded border border-emerald-200 bg-white p-3 dark:border-emerald-800 dark:bg-gray-950">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{q}</p>
+                      <p className="mt-1 text-sm text-gray-800 dark:text-gray-200">{a}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                A good rule of thumb
+              </p>
+              <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                Answer like you are explaining yourself to a thoughtful colleague — not filling out a form.
+                If your answer is shorter than this tip, it is probably too short.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="bg-gray-50 px-6 py-20 dark:bg-gray-900 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-start">
               <div>
                 <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                  03 / Your output
+                  04 / Your output
                 </span>
                 <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                   A profile you can inspect.
@@ -185,7 +260,7 @@ function InterviewPage() {
           <div className="mx-auto max-w-6xl">
             <div className="max-w-2xl">
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                04 / Portable by design
+                05 / Portable by design
               </span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                 One profile. Every AI tool.

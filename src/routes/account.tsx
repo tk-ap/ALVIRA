@@ -18,7 +18,7 @@ interface Limits {
 const tierBadgeClass: Record<string, string> = {
   free: "border-gray-400 dark:border-gray-500 text-gray-500 dark:text-gray-400",
   pro: "border-emerald-500 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400",
-  lifetime: "border-amber-500 dark:border-amber-400 text-amber-600 dark:text-amber-400",
+  lifetime: "border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-400",
 };
 
 const STRIPE_LINKS = {
@@ -86,7 +86,7 @@ function AccountPage() {
     return (
       <div className="min-h-dvh flex flex-col">
         <Header />
-        <main className="flex-1 px-6 py-10">
+        <main id="main-content" className="flex-1 px-6 py-10">
           <div className="mx-auto max-w-2xl">
             <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Loading...</p>
           </div>
@@ -98,7 +98,7 @@ function AccountPage() {
   return (
     <div className="min-h-dvh flex flex-col">
       <Header />
-      <main className="flex-1 px-6 py-10">
+      <main id="main-content" className="flex-1 px-6 py-10">
         <div className="mx-auto max-w-2xl space-y-8">
           {/* Header */}
           <div>
@@ -196,7 +196,7 @@ function AccountPage() {
                           href={`${STRIPE_LINKS.lifetime}?prefilled_email=${encodeURIComponent(limits.email)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block w-full text-center rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2.5 font-mono text-sm font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
+                          className="block w-full text-center rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2.5 font-mono text-sm font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
                         >
                           Go Lifetime
                         </a>
@@ -216,7 +216,7 @@ function AccountPage() {
                         >
                           {refreshMsg || "Refresh account"}
                         </button>
-                        <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">or</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">or</span>
                         <button
                           type="button"
                           onClick={() => handleUpgrade("pro")}
@@ -229,7 +229,7 @@ function AccountPage() {
                           type="button"
                           onClick={() => handleUpgrade("lifetime")}
                           disabled={upgrading}
-                          className="rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2 font-mono text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors disabled:opacity-50"
+                          className="rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2 font-mono text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors disabled:opacity-50"
                         >
                           {upgrading ? "..." : "Self-report Lifetime purchase"}
                         </button>

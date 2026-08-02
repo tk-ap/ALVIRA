@@ -181,7 +181,7 @@ function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; e
             href={STRIPE_LINKS.lifetime + prefilled}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-1.5 font-mono text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
+            className="rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-1.5 font-mono text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
           >
             Go Lifetime
           </a>
@@ -222,7 +222,7 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
             href={STRIPE_LINKS.lifetime + prefilled}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full text-center rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2.5 font-mono text-sm font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
+            className="block w-full text-center rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2.5 font-mono text-sm font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
           >
             Go Lifetime — $199 once
           </a>
@@ -827,10 +827,10 @@ function AppPage() {
         <Header />
         <AuthPromptBanner show={authUser === null} />
         {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
-        <main className="flex-1 flex items-center justify-center px-6">
+        <main id="main-content" className="flex-1 flex items-center justify-center px-6">
           <div className="text-center max-w-md">
             <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30 mx-auto mb-6">
-              <svg className="h-8 w-8 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <svg className="h-8 w-8 text-amber-700 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
               </svg>
             </div>
@@ -863,7 +863,7 @@ function AppPage() {
         <AuthPromptBanner show={authUser === null} />
         {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
-        <main className="flex-1 py-8 px-6">
+        <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -947,7 +947,7 @@ function AppPage() {
         <AuthPromptBanner show={authUser === null} />
         {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
-        <main className="flex-1 flex flex-col px-6">
+        <main id="main-content" className="flex-1 flex flex-col px-6">
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
@@ -1019,7 +1019,7 @@ function AppPage() {
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
               {/* Generate button — always available */}
               <div className="mb-3 flex items-center justify-between">
-                <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
+                <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
                   {totalDomains > 0 ? Math.round((coveredCount / totalDomains) * 100) : 0}% complete
                 </span>
                 <div className="flex gap-2">
@@ -1039,7 +1039,7 @@ function AppPage() {
                     className={`font-mono text-xs transition-colors ${
                       state && state.history.length >= 2
                         ? "text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300"
-                        : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                        : "text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     {compiling ? "Compiling..." : "Generate knowledge files →"}
@@ -1058,7 +1058,7 @@ function AppPage() {
                       <li key={i}>{w}</li>
                     ))}
                   </ul>
-                  <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
                     You can still generate now, but consider continuing the interview with more detailed responses for better results.
                   </p>
                 </div>
@@ -1139,7 +1139,7 @@ function AppPage() {
       <AuthPromptBanner show={authUser === null} />
       {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
       {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
         <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
           <div className="text-center mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">

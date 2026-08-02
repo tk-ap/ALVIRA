@@ -50,7 +50,7 @@ function SignupPage() {
     <div className="min-h-dvh flex flex-col">
       <Header />
 
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-10">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">

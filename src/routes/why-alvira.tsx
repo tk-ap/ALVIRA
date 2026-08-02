@@ -41,7 +41,7 @@ function WhyAlviraPage() {
   return (
     <div className="min-h-dvh flex flex-col bg-white dark:bg-gray-950">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <section className="px-6 py-24 sm:px-8 sm:py-32 border-b border-gray-100 dark:border-gray-800">
           <div className="mx-auto max-w-4xl text-center">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">The case for context</span>

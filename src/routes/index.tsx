@@ -65,8 +65,8 @@ function Home() {
       {/* ================================================================ */}
       {/* 1. Hero */}
       {/* ================================================================ */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-8 sm:py-16">
-        <div className="mx-auto max-w-4xl text-center w-full">
+      <section className="flex-1 flex flex-col items-center justify-center px-6 py-20 sm:px-8 sm:py-28 lg:py-32">
+        <div className="mx-auto max-w-5xl text-center w-full">
           {/* Technical eyebrow */}
           <div className="inline-block mb-6 sm:mb-8">
             <span className="font-mono text-xs text-system dark:text-system border border-system/30 dark:border-system/40 rounded-md px-3 py-1.5 tracking-wide">
@@ -75,11 +75,11 @@ function Home() {
           </div>
 
           {/* Living context map — fragments of human knowledge resolving into domains */}
-          <div className="mx-auto mt-8 mb-12 w-full max-w-lg">
+          <div className="mx-auto mt-10 mb-14 w-full max-w-xl">
             <HeroGraphic />
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-mineral-dark dark:text-mineral sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08]">
+          <h1 className="text-4xl font-bold tracking-tight text-mineral-dark dark:text-mineral sm:text-5xl md:text-6xl lg:text-7xl leading-[1.02]">
             Build the context
             <br />
             your AI is missing.
@@ -115,9 +115,9 @@ function Home() {
       {/* ================================================================ */}
       {/* 2. Problem / benefit summary */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+      <section className="border-t border-gray-100 bg-white px-6 py-28 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-36">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl lg:ml-[8%]">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Why ALVIRA</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Stop starting from scratch with AI.
@@ -127,7 +127,7 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-16 grid gap-x-12 gap-y-12 md:grid-cols-2">
+          <div className="mt-20 grid gap-x-16 gap-y-14 sm:grid-cols-2 lg:ml-[8%] lg:max-w-5xl">
             {[
               ["Spend less time explaining yourself", "Stop repeatedly typing your preferences, background, goals, working style, and instructions into every new conversation."],
               ["Get answers that fit you", "Give AI the context it needs to tailor its writing, recommendations, plans, and decisions to your actual needs."],
@@ -146,7 +146,7 @@ function Home() {
             ))}
           </div>
 
-          <div className="mt-20 overflow-x-auto border border-gray-200 dark:border-gray-800">
+          <div className="mt-24 overflow-x-auto border-y border-gray-200 dark:border-gray-800">
             <table className="w-full min-w-[30rem] border-collapse text-left">
               <thead>
                 <tr className="font-mono text-xs uppercase tracking-wide">
@@ -187,9 +187,9 @@ function Home() {
       {/* ================================================================ */}
       {/* 3. Interactive interview example (live demo) */}
       {/* ================================================================ */}
-      <section id="how-it-works" className="border-t border-gray-100 bg-gray-50 px-6 py-24 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-32">
+      <section id="how-it-works" className="border-t border-gray-100 bg-gray-50 px-6 py-28 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-36">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl lg:ml-[8%]">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How it works</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">See ALVIRA in action</h2>
             <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
@@ -197,12 +197,12 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-12 grid items-center gap-10 border-y border-gray-200 py-8 dark:border-gray-800 lg:grid-cols-[1fr_560px]">
+          <div className="mt-20 grid items-center gap-12 border-y border-gray-200 py-12 dark:border-gray-800 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:pl-[8%]">
             <p className="max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Your words are not lost in the chat. ALVIRA compiles the conversation into clear, reusable files your AI can understand.</p>
             <ConversationToKnowledgeGraphic />
           </div>
 
-          <ol className="mt-16 space-y-10 border-l border-gray-300 pl-6 dark:border-gray-700 sm:ml-4 sm:pl-10">
+          <ol className="mt-24 max-w-4xl space-y-14 border-l border-gray-300 pl-6 dark:border-gray-700 sm:ml-[12%] sm:pl-12">
             {[
               {
                 title: "ALVIRA asks",
@@ -235,7 +235,7 @@ function Home() {
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{step.title}</h3>
                 <p className="mt-2 max-w-3xl text-base leading-relaxed text-gray-600 dark:text-gray-400">{step.body}</p>
                 {step.quote && (
-                  <p className="mt-4 max-w-3xl border-l-2 border-emerald-500 bg-white px-4 py-3 font-mono text-sm leading-relaxed text-gray-700 shadow-sm dark:bg-gray-950 dark:text-gray-300">
+                  <p className="mt-4 max-w-3xl border-l-2 border-emerald-500 pl-4 py-3 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                     {step.quote}
                   </p>
                 )}
@@ -243,16 +243,16 @@ function Home() {
             ))}
           </ol>
 
-          <div className="mt-20">
+          <div className="mt-24 lg:ml-[8%]">
             <h3 className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">The difference in practice</h3>
-            <div className="mt-5 grid gap-5 md:grid-cols-2">
-              <div className="border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-950">
+            <div className="mt-5 grid gap-10 border-y border-gray-200 py-8 md:grid-cols-2 dark:border-gray-700">
+              <div className="border-l border-gray-300 pl-5 dark:border-gray-700">
                 <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Without your ALVIRA profile</p>
                 <blockquote className="mt-5 text-base leading-relaxed text-gray-700 dark:text-gray-300">
                   "To make better decisions, try listing pros and cons. Consider asking a mentor for advice. Trust your gut."
                 </blockquote>
               </div>
-              <div className="border border-emerald-600 bg-emerald-50 p-6 dark:border-emerald-500 dark:bg-emerald-950/40">
+              <div className="border-l-2 border-emerald-600 pl-5 dark:border-emerald-500">
                 <p className="font-mono text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-300">With your ALVIRA profile</p>
                 <blockquote className="mt-5 text-base leading-relaxed text-gray-800 dark:text-gray-200">
                   "Since you've said speed is your priority for reversible decisions, I'll give you a quick recommendation: option A based on what you've shared. For the bigger call — given your preference for consulting two trusted people — here are the specific questions worth running by them before you commit."
@@ -269,7 +269,7 @@ function Home() {
       {/* ================================================================ */}
       {/* 4. Example profile artifact */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+      <section className="border-t border-gray-100 bg-white px-6 py-28 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-36">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Example profile</span>
@@ -281,7 +281,7 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-12 overflow-hidden rounded-xl border border-gray-200 bg-gray-950 shadow-sm dark:border-gray-700">
+          <div className="mt-16 overflow-hidden border-y border-gray-200 bg-gray-950 dark:border-gray-700">
             <div className="flex overflow-x-auto border-b border-gray-800 bg-gray-900" role="tablist" aria-label="Example profile files">
               {profilePreviews.map((preview) => {
                 const isActive = preview.filename === activePreview;
@@ -315,11 +315,11 @@ function Home() {
             Sample profile — your results will reflect your unique knowledge.
           </p>
 
-          <div className="mt-16 grid items-center gap-10 border-t border-gray-200 pt-10 dark:border-gray-800 lg:grid-cols-[1fr_560px]">
+          <div className="mt-24 grid items-center gap-14 border-t border-gray-200 pt-12 dark:border-gray-800 lg:ml-[8%] lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Living profile</span>
               <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">Your AI profile grows with you.</h3>
-              <p className="mt-3 max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. Every update is a visible version you control.</p>
+              <p className="mt-3 max-w-xl text-center text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. Every update is a visible version you control.</p>
             </div>
             <VersionHistoryGraphic />
           </div>
@@ -329,9 +329,9 @@ function Home() {
       {/* ================================================================ */}
       {/* 5. Portability comparison */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-gray-50 px-6 py-24 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-32">
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-28 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-36">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl lg:ml-[8%]">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Comparison</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Your knowledge, not their platform
@@ -342,7 +342,7 @@ function Home() {
           </div>
 
           {/* --- Desktop table --- */}
-          <div className="mt-14 hidden sm:block overflow-x-auto">
+          <div className="mt-20 hidden sm:block overflow-x-auto lg:mx-[4%]">
             <table className="w-full min-w-[48rem] border-collapse text-left">
               <thead>
                 <tr className="border-b-2 border-gray-200 dark:border-gray-700">
@@ -492,13 +492,13 @@ function Home() {
             ))}
           </div>
 
-          <div className="mt-14 grid items-center gap-10 border-t border-gray-200 pt-10 dark:border-gray-800 lg:grid-cols-[1fr_560px]">
+          <div className="mt-24 flex flex-col items-center border-t border-gray-200 pt-14 dark:border-gray-800">
             <div>
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Works everywhere</span>
               <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">One profile. Every AI tool.</h3>
               <p className="mt-3 max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Open Markdown keeps your knowledge useful across the tools you already use — and the ones you have not met yet.</p>
             </div>
-            <PortabilityGraphic />
+            <div className="mt-10 w-full max-w-3xl"><PortabilityGraphic /></div>
           </div>
 
           <p className="mt-12 max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">
@@ -523,8 +523,8 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-12 max-w-md">
-            <div className="rounded-xl border-2 border-emerald-500/30 bg-emerald-50/40 p-6 shadow-sm dark:border-emerald-400/20 dark:bg-emerald-950/20 sm:p-8">
+          <div className="mt-14 max-w-2xl border-y border-emerald-500/40 py-8 dark:border-emerald-400/30 sm:py-10">
+            <div>
               <h3 className="font-mono text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">$0</span>
@@ -610,7 +610,7 @@ function Home() {
       {/* ================================================================ */}
       {/* 8. MeOS expansion card (cross-sell) */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-gray-50 px-6 py-24 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-32">
+      <section className="border-t border-gray-100 bg-system-soft/40 px-6 py-28 dark:border-gray-800 dark:bg-system-dark/10 sm:px-8 sm:py-36">
         <div className="mx-auto max-w-6xl text-center">
           <div className="mx-auto max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Go deeper</span>

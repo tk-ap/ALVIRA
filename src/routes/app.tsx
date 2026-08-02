@@ -1039,6 +1039,22 @@ function AppPage() {
                 </div>
               )}
 
+              {/* Signup reminder — shown when interview is complete but user isn't signed in */}
+              {!hasGaps && !waiting && authUser === null && (
+                <div className="mb-4 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                    <strong>Your interview is complete.</strong>{" "}
+                    Create a free account to save your results and link them to your profile — it only takes a minute.
+                  </p>
+                  <a
+                    href="/signup"
+                    className="mt-2 inline-block rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors"
+                  >
+                    Create account →
+                  </a>
+                </div>
+              )}
+
               {/* Text input */}
               {hasGaps && (
                 <div className="flex gap-2">

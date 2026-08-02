@@ -1,4 +1,6 @@
 // ── Auth server functions ──
+import { appendFileSync } from "node:fs";
+import { join } from "node:path";
 import { createServerFn } from "@tanstack/react-start";
 import { deleteCookie, getCookie } from "@tanstack/react-start/server";
 import {
@@ -59,6 +61,10 @@ export const signup = createServerFn({ method: "POST" })
     // Create user
     const userId = crypto.randomUUID();
     const user = createUser(userId, data.email, passwordHash);
+
+    // Queue welcome email (file-based bridge to email agent)
+    const queuePath = join("/home", "team", "shared", "pending-welcome-emails.txt");
+    appendFileSync(queuePath, JSON.stringify({ email: data.email, timestamp: new Date().toISOString() }) + "\n");
 
     // Create session
     const token = crypto.randomUUID();

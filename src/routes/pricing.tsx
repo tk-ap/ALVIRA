@@ -85,7 +85,7 @@ function Pricing() {
   return (
     <div className="min-h-dvh bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <Header />
-      <main>
+      <main id="main-content">
         <section className="px-6 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-3xl">
@@ -100,7 +100,7 @@ function Pricing() {
               </p>
               <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">
                 For MeOS pricing, see the{" "}
-                <a href="/meos" className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
+                <a href="/meos" className="text-emerald-700 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400">
                   MeOS page
                 </a>
                 .
@@ -109,10 +109,13 @@ function Pricing() {
 
             {/* Billing toggle */}
             <div className="mt-10 flex justify-center">
-              <div className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
+              <div role="radiogroup" aria-label="Billing period" className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
                 <button
+                  type="button"
                   onClick={() => setBilling("monthly")}
-                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors ${
+                  role="radio"
+                  aria-checked={billing === "monthly"}
+                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 ${
                     billing === "monthly"
                       ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -121,8 +124,11 @@ function Pricing() {
                   Monthly
                 </button>
                 <button
+                  type="button"
                   onClick={() => setBilling("annual")}
-                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors ${
+                  role="radio"
+                  aria-checked={billing === "annual"}
+                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 ${
                     billing === "annual"
                       ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -144,7 +150,7 @@ function Pricing() {
                   }`}
                 >
                   {plan.featured && (
-                    <span className="absolute -top-3 left-6 bg-emerald-600 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-emerald-500 dark:text-gray-950">
+                    <span className="absolute -top-3 left-6 bg-emerald-700 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-emerald-600 dark:text-gray-950">
                       Most popular
                     </span>
                   )}

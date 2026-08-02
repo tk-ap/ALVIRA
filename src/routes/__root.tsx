@@ -53,7 +53,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="min-h-11 min-w-11 rounded-lg p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+      className="min-h-11 min-w-11 rounded-lg p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
     >
       {dark ? (
@@ -76,6 +76,12 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-5 focus:py-3 focus:font-mono focus:text-sm focus:font-semibold focus:text-mineral focus:shadow-xl dark:focus:bg-ink-light dark:focus:text-mineral-dark"
+        >
+          Skip to main content
+        </a>
         {children}
         <Scripts />
       </body>

@@ -62,6 +62,8 @@ function Home() {
       {/* --- Header --- */}
       <Header />
 
+      <main id="main-content" className="flex-1 flex flex-col">
+
       {/* ================================================================ */}
       {/* 1. Hero */}
       {/* ================================================================ */}
@@ -69,7 +71,7 @@ function Home() {
         <div className="mx-auto max-w-5xl text-center w-full">
           {/* Technical eyebrow */}
           <div className="inline-block mb-6 sm:mb-8">
-            <span className="font-mono text-xs text-system dark:text-system border border-system/30 dark:border-system/40 rounded-md px-3 py-1.5 tracking-wide">
+            <span className="font-mono text-xs text-system-dark dark:text-system border border-system/30 dark:border-system/40 rounded-md px-3 py-1.5 tracking-wide">
               &lt;personal-ai-knowledge-system /&gt;
             </span>
           </div>
@@ -85,7 +87,7 @@ function Home() {
             your AI is missing.
           </h1>
 
-          <p className="mt-6 sm:mt-8 text-base leading-relaxed text-warm-gray sm:text-lg max-w-2xl mx-auto">
+          <p className="mt-6 sm:mt-8 text-base leading-relaxed text-warm-gray-dark dark:text-warm-gray sm:text-lg max-w-2xl mx-auto">
             ALVIRA interviews you to uncover how you think, work, communicate, and decide—then turns that knowledge into a living AI profile you can use across ChatGPT, Claude, Gemini, Cursor, and future AI tools.
           </p>
 
@@ -101,12 +103,12 @@ function Home() {
             </a>
             <a
               href="#how-it-works"
-              className="inline-flex items-center justify-center rounded-lg border border-warm-gray/30 dark:border-warm-gray/30 px-7 py-3.5 text-base font-semibold text-warm-gray hover:text-mineral-dark dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system motion-reduce:transition-none transition-colors duration-200"
+              className="inline-flex items-center justify-center rounded-lg border border-warm-gray/30 dark:border-warm-gray/30 px-7 py-3.5 text-base font-semibold text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system motion-reduce:transition-none transition-colors duration-200"
             >
               See how it works
             </a>
           </div>
-          <p className="mt-5 font-mono text-xs text-warm-gray/60">
+          <p className="mt-5 font-mono text-xs text-warm-gray-dark dark:text-warm-gray">
             Free to start · No credit card · Portable Markdown
           </p>
         </div>
@@ -290,7 +292,9 @@ function Home() {
                     key={preview.filename}
                     type="button"
                     role="tab"
+                    id={`profile-tab-${preview.filename}`}
                     aria-selected={isActive}
+                    aria-controls="profile-preview-panel"
                     onClick={() => setActivePreview(preview.filename)}
                     className={`shrink-0 border-r border-gray-800 px-5 py-3 font-mono text-xs transition-colors ${
                       isActive ? "bg-gray-950 text-emerald-400" : "text-gray-500 hover:bg-gray-800 hover:text-gray-300"
@@ -301,8 +305,8 @@ function Home() {
                 );
               })}
             </div>
-            <div className="min-h-[16rem] p-5 sm:p-8" role="tabpanel" aria-label={profilePreviews.find((p) => p.filename === activePreview)?.filename}>
-              <div className="mb-5 flex items-center gap-2 font-mono text-xs text-gray-500">
+            <div className="min-h-[16rem] p-5 sm:p-8" id="profile-preview-panel" role="tabpanel" aria-labelledby={`profile-tab-${activePreview}`}>
+              <div className="mb-5 flex items-center gap-2 font-mono text-xs text-gray-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
                 {profilePreviews.find((p) => p.filename === activePreview)?.label}
               </div>
@@ -556,7 +560,7 @@ function Home() {
                 </svg>
               </a>
               <p className="mt-3 text-center">
-                <a href="/pricing" className="font-mono text-xs text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors">
+                <a href="/pricing" className="font-mono text-xs text-gray-500 hover:text-emerald-700 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400">
                   Compare plans →
                 </a>
               </p>
@@ -670,14 +674,15 @@ function Home() {
                   <button
                     type="button"
                     aria-expanded={isOpen}
+                    aria-controls={`faq-${index}`}
                     onClick={() => setActiveFaq(isOpen ? null : index)}
-                    className="flex w-full items-center justify-between gap-6 py-5 text-left text-base font-semibold text-gray-900 transition-colors hover:text-emerald-700 dark:text-gray-100 dark:hover:text-emerald-400 sm:text-lg"
+                    className="flex w-full items-center justify-between gap-6 py-5 text-left text-base font-semibold text-gray-900 transition-colors hover:text-emerald-700 dark:text-gray-100 dark:hover:text-emerald-400 sm:text-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400"
                   >
                     <span>{item.question}</span>
                     <span className="shrink-0 font-mono text-xl font-normal text-emerald-700 dark:text-emerald-400" aria-hidden="true">{isOpen ? "−" : "+"}</span>
                   </button>
                   {isOpen && (
-                    <p className="max-w-2xl pb-5 pr-10 text-base leading-relaxed text-gray-600 dark:text-gray-400">{item.answer}</p>
+                    <p id={`faq-${index}`} className="max-w-2xl pb-5 pr-10 text-base leading-relaxed text-gray-600 dark:text-gray-400">{item.answer}</p>
                   )}
                 </div>
               );
@@ -695,11 +700,13 @@ function Home() {
         </div>
       </section>
 
+      </main>
+
       {/* --- Footer --- */}
       <footer className="bg-gray-950 py-8 px-8 border-t border-gray-800">
         <div className="mx-auto max-w-7xl flex flex-col items-center gap-3">
           <span className="font-mono text-sm text-gray-400 tracking-tight">ALVIRA</span>
-          <p className="font-mono text-xs text-gray-600 tabular-nums">
+          <p className="font-mono text-xs text-gray-400 tabular-nums">
             &copy; {new Date().getFullYear()}
           </p>
         </div>

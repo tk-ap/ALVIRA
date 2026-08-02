@@ -11,7 +11,7 @@ interface UserInfo {
 }
 
 const linkClass =
-  "text-sm font-medium text-warm-gray hover:text-mineral-dark dark:hover:text-mineral transition-colors";
+  "text-sm font-medium text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system";
 const mobileLinkClass = `${linkClass} flex min-h-11 items-center border-b border-warm-gray/20`;
 
 export function Header() {
@@ -56,7 +56,7 @@ export function Header() {
         <div className="flex items-center justify-between">
           <a
             href="/"
-            className="font-mono tracking-tight font-bold text-lg text-mineral-dark dark:text-mineral"
+            className="font-mono tracking-tight font-bold text-lg text-mineral-dark dark:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
           >
             ALVIRA
           </a>
@@ -72,7 +72,7 @@ export function Header() {
             <a href="/why-alvira" className={linkClass}>
               Why ALVIRA
             </a>
-            <a href="/meos" className="font-mono text-sm text-human dark:text-human hover:text-human-dark transition-colors">
+            <a href="/meos" className="font-mono text-sm text-human-dark hover:text-human dark:text-human dark:hover:text-human-dark transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
               MeOS
             </a>
             {user === undefined ? (
@@ -106,7 +106,7 @@ export function Header() {
           <div className="flex items-center gap-2 md:hidden">
             <a
               href={mobileCtaHref}
-              className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:decoration-warm-gray/30 dark:hover:text-mineral"
+              className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
             >
               {mobileCtaLabel}
             </a>
@@ -119,7 +119,7 @@ export function Header() {
                 menuOpen ? "Close navigation menu" : "Open navigation menu"
               }
               aria-controls="mobile-navigation"
-              className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray hover:text-mineral-dark dark:hover:text-mineral"
+              className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
             >
               <span className="sr-only">
                 {menuOpen ? "Close menu" : "Open menu"}
@@ -148,7 +148,7 @@ export function Header() {
           <a href="/why-alvira" onClick={closeMenu} className={mobileLinkClass}>
             Why ALVIRA
           </a>
-          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-human dark:text-human`}>
+          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-human-dark dark:text-human`}>
             MeOS
           </a>
           {user ? (

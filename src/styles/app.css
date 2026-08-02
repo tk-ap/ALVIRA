@@ -18,6 +18,8 @@
 
   /* Secondary text */
   --color-warm-gray: #9c9585;
+  /* Darker warm gray for light backgrounds (WCAG AA: 5.2:1 on ink-light) */
+  --color-warm-gray-dark: #6d685c;
 
   /* System accent (knowledge, validation, structure) */
   --color-system: #2d9b8c;
@@ -34,5 +36,28 @@
   html,
   body {
     @apply bg-ink-light text-mineral-dark antialiased dark:bg-ink dark:text-mineral;
+  }
+
+  /* Visible focus indicator for every keyboard-focusable element.
+     Elements with explicit focus-visible:* utilities or focus rings override
+     this via the utilities layer. */
+  a:focus-visible,
+  button:focus-visible,
+  summary:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--color-system-dark);
+    outline-offset: 2px;
+  }
+  .dark a:focus-visible,
+  .dark button:focus-visible,
+  .dark summary:focus-visible,
+  .dark select:focus-visible,
+  .dark textarea:focus-visible,
+  .dark [role="button"]:focus-visible,
+  .dark [tabindex]:focus-visible {
+    outline-color: var(--color-system);
   }
 }

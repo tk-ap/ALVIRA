@@ -53,7 +53,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+      className="min-h-11 min-w-11 rounded-lg p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
     >
       {dark ? (

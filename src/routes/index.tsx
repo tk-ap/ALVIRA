@@ -579,8 +579,8 @@ function Home() {
       {/* 8. MeOS expansion card (cross-sell) */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-gray-50 px-6 py-24 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-32">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
+        <div className="mx-auto max-w-6xl text-center">
+          <div className="mx-auto max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Go deeper</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Beyond the AI profile.
@@ -589,7 +589,7 @@ function Home() {
               ALVIRA helps AI understand you. MeOS takes it further — turning what ALVIRA discovers into a personal operating system for decisions, direction, work, and daily life.
             </p>
           </div>
-          <div className="mt-10 max-w-2xl">
+          <div className="mt-10 flex justify-center">
             <MeOSCTA placement="homepage" variant="default" />
           </div>
         </div>

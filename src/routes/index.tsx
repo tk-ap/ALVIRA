@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
+import { HeroGraphic } from "~/components/HeroGraphic";
 import { MeOSCTA } from "~/components/MeOSCTA";
 
 export const Route = createFileRoute("/")({
@@ -68,6 +69,11 @@ function Home() {
             <span className="font-mono text-xs text-system dark:text-system border border-system/30 dark:border-system/40 rounded-md px-3 py-1.5 tracking-wide">
               &lt;personal-ai-knowledge-system /&gt;
             </span>
+          </div>
+
+          {/* Living context map — fragments of human knowledge resolving into domains */}
+          <div className="mx-auto mt-8 mb-12 w-full max-w-lg">
+            <HeroGraphic />
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight text-mineral-dark dark:text-mineral sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08]">

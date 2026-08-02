@@ -31,9 +31,14 @@ const lifetimePlan = {
   cadence: "one-time",
   description: "A permanent home for your personal AI context.",
   features: [
-    "Everything in Pro",
-    "Permanent profile — no subscription",
-    "Priority access to new features",
+    "One personal AI profile",
+    "All 19 personal knowledge domains",
+    "Up to 12 guided interviews in the first year",
+    "Four AI-assisted refresh interviews per year after year one",
+    "Unlimited manual edits",
+    "Markdown and JSON exports",
+    "Up to 50 saved versions",
+    "Standard support",
   ],
   cta: "Go Lifetime",
   href: "https://buy.stripe.com/cNi6oH7xUbWr5jb2Zmf7i03",
@@ -156,6 +161,11 @@ function Pricing() {
                       </span>
                     )}
                     <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
+                    {plan.name === "Lifetime" && (
+                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                        Lifetime access applies to the profile features included with this plan for as long as ALVIRA continues to offer the AI Context Profile service. Your exported profile remains yours permanently.
+                      </p>
+                    )}
                   </div>
                   <ul className="mt-8 flex-1 space-y-3 border-t border-gray-200 pt-6 text-sm dark:border-gray-800">
                     {plan.features.map((feature) => (
@@ -165,6 +175,16 @@ function Pricing() {
                       </li>
                     ))}
                   </ul>
+                  {plan.name === "Lifetime" && (
+                    <>
+                      <p className="mt-6 border-t border-amber-200 pt-5 text-xs leading-relaxed text-gray-600 dark:border-amber-900/60 dark:text-gray-400">
+                        MeOS, team workspaces, API access, additional profiles, third-party subscriptions, and future premium products are sold separately.
+                      </p>
+                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                        One-time payment. No automatic renewal. Lifetime access applies while ALVIRA operates the AI Context Profile service. Your exported files remain yours permanently. MeOS, additional profiles, future premium modules, API access, and third-party subscriptions are sold separately.
+                      </p>
+                    </>
+                  )}
                   <a
                     href={plan.href}
                     {...(plan.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}

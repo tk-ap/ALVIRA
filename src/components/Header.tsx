@@ -10,15 +10,8 @@ interface UserInfo {
   interviewCount: number;
 }
 
-const tierBadgeClass: Record<string, string> = {
-  free: "border-gray-400 dark:border-gray-500 text-gray-500 dark:text-gray-400",
-  pro: "border-emerald-500 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400",
-  lifetime:
-    "border-amber-500 dark:border-amber-400 text-amber-600 dark:text-amber-400",
-};
-
 const linkClass =
-  "font-mono text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors";
+  "text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors";
 const mobileLinkClass = `${linkClass} flex min-h-11 items-center border-b border-gray-200 dark:border-gray-800`;
 
 export function Header() {
@@ -58,8 +51,8 @@ export function Header() {
   const mobileCtaLabel = user ? "Dashboard" : "Get Started";
 
   return (
-    <header className="w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 sticky top-0 z-50">
-      <div className="mx-auto max-w-4xl px-6 py-4">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/90 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/90">
+      <div className="mx-auto max-w-4xl px-6 py-3">
         <div className="flex items-center justify-between">
           <a
             href="/"
@@ -69,7 +62,7 @@ export function Header() {
           </a>
 
           {/* Desktop navigation retains the existing horizontal layout. */}
-          <div className="hidden items-center gap-4 md:flex">
+          <div className="hidden items-center gap-5 md:flex">
             <a href="/why-alvira" className={linkClass}>
               Why ALVIRA
             </a>
@@ -85,26 +78,15 @@ export function Header() {
             {user === undefined ? (
               <div className="h-8 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
             ) : user ? (
-              <div className="flex items-center gap-3">
-                <span
-                  className={`font-mono text-[10px] uppercase tracking-wider border px-1.5 py-0.5 rounded ${tierBadgeClass[user.tier] || tierBadgeClass.free}`}
-                >
-                  {user.tier}
-                </span>
-                <span className="font-mono text-sm text-gray-600 dark:text-gray-400 hidden sm:inline">
-                  {user.email}
-                </span>
+              <div className="flex items-center gap-5">
                 <a href="/dashboard" className={linkClass}>
                   Dashboard
-                </a>
-                <a href="/account" className={linkClass}>
-                  Account
                 </a>
                 <button
                   type="button"
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="font-mono text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors disabled:opacity-50 min-h-11"
+                  className={`${linkClass} min-h-11 disabled:opacity-50`}
                 >
                   {loggingOut ? "..." : "Logout"}
                 </button>
@@ -124,7 +106,7 @@ export function Header() {
           <div className="flex items-center gap-2 md:hidden">
             <a
               href={mobileCtaHref}
-              className="min-h-11 inline-flex items-center rounded border border-amber-500 px-3 font-mono text-xs font-semibold text-amber-700 dark:border-amber-400 dark:text-amber-300"
+              className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-gray-600 underline decoration-gray-300 underline-offset-4 transition-colors hover:text-gray-900 dark:text-gray-400 dark:decoration-gray-600 dark:hover:text-gray-100"
             >
               {mobileCtaLabel}
             </a>
@@ -137,7 +119,7 @@ export function Header() {
                 menuOpen ? "Close navigation menu" : "Open navigation menu"
               }
               aria-controls="mobile-navigation"
-              className="flex min-h-11 min-w-11 items-center justify-center rounded border border-gray-300 text-gray-600 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+              className="flex min-h-11 min-w-11 items-center justify-center text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
             >
               <span className="sr-only">
                 {menuOpen ? "Close menu" : "Open menu"}
@@ -155,7 +137,7 @@ export function Header() {
           id="mobile-navigation"
           aria-label="Mobile navigation"
           role="navigation"
-          className={`${menuOpen ? "block" : "hidden"} mt-4 border-t border-gray-200 dark:border-gray-800 md:hidden`}
+          className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-gray-200/60 dark:border-gray-800/60 md:hidden`}
         >
           <a href="/why-alvira" onClick={closeMenu} className={mobileLinkClass}>
             Why ALVIRA
@@ -170,26 +152,17 @@ export function Header() {
             MeOS
           </a>
           {user ? (
-            <>
-              <a
-                href="/account"
-                onClick={closeMenu}
-                className={mobileLinkClass}
-              >
-                Account
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  closeMenu();
-                  void handleLogout();
-                }}
-                disabled={loggingOut}
-                className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}
-              >
-                {loggingOut ? "Signing out..." : "Sign Out"}
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => {
+                closeMenu();
+                void handleLogout();
+              }}
+              disabled={loggingOut}
+              className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}
+            >
+              {loggingOut ? "Logging out..." : "Logout"}
+            </button>
           ) : user === null ? (
             <a href="/login" onClick={closeMenu} className={mobileLinkClass}>
               Sign In

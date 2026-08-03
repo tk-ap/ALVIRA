@@ -379,8 +379,8 @@ function AppPage() {
     const el = inputRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, MAX_ANSWER_INPUT_HEIGHT)}px`;
-    el.style.overflowY = el.scrollHeight > MAX_ANSWER_INPUT_HEIGHT ? "auto" : "hidden";
+    el.style.height = `${Math.min(el.offsetHeight, MAX_ANSWER_INPUT_HEIGHT)}px`;
+    el.style.overflowY = el.offsetHeight >= MAX_ANSWER_INPUT_HEIGHT ? "auto" : "hidden";
   }, [answer]);
 
   // Persist every in-progress state locally; authenticated users also get a server draft.

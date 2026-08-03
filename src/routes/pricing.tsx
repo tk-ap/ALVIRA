@@ -40,7 +40,7 @@ const lifetimePlan = {
     "Standard support",
   ],
   cta: "Go Lifetime",
-  href: "https://buy.stripe.com/cNi6oH7xUbWr5jb2Zmf7i03",
+  href: "https://buy.stripe.com/8x24gz05s6C7bHzdE0f7i07",
 } as const;
 
 const faqs = [

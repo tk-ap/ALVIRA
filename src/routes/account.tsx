@@ -23,7 +23,7 @@ const tierBadgeClass: Record<string, string> = {
 
 const STRIPE_LINKS = {
   pro: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
-  lifetime: "https://buy.stripe.com/cNi6oH7xUbWr5jb2Zmf7i03",
+  lifetime: "https://buy.stripe.com/8x24gz05s6C7bHzdE0f7i07",
 };
 
 function AccountPage() {

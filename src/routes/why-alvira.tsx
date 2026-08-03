@@ -47,7 +47,7 @@ const comparisonDimensions = [
   "Portable",
   "Elicitation",
   "Validation",
-  "Export (MD/JSON)",
+  "Export (Markdown)",
   "Versions",
   "Ownership",
 ];
@@ -58,7 +58,7 @@ const comparisonRows: { name: string; marks: Mark[]; highlight?: boolean }[] = [
   { name: "Gemini", marks: ["yes", "no", "no", "no", "partial", "no", "partial"] },
   { name: "Cursor", marks: ["yes", "partial", "no", "no", "yes", "partial", "yes"] },
   { name: "Custom GPTs", marks: ["yes", "no", "no", "no", "no", "partial", "partial"] },
-  { name: "ALVIRA", marks: ["yes", "yes", "yes", "yes", "yes", "yes", "yes"], highlight: true },
+  { name: "ALVIRA", marks: ["yes", "yes", "yes", "yes", "yes", "partial", "yes"], highlight: true },
 ];
 
 const adjacentPlayers = [
@@ -123,7 +123,7 @@ function WhyAlviraPage() {
 
             <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
               <table className="w-full min-w-[860px] border-collapse text-sm">
-                <caption className="sr-only">Feature comparison across reusable persistent context, cross-platform portability, structured elicitation (guided interview), validation and confidence scoring, structured export (Markdown/JSON), version history, and data ownership and download — for ChatGPT, Claude, Gemini, Cursor, Custom GPTs, and ALVIRA.</caption>
+                <caption className="sr-only">Feature comparison across reusable persistent context, cross-platform portability, structured elicitation (guided interview), validation and confidence scoring, Markdown export, version history (coming soon for ALVIRA), and data ownership and download — for ChatGPT, Claude, Gemini, Cursor, Custom GPTs, and ALVIRA.</caption>
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-800">
                     <th scope="col" className="px-4 py-4 text-left font-mono text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Product</th>
@@ -150,7 +150,7 @@ function WhyAlviraPage() {
               </table>
             </div>
 
-            <p className="mt-4 font-mono text-xs text-gray-400 dark:text-gray-500">✅ yes · <span className="text-amber-500 dark:text-amber-400">◑</span> partial · ❌ no</p>
+            <p className="mt-4 font-mono text-xs text-gray-400 dark:text-gray-500">✅ yes · <span className="text-amber-500 dark:text-amber-400">◑</span> partial · ❌ no — ALVIRA version history is coming soon.</p>
 
             <p className="mt-10 max-w-2xl text-lg font-semibold leading-snug text-gray-900 dark:text-gray-100">No other product lets you elicit, validate, and export your AI context to use everywhere.</p>
 
@@ -169,8 +169,8 @@ function WhyAlviraPage() {
           <div className="mx-auto max-w-5xl">
             <div className="mb-14"><span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Choose your plan</span><h2 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Ready to stop repeating yourself?</h2><p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context working for you across every conversation, platform, and project.</p></div>
             <div className="grid gap-6 md:grid-cols-2">
-              <PricingCard name="Pro" price="$20" suffix="/mo" description="For an AI profile that grows with how you work." features={["Unlimited interviews", "Multiple AI profiles", "Markdown & JSON exports", "Version history", "Continuous updates"]} href={STRIPE_LINKS.pro} />
-              <PricingCard name="Lifetime" price={LIFETIME_PRICE} suffix="" description="One payment. One permanent profile. No subscription." features={["Permanent personal profile", "All 19 knowledge domains", "Markdown & JSON exports", "Version history", "Standard support"]} href={STRIPE_LINKS.lifetime} featured />
+              <PricingCard name="Pro" price="$20" suffix="/mo" description="For an AI profile that grows with how you work." features={["Unlimited interviews", "Multiple AI profiles", "Markdown exports (JSON coming soon)", "Version history (coming soon)", "Continuous updates"]} href={STRIPE_LINKS.pro} />
+              <PricingCard name="Lifetime" price={LIFETIME_PRICE} suffix="" description="One payment. One permanent profile. No subscription." features={["Permanent personal profile", "All 19 knowledge domains", "Markdown exports (JSON coming soon)", "Version history (coming soon)", "Standard support"]} href={STRIPE_LINKS.lifetime} featured />
             </div>
           </div>
         </section>

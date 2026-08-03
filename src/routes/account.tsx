@@ -147,8 +147,8 @@ function AccountPage() {
                         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4 font-mono">
                           <li>· Unlimited interviews</li>
                           <li>· Multiple profiles</li>
-                          <li>· Version history</li>
-                          <li>· Markdown/JSON export</li>
+                          <li>· Version history (coming soon)</li>
+                          <li>· Markdown export (JSON coming soon)</li>
                         </ul>
                         <a
                           href={`${STRIPE_LINKS.pro}?prefilled_email=${encodeURIComponent(limits.email)}`}
@@ -170,7 +170,7 @@ function AccountPage() {
                           <li>· One permanent personal AI profile</li>
                           <li>· Up to 12 guided interviews in year one</li>
                           <li>· 4 refresh interviews per year after year one</li>
-                          <li>· Up to 50 saved versions</li>
+                          <li>· Up to 50 saved versions (coming soon)</li>
                           <li>· No subscription</li>
                         </ul>
                         <a

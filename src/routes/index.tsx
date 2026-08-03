@@ -318,7 +318,7 @@ function Home() {
             <div>
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Living profile</span>
               <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">Your AI profile grows with you.</h3>
-              <p className="mt-3 max-w-xl text-center text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. Every update is a visible version you control.</p>
+              <p className="mt-3 max-w-xl text-center text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. A visible version history of your updates is coming soon.</p>
             </div>
             <VersionHistoryGraphic />
           </div>
@@ -389,7 +389,7 @@ function Home() {
                   },
                   {
                     dim: "Updates",
-                    alvira: { text: "Continuous, versioned, you control", positive: true },
+                    alvira: { text: "Continuous, you control", positive: true },
                     gptMem: { text: "Automatic, unpredictable", positive: false },
                     claude: { text: "Manual per project", positive: false },
                     gpts: { text: "Static unless rebuilt", positive: false },
@@ -397,7 +397,7 @@ function Home() {
                   },
                   {
                     dim: "Privacy",
-                    alvira: { text: "Your files, your storage", positive: true },
+                    alvira: { text: "Stored privately, exportable anytime", positive: true },
                     gptMem: { text: "OpenAI servers", positive: false },
                     claude: { text: "Anthropic servers", positive: false },
                     gpts: { text: "OpenAI servers", positive: false },
@@ -456,12 +456,12 @@ function Home() {
               },
               {
                 dim: "Updates",
-                alvira: "Continuous, versioned, you control",
+                alvira: "Continuous, you control",
                 others: ["ChatGPT Memory: Automatic, unpredictable", "Claude Projects: Manual per project", "Custom GPTs: Static unless rebuilt", "Cursor Rules: Manual file edits"],
               },
               {
                 dim: "Privacy",
-                alvira: "Your files, your storage",
+                alvira: "Stored privately, exportable anytime",
                 others: ["ChatGPT Memory: OpenAI servers", "Claude Projects: Anthropic servers", "Custom GPTs: OpenAI servers", "Cursor Rules: Local file on disk"],
               },
             ].map((card) => (
@@ -502,7 +502,7 @@ function Home() {
 
           <p className="mt-12 max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">
             Platform memory features are designed to keep you on their platform. ALVIRA's Markdown knowledge files are designed to go wherever you go — into any AI tool, any editor, any workflow.{" "}
-            <span className="text-gray-700 dark:text-gray-300">You own the files. You control the updates. You decide where they live.</span>
+            <span className="text-gray-700 dark:text-gray-300">You own the files. You control the updates. Your exports go anywhere.</span>
           </p>
         </div>
       </section>
@@ -581,7 +581,7 @@ function Home() {
 
           <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
             {[
-              ["01", "Local-first", "Your interviews and profiles are stored as Markdown files. You decide where they live — your computer, a private repo, or nowhere at all."],
+              ["01", "Secure storage", "Your interviews and profiles are stored securely on ALVIRA's servers. Export them as Markdown files anytime — the files are yours to keep and take anywhere."],
               ["02", "No training", "We never use your knowledge to train AI models. Your data is yours, period."],
               ["03", "Portable format", "Open Markdown means no vendor lock-in. Read, edit, and use your files with any tool, forever."],
               ["04", "You control sharing", "Share files with specific AI tools or team members, or keep them completely private. There is no opt-out because you are never opted in."],
@@ -644,7 +644,7 @@ function Home() {
               },
               {
                 question: "What happens to my data?",
-                answer: "Your knowledge stays in the Markdown files you control. We never train on it.",
+                answer: "Your data is stored on ALVIRA's servers and never used to train AI models. You can export it as Markdown files you control at any time.",
               },
               {
                 question: "Can I use this with Claude, Gemini, or Cursor?",

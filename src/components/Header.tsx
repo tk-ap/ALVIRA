@@ -94,6 +94,9 @@ export function Header() {
                 <a href="/dashboard" className={linkClass}>
                   Dashboard
                 </a>
+                <a href="/account" className={linkClass}>
+                  Account
+                </a>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -163,6 +166,11 @@ export function Header() {
           <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>
             MeOS
           </a>
+          {user ? (
+            <a href="/account" onClick={closeMenu} className={mobileLinkClass}>
+              Account
+            </a>
+          ) : null}
           {user ? (
             <button
               type="button"

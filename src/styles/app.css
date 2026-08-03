@@ -12,9 +12,9 @@
   --color-ink: #0b0e0e;
   --color-ink-light: #f8f7f5;
 
-  /* Primary text */
-  --color-mineral: #e2e8e6;
-  --color-mineral-dark: #1a1a1a;
+  /* Primary text — tan on light, white on dark */
+  --color-mineral: #f5f0eb;
+  --color-mineral-dark: #8b6548;
 
   /* Secondary text — teal-gray instead of brown-gray */
   --color-warm-gray: #8b9492;

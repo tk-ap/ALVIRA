@@ -10,17 +10,43 @@ The production application must not import or serve assets from this directory.
 
 This workflow is an operational recommendation for safe multi-agent collaboration. It does not change Revision 11 owner-ratified product direction.
 
-## Current Canonical Reference
+The primary and secondary `ALVIRA/>` directions added on 2026-08-02 are owner-approved brand decisions made after Revision 11. Their production adaptation remains a separate implementation task.
+
+## Mark Usage Guidance
+
+See [`ALVIRA_MARK_USAGE.md`](ALVIRA_MARK_USAGE.md) for the approved hierarchy, use cases, constraints, and production acceptance criteria for the primary and secondary marks.
+
+## Current Canonical References
+
+### Primary balanced wordmark v1
+
+- File: `source/2026-08-02/alvira-primary-wordmark-balanced-v1.png`
+- Date added: 2026-08-02
+- SHA-256: `0470c3abff2177425c8331eb3752aab9e40adc33fd0ff1cc92dbf07c5e18d347`
+- Status: Owner-approved primary mark direction; production vector adaptation required
+- Purpose: Default `ALVIRA/>` identity for navigation, product surfaces, and compact placements
+- Production use: Reference only; do not load the PNG in the website
+- Preservation: Immutable
+
+### Secondary axis wordmark v1
+
+- File: `source/2026-08-02/alvira-secondary-axis-wordmark-v1.png`
+- Date added: 2026-08-02
+- SHA-256: `b6d0499f8e51e245ac4bbb11eab7306e9fbc7244ed91de5ba60618b1f4106f9e`
+- Status: Owner-approved secondary mark direction; production vector adaptation required
+- Purpose: Expressive `ALVIRA/>` identity for large editorial and campaign moments
+- Production use: Reference only; do not load the PNG in the website
+- Preservation: Immutable
 
 ### Context Frame v3
 
 - File: `alvira-logo-context-frame-v3.png`
 - Date added: 2026-08-02
 - SHA-256: `0af7c1896ffced0a475034cbd29cef2329037d981f5203c130b4eb96d10df353`
-- Status: Owner-selected visual direction; production adaptation required
-- Purpose: Visual source for the Context Frame symbol and ALVIRA wordmark
+- Status: Earlier owner-selected direction and current production reference at time of this update
+- Purpose: Visual source for the Context Frame symbol and prior ALVIRA wordmark implementation
 - Production use: Reference only; do not load the PNG in the website header
-- Preservation: Keep this file unchanged at its existing path because implementation briefs already reference it
+- Preservation: Keep this file unchanged because implementation briefs and repository history reference it
 
 ## Directory Convention
 
@@ -29,6 +55,7 @@ Use this structure for future asset intake:
 ```text
 design/brand-references/
 ├── README.md
+├── ALVIRA_MARK_USAGE.md
 ├── alvira-logo-context-frame-v3.png
 ├── source/
 │   └── YYYY-MM-DD/
@@ -110,3 +137,4 @@ Use Git commits, pull requests, and tagged releases for recovery. Use the archiv
 - Never delete a reference solely because a production derivative exists.
 - Never use a concept presentation PNG directly as a navigation logo when it contains a background or presentation whitespace.
 - Keep production assets and source references clearly separated.
+

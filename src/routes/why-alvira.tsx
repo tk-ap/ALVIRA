@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
+import { ComparisonTable } from "~/components/ComparisonTable";
 
 const arguments_ = [
   {
@@ -26,39 +27,6 @@ const useCases = [
   ["Consultants use ALVIRA to...", "move between clients and AI tools without rebuilding their voice, process, or expertise from scratch."],
   ["Teams use ALVIRA to...", "turn scattered operational knowledge into durable context every teammate and AI agent can use."],
   ["Creators use ALVIRA to...", "make every draft sound like them, with their audience, values, and boundaries in view."],
-];
-
-type Mark = "yes" | "partial" | "no";
-
-const MARKS: Record<Mark, string> = {
-  yes: "✅",
-  partial: "◑",
-  no: "❌",
-};
-
-const MARKS_LABEL: Record<Mark, string> = {
-  yes: "Yes",
-  partial: "Partial",
-  no: "No",
-};
-
-const comparisonDimensions = [
-  "Reusable context",
-  "Portable",
-  "Elicitation",
-  "Validation",
-  "Export (Markdown)",
-  "Versions",
-  "Ownership",
-];
-
-const comparisonRows: { name: string; marks: Mark[]; highlight?: boolean }[] = [
-  { name: "ChatGPT", marks: ["yes", "no", "no", "no", "partial", "no", "partial"] },
-  { name: "Claude", marks: ["yes", "no", "no", "no", "partial", "no", "partial"] },
-  { name: "Gemini", marks: ["yes", "no", "no", "no", "partial", "no", "partial"] },
-  { name: "Cursor", marks: ["yes", "partial", "no", "no", "yes", "partial", "yes"] },
-  { name: "Custom GPTs", marks: ["yes", "no", "no", "no", "no", "partial", "partial"] },
-  { name: "ALVIRA", marks: ["yes", "yes", "yes", "yes", "yes", "partial", "yes"], highlight: true },
 ];
 
 const adjacentPlayers = [
@@ -121,41 +89,12 @@ function WhyAlviraPage() {
             <div className="mb-10">
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How ALVIRA compares</span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Context you can keep — everywhere.</h2>
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory locks your context inside one tool. ALVIRA is the only system that elicits, validates, and exports it as files you own.</p>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, and export structured files you own.</p>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-              <table className="w-full min-w-[860px] border-collapse text-sm">
-                <caption className="sr-only">Feature comparison across reusable persistent context, cross-platform portability, structured elicitation (guided interview), validation and confidence scoring, Markdown export, version history (coming soon for ALVIRA), and data ownership and download — for ChatGPT, Claude, Gemini, Cursor, Custom GPTs, and ALVIRA.</caption>
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-800">
-                    <th scope="col" className="px-4 py-4 text-left font-mono text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Product</th>
-                    {comparisonDimensions.map((dimension) => (
-                      <th key={dimension} scope="col" className="px-3 py-4 text-center font-mono text-[11px] font-medium leading-tight text-gray-500 dark:text-gray-400">{dimension}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparisonRows.map((row) => (
-                    <tr key={row.name} className={`border-b border-gray-100 dark:border-gray-800 last:border-b-0 ${row.highlight ? "bg-emerald-50/70 dark:bg-emerald-950/40" : ""}`}>
-                      <th scope="row" className={`whitespace-nowrap px-4 py-3.5 text-left font-mono text-xs font-semibold ${row.highlight ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-gray-100"}`}>
-                        {row.name}
-                        {row.highlight ? <span className="sr-only"> — supports every capability</span> : null}
-                      </th>
-                      {row.marks.map((mark, index) => (
-                        <td key={index} className={`px-3 py-3.5 text-center ${mark === "partial" ? "text-amber-500 dark:text-amber-400" : ""}`}>
-                          <span role="img" aria-label={MARKS_LABEL[mark]}>{MARKS[mark]}</span>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ComparisonTable />
 
-            <p className="mt-4 font-mono text-xs text-gray-500 dark:text-gray-400">✅ yes · <span className="text-amber-500 dark:text-amber-400">◑</span> partial · ❌ no — ALVIRA version history is coming soon.</p>
-
-            <p className="mt-10 max-w-2xl text-lg font-semibold leading-snug text-gray-900 dark:text-gray-100">No other product lets you elicit, validate, and export your AI context to use everywhere.</p>
+            <p className="mt-10 max-w-2xl text-lg font-semibold leading-snug text-gray-900 dark:text-gray-100">Most tools don’t let you elicit, validate, and export your AI context to use everywhere.</p>
 
             <p className="mt-6 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Adjacent players: {adjacentPlayers.map(([name, detail], index) => (
               <span key={name}>

@@ -11,8 +11,8 @@ interface UserInfo {
 }
 
 const linkClass =
-  "text-sm font-medium text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system";
-const mobileLinkClass = `${linkClass} flex min-h-11 items-center border-b border-warm-gray/20`;
+  "text-sm font-medium text-human-dark hover:text-mineral-dark dark:text-human dark:hover:text-mineral transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system";
+const mobileLinkClass = `${linkClass} flex min-h-11 items-center border-b border-human/20`;
 
 export function Header() {
   const [user, setUser] = useState<UserInfo | null | undefined>(undefined); // undefined = loading

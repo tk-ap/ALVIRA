@@ -226,7 +226,7 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div className="mx-4 w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Upgrade to continue</h3>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Upgrade to continue</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 font-mono">
           {reason === "profiles"
             ? "Free accounts can save 1 profile. Upgrade to Pro or Lifetime for unlimited profiles."
@@ -977,7 +977,7 @@ function AppPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">API Key Not Configured</h2>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">API Key Not Configured</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               The OpenAI API key is not set. Add <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono">OPENAI_API_KEY</code> to your environment to enable the knowledge elicitation engine.
             </p>
@@ -1011,7 +1011,7 @@ function AppPage() {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Generated Knowledge Files</h2>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Generated Knowledge Files</h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-mono">
                     based on: {state?.topic || topic}
                   </p>
@@ -1091,6 +1091,11 @@ function AppPage() {
         {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main id="main-content" className="flex-1 flex flex-col px-6">
+          {/* a11y: interview page needs a single H1 — screen-reader-only, contextual to the active interview */}
+          <h1 className="sr-only">
+            {offering === "meos" ? "MeOS interview" : "AI profile interview"}
+            {state?.topic ? ` — ${state.topic}` : ""}
+          </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
@@ -1330,7 +1335,7 @@ function AppPage() {
               ← Back
             </button>
 
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Review what was extracted</h2>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Review what was extracted</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
               {extraction.summary || "Here's what your document contained."} Approve, revise, or skip each claim — only approved claims are pre-filled into your interview.
             </p>
@@ -1369,7 +1374,7 @@ function AppPage() {
                 <div key={domain.id} className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-4 py-2.5">
                     <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">{domain.label}</span>
-                    <span className="font-mono text-[10px] text-gray-400">&lt;{domain.id} /&gt;</span>
+                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">&lt;{domain.id} /&gt;</span>
                   </div>
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
                     {items.map(({ claim, index }) => {
@@ -1388,7 +1393,7 @@ function AppPage() {
                             </span>
                           </div>
                           {claim.evidence && (
-                            <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
+                            <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-gray-500 dark:text-gray-400">
                               evidence: “{claim.evidence}”
                             </p>
                           )}
@@ -1465,9 +1470,9 @@ function AppPage() {
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
         <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
           <div className="text-center mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
               {offering === "meos" ? "Build your personal operating system" : "Build your AI profile"}
-            </h2>
+            </h1>
             <p className="text-gray-600 dark:text-gray-400">
               {offering === "meos"
                 ? "A guided interview that captures your values, patterns, goals, and direction — then compiles them into a private integrated portrait and decision companion."
@@ -1478,12 +1483,32 @@ function AppPage() {
 
           {/* Offering selection */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {/* a11y: the selected card is announced via aria-pressed and shown via a distinct
+                border/tint/ring (emerald = AI Profile, human = MeOS) plus a ✓ indicator —
+                the selection never relies on color alone. */}
             {[
               { key: "context" as const, title: "AI Context Profile", label: "<ai-context-profile />", description: "Captures communication, decision-making, workflows, relationships, goals, values, and boundaries for use across AI agents." },
               { key: "meos" as const, title: "MeOS — Personal Alignment System", label: "<me-os />", description: "Creates an integrated portrait and private interactive companion for personal and professional alignment." },
             ].map((item) => (
-              <button key={item.key} type="button" onClick={() => { setOffering(item.key); setStartError(""); }} className={`text-left rounded-lg border p-4 transition-colors ${offering === item.key ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30" : item.key === "context" ? "border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-800 hover:border-emerald-400" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600"}`}>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">{item.title}</div>
+              <button
+                key={item.key}
+                type="button"
+                aria-pressed={offering === item.key}
+                onClick={() => { setOffering(item.key); setStartError(""); }}
+                className={`text-left rounded-lg border p-4 transition-colors ${offering === item.key
+                  ? item.key === "context"
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 ring-2 ring-emerald-500/30"
+                    : "border-human-dark bg-human-soft dark:border-human dark:bg-human-dark/10 ring-2 ring-human/40"
+                  : item.key === "context"
+                    ? "border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-800 hover:border-emerald-400"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600"}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="font-semibold text-gray-900 dark:text-gray-100">{item.title}</div>
+                  {offering === item.key && (
+                    <span aria-hidden="true" className={`flex-shrink-0 font-mono text-sm font-bold ${item.key === "context" ? "text-emerald-700 dark:text-emerald-400" : "text-human-dark dark:text-human"}`}>✓</span>
+                  )}
+                </div>
                 <div className="mt-2 font-mono text-xs text-emerald-700 dark:text-emerald-400">{item.label}</div>
                 <div className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">{item.description}</div>
               </button>
@@ -1514,7 +1539,7 @@ function AppPage() {
               {offering === "meos" && (
                 <fieldset className="mt-3 space-y-1">
                   <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                    Which themes apply? <span className="normal-case tracking-normal text-gray-400">(choose any)</span>
+                    Which themes apply? <span className="normal-case tracking-normal text-gray-500 dark:text-gray-400">(choose any)</span>
                   </legend>
                   {["Navigating a career pivot", "Starting something new", "Rebuilding after a setback", "Deep in a growth phase", "Feeling stuck and seeking direction"].map((suggestion) => (
                     <label key={suggestion} className="flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
@@ -1539,7 +1564,7 @@ function AppPage() {
 
               {/* Tier — locked to Personal for public launch */}
               {offering === "context" && (
-                <p className="font-mono text-xs text-gray-400 dark:text-gray-500 mt-2">
+                <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Team and enterprise coming soon. <a href="mailto:hello@alvira.ai" className="underline hover:text-gray-600 dark:hover:text-gray-300">Join the pilot →</a>
                 </p>
               )}
@@ -1618,7 +1643,7 @@ function AppPage() {
               <div className="pt-2">
                 <div className="flex items-center gap-3">
                   <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500">or start from a document</span>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">or start from a document</span>
                   <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                 </div>
                 <div className="mt-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-4">
@@ -1636,7 +1661,7 @@ function AppPage() {
                     >
                       {uploading ? "Extracting knowledge…" : "Choose file…"}
                     </button>
-                    <span className="font-mono text-[10px] text-gray-400 dark:text-gray-500">.txt · .md · .docx · max 5MB</span>
+                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">.txt · .md · .docx · max 5MB</span>
                   </div>
                   {uploadError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{uploadError}</p>}
                 </div>

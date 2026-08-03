@@ -22,7 +22,7 @@ import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
-import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits } from "./-auth";
+import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft } from "./-auth";
 
 // ── Initialize empty interview state ──
 function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context"): InterviewState {
@@ -297,6 +297,8 @@ function AppPage() {
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
+  const autosaveAnswerCountRef = useRef(0);
+  const draftRestoredRef = useRef(false);
   const [showInsightCTA, setShowInsightCTA] = useState(false);
 
   // Output state
@@ -370,6 +372,16 @@ function AppPage() {
     }
   }, [screen, waiting]);
 
+  // Persist every in-progress state locally; authenticated users also get a server draft.
+  useEffect(() => {
+    if (!state || typeof window === "undefined") return;
+    const key = `alvira-draft-${offering ?? "context"}`;
+    try { window.localStorage.setItem(key, JSON.stringify({ offering: offering ?? "context", topic: state.topic, state, savedAt: Date.now() })); } catch { /* storage may be unavailable */ }
+    if (authUser) {
+      const timer = window.setTimeout(() => { autosaveInterview({ data: { offering: offering ?? "context", topic: state.topic, state } }).catch(() => {}); }, 500);
+      return () => window.clearTimeout(timer);
+    }
+  }, [state, offering, authUser]);
   // Check auth state, resume profile, and fetch limits
   useEffect(() => {
     let cancelled = false;
@@ -390,6 +402,24 @@ function AppPage() {
           }
         } catch { /* ignore */ }
 
+        // Restore a server draft first, or the anonymous local draft left before signup/login.
+        if (!draftRestoredRef.current) {
+          try {
+            const localRaw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
+            const serverDraft = await getInterviewDraft().catch(() => null);
+            const draft = localRaw ? JSON.parse(localRaw) : serverDraft;
+            if (draft?.state && !cancelled) {
+              setOffering(draft.offering === "meos" ? "meos" : "context");
+              setTopic(draft.topic ?? draft.state.topic);
+              setTier(draft.state.tier as Tier);
+              setState(draft.state as InterviewState);
+              setScreen("interview");
+              draftRestoredRef.current = true;
+              window.localStorage.removeItem(`alvira-draft-${draft.offering === "meos" ? "meos" : "context"}`);
+              await clearInterviewDraft().catch(() => {});
+            }
+          } catch { /* malformed or unavailable draft */ }
+        }
         const profileId = new URLSearchParams(window.location.search).get("profile");
         if (profileId) {
           try {
@@ -404,6 +434,19 @@ function AppPage() {
         }
       } else {
         setAuthUser(null);
+        try {
+          const raw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
+          if (raw) {
+            const draft = JSON.parse(raw);
+            if (draft?.state && !cancelled) {
+              setOffering(draft.offering === "meos" ? "meos" : "context");
+              setTopic(draft.topic ?? draft.state.topic);
+              setTier(draft.state.tier as Tier);
+              setState(draft.state as InterviewState);
+              setScreen("interview");
+            }
+          }
+        } catch { /* malformed or unavailable draft */ }
       }
     }).catch(() => {
       if (!cancelled) setAuthUser(null);

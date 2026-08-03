@@ -253,6 +253,33 @@ export const deleteProfile = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const autosaveInterview = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    const d = data as { offering?: string; topic?: string; state?: unknown };
+    if (!d.offering || !d.topic || !d.state) throw new Error("Interview state is required.");
+    return { offering: d.offering.trim(), topic: d.topic.trim(), state: d.state };
+  })
+  .handler(async ({ data }) => {
+    const user = await requireUser();
+    getDb().run(
+      "INSERT INTO interview_drafts (user_id, offering, topic, state_json, updated_at) VALUES (?, ?, ?, ?, datetime('now')) ON CONFLICT(user_id, offering) DO UPDATE SET topic=excluded.topic, state_json=excluded.state_json, updated_at=datetime('now')",
+      [user.id, data.offering, data.topic, JSON.stringify(data.state)],
+    );
+    return { success: true };
+  });
+
+export const getInterviewDraft = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireUser();
+  const row = getDb().query("SELECT offering, topic, state_json, updated_at FROM interview_drafts WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1").get(user.id) as { offering: string; topic: string; state_json: string; updated_at: string } | undefined;
+  return row ? { ...row, state: JSON.parse(row.state_json) } : null;
+});
+
+export const clearInterviewDraft = createServerFn({ method: "POST" }).handler(async () => {
+  const user = await requireUser();
+  getDb().run("DELETE FROM interview_drafts WHERE user_id = ?", [user.id]);
+  return { success: true };
+});
+
 export const getCurrentUser = createServerFn({ method: "GET" }).handler(async () => {
   // Clean up expired sessions
   deleteExpiredSessions();

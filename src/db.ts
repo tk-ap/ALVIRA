@@ -67,6 +67,15 @@ export function getDb(): Database {
       UNIQUE (user_id, topic)
     );
     CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles(user_id);
+    CREATE TABLE IF NOT EXISTS interview_drafts (
+      user_id TEXT NOT NULL,
+      offering TEXT NOT NULL,
+      topic TEXT NOT NULL,
+      state_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (user_id, offering),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `);
 
   // ── Migration: add interview_count to existing users table ──

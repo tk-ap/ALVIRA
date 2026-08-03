@@ -56,9 +56,38 @@ export function Header() {
         <div className="flex items-center justify-between">
           <a
             href="/"
-            className="font-mono tracking-tight font-bold text-lg text-mineral-dark dark:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
+            aria-label="ALVIRA home"
+            className="-ml-2 flex min-h-11 min-w-11 items-center px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
           >
-            ALVIRA
+            {/* Desktop (>=640px): full lockup; mobile: mark only. */}
+            <span className="hidden sm:block">
+              <img
+                src="/brand/alvira-logo-lockup-dark.svg"
+                alt=""
+                aria-hidden="true"
+                className="hidden h-7 w-auto dark:block"
+              />
+              <img
+                src="/brand/alvira-logo-lockup-light.svg"
+                alt=""
+                aria-hidden="true"
+                className="h-7 w-auto dark:hidden"
+              />
+            </span>
+            <span className="sm:hidden">
+              <img
+                src="/brand/alvira-logo-mark-dark.svg"
+                alt=""
+                aria-hidden="true"
+                className="hidden h-8 w-8 dark:block"
+              />
+              <img
+                src="/brand/alvira-logo-mark-light.svg"
+                alt=""
+                aria-hidden="true"
+                className="h-8 w-8 dark:hidden"
+              />
+            </span>
           </a>
 
           {/* Desktop navigation retains the existing horizontal layout. */}

@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
-import { HeroGraphic } from "~/components/HeroGraphic";
 import { ConversationToKnowledgeGraphic } from "~/components/ConversationToKnowledgeGraphic";
 import { VersionHistoryGraphic } from "~/components/VersionHistoryGraphic";
 import { PortabilityGraphic } from "~/components/PortabilityGraphic";
@@ -74,11 +73,6 @@ function Home() {
             <span className="font-mono text-xs text-system-dark dark:text-system border border-system/30 dark:border-system/40 rounded-md px-3 py-1.5 tracking-wide">
               &lt;personal-ai-knowledge-system /&gt;
             </span>
-          </div>
-
-          {/* Living context map — fragments of human knowledge resolving into domains */}
-          <div className="mx-auto mt-10 mb-14 w-full max-w-xl">
-            <HeroGraphic />
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight text-mineral-dark dark:text-mineral sm:text-5xl md:text-6xl lg:text-7xl leading-[1.02]">
@@ -705,7 +699,12 @@ function Home() {
       {/* --- Footer --- */}
       <footer className="bg-gray-950 py-8 px-8 border-t border-gray-800">
         <div className="mx-auto max-w-7xl flex flex-col items-center gap-3">
-          <span className="font-mono text-sm text-gray-400 tracking-tight">ALVIRA</span>
+          <img
+            src="/brand/alvira-logo-lockup-dark.svg"
+            alt="ALVIRA"
+            className="h-6 w-auto"
+          />
+          <p className="font-mono text-xs text-gray-400">Human context for AI.</p>
           <p className="font-mono text-xs text-gray-400 tabular-nums">
             &copy; {new Date().getFullYear()}
           </p>

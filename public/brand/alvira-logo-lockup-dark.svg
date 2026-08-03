@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64" role="img" aria-label="ALVIRA">
+  <!-- Context Frame: four open corner brackets (never connect) -->
+  <g fill="none" stroke="#e8e6e1" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 23.5V10H23.5"/>
+    <path d="M54 23.5V10H40.5"/>
+    <path d="M54 40.5V54H40.5"/>
+    <path d="M10 40.5V54H23.5"/>
+  </g>
+  <!-- Human form: rounded asymmetrical capsule on the diagonal -->
+  <path fill="#2d9b8c" d="M25.66 14.34C30.6 19.3 44.3 35.8 49.24 40.76A6 6 0 0 1 40.76 49.24C35.8 44.3 20.7 32 14.34 25.66A8 8 0 0 1 25.66 14.34Z"/>
+  <!-- Context point: near upper-right of the human form -->
+  <circle cx="30.5" cy="14.5" r="1.9" fill="#9c9585"/>
+  <text x="71" y="53" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="58" font-weight="600" letter-spacing="0.01em" fill="#e8e6e1">ALVIRA</text>
+</svg>

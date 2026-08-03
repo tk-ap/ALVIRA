@@ -58,8 +58,19 @@ function MarkdownPreview({ content }: { content: string }) {
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold">
-        A
+      <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+        <img
+          src="/brand/alvira-logo-mark-dark.svg"
+          alt=""
+          aria-label="ALVIRA"
+          className="hidden h-8 w-8 dark:block"
+        />
+        <img
+          src="/brand/alvira-logo-mark-light.svg"
+          alt=""
+          aria-label="ALVIRA"
+          className="h-8 w-8 dark:hidden"
+        />
       </div>
       <div className="rounded-lg rounded-tl-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3">
         <div className="flex gap-1">
@@ -957,15 +968,26 @@ function AppPage() {
                   className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                 >
                   {/* Avatar */}
-                  <div
-                    className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                      msg.role === "assistant"
-                        ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                        : "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                    }`}
-                  >
-                    {msg.role === "assistant" ? "A" : "Y"}
-                  </div>
+                  {msg.role === "assistant" ? (
+                    <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                      <img
+                        src="/brand/alvira-logo-mark-dark.svg"
+                        alt=""
+                        aria-label="ALVIRA"
+                        className="hidden h-8 w-8 dark:block"
+                      />
+                      <img
+                        src="/brand/alvira-logo-mark-light.svg"
+                        alt=""
+                        aria-label="ALVIRA"
+                        className="h-8 w-8 dark:hidden"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 dark:bg-gray-100 text-xs font-bold text-white dark:text-gray-900">
+                      Y
+                    </div>
+                  )}
                   {/* Bubble */}
                   <div className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${chatBubbleClass(msg.role)}`}>
                     <div className="whitespace-pre-wrap">{msg.content}</div>

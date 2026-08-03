@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="200" viewBox="0 0 820 200" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">ALVIRA</title>
+  <desc id="description">ALVIRA in an editorial wordmark enclosed by refined open code syntax.</desc>
+
+  <!-- Quiet opening syntax: technical structure with a human accent. -->
+  <path d="M91 60L48 100" stroke="#F3F4F2" stroke-width="9" stroke-linecap="round"/>
+  <path d="M48 100L91 140" stroke="#65CDB5" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- Editorial typography represents the complexity and continuity of a human life. -->
+  <text x="128" y="129"
+        fill="#F3F4F2"
+        font-family="'Iowan Old Style', 'Baskerville', 'Times New Roman', serif"
+        font-size="82"
+        font-weight="600"
+        letter-spacing="9">ALVIRA</text>
+
+  <!-- The compiling slash is the only fully accented operator. -->
+  <path d="M650 55L614 145" stroke="#65CDB5" stroke-width="9" stroke-linecap="round"/>
+  <path d="M681 60L724 100L681 140" stroke="#F3F4F2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

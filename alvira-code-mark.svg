@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">ALVIRA mark</title>
+  <desc id="description">The letter A inside an open code tag.</desc>
+  <g font-family="'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace" font-size="58" font-weight="650">
+    <text x="7" y="101" fill="#65CDB5">&lt;</text>
+    <text x="54" y="101" fill="#F3F4F2">A</text>
+    <text x="92" y="101" fill="#65CDB5">/&gt;</text>
+  </g>
+</svg>

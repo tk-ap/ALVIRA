@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="160" viewBox="0 0 760 160" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">ALVIRA</title>
+  <desc id="description">The ALVIRA wordmark written as an open code tag.</desc>
+  <g font-family="'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace" font-size="76" font-weight="600" letter-spacing="3">
+    <text x="28" y="108" fill="#167864">&lt;</text>
+    <text x="100" y="108" fill="#0B0E16" letter-spacing="9">ALVIRA</text>
+    <text x="570" y="108" fill="#167864">/&gt;</text>
+  </g>
+</svg>

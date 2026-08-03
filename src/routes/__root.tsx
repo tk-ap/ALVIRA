@@ -15,7 +15,7 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "ALVIRA — AI Agent Context, Structured" },
-      { name: "theme-color", content: "#0b0e14" },
+      { name: "theme-color", content: "#0b0e0e" },
       {
         property: "og:title",
         content: "ALVIRA — AI Agent Context, Structured",

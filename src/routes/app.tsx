@@ -1219,7 +1219,7 @@ function AppPage() {
 
               {/* Interview complete banner */}
               {!hasGaps && !waiting && (
-                <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-800 dark:text-green-200 flex items-center justify-between">
+                <div className="mb-4 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
                   <span>
                     {requiredCovered
                       ? "✓ All domains covered. Ready to generate your knowledge files."

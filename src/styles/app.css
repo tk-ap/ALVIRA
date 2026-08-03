@@ -8,28 +8,59 @@
   --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Backgrounds */
-  --color-ink: #0b0e14;
+  /* Backgrounds — derived from logo teal (H≈173°) */
+  --color-ink: #0b0e0e;
   --color-ink-light: #f8f7f5;
 
   /* Primary text */
-  --color-mineral: #e8e6e1;
+  --color-mineral: #e2e8e6;
   --color-mineral-dark: #1a1a1a;
 
-  /* Secondary text */
-  --color-warm-gray: #9c9585;
-  /* Darker warm gray for light backgrounds (WCAG AA: 5.2:1 on ink-light) */
-  --color-warm-gray-dark: #6d685c;
+  /* Secondary text — teal-gray instead of brown-gray */
+  --color-warm-gray: #8b9492;
+  --color-warm-gray-dark: #6d7775;
+
+  /* Override Tailwind's gray scale — teal-derived, aligned with the logo */
+  --color-gray-50: #f4f6f5;
+  --color-gray-100: #e2e8e6;
+  --color-gray-200: #cdd5d3;
+  --color-gray-300: #aab5b3;
+  --color-gray-400: #8b9492;
+  --color-gray-500: #6d7775;
+  --color-gray-600: #535c5b;
+  --color-gray-700: #3a4241;
+  --color-gray-800: #252b2a;
+  --color-gray-900: #171a19;
+  --color-gray-950: #0b0e0e;
+
+  /* Override Tailwind's emerald & green scales — all map to logo teal */
+  --color-emerald-50: #e8f5f3;
+  --color-emerald-100: #ceeae4;
+  --color-emerald-200: #a3dbd1;
+  --color-emerald-300: #66c4b5;
+  --color-emerald-400: #2d9b8c;
+  --color-emerald-500: #278a7d;
+  --color-emerald-600: #227569;
+  --color-emerald-700: #1f7a6d;
+  --color-emerald-800: #185a50;
+  --color-emerald-900: #114038;
+  --color-emerald-950: #0b2622;
+  --color-green-50: #e8f5f3;
+  --color-green-100: #ceeae4;
+  --color-green-200: #a3dbd1;
+  --color-green-300: #66c4b5;
+  --color-green-400: #2d9b8c;
+  --color-green-500: #278a7d;
+  --color-green-600: #227569;
+  --color-green-700: #1f7a6d;
+  --color-green-800: #185a50;
+  --color-green-900: #114038;
+  --color-green-950: #0b2622;
 
   /* System accent (knowledge, validation, structure) */
   --color-system: #2d9b8c;
   --color-system-soft: #e8f5f3;
   --color-system-dark: #1f7a6d;
-
-  /* Human accent (ambiguity, reflection, insight) */
-  --color-human: #b0886c;
-  --color-human-soft: #faf5f0;
-  --color-human-dark: #8b6548;
 }
 
 @layer base {

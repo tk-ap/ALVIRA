@@ -26,11 +26,11 @@ const freePlan = {
 
 const lifetimePlan = {
   name: "Lifetime",
-  price: "$199",
+  price: "$399",
   cadence: "one-time",
-  description: "A permanent home for your personal AI context.",
+  description: "Pay once — about two years of Pro. Keep your profile forever.",
   features: [
-    "One personal AI profile",
+    "One permanent personal AI profile",
     "All 19 personal knowledge domains",
     "Up to 12 guided interviews in the first year",
     "Four AI-assisted refresh interviews per year after year one",
@@ -55,7 +55,7 @@ const faqs = [
   ],
   [
     "What's the difference between Pro and Lifetime?",
-    "Pro is a monthly subscription. Lifetime is a one-time payment — you never pay again.",
+    "Pro is for ongoing use with multiple profiles and unlimited interviews. Lifetime is a one-time $399 payment for a single permanent profile — it pays for itself in about two years vs. annual Pro. Best if you want one profile that lasts.",
   ],
 ] as const;
 
@@ -204,6 +204,11 @@ function Pricing() {
                 </article>
               ))}
             </div>
+
+            <p className="mt-8 text-center font-mono text-xs text-gray-500 dark:text-gray-400">
+              <strong>Pro</strong> is best for ongoing use, multiple profiles, and unlimited interviews.{' '}
+              <strong>Lifetime</strong> is best for one permanent profile — it pays for itself in about two years of annual Pro.
+            </p>
           </div>
         </section>
 

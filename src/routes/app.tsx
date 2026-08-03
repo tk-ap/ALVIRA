@@ -125,8 +125,6 @@ const FILES = [
 
 const TIERS: { value: Tier; label: string; description: string }[] = [
   { value: "personal", label: "Personal", description: "Personal knowledge & preferences" },
-  { value: "team", label: "Team", description: "Department or small business" },
-  { value: "enterprise", label: "Enterprise", description: "Organization-wide" },
 ];
 const TOPIC_GROUPS = [
   {
@@ -138,17 +136,6 @@ const TOPIC_GROUPS = [
       "My values, boundaries, and what I won't compromise on",
       "My key relationships and how I collaborate with others",
       "My goals, priorities, and how I evaluate tradeoffs",
-    ],
-  },
-  {
-    label: "For teams",
-    tier: "team" as const,
-    topics: [
-      "How our support team handles customer escalations",
-      "Our team's development standards and code review process",
-      "Our department's approval chains and decision thresholds",
-      "Our organization's compliance rules and security policies",
-      "Our cross-department workflows and vendor relationships",
     ],
   },
 ] as const;
@@ -1550,44 +1537,12 @@ function AppPage() {
                 </fieldset>
               )}
 
-              {/* Tier selector */}
-              {offering === "context" && <div>
-              <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide mb-2">Scope</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {TIERS.map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => {
-                        setTier(t.value);
-                        if (t.value === "enterprise") {
-                          const allTopics = TOPIC_GROUPS.flatMap(g => [...g.topics]);
-                          setSelectedTopics(allTopics);
-                          setCustomTopic("");
-                          setTopic(allTopics.join(", "));
-                        } else {
-                          const group = TOPIC_GROUPS.find(g => g.tier === t.value);
-                          if (group) {
-                            const topics = [...group.topics];
-                            setSelectedTopics(topics);
-                            setCustomTopic("");
-                            setTopic(topics.join(", "));
-                          }
-                        }
-                        setStartError("");
-                      }}
-                      className={`rounded-lg border px-3 py-3 text-center transition-colors ${
-                        tier === t.value
-                          ? "border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
-                      }`}
-                    >
-                      <div className="font-mono text-sm font-semibold">{t.label}</div>
-                      <div className="text-xs mt-0.5 opacity-70">{t.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>}
+              {/* Tier — locked to Personal for public launch */}
+              {offering === "context" && (
+                <p className="font-mono text-xs text-gray-400 dark:text-gray-500 mt-2">
+                  Team and enterprise coming soon. <a href="mailto:hello@alvira.ai" className="underline hover:text-gray-600 dark:hover:text-gray-300">Join the pilot →</a>
+                </p>
+              )}
 
               {/* Example topic suggestions */}
               {offering === "context" && (

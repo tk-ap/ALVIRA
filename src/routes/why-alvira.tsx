@@ -180,8 +180,8 @@ function WhyAlviraPage() {
         </section>
 
         <section className="bg-gray-950 px-6 py-20 text-center sm:px-8">
-          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Start building your AI profile</h2>
-          <a href="/app" className="mt-8 inline-flex rounded-lg bg-emerald-600 px-7 py-3.5 font-semibold text-white hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 transition-colors">Get started <Arrow /></a>
+          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Build my free profile</h2>
+          <a href="/app" className="mt-8 inline-flex rounded-lg bg-emerald-600 px-7 py-3.5 font-semibold text-white hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 transition-colors">Build my free profile <Arrow /></a>
         </section>
       </main>
       <TrustFooter />
@@ -192,6 +192,6 @@ function WhyAlviraPage() {
 function PricingCard({ name, price, suffix, description, features, href, featured = false }: { name: string; price: string; suffix: string; description: string; features: string[]; href: string; featured?: boolean }) {
   return <div className={`flex flex-col rounded-lg border p-8 ${featured ? "border-emerald-500 dark:border-emerald-400" : "border-gray-200 dark:border-gray-700"} bg-white dark:bg-gray-800`}>
     <div className="flex-1"><p className="font-mono text-sm text-emerald-700 dark:text-emerald-400">{name}</p><p className="mt-4 text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{price}<span className="text-lg font-medium text-gray-600 dark:text-gray-400">{suffix}</span></p><p className="mt-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{description}</p><ul className="mt-8 space-y-3 text-sm text-gray-600 dark:text-gray-400">{features.map((feature) => <li key={feature} className="flex gap-3"><span className="font-mono text-emerald-600 dark:text-emerald-400" aria-hidden="true">+</span><span>{feature}</span></li>)}</ul></div>
-    <a href={href} target="_blank" rel="noopener noreferrer" className="mt-10 inline-flex items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 px-6 py-3.5 text-sm font-semibold text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 transition-colors">Get {name} <Arrow /></a>
+    <a href={href} target="_blank" rel="noopener noreferrer" className="mt-10 inline-flex items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 px-6 py-3.5 text-sm font-semibold text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 transition-colors">{name === "Pro" ? "Upgrade to Pro" : "Choose Lifetime"} <Arrow /></a>
   </div>;
 }

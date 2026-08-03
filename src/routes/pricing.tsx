@@ -21,7 +21,7 @@ const freePlan = {
     "All 19 personal knowledge domains",
     "No credit card required",
   ],
-  cta: "Start free",
+  cta: "Build my free profile",
   href: "/app",
 } as const;
 
@@ -40,7 +40,7 @@ const lifetimePlan = {
     "Up to 50 saved versions",
     "Standard support",
   ],
-  cta: "Go Lifetime",
+  cta: "Choose Lifetime",
   href: "https://buy.stripe.com/8x24gz05s6C7bHzdE0f7i07",
 } as const;
 
@@ -75,7 +75,7 @@ function Pricing() {
       "Version history",
       "Continuous profile updates",
     ],
-    cta: "Get Pro",
+    cta: "Upgrade to Pro",
     href: billing === "annual" ? STRIPE_ANNUAL : STRIPE_MONTHLY,
     featured: true,
     annual: billing === "annual",
@@ -239,7 +239,7 @@ function Pricing() {
               href="/app"
               className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
             >
-              Build my AI profile <span aria-hidden="true" className="ml-2">→</span>
+              Build my free profile <span aria-hidden="true" className="ml-2">→</span>
             </a>
             <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">Free to start · No credit card · Portable Markdown</p>
           </div>

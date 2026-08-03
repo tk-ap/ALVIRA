@@ -59,22 +59,22 @@ export function Header() {
             aria-label="ALVIRA home"
             className="-ml-2 flex min-h-11 min-w-11 items-center px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
           >
-            {/* Desktop (>=640px): full lockup; mobile: mark only. */}
-            <span className="hidden sm:block">
+            {/* Full lockup through 480px; compact mark below. */}
+            <span className="max-[480px]:hidden">
               <img
                 src="/brand/alvira-logo-lockup-dark.svg"
                 alt=""
                 aria-hidden="true"
-                className="hidden h-7 w-auto dark:block"
+                className="hidden h-8 w-auto dark:block"
               />
               <img
                 src="/brand/alvira-logo-lockup-light.svg"
                 alt=""
                 aria-hidden="true"
-                className="h-7 w-auto dark:hidden"
+                className="h-8 w-auto dark:hidden"
               />
             </span>
-            <span className="sm:hidden">
+            <span className="min-[481px]:hidden">
               <img
                 src="/brand/alvira-logo-mark-dark.svg"
                 alt=""

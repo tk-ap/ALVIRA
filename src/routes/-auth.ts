@@ -19,9 +19,6 @@ import {
   getProfileCount,
   incrementInterviewCount,
   getUserLimits,
-  hasEntitlement,
-  recordPurchase,
-  listEntitlements,
 } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
@@ -187,18 +184,20 @@ async function requireUser() {
   return user;
 }
 
-function requireEntitlement(product: string) {
-  return requireUser().then((user) => {
-    if (!hasEntitlement(user.id, product)) throw new Error(`An active ${product.replace(/_/g, " ")} entitlement is required.`);
-    return user;
-  });
+async function requireEntitlement(product: string) {
+  const user = await requireUser();
+  const { hasEntitlement } = await import("~/db");
+  if (!hasEntitlement(user.id, product)) throw new Error(`An active ${product.replace(/_/g, " ")} entitlement is required.`);
+  return user;
 }
 
-const requireMeos = () => requireUser().then((user) => {
+const requireMeos = async () => {
+  const user = await requireUser();
   if (user.tier !== "pro" && user.tier !== "lifetime") throw new Error("MeOS requires an active Pro or Lifetime plan.");
+  const { hasEntitlement } = await import("~/db");
   if (!hasEntitlement(user.id, "meos_build")) throw new Error("MeOS Build must be purchased before continuing.");
   return user;
-});
+};
 
 export const claimPurchase = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
@@ -206,10 +205,16 @@ export const claimPurchase = createServerFn({ method: "POST" })
     if (product !== "meos_build" && product !== "meos_care") throw new Error("Unsupported purchase.");
     return { product };
   })
-  .handler(async ({ data }) => { const user = await requireUser(); recordPurchase(user.id, data.product); return { success: true }; });
+  .handler(async ({ data }) => {
+    const user = await requireUser();
+    const { recordPurchase } = await import("~/db");
+    recordPurchase(user.id, data.product);
+    return { success: true };
+  });
 
 export const getEntitlements = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
+  const { listEntitlements } = await import("~/db");
   return listEntitlements(user.id);
 });
 

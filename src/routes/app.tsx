@@ -23,6 +23,8 @@ import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
+// Max height (px) of the answer textarea before it scrolls instead of growing.
+const MAX_ANSWER_INPUT_HEIGHT = 160;
 
 // ── Initialize empty interview state ──
 function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context"): InterviewState {
@@ -321,7 +323,7 @@ function AppPage() {
   const [interviewCount, setInterviewCount] = useState(0);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Computed values
@@ -372,6 +374,14 @@ function AppPage() {
       inputRef.current?.focus();
     }
   }, [screen, waiting]);
+  // Auto-resize the answer textarea as content grows (capped at MAX_ANSWER_INPUT_HEIGHT, then scrolls).
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, MAX_ANSWER_INPUT_HEIGHT)}px`;
+    el.style.overflowY = el.scrollHeight > MAX_ANSWER_INPUT_HEIGHT ? "auto" : "hidden";
+  }, [answer]);
 
   // Persist every in-progress state locally; authenticated users also get a server draft.
   useEffect(() => {
@@ -1301,16 +1311,18 @@ function AppPage() {
 
               {/* Text input */}
               {hasGaps && (
-                <div className="flex gap-2">
-                  <input
+                <div className="flex gap-2 items-end">
+                  <textarea
                     ref={inputRef}
-                    type="text"
+                    rows={1}
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={waiting ? "ALVIRA is thinking..." : "Type your answer..."}
+                    placeholder={waiting ? "ALVIRA is thinking..." : "Type your answer...  (Shift+Enter for a new line)"}
                     disabled={waiting}
-                    className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500"
+                    enterKeyHint="enter"
+                    aria-label="Your answer"
+                    className="flex-1 resize-none rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 max-h-40 overflow-y-auto"
                   />
                   <button
                     type="button"

@@ -46,7 +46,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
       <a
         href="/meos"
         onClick={handlePrimaryClick}
-        className="inline-flex items-center gap-1.5 font-mono text-sm text-human-dark hover:text-human-dark dark:text-human dark:hover:text-human transition-colors"
+        className="inline-flex items-center gap-1.5 font-mono text-sm text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
       >
         Go deeper with MeOS <span aria-hidden="true">→</span>
       </a>
@@ -68,7 +68,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
         <a
           href="/meos"
           onClick={handlePrimaryClick}
-          className="shrink-0 inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-human-dark hover:text-human-dark dark:text-human dark:hover:text-human transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
         >
           Explore MeOS <span aria-hidden="true">→</span>
         </a>
@@ -86,9 +86,9 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
 
   // ── Default (full card) ──
   return (
-    <div className="relative rounded-xl border border-human/50 dark:border-human-dark/40 bg-gradient-to-br from-human-soft/80 to-white dark:from-human-dark/20 dark:to-gray-950 px-6 py-6 sm:px-8 sm:py-7">
+    <div className="relative rounded-xl border border-emerald-500/50 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-950/20 dark:to-gray-950 px-6 py-6 sm:px-8 sm:py-7">
       {/* Eyebrow */}
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-human-dark dark:text-human">
+      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-system-dark dark:text-system">
         GO DEEPER WITH MEOS
       </p>
 
@@ -107,7 +107,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
         <a
           href="/meos"
           onClick={handlePrimaryClick}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-human-dark px-5 py-3 font-mono text-sm font-semibold text-white hover:bg-human-dark dark:hover:bg-human focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-human transition-colors duration-200"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
         >
           Explore MeOS
           <span aria-hidden="true">→</span>
@@ -115,7 +115,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
         <a
           href="/meos"
           onClick={handleSecondaryClick}
-          className="inline-flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-3 font-mono text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-human transition-colors duration-200"
+          className="inline-flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-3 font-mono text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
         >
           How MeOS works
         </a>

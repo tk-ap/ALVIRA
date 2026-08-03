@@ -78,13 +78,13 @@ export function Header() {
             <a href="/interview" className={linkClass}>
               Interview
             </a>
-            <a href="/pricing" className={linkClass}>
-              Pricing
-            </a>
             <a href="/why-alvira" className={linkClass}>
               Why ALVIRA
             </a>
-            <a href="/meos" className="font-mono text-sm text-human-dark hover:text-human dark:text-human dark:hover:text-human-dark transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
+            <a href="/pricing" className={linkClass}>
+              Pricing
+            </a>
+            <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
               MeOS
             </a>
             {user === undefined ? (
@@ -154,13 +154,13 @@ export function Header() {
           <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>
             Interview
           </a>
-          <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>
-            Pricing
-          </a>
           <a href="/why-alvira" onClick={closeMenu} className={mobileLinkClass}>
             Why ALVIRA
           </a>
-          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-human-dark dark:text-human`}>
+          <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>
+            Pricing
+          </a>
+          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>
             MeOS
           </a>
           {user ? (

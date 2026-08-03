@@ -154,7 +154,7 @@ function WhyAlviraPage() {
               </table>
             </div>
 
-            <p className="mt-4 font-mono text-xs text-gray-400 dark:text-gray-500">✅ yes · ◑ partial · ❌ no</p>
+            <p className="mt-4 font-mono text-xs text-gray-400 dark:text-gray-500">✅ yes · <span className="text-amber-500 dark:text-amber-400">◑</span> partial · ❌ no</p>
 
             <p className="mt-10 max-w-2xl text-lg font-semibold leading-snug text-gray-900 dark:text-gray-100">No other product lets you elicit, validate, and export your AI context to use everywhere.</p>
 

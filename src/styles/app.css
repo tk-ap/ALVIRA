@@ -61,6 +61,11 @@
   --color-system: #2d9b8c;
   --color-system-soft: #e8f5f3;
   --color-system-dark: #1f7a6d;
+
+  /* Human accent (ambiguity, reflection, insight) */
+  --color-human: #b0886c;
+  --color-human-soft: #faf5f0;
+  --color-human-dark: #8b6548;
 }
 
 @layer base {

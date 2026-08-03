@@ -143,32 +143,7 @@ function Home() {
             ))}
           </div>
 
-          <div className="mt-24 overflow-x-auto border-y border-gray-200 dark:border-gray-800">
-            <table className="w-full min-w-[30rem] border-collapse text-left">
-              <thead>
-                <tr className="font-mono text-xs uppercase tracking-wide">
-                  <th scope="col" className="w-1/2 border-b border-r border-gray-200 bg-gray-50 px-5 py-4 text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">Without ALVIRA</th>
-                  <th scope="col" className="w-1/2 border-b border-gray-200 bg-emerald-50 px-5 py-4 text-emerald-800 dark:border-gray-800 dark:bg-emerald-950/40 dark:text-emerald-300">With ALVIRA</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                {[
-                  ["Re-explain yourself in every chat", "Create reusable context once"],
-                  ["Receive generic answers", "Receive answers shaped around you"],
-                  ["Keep instructions scattered across chats", "Maintain one organized AI profile"],
-                  ["Lose context when switching tools", "Bring your knowledge to any AI"],
-                  ["Guess what information AI needs", "Let adaptive interviews uncover it"],
-                ].map(([without, withAlvira]) => (
-                  <tr key={without}>
-                    <td className="border-b border-r border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-950">{without}</td>
-                    <td className="border-b border-gray-200 bg-emerald-50/60 px-5 py-4 dark:border-gray-800 dark:bg-emerald-950/20">{withAlvira}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-16 text-center">
+          <div className="mt-10 text-center">
             <a
               href="/app"
               className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
@@ -326,188 +301,23 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 5. Portability comparison */}
-      {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-gray-50 px-6 py-28 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-36">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-4xl lg:ml-[8%]">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Comparison</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-              Your knowledge, not their platform
-            </h2>
-            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              Most AI platforms remember you in ways you can't see, edit, or take with you. ALVIRA builds knowledge you own — open Markdown files that work everywhere, stay current, and never lock you in.
-            </p>
-          </div>
-
-          {/* --- Desktop table --- */}
-          <div className="mt-20 hidden sm:block overflow-x-auto lg:mx-[4%]">
-            <table className="w-full min-w-[48rem] border-collapse text-left">
-              <thead>
-                <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-                  <th scope="col" className="w-1/6 py-3 pr-4 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Dimension</th>
-                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/30">ALVIRA</th>
-                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">ChatGPT Memory</th>
-                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Claude Projects</th>
-                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Custom GPTs</th>
-                  <th scope="col" className="w-[17%] py-3 px-3 font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Cursor Rules</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm leading-relaxed">
-                {[
-                  {
-                    dim: "Portability",
-                    alvira: { text: "Works with any AI tool", positive: true },
-                    gptMem: { text: "ChatGPT only", positive: false },
-                    claude: { text: "Claude only", positive: false },
-                    gpts: { text: "ChatGPT only", positive: false },
-                    cursor: { text: "Cursor IDE only", positive: false },
-                  },
-                  {
-                    dim: "File format",
-                    alvira: { text: "Open Markdown, you own it", positive: true },
-                    gptMem: { text: "Hidden, proprietary", positive: false },
-                    claude: { text: "Hidden project config", positive: false },
-                    gpts: { text: "Hidden GPT config", positive: false },
-                    cursor: { text: "Plain text, but dev-only", positive: false },
-                  },
-                  {
-                    dim: "Editability",
-                    alvira: { text: "Full control — edit anything", positive: true },
-                    gptMem: { text: "Cannot view or export", positive: false },
-                    claude: { text: "Limited to project UI", positive: false },
-                    gpts: { text: "Limited to builder UI", positive: false },
-                    cursor: { text: "Manual file edits", positive: false },
-                  },
-                  {
-                    dim: "Depth",
-                    alvira: { text: "19 domains, adaptive interviews", positive: true },
-                    gptMem: { text: "Surface memory from chats", positive: false },
-                    claude: { text: "Project-level context", positive: false },
-                    gpts: { text: "Single-purpose instructions", positive: false },
-                    cursor: { text: "Code-style rules only", positive: false },
-                  },
-                  {
-                    dim: "Updates",
-                    alvira: { text: "Continuous, versioned, you control", positive: true },
-                    gptMem: { text: "Automatic, unpredictable", positive: false },
-                    claude: { text: "Manual per project", positive: false },
-                    gpts: { text: "Static unless rebuilt", positive: false },
-                    cursor: { text: "Manual file edits", positive: false },
-                  },
-                  {
-                    dim: "Privacy",
-                    alvira: { text: "Your files, your storage", positive: true },
-                    gptMem: { text: "OpenAI servers", positive: false },
-                    claude: { text: "Anthropic servers", positive: false },
-                    gpts: { text: "OpenAI servers", positive: false },
-                    cursor: { text: "Local file on disk", positive: true },
-                  },
-                ].map((row) => (
-                  <tr key={row.dim} className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
-                    <td className="py-3.5 pr-4 font-semibold text-gray-900 dark:text-gray-100">{row.dim}</td>
-                    {[row.alvira, row.gptMem, row.claude, row.gpts, row.cursor].map((cell, ci) => (
-                      <td
-                        key={ci}
-                        className={`py-3.5 px-3 ${ci === 0 ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""}`}
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          {cell.positive ? (
-                            <svg className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                            </svg>
-                          ) : (
-                            <svg className="h-4 w-4 shrink-0 text-red-400 dark:text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
-                          )}
-                          <span className={cell.positive ? "text-gray-800 dark:text-gray-200" : "text-gray-500 dark:text-gray-400"}>{cell.text}</span>
-                        </span>
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* --- Mobile cards --- */}
-          <div className="mt-12 sm:hidden space-y-6">
-            {[
-              {
-                dim: "Portability",
-                alvira: "Works with any AI tool",
-                others: ["ChatGPT Memory: ChatGPT only", "Claude Projects: Claude only", "Custom GPTs: ChatGPT only", "Cursor Rules: Cursor IDE only"],
-              },
-              {
-                dim: "File format",
-                alvira: "Open Markdown, you own it",
-                others: ["ChatGPT Memory: Hidden, proprietary", "Claude Projects: Hidden project config", "Custom GPTs: Hidden GPT config", "Cursor Rules: Plain text, dev-only"],
-              },
-              {
-                dim: "Editability",
-                alvira: "Full control — edit anything",
-                others: ["ChatGPT Memory: Cannot view or export", "Claude Projects: Limited to project UI", "Custom GPTs: Limited to builder UI", "Cursor Rules: Manual file edits"],
-              },
-              {
-                dim: "Depth",
-                alvira: "19 domains, adaptive interviews",
-                others: ["ChatGPT Memory: Surface memory from chats", "Claude Projects: Project-level context", "Custom GPTs: Single-purpose instructions", "Cursor Rules: Code-style rules only"],
-              },
-              {
-                dim: "Updates",
-                alvira: "Continuous, versioned, you control",
-                others: ["ChatGPT Memory: Automatic, unpredictable", "Claude Projects: Manual per project", "Custom GPTs: Static unless rebuilt", "Cursor Rules: Manual file edits"],
-              },
-              {
-                dim: "Privacy",
-                alvira: "Your files, your storage",
-                others: ["ChatGPT Memory: OpenAI servers", "Claude Projects: Anthropic servers", "Custom GPTs: OpenAI servers", "Cursor Rules: Local file on disk"],
-              },
-            ].map((card) => (
-              <div key={card.dim} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <div className="bg-emerald-50 dark:bg-emerald-950/40 px-5 py-3 border-b border-emerald-200 dark:border-emerald-900">
-                  <span className="font-mono text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-300">{card.dim}</span>
-                </div>
-                <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-emerald-50/30 dark:bg-emerald-950/10">
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <svg className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
-                    ALVIRA: {card.alvira}
-                  </span>
-                </div>
-                <div className="px-5 py-3 space-y-2.5">
-                  {card.others.map((o) => (
-                    <div key={o} className="flex items-start gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                      <svg className="h-4 w-4 shrink-0 mt-0.5 text-red-400 dark:text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                      </svg>
-                      {o}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-24 flex flex-col items-center border-t border-gray-200 pt-14 dark:border-gray-800">
-            <div>
-              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Works everywhere</span>
-              <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">One profile. Every AI tool.</h3>
-              <p className="mt-3 max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Open Markdown keeps your knowledge useful across the tools you already use — and the ones you have not met yet.</p>
-            </div>
-            <div className="mt-10 w-full max-w-3xl"><PortabilityGraphic /></div>
-          </div>
-
-          <p className="mt-12 max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-            Platform memory features are designed to keep you on their platform. ALVIRA's Markdown knowledge files are designed to go wherever you go — into any AI tool, any editor, any workflow.{" "}
-            <span className="text-gray-700 dark:text-gray-300">You own the files. You control the updates. You decide where they live.</span>
+      {/* 5. Works everywhere */}
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Works everywhere</span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">One profile. Every AI tool.</h2>
+          <p className="mt-5 max-w-xl mx-auto text-base leading-relaxed text-gray-600 dark:text-gray-400">
+            Open Markdown keeps your knowledge useful across the tools you already use — ChatGPT, Claude, Gemini, Cursor — and the ones you haven't met yet.
+          </p>
+          <div className="mt-12"><PortabilityGraphic /></div>
+          <p className="mt-6">
+            <a href="/why-alvira" className="font-mono text-sm text-emerald-700 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
+              See how we compare to other platforms →
+            </a>
           </p>
         </div>
       </section>
 
-      {/* ================================================================ */}
       {/* 6. Free-plan CTA */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
@@ -566,31 +376,18 @@ function Home() {
 
       {/* ================================================================ */}
       {/* 7. Privacy & trust */}
-      {/* ================================================================ */}
       <section id="privacy" className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Privacy &amp; trust</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-              Your knowledge stays yours.
-            </h2>
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              You should never have to wonder where the most personal context about you goes. ALVIRA is designed around ownership and control from the start.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Privacy &amp; trust</span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Your knowledge stays yours.</h2>
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 max-w-2xl mx-auto text-left">
             {[
               ["01", "Local-first", "Your interviews and profiles are stored as Markdown files. You decide where they live — your computer, a private repo, or nowhere at all."],
               ["02", "No training", "We never use your knowledge to train AI models. Your data is yours, period."],
-              ["03", "Portable format", "Open Markdown means no vendor lock-in. Read, edit, and use your files with any tool, forever."],
-              ["04", "You control sharing", "Share files with specific AI tools or team members, or keep them completely private. There is no opt-out because you are never opted in."],
             ].map(([number, title, body]) => (
               <div key={title} className="border-t border-gray-200 pt-5 dark:border-gray-800">
                 <div className="flex items-start gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-600 font-mono text-xs font-semibold text-emerald-700 dark:border-emerald-500 dark:text-emerald-400" aria-hidden="true">
-                    {number}
-                  </span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-600 font-mono text-xs font-semibold text-emerald-700 dark:border-emerald-500 dark:text-emerald-400" aria-hidden="true">{number}</span>
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{title}</h3>
                     <p className="mt-2 text-base leading-relaxed text-gray-600 dark:text-gray-400">{body}</p>
@@ -599,14 +396,9 @@ function Home() {
               </div>
             ))}
           </div>
-
-          <p className="mt-12 max-w-3xl border-l-2 border-emerald-500 pl-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            ALVIRA is built on the belief that your knowledge should belong to you — not to us, and not to any AI platform.
-          </p>
         </div>
       </section>
 
-      {/* ================================================================ */}
       {/* 8. MeOS expansion card (cross-sell) */}
       {/* ================================================================ */}
       <section className="border-t border-human/30 bg-human-soft/70 px-6 py-28 dark:border-human-dark/40 dark:bg-human-dark/10 sm:px-8 sm:py-36">

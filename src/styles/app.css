@@ -8,18 +8,31 @@
   --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Backgrounds */
-  --color-ink: #0b0e14;
+  /* Backgrounds — derived from logo teal (H≈173°) */
+  --color-ink: #0b0e0e;
   --color-ink-light: #f8f7f5;
 
   /* Primary text */
-  --color-mineral: #e8e6e1;
+  --color-mineral: #e2e8e6;
   --color-mineral-dark: #1a1a1a;
 
-  /* Secondary text */
-  --color-warm-gray: #9c9585;
-  /* Darker warm gray for light backgrounds (WCAG AA: 5.2:1 on ink-light) */
-  --color-warm-gray-dark: #6d685c;
+  /* Secondary text — teal-gray instead of brown-gray */
+  --color-warm-gray: #8b9492;
+  /* Darker teal-gray for light backgrounds (WCAG AA: 5.2:1 on ink-light) */
+  --color-warm-gray-dark: #6d7775;
+
+  /* Override Tailwind's gray scale — teal-derived, aligned with the logo */
+  --color-gray-50: #f4f6f5;
+  --color-gray-100: #e2e8e6;
+  --color-gray-200: #cdd5d3;
+  --color-gray-300: #aab5b3;
+  --color-gray-400: #8b9492;
+  --color-gray-500: #6d7775;
+  --color-gray-600: #535c5b;
+  --color-gray-700: #3a4241;
+  --color-gray-800: #252b2a;
+  --color-gray-900: #171a19;
+  --color-gray-950: #0b0e0e;
 
   /* System accent (knowledge, validation, structure) */
   --color-system: #2d9b8c;

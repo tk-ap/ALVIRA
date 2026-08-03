@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
-import { getCurrentUser, fetchUserLimits, logout } from "./-auth";
+import { getCurrentUser, fetchUserLimits, logout, getEntitlements, claimPurchase } from "./-auth";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
 export const Route = createFileRoute("/account")({ component: AccountPage });
@@ -28,6 +28,8 @@ function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshMsg, setRefreshMsg] = useState("");
+  const [entitlements, setEntitlements] = useState<string[]>([]);
+  const [claimMsg, setClaimMsg] = useState("");
 
   const loadLimits = async () => {
     setLoading(true);
@@ -40,6 +42,7 @@ function AccountPage() {
       }
       const l = await fetchUserLimits();
       setLimits(l as Limits);
+      setEntitlements(await getEntitlements());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to load account info.");
     } finally {
@@ -96,6 +99,10 @@ function AccountPage() {
 
           {limits && (
             <>
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700"><h2 className="font-semibold text-gray-900 dark:text-gray-100">Purchases &amp; Entitlements</h2></div>
+                <div className="px-5 py-4 space-y-4"><p className="text-sm text-gray-600 dark:text-gray-400">{entitlements.length ? entitlements.map((e) => e.replace(/_/g, " ")).join(", ") : "No entitlements recorded yet."}</p><button type="button" onClick={async () => { setClaimMsg("Claiming..."); try { await claimPurchase({ data: { product: "meos_build" } }); setEntitlements(await getEntitlements()); setClaimMsg("MeOS Build claimed."); } catch (e) { setClaimMsg(e instanceof Error ? e.message : "Unable to claim purchase."); } }} className="rounded-lg border border-emerald-600 px-4 py-2 font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950">{claimMsg || "Claim MeOS Build purchase"}</button><p className="text-xs text-gray-500 dark:text-gray-400">Self-serve activation for V1; Stripe verification is coming.</p></div>
+              </div>
               {/* User info card */}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">

@@ -22,7 +22,7 @@ import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
-import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft } from "./-auth";
+import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
 
 // ── Initialize empty interview state ──
 function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context"): InterviewState {
@@ -313,6 +313,7 @@ function AppPage() {
 
   // Auth state
   const [authUser, setAuthUser] = useState<{ id: string; email: string; tier: string } | null | undefined>(undefined);
+  const [meosAuthorized, setMeosAuthorized] = useState(false);
 
   // Limit state
   const [limitBanner, setLimitBanner] = useState<"profiles" | "interviews" | null>(null);
@@ -389,6 +390,7 @@ function AppPage() {
       if (cancelled) return;
       if (u) {
         setAuthUser({ id: u.id, email: u.email, tier: u.tier });
+        if (offeringSearch === "meos") getEntitlements().then((items) => setMeosAuthorized((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build"))).catch(() => setMeosAuthorized(false));
         setInterviewCount(u.interviewCount ?? 0);
 
         // Fetch detailed limits for the banner
@@ -497,7 +499,7 @@ function AppPage() {
     if (!state || !authUser || saving) return;
     setSaving(true);
     try {
-      const result = await saveProfile({ data: { topic: state.topic, tier: state.tier, state, portrait: offering === "meos" ? meosPortrait : undefined } });
+      const result = await saveProfile({ data: { topic: state.topic, tier: state.tier, state, offering: offering === "meos" ? "meos" : "context", portrait: offering === "meos" ? meosPortrait : undefined } });
       // Check for limit_reached error
       const r = result as { id?: string; error?: string; limit?: string };
       if (r.error === "limit_reached") {
@@ -517,6 +519,7 @@ function AppPage() {
 
   const handleStart = async () => {
     const trimmed = topic.trim();
+    if (offering === "meos" && !meosAuthorized) { setStartError("MeOS requires an active Pro or Lifetime plan plus MeOS Build ($149 one-time). Purchase access on the MeOS page."); return; }
     if (!trimmed) return;
 
     // MeOS topics are introspective/philosophical — skip the context-oriented validation

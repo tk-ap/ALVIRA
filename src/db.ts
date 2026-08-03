@@ -67,6 +67,14 @@ export function getDb(): Database {
       UNIQUE (user_id, topic)
     );
     CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles(user_id);
+    CREATE TABLE IF NOT EXISTS purchases (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      product TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_purchases_user_id ON purchases(user_id);
     CREATE TABLE IF NOT EXISTS interview_drafts (
       user_id TEXT NOT NULL,
       offering TEXT NOT NULL,
@@ -86,6 +94,11 @@ export function getDb(): Database {
   }
   try {
     db.exec("ALTER TABLE users ADD COLUMN interview_count INTEGER NOT NULL DEFAULT 0");
+  } catch {
+    // Column already exists — safe to ignore
+  }
+  try {
+    db.exec("ALTER TABLE profiles ADD COLUMN offering TEXT NOT NULL DEFAULT 'context'");
   } catch {
     // Column already exists — safe to ignore
   }
@@ -203,6 +216,18 @@ export function getProfileCount(userId: string): number {
   const d = getDb();
   const row = d.query("SELECT COUNT(*) as count FROM profiles WHERE user_id = ?").get(userId) as { count: number };
   return row.count;
+}
+
+export function hasEntitlement(userId: string, product: string): boolean {
+  return !!getDb().query("SELECT 1 FROM purchases WHERE user_id = ? AND product = ? LIMIT 1").get(userId, product);
+}
+
+export function recordPurchase(userId: string, product: string): void {
+  getDb().run("INSERT INTO purchases (id, user_id, product) VALUES (?, ?, ?)", [crypto.randomUUID(), userId, product]);
+}
+
+export function listEntitlements(userId: string): string[] {
+  return (getDb().query("SELECT DISTINCT product FROM purchases WHERE user_id = ? ORDER BY created_at DESC").all(userId) as Array<{ product: string }>).map(row => row.product);
 }
 
 // ── Interview count ──

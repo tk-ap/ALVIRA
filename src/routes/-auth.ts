@@ -19,6 +19,9 @@ import {
   getProfileCount,
   incrementInterviewCount,
   getUserLimits,
+  hasEntitlement,
+  recordPurchase,
+  listEntitlements,
 } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
@@ -184,16 +187,47 @@ async function requireUser() {
   return user;
 }
 
+function requireEntitlement(product: string) {
+  return requireUser().then((user) => {
+    if (!hasEntitlement(user.id, product)) throw new Error(`An active ${product.replace(/_/g, " ")} entitlement is required.`);
+    return user;
+  });
+}
+
+const requireMeos = () => requireUser().then((user) => {
+  if (user.tier !== "pro" && user.tier !== "lifetime") throw new Error("MeOS requires an active Pro or Lifetime plan.");
+  if (!hasEntitlement(user.id, "meos_build")) throw new Error("MeOS Build must be purchased before continuing.");
+  return user;
+});
+
+export const claimPurchase = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    const product = (data as { product?: string }).product;
+    if (product !== "meos_build" && product !== "meos_care") throw new Error("Unsupported purchase.");
+    return { product };
+  })
+  .handler(async ({ data }) => { const user = await requireUser(); recordPurchase(user.id, data.product); return { success: true }; });
+
+export const getEntitlements = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireUser();
+  return listEntitlements(user.id);
+});
+
+export const authorizeMeos = createServerFn({ method: "GET" }).handler(async () => {
+  await requireMeos();
+  return { authorized: true };
+});
+
 // ── Save profile (with free tier limit check) ──
 
 export const saveProfile = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { topic?: string; tier?: string; state?: unknown; portrait?: unknown };
+    const d = data as { topic?: string; tier?: string; state?: unknown; portrait?: unknown; offering?: string };
     if (!d.topic || typeof d.topic !== "string" || !d.tier || !d.state) throw new Error("Topic, tier, and state are required.");
-    return { topic: d.topic.trim(), tier: d.tier, state: d.state, portrait: d.portrait };
+    return { topic: d.topic.trim(), tier: d.tier, state: d.state, portrait: d.portrait, offering: d.offering === "meos" ? "meos" as const : "context" as const };
   })
   .handler(async ({ data }) => {
-    const user = await requireUser();
+    const user = data.offering === "meos" ? await requireMeos() : await requireUser();
     const d = getDb();
 
     // Check if this is an existing profile (same topic)
@@ -210,9 +244,9 @@ export const saveProfile = createServerFn({ method: "POST" })
     const id = existing?.id ?? crypto.randomUUID();
     d.run(
       existing
-        ? "UPDATE profiles SET tier = ?, state_json = ?, portrait_json = COALESCE(?, portrait_json), updated_at = datetime('now') WHERE id = ? AND user_id = ?"
-        : "INSERT INTO profiles (id, user_id, topic, tier, state_json, portrait_json) VALUES (?, ?, ?, ?, ?, ?)",
-      existing ? [data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null, id, user.id] : [id, user.id, data.topic, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null],
+        ? "UPDATE profiles SET offering = ?, tier = ?, state_json = ?, portrait_json = COALESCE(?, portrait_json), updated_at = datetime('now') WHERE id = ? AND user_id = ?"
+        : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      existing ? [data.offering, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null, id, user.id] : [id, user.id, data.topic, data.offering, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null],
     );
     return { id };
   });
@@ -223,16 +257,16 @@ export const listProfiles = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getMeosProfiles = createServerFn({ method: "GET" }).handler(async () => {
-  const user = await requireUser();
-  const rows = getDb().query("SELECT id, topic, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = ? AND (topic LIKE '%MeOS%' OR topic LIKE '%meos%') ORDER BY updated_at DESC").all(user.id) as Array<{ id: string; topic: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
+  const user = await requireMeos();
+  const rows = getDb().query("SELECT id, topic, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = ? AND offering = 'meos' ORDER BY updated_at DESC").all(user.id) as Array<{ id: string; topic: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
   return rows.map(row => ({ ...row, state: JSON.parse(row.state_json), portrait: row.portrait_json ? JSON.parse(row.portrait_json) : null }));
 });
 
 export const saveMeosPortrait = createServerFn({ method: "POST" })
   .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait }))
   .handler(async ({ data }) => {
-    const user = await requireUser();
-    getDb().run("UPDATE profiles SET portrait_json = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(data.portrait), data.profileId, user.id]);
+    const user = await requireMeos();
+    getDb().run("UPDATE profiles SET portrait_json = ?, offering = 'meos', updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(data.portrait), data.profileId, user.id]);
     return { success: true };
   });
 

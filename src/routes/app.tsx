@@ -6,6 +6,7 @@ import JSZip from "jszip";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
+import { extractClaims, type ExtractionResult } from "./-extractor";
 import {
   getKnowledgeGraph,
   getPlaybook,
@@ -36,6 +37,42 @@ function createInitialState(tier: Tier, topic: string, offering: "context" | "me
     history: [],
     currentDomain: null,
   };
+}
+
+// ── Document parsing helpers (Upload-to-seed) ──
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
+const SUPPORTED_UPLOAD_EXTENSIONS = ["txt", "md", "docx"] as const;
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read that file. Please try another one."));
+    reader.readAsText(file);
+  });
+}
+
+/** Extract plain text from a .docx via JSZip — unzip word/document.xml, strip tags. */
+async function parseDocx(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  const docXml = await zip.file("word/document.xml")?.async("string");
+  if (!docXml) {
+    throw new Error("That doesn't look like a valid .docx file.");
+  }
+  const text = docXml
+    .replace(/<w:p[^>]*>/g, "\n") // paragraphs
+    .replace(/<w:tab[^>]*>/g, "\t") // tabs
+    .replace(/<w:br[^>]*\/?>/g, "\n") // line breaks
+    .replace(/<[^>]+>/g, "") // remaining tags
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n");
+  return text.trim();
 }
 
 // ── Markdown preview component ──
@@ -245,8 +282,8 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
 }
 
 function AppPage() {
-  // Screen state: "start" | "interview" | "output" | "api-error"
-  const [screen, setScreen] = useState<"start" | "interview" | "output" | "api-error">("start");
+  // Screen state: "start" | "seed-review" | "interview" | "output" | "api-error"
+  const [screen, setScreen] = useState<"start" | "seed-review" | "interview" | "output" | "api-error">("start");
 
   // Start screen state
   const [topic, setTopic] = useState("");
@@ -269,6 +306,12 @@ function AppPage() {
   const [waiting, setWaiting] = useState(false);
   const [interviewError, setInterviewError] = useState("");
   const [startError, setStartError] = useState("");
+  // Upload-to-seed state
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
+  const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
+  const [seededInfo, setSeededInfo] = useState<string | null>(null);
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
   const [showInsightCTA, setShowInsightCTA] = useState(false);
@@ -293,6 +336,7 @@ function AppPage() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Computed values
   const graph = state ? (offering === "meos" ? getMeosGraph() : getKnowledgeGraph(state.tier)) : [];
@@ -485,6 +529,108 @@ function AppPage() {
       if (msg !== "API key not configured") {
         setInterviewError(msg);
         setState(initialState);
+      }
+    } finally {
+      setWaiting(false);
+    }
+  };
+
+  // ── Upload-to-seed: parse file → extract claims → review screen ──
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+
+    if (!topic.trim()) {
+      setUploadError("Describe what your AI should know first, then upload your document.");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadError("That file is larger than 5MB. Please upload a smaller document.");
+      return;
+    }
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!(SUPPORTED_UPLOAD_EXTENSIONS as readonly string[]).includes(ext)) {
+      setUploadError("Only .txt, .md, and .docx files are supported right now.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError("");
+    setInterviewError("");
+    try {
+      const text = ext === "docx" ? await parseDocx(file) : await readFileAsText(file);
+      if (!text.trim()) {
+        throw new Error("That file appears to be empty — nothing to extract.");
+      }
+      const result = await extractClaims({ data: { text, tier, topic: topic.trim() } });
+      setExtraction(result);
+      setSeedDecisions({});
+      setScreen("seed-review");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not extract knowledge from that file.";
+      if (msg === "API key not configured") {
+        setScreen("api-error");
+      } else {
+        setUploadError(msg);
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ── Upload-to-seed: apply approved claims → seed state → continue interview ──
+  const handleSeedContinue = async () => {
+    if (!extraction) return;
+
+    const currentGraph = getKnowledgeGraph(tier);
+    const initialState = createInitialState(tier, topic.trim(), "context");
+    const domains = { ...initialState.domains };
+
+    extraction.claims.forEach((claim, index) => {
+      const decision = seedDecisions[index] ?? { status: claim.confidence >= 0.8 ? "agree" : "skip" };
+      if (decision.status === "skip") return;
+      if (!currentGraph.some((d) => d.id === claim.domainId)) return; // safety: unknown domain
+      const text =
+        decision.status === "revise" && decision.text?.trim() ? decision.text.trim() : claim.text;
+      if (!text) return;
+      const existing = domains[claim.domainId]?.answers ?? [];
+      if (!existing.includes(text)) {
+        // Approved claims are user-validated → confidence 1, covered true.
+        // This is what lets gap detection skip the seeded domains (personal threshold 0.90).
+        domains[claim.domainId] = { answers: [...existing, text], confidence: 1, covered: true };
+      }
+    });
+
+    const seededDomainCount = Object.values(domains).filter((d) => d.covered).length;
+    const seededState: InterviewState = { ...initialState, domains };
+
+    setState(seededState);
+    setExtraction(null);
+    setSeedDecisions({});
+    setSeededInfo(
+      seededDomainCount > 0
+        ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} pre-filled from your document. Answer the remaining questions to finish your profile.`
+        : "No claims were selected — starting a fresh interview.",
+    );
+    setScreen("interview");
+    setWaiting(true);
+    setInterviewError("");
+
+    // Auto-run the next question so the interview continues with remaining gaps
+    // and history is populated (Generate requires history.length >= 2).
+    try {
+      const result = await askNextQuestion(seededState);
+      if (result) {
+        setState(result);
+      } else {
+        setState({ ...seededState, currentDomain: null });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      if (msg !== "API key not configured") {
+        setInterviewError(msg);
+        setState(seededState);
       }
     } finally {
       setWaiting(false);
@@ -806,6 +952,11 @@ function AppPage() {
     setMeosPortrait(null);
     setPortraitError(false);
     setInterviewError("");
+    setUploading(false);
+    setUploadError("");
+    setExtraction(null);
+    setSeedDecisions({});
+    setSeededInfo(null);
     meaningfulAnswerCountRef.current = 0;
     setShowInsightCTA(false);
     setScreen("start");
@@ -956,6 +1107,11 @@ function AppPage() {
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
+              {seededInfo && (
+                <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
+                  {seededInfo}
+                </div>
+              )}
               {state?.history.map((msg, i) => (
                 <div
                   key={i}
@@ -1134,6 +1290,176 @@ function AppPage() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </main>
+        <SignupPromptBanner show={authUser === null} />
+      </div>
+    );
+  }
+
+  // ── Render: Seed Review Screen (upload → claim review → seed) ──
+  if (screen === "seed-review" && extraction) {
+    const reviewGraph = getKnowledgeGraph(tier);
+    const claims = extraction.claims;
+    const grouped = new Map<string, { claim: (typeof claims)[number]; index: number }[]>();
+    claims.forEach((claim, index) => {
+      const list = grouped.get(claim.domainId) ?? [];
+      list.push({ claim, index });
+      grouped.set(claim.domainId, list);
+    });
+    const orderedGroups = reviewGraph
+      .filter((d) => grouped.has(d.id))
+      .map((d) => ({ domain: d, items: grouped.get(d.id)! }));
+    const decisionFor = (index: number) =>
+      seedDecisions[index] ?? { status: claims[index].confidence >= 0.8 ? "agree" : "skip" };
+    const approvedCount = claims.filter((_, i) => decisionFor(i).status !== "skip").length;
+    const skippedCount = claims.length - approvedCount;
+    const uncoveredLabels = extraction.uncoveredDomains
+      .map((id) => reviewGraph.find((d) => d.id === id)?.label ?? id)
+      .slice(0, 8);
+    const setDecision = (index: number, status: "agree" | "revise" | "skip") =>
+      setSeedDecisions((x) => ({ ...x, [index]: { status, text: x[index]?.text } }));
+    const abandonUpload = () => {
+      setScreen("start");
+      setExtraction(null);
+      setSeedDecisions({});
+      setUploadError("");
+    };
+
+    return (
+      <div className="min-h-dvh flex flex-col">
+        <Header />
+        <AuthPromptBanner show={authUser === null} />
+        {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
+        {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
+        <main id="main-content" className="flex-1 px-6 py-10">
+          <div className="mx-auto w-full max-w-3xl">
+            <button
+              type="button"
+              onClick={abandonUpload}
+              className="mb-6 font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            >
+              ← Back
+            </button>
+
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Review what was extracted</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              {extraction.summary || "Here's what your document contained."} Approve, revise, or skip each claim — only approved claims are pre-filled into your interview.
+            </p>
+
+            {/* Summary strip */}
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
+                <div className="font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-400">{claims.length}</div>
+                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">claims extracted</div>
+              </div>
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
+                <div className="font-mono text-2xl font-bold text-gray-900 dark:text-gray-100">{orderedGroups.length}</div>
+                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">domains covered</div>
+              </div>
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
+                <div className="font-mono text-2xl font-bold text-amber-700 dark:text-amber-400">{extraction.uncoveredDomains.length}</div>
+                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">domains not in document</div>
+              </div>
+            </div>
+
+            {uncoveredLabels.length > 0 && (
+              <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                Your document doesn't cover:{" "}
+                <span className="text-gray-700 dark:text-gray-300">{uncoveredLabels.join(", ")}</span>. These will be asked in the interview.
+              </p>
+            )}
+
+            {/* Claim groups by domain */}
+            <div className="mt-6 space-y-4">
+              {orderedGroups.length === 0 && (
+                <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                  Nothing usable was extracted from this document. Continue to start a fresh interview.
+                </p>
+              )}
+              {orderedGroups.map(({ domain, items }) => (
+                <div key={domain.id} className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-4 py-2.5">
+                    <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">{domain.label}</span>
+                    <span className="font-mono text-[10px] text-gray-400">&lt;{domain.id} /&gt;</span>
+                  </div>
+                  <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {items.map(({ claim, index }) => {
+                      const decision = decisionFor(index);
+                      const highConf = claim.confidence >= 0.8;
+                      return (
+                        <div key={index} className="px-4 py-3.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">{claim.text}</p>
+                            <span className={`flex-shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] ${
+                              highConf
+                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                            }`}>
+                              {highConf ? `high · ${Math.round(claim.confidence * 100)}%` : `verify · ${Math.round(claim.confidence * 100)}%`}
+                            </span>
+                          </div>
+                          {claim.evidence && (
+                            <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
+                              evidence: “{claim.evidence}”
+                            </p>
+                          )}
+                          <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            {([["agree", "✓ Agree"], ["revise", "✎ Revise"], ["skip", "⏭ Skip"]] as const).map(([s, label]) => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setDecision(index, s)}
+                                className={`rounded border px-2 py-1 font-mono text-xs transition-colors ${
+                                  decision.status === s
+                                    ? s === "agree"
+                                      ? "border-emerald-600 dark:border-emerald-400 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40"
+                                      : s === "revise"
+                                        ? "border-amber-600 dark:border-amber-400 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40"
+                                        : "border-gray-500 dark:border-gray-400 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900"
+                                    : "border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                          {decision.status === "revise" && (
+                            <textarea
+                              value={decision.text ?? claim.text}
+                              onChange={(ev) => setSeedDecisions((x) => ({ ...x, [index]: { status: "revise", text: ev.target.value } }))}
+                              rows={2}
+                              autoFocus
+                              className="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer actions */}
+            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                {approvedCount} approved · {skippedCount} skipped
+                {approvedCount > 0 && (
+                  <span className="block mt-0.5 text-xs text-gray-500 dark:text-gray-500">
+                    Approved claims seed your interview as high-confidence answers — remaining domains are asked normally.
+                  </span>
+                )}
+              </p>
+              <div className="flex gap-2 flex-shrink-0">
+                <button type="button" onClick={abandonUpload} className={btnSecondary}>
+                  Start fresh
+                </button>
+                <button type="button" onClick={handleSeedContinue} disabled={waiting} className={btnPrimary}>
+                  {waiting ? "Starting interview..." : "Continue to interview →"}
+                </button>
+              </div>
             </div>
           </div>
         </main>
@@ -1331,6 +1657,36 @@ function AppPage() {
             >
               {offering === "meos" ? "Start my MeOS interview" : "Start interview"}
             </button>
+
+            {/* Upload-to-seed option — only for AI Context Profile */}
+            {offering === "context" && (
+              <div className="pt-2">
+                <div className="flex items-center gap-3">
+                  <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500">or start from a document</span>
+                  <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                </div>
+                <div className="mt-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-4">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Upload a resume, bio, or notes</p>
+                  <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                    ALVIRA extracts what it can from a .txt, .md, or .docx file — you review the claims, then the interview only asks about what's missing. Your file is never stored.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading || !topic.trim()}
+                      className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {uploading ? "Extracting knowledge…" : "Choose file…"}
+                    </button>
+                    <span className="font-mono text-[10px] text-gray-400 dark:text-gray-500">.txt · .md · .docx · max 5MB</span>
+                  </div>
+                  {uploadError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{uploadError}</p>}
+                </div>
+              </div>
+            )}
             </div>
 
             {offering === "context" && (

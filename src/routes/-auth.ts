@@ -19,6 +19,8 @@ import {
   getProfileCount,
   incrementInterviewCount,
   getUserLimits,
+  recordPurchase,
+  listEntitlements,
 } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
@@ -184,42 +186,23 @@ async function requireUser() {
   return user;
 }
 
-async function requireEntitlement(product: string) {
-  const user = await requireUser();
-  const { hasEntitlement } = await import("~/db");
-  if (!hasEntitlement(user.id, product)) throw new Error(`An active ${product.replace(/_/g, " ")} entitlement is required.`);
-  return user;
-}
-
-const requireMeos = async () => {
-  const user = await requireUser();
-  if (user.tier !== "pro" && user.tier !== "lifetime") throw new Error("MeOS requires an active Pro or Lifetime plan.");
-  const { hasEntitlement } = await import("~/db");
-  if (!hasEntitlement(user.id, "meos_build")) throw new Error("MeOS Build must be purchased before continuing.");
-  return user;
-};
-
 export const claimPurchase = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
     const product = (data as { product?: string }).product;
     if (product !== "meos_build" && product !== "meos_care") throw new Error("Unsupported purchase.");
     return { product };
   })
-  .handler(async ({ data }) => {
-    const user = await requireUser();
-    const { recordPurchase } = await import("~/db");
-    recordPurchase(user.id, data.product);
-    return { success: true };
-  });
+  .handler(async ({ data }) => { const user = await requireUser(); recordPurchase(user.id, data.product); return { success: true }; });
 
 export const getEntitlements = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  const { listEntitlements } = await import("~/db");
   return listEntitlements(user.id);
 });
 
 export const authorizeMeos = createServerFn({ method: "GET" }).handler(async () => {
-  await requireMeos();
+  const user = await requireUser();
+  const { requireMeos } = await import("./-entitlements.server");
+  requireMeos(user);
   return { authorized: true };
 });
 
@@ -232,7 +215,11 @@ export const saveProfile = createServerFn({ method: "POST" })
     return { topic: d.topic.trim(), tier: d.tier, state: d.state, portrait: d.portrait, offering: d.offering === "meos" ? "meos" as const : "context" as const };
   })
   .handler(async ({ data }) => {
-    const user = data.offering === "meos" ? await requireMeos() : await requireUser();
+    const user = await requireUser();
+    if (data.offering === "meos") {
+      const { requireMeos } = await import("./-entitlements.server");
+      requireMeos(user);
+    }
     const d = getDb();
 
     // Check if this is an existing profile (same topic)
@@ -262,7 +249,9 @@ export const listProfiles = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getMeosProfiles = createServerFn({ method: "GET" }).handler(async () => {
-  const user = await requireMeos();
+  const user = await requireUser();
+  const { requireMeos } = await import("./-entitlements.server");
+  requireMeos(user);
   const rows = getDb().query("SELECT id, topic, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = ? AND offering = 'meos' ORDER BY updated_at DESC").all(user.id) as Array<{ id: string; topic: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
   return rows.map(row => ({ ...row, state: JSON.parse(row.state_json), portrait: row.portrait_json ? JSON.parse(row.portrait_json) : null }));
 });
@@ -270,7 +259,9 @@ export const getMeosProfiles = createServerFn({ method: "GET" }).handler(async (
 export const saveMeosPortrait = createServerFn({ method: "POST" })
   .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait }))
   .handler(async ({ data }) => {
-    const user = await requireMeos();
+    const user = await requireUser();
+    const { requireMeos } = await import("./-entitlements.server");
+    requireMeos(user);
     getDb().run("UPDATE profiles SET portrait_json = ?, offering = 'meos', updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(data.portrait), data.profileId, user.id]);
     return { success: true };
   });

@@ -15,7 +15,6 @@ import {
   getUserById,
   getProfileCount,
   incrementInterviewCount,
-  upgradeUserTier,
   getUserLimits,
 } from "~/db";
 
@@ -248,28 +247,6 @@ export const trackInterview = createServerFn({ method: "POST" }).handler(async (
   const newCount = incrementInterviewCount(user.id);
   return { interviewCount: newCount, tier: user.tier };
 });
-
-// ── Upgrade tier (temporary manual approach until Stripe webhooks) ──
-
-export const upgradeTier = createServerFn({ method: "POST" })
-  .validator((data: unknown) => {
-    const d = data as { tier?: string };
-    if (!d.tier || !["pro", "lifetime"].includes(d.tier)) {
-      throw new Error("Invalid tier. Must be 'pro' or 'lifetime'.");
-    }
-    return { tier: d.tier };
-  })
-  .handler(async ({ data }) => {
-    const user = await requireUser();
-    const updated = upgradeUserTier(user.id, data.tier);
-    if (!updated) throw new Error("Failed to upgrade tier.");
-    return {
-      id: updated.id,
-      email: updated.email,
-      tier: updated.tier,
-      interviewCount: updated.interview_count,
-    };
-  });
 
 // ── Get user limits (for account page and app) ──
 

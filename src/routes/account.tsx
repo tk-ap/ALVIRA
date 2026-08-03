@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
-import { getCurrentUser, fetchUserLimits, upgradeTier, logout } from "./-auth";
+import { getCurrentUser, fetchUserLimits, logout } from "./-auth";
+import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
 export const Route = createFileRoute("/account")({ component: AccountPage });
 
@@ -21,18 +22,11 @@ const tierBadgeClass: Record<string, string> = {
   lifetime: "border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-400",
 };
 
-const STRIPE_LINKS = {
-  pro: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
-  lifetime: "https://buy.stripe.com/8x24gz05s6C7bHzdE0f7i07",
-};
-
 function AccountPage() {
   const navigate = useNavigate();
   const [limits, setLimits] = useState<Limits | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [upgrading, setUpgrading] = useState(false);
-  const [upgradeMsg, setUpgradeMsg] = useState("");
   const [refreshMsg, setRefreshMsg] = useState("");
 
   const loadLimits = async () => {
@@ -54,20 +48,6 @@ function AccountPage() {
   };
 
   useEffect(() => { loadLimits(); }, [navigate]);
-
-  const handleUpgrade = async (tier: "pro" | "lifetime") => {
-    setUpgrading(true);
-    setUpgradeMsg("");
-    try {
-      await upgradeTier({ data: { tier } });
-      setUpgradeMsg(`Upgraded to ${tier}! Refreshing...`);
-      setTimeout(() => loadLimits(), 500);
-    } catch (e) {
-      setUpgradeMsg(e instanceof Error ? e.message : "Upgrade failed.");
-    } finally {
-      setUpgrading(false);
-    }
-  };
 
   const handleRefresh = async () => {
     setRefreshMsg("Refreshing...");
@@ -153,7 +133,7 @@ function AccountPage() {
                   <div className="px-5 py-4 border-b border-emerald-200 dark:border-emerald-800">
                     <h2 className="font-semibold text-gray-900 dark:text-gray-100">Upgrade your plan</h2>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Remove limits and unlock unlimited interviews and profiles.
+                      Pro unlocks unlimited interviews and profiles. Lifetime gives you one permanent profile — no subscription.
                     </p>
                   </div>
                   <div className="px-5 py-4 space-y-4">
@@ -184,13 +164,14 @@ function AccountPage() {
                       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">Lifetime</span>
-                          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">$199 once</span>
+                          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">{LIFETIME_PRICE} once</span>
                         </div>
                         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4 font-mono">
-                          <li>· Everything in Pro</li>
-                          <li>· Permanent AI profile</li>
+                          <li>· One permanent personal AI profile</li>
+                          <li>· Up to 12 guided interviews in year one</li>
+                          <li>· 4 refresh interviews per year after year one</li>
+                          <li>· Up to 50 saved versions</li>
                           <li>· No subscription</li>
-                          <li>· One-time payment</li>
                         </ul>
                         <a
                           href={`${STRIPE_LINKS.lifetime}?prefilled_email=${encodeURIComponent(limits.email)}`}
@@ -203,40 +184,18 @@ function AccountPage() {
                       </div>
                     </div>
 
-                    {/* Manual upgrade (temporary) */}
+                    {/* Post-purchase sync */}
                     <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                        Already upgraded? Refresh your account to apply the change.
+                        Already purchased a plan? Refresh your account to apply it.
                       </p>
-                      <div className="flex flex-wrap gap-2 items-center">
-                        <button
-                          type="button"
-                          onClick={handleRefresh}
-                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 font-mono text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          {refreshMsg || "Refresh account"}
-                        </button>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">or</span>
-                        <button
-                          type="button"
-                          onClick={() => handleUpgrade("pro")}
-                          disabled={upgrading}
-                          className="rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 font-mono text-sm text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-50"
-                        >
-                          {upgrading ? "..." : "Self-report Pro purchase"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpgrade("lifetime")}
-                          disabled={upgrading}
-                          className="rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2 font-mono text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors disabled:opacity-50"
-                        >
-                          {upgrading ? "..." : "Self-report Lifetime purchase"}
-                        </button>
-                      </div>
-                      {upgradeMsg && (
-                        <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400 font-mono">{upgradeMsg}</p>
-                      )}
+                      <button
+                        type="button"
+                        onClick={handleRefresh}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 font-mono text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        {refreshMsg || "Refresh account"}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -250,7 +209,7 @@ function AccountPage() {
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                       {limits.tier === "pro"
                         ? "Unlimited interviews and profiles. Thank you for subscribing!"
-                        : "Permanent access with no subscription. Enjoy unlimited everything!"}
+                        : "Permanent access with no subscription. Your profile and exported files remain yours."}
                     </p>
                   </div>
                 </div>

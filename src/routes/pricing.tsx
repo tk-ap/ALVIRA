@@ -2,13 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
 export const Route = createFileRoute("/pricing")({
   component: Pricing,
 });
-
-const STRIPE_MONTHLY = "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02";
-const STRIPE_ANNUAL = "https://buy.stripe.com/6oUaEX9G21hNfXP43qf7i06";
 
 const freePlan = {
   name: "Free",
@@ -27,7 +25,7 @@ const freePlan = {
 
 const lifetimePlan = {
   name: "Lifetime",
-  price: "$399",
+  price: LIFETIME_PRICE,
   cadence: "one-time",
   description: "Pay once — about two years of Pro. Keep your profile forever.",
   features: [
@@ -41,7 +39,7 @@ const lifetimePlan = {
     "Standard support",
   ],
   cta: "Go Lifetime",
-  href: "https://buy.stripe.com/8x24gz05s6C7bHzdE0f7i07",
+  href: STRIPE_LINKS.lifetime,
 } as const;
 
 const faqs = [
@@ -56,7 +54,7 @@ const faqs = [
   ],
   [
     "What's the difference between Pro and Lifetime?",
-    "Pro is for ongoing use with multiple profiles and unlimited interviews. Lifetime is a one-time $399 payment for a single permanent profile — it pays for itself in about two years vs. annual Pro. Best if you want one profile that lasts.",
+    `Pro is for ongoing use with multiple profiles and unlimited interviews. Lifetime is a one-time ${LIFETIME_PRICE} payment for a single permanent profile — it pays for itself in about two years vs. annual Pro. Best if you want one profile that lasts.`,
   ],
 ] as const;
 
@@ -76,7 +74,7 @@ function Pricing() {
       "Continuous profile updates",
     ],
     cta: "Get Pro",
-    href: billing === "annual" ? STRIPE_ANNUAL : STRIPE_MONTHLY,
+    href: billing === "annual" ? STRIPE_LINKS.annual : STRIPE_LINKS.pro,
     featured: true,
     annual: billing === "annual",
   };

@@ -1,11 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
-
-const STRIPE_LINKS = {
-  pro: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
-  lifetime: "https://buy.stripe.com/8x24gz05s6C7bHzdE0f7i07",
-};
+import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
 const arguments_ = [
   {
@@ -174,7 +170,7 @@ function WhyAlviraPage() {
             <div className="mb-14"><span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Choose your plan</span><h2 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Ready to stop repeating yourself?</h2><p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context working for you across every conversation, platform, and project.</p></div>
             <div className="grid gap-6 md:grid-cols-2">
               <PricingCard name="Pro" price="$20" suffix="/mo" description="For an AI profile that grows with how you work." features={["Unlimited interviews", "Multiple AI profiles", "Markdown & JSON exports", "Version history", "Continuous updates"]} href={STRIPE_LINKS.pro} />
-              <PricingCard name="Lifetime" price="$399" suffix="" description="One payment. One permanent profile. No subscription." features={["Permanent personal profile", "All 19 knowledge domains", "Markdown & JSON exports", "Version history", "Standard support"]} href={STRIPE_LINKS.lifetime} featured />
+              <PricingCard name="Lifetime" price={LIFETIME_PRICE} suffix="" description="One payment. One permanent profile. No subscription." features={["Permanent personal profile", "All 19 knowledge domains", "Markdown & JSON exports", "Version history", "Standard support"]} href={STRIPE_LINKS.lifetime} featured />
             </div>
           </div>
         </section>

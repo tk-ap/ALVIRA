@@ -6,6 +6,7 @@ import JSZip from "jszip";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
+import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { extractClaims, type ExtractionResult } from "./-extractor";
 import {
   getKnowledgeGraph,
@@ -140,11 +141,6 @@ const TOPIC_GROUPS = [
   },
 ] as const;
 
-const STRIPE_LINKS = {
-  pro: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
-  lifetime: "https://buy.stripe.com/8x24gz05s6C7bHzdE0f7i07",
-};
-
 // ── Page ──
 export const Route = createFileRoute("/app")({
   validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined }),
@@ -229,8 +225,8 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Upgrade to continue</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 font-mono">
           {reason === "profiles"
-            ? "Free accounts can save 1 profile. Upgrade to Pro or Lifetime for unlimited profiles."
-            : "Free accounts are limited to 3 interviews. Upgrade for unlimited interviews."}
+            ? "Free accounts can save 1 profile. Upgrade to Pro for unlimited profiles."
+            : "Free accounts are limited to 3 interviews. Upgrade to Pro for unlimited interviews."}
         </p>
         <div className="space-y-3">
           <a
@@ -253,7 +249,7 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
             rel="noopener noreferrer"
             className="block w-full text-center rounded-lg border border-amber-500 dark:border-amber-400 px-4 py-2.5 font-mono text-sm font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
           >
-            Go Lifetime — $199 once
+            Go Lifetime — {LIFETIME_PRICE} once
           </a>
           <button
             type="button"

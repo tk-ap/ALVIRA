@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header";
 
 export const Route = createFileRoute("/interview")({
+  head: () => ({
+    meta: [{ title: 'The Interview — ALVIRA' }, { name: "description", content: "ALVIRA's adaptive interview builds your AI profile through structured knowledge elicitation." }],
+  }),
   component: InterviewPage,
 });
 

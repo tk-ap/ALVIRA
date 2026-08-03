@@ -6,7 +6,10 @@ import { getMeosProfiles, getCurrentUser, getEntitlements } from "./-auth";
 import { compileMeosKnowledge, type MeosPortrait } from "./-meosCompiler";
 import { getMeosGraph } from "./-meosGraph";
 
-export const Route = createFileRoute("/meos")({ component: MeosPage });
+export const Route = createFileRoute("/meos")({
+  head: () => ({
+    meta: [{ title: 'MeOS — Personal Alignment Operating System' }, { name: "description", content: 'Turn your AI profile into a personal operating system for decisions, direction, and daily life.' }],
+  }), component: MeosPage });
 type Profile = { id: string; topic: string; state: unknown; portrait: MeosPortrait | null; updated_at: string };
 const tabs = ["Portrait", "Purpose", "Compass", "Daily", "Cycles", "Files"] as const;
 

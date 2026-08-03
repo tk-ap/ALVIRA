@@ -3,7 +3,10 @@ import { useState } from "react";
 import { requestPasswordReset } from "./-auth";
 import { Header } from "~/components/Header";
 
-export const Route = createFileRoute("/forgot-password")({ component: ForgotPasswordPage });
+export const Route = createFileRoute("/forgot-password")({
+  head: () => ({
+    meta: [{ title: 'Reset your password — ALVIRA' }, { name: "description", content: 'Request a password reset for your ALVIRA account.' }],
+  }), component: ForgotPasswordPage });
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

@@ -4,7 +4,10 @@ import { Header } from "~/components/Header";
 import { getCurrentUser, fetchUserLimits, logout, getEntitlements, claimPurchase } from "./-auth";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
-export const Route = createFileRoute("/account")({ component: AccountPage });
+export const Route = createFileRoute("/account")({
+  head: () => ({
+    meta: [{ title: 'Account — ALVIRA' }, { name: "description", content: 'Manage your ALVIRA subscription and entitlements.' }],
+  }), component: AccountPage });
 
 interface Limits {
   id: string;

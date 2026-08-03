@@ -67,7 +67,10 @@ const adjacentPlayers = [
   ["Obsidian", "a knowledge store you assemble by hand — ALVIRA builds yours for you"],
 ];
 
-export const Route = createFileRoute("/why-alvira")({ component: WhyAlviraPage });
+export const Route = createFileRoute("/why-alvira")({
+  head: () => ({
+    meta: [{ title: 'Why ALVIRA — Portable AI Knowledge' }, { name: "description", content: 'Compare how ALVIRA stacks up against ChatGPT Memory, Claude Projects, Custom GPTs, and Cursor Rules.' }],
+  }), component: WhyAlviraPage });
 
 function Arrow() {
   return <span aria-hidden="true"> →</span>;

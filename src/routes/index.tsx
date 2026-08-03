@@ -8,6 +8,9 @@ import { PortabilityGraphic } from "~/components/PortabilityGraphic";
 import { MeOSCTA } from "~/components/MeOSCTA";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [{ title: 'ALVIRA — Build the context your AI is missing' }, { name: "description", content: 'Discover, organize, and compile your knowledge so ChatGPT, Claude, Gemini, and Cursor actually understand you.' }],
+  }),
   component: Home,
 });
 

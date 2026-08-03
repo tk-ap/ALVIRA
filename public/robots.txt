@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://alvira.ctonew.app/sitemap.xml

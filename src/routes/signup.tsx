@@ -5,6 +5,9 @@ import { signup } from "./-auth";
 import { Header } from "~/components/Header";
 
 export const Route = createFileRoute("/signup")({
+  head: () => ({
+    meta: [{ title: 'Create your ALVIRA profile' }, { name: "description", content: 'Create an ALVIRA account and build the context your AI is missing.' }],
+  }),
   component: SignupPage,
 });
 

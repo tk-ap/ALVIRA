@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header"; import { TrustFooter } from "~/components/TrustFooter";
-export const Route = createFileRoute("/terms")({ component: Terms });
+export const Route = createFileRoute("/terms")({
+  head: () => ({
+    meta: [{ title: 'Terms of Service — ALVIRA' }, { name: "description", content: '' }],
+  }), component: Terms });
 function Terms() { return <Page title="Terms of Service"><p>ALVIRA is a software service for creating and maintaining AI knowledge profiles. You must provide accurate information and use the service lawfully.</p><h2>Plans and subscriptions</h2><p>The free tier includes one profile and three interviews. Pro is a recurring subscription billed monthly or annually; it renews until cancelled. Lifetime is a one-time purchase that includes the benefits described at purchase, subject to service availability.</p><h2>Refunds and availability</h2><p>Lifetime purchases may be refunded within 14 days. Subscription and MeOS refund details are described in our <a href="/refunds">Refunds &amp; Cancellation policy</a>. We work to keep ALVIRA available, but do not guarantee uninterrupted or error-free service.</p></Page>; }
 function Page({ title, children }: { title: string; children: React.ReactNode }) { return <div className="min-h-dvh flex flex-col"><Header /><main id="main-content" className="mx-auto w-full max-w-3xl flex-1 px-6 py-16"><p className="font-mono text-xs uppercase tracking-widest text-human">&lt; trust /&gt;</p><h1 className="mt-4 text-4xl font-semibold text-gray-900 dark:text-gray-100">{title}</h1><div className="mt-10 space-y-6 text-base leading-8 text-gray-600 dark:text-gray-400">{children}</div></main><TrustFooter /></div>; }

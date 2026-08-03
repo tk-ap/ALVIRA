@@ -5,6 +5,9 @@ import { login } from "./-auth";
 import { Header } from "~/components/Header";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [{ title: 'Log in — ALVIRA' }, { name: "description", content: 'Log in to your ALVIRA account.' }],
+  }),
   component: LoginPage,
 });
 

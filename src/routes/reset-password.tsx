@@ -3,7 +3,10 @@ import { useState } from "react";
 import { resetPassword } from "./-auth";
 import { Header } from "~/components/Header";
 
-export const Route = createFileRoute("/reset-password")({ component: ResetPasswordPage });
+export const Route = createFileRoute("/reset-password")({
+  head: () => ({
+    meta: [{ title: 'Set a new password — ALVIRA' }, { name: "description", content: 'Set a new password for your ALVIRA account.' }],
+  }), component: ResetPasswordPage });
 
 function ResetPasswordPage() {
   const navigate = useNavigate();

@@ -14,7 +14,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ALVIRA — AI Agent Context, Structured" },
+      { title: "ALVIRA — Build the context your AI is missing" },
       { name: "theme-color", content: "#0b0e0e" },
       {
         property: "og:title",
@@ -23,9 +23,14 @@ export const Route = createRootRoute({
       {
         property: "og:description",
         content:
-          "ALVIRA discovers, organizes, and compiles the knowledge people and organizations need to work effectively with AI.",
+          "Discover, organize, and compile your knowledge so ChatGPT, Claude, Gemini, and Cursor actually understand you.",
       },
       { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: "https://alvira.ctonew.app/alvira-logo-editorial-v2.png",
+      },
+      { property: "og:url", content: "https://alvira.ctonew.app/" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

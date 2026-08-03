@@ -5,6 +5,9 @@ import { TrustFooter } from "~/components/TrustFooter";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
 export const Route = createFileRoute("/pricing")({
+  head: () => ({
+    meta: [{ title: 'Pricing — ALVIRA' }, { name: "description", content: 'Free, Pro ($20/mo), and Lifetime ($399) plans for your AI profile.' }],
+  }),
   component: Pricing,
 });
 

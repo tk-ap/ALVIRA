@@ -4,7 +4,10 @@ import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft } from "./-auth";
 
-export const Route = createFileRoute("/dashboard")({ component: DashboardPage });
+export const Route = createFileRoute("/dashboard")({
+  head: () => ({
+    meta: [{ title: 'Dashboard — ALVIRA' }, { name: "description", content: 'Your AI profiles and interview history.' }],
+  }), component: DashboardPage });
 
 type Profile = { id: string; topic: string; tier: string; updated_at: string };
 

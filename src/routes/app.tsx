@@ -145,6 +145,9 @@ const TOPIC_GROUPS = [
 
 // ── Page ──
 export const Route = createFileRoute("/app")({
+  head: () => ({
+    meta: [{ title: 'ALVIRA Interview' }, { name: "description", content: 'Build your AI profile.' }],
+  }),
   validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined }),
   component: AppPage,
 });

@@ -700,8 +700,9 @@ function Home() {
       <footer className="bg-gray-950 py-8 px-8 border-t border-gray-800">
         <div className="mx-auto max-w-7xl flex flex-col items-center gap-3">
           <img
-            src="/brand/alvira-logo-lockup-dark.svg"
-            alt="ALVIRA"
+            src="/brand/alvira-primary-wordmark-dark.svg"
+            alt=""
+            aria-hidden="true"
             className="h-6 w-auto"
           />
           <p className="font-mono text-xs text-gray-400">Human context for AI.</p>

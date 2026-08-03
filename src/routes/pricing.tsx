@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
+import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/pricing")({
   component: Pricing,
@@ -244,6 +245,7 @@ function Pricing() {
           </div>
         </section>
       </main>
+      <TrustFooter />
     </div>
   );
 }

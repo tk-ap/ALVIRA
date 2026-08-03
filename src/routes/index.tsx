@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
+import { TrustFooter } from "~/components/TrustFooter";
 import { ConversationToKnowledgeGraphic } from "~/components/ConversationToKnowledgeGraphic";
 import { VersionHistoryGraphic } from "~/components/VersionHistoryGraphic";
 import { PortabilityGraphic } from "~/components/PortabilityGraphic";
@@ -711,6 +712,7 @@ function Home() {
           </p>
         </div>
       </footer>
+      <TrustFooter />
     </div>
   );
 }

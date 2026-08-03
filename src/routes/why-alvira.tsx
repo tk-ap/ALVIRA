@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header";
+import { TrustFooter } from "~/components/TrustFooter";
 
 const STRIPE_LINKS = {
   pro: "https://buy.stripe.com/5kQdR97xU0dJ3b30Ref7i02",
@@ -92,6 +93,7 @@ function WhyAlviraPage() {
           <a href="/app" className="mt-8 inline-flex rounded-lg bg-emerald-600 px-7 py-3.5 font-semibold text-white hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 transition-colors">Get started <Arrow /></a>
         </section>
       </main>
+      <TrustFooter />
     </div>
   );
 }

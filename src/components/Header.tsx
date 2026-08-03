@@ -60,10 +60,16 @@ export function Header() {
             className="-ml-2 flex min-h-11 min-w-11 items-center px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
           >
             <img
-              src="/brand/alvira-primary-wordmark-dark.svg"
+              src="/brand/alvira-wordmark-primary-dark.svg"
               alt=""
               aria-hidden="true"
-              className="h-7 w-auto md:h-8"
+              className="hidden h-7 w-auto md:h-8 dark:block"
+            />
+            <img
+              src="/brand/alvira-wordmark-primary-light.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-7 w-auto md:h-8 dark:hidden"
             />
           </a>
 

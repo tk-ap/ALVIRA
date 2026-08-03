@@ -700,7 +700,7 @@ function Home() {
       <footer className="bg-gray-950 py-8 px-8 border-t border-gray-800">
         <div className="mx-auto max-w-7xl flex flex-col items-center gap-3">
           <img
-            src="/brand/alvira-primary-wordmark-dark.svg"
+            src="/brand/alvira-wordmark-primary-dark.svg"
             alt=""
             aria-hidden="true"
             className="h-6 w-auto"

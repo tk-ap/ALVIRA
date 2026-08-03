@@ -621,7 +621,7 @@ function Home() {
             </p>
           </div>
           <div className="mt-10 flex justify-center">
-            <MeOSCTA placement="homepage" variant="default" />
+            <MeOSCTA placement="homepage" variant="default" dismissible={false} />
           </div>
         </div>
       </section>

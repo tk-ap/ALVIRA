@@ -12,10 +12,12 @@ export interface MeOSCTAProps {
   placement: string;
   /** Visual density. "default" = full card, "compact" = headline + one-liner, "inline" = single text link */
   variant?: "default" | "compact" | "inline";
+  /** Show dismiss button. Default true; set false for permanent sections (e.g. homepage). */
+  dismissible?: boolean;
 }
 
 // ── Component ──
-export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
+export function MeOSCTA({ placement, variant = "default", dismissible = true }: MeOSCTAProps) {
   const [dismissed, setDismissed] = useState(false);
 
   // ── Impression tracking on mount ──
@@ -72,6 +74,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
         >
           Explore MeOS <span aria-hidden="true">→</span>
         </a>
+        {dismissible && (
         <button
           type="button"
           onClick={handleDismiss}
@@ -80,6 +83,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
         >
           ×
         </button>
+        )}
       </div>
     );
   }
@@ -122,6 +126,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
       </div>
 
       {/* Dismiss */}
+      {dismissible && (
       <button
         type="button"
         onClick={handleDismiss}
@@ -129,6 +134,7 @@ export function MeOSCTA({ placement, variant = "default" }: MeOSCTAProps) {
       >
         Not now
       </button>
+      )}
     </div>
   );
 }

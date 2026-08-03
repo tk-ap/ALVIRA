@@ -379,8 +379,11 @@ function AppPage() {
     const el = inputRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.offsetHeight, MAX_ANSWER_INPUT_HEIGHT)}px`;
-    el.style.overflowY = el.offsetHeight >= MAX_ANSWER_INPUT_HEIGHT ? "auto" : "hidden";
+    // scrollHeight excludes the border (textarea scrollHeight = content + padding);
+    // add the border so a single line exactly matches the 46px send button.
+    const border = el.offsetHeight - el.clientHeight;
+    el.style.height = `${Math.min(el.scrollHeight + border, MAX_ANSWER_INPUT_HEIGHT)}px`;
+    el.style.overflowY = el.scrollHeight + border >= MAX_ANSWER_INPUT_HEIGHT ? "auto" : "hidden";
   }, [answer]);
 
   // Persist every in-progress state locally; authenticated users also get a server draft.

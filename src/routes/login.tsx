@@ -14,6 +14,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reset") === "success");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +56,12 @@ function LoginPage() {
               Continue building your AI knowledge profile.
             </p>
           </div>
+
+          {resetSuccess && (
+            <div className="mb-5 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
+              Your password has been updated. You can now sign in.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -108,6 +115,12 @@ function LoginPage() {
               {submitting ? "Signing in..." : "Sign in"}
             </button>
           </form>
+
+          <p className="mt-4 text-center text-sm">
+            <a href="/forgot-password" className="font-mono text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">
+              Forgot password?
+            </a>
+          </p>
 
           <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
             Don&apos;t have an account?{" "}

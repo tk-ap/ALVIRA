@@ -10,6 +10,9 @@ import {
   deleteSession,
   deleteExpiredSessions,
   getPasswordHash,
+  createPasswordResetToken,
+  consumePasswordResetToken,
+  updatePasswordHash,
   getSessionByToken,
   getUserByEmail,
   getUserById,
@@ -113,6 +116,44 @@ export const login = createServerFn({ method: "POST" })
       token,
       expiresAt,
     };
+  });
+
+// ── Password reset ──
+
+const RESET_TOKEN_MAX_AGE = 60 * 60 * 1000;
+const PUBLIC_SITE_URL = "https://alvira.ctonew.app";
+
+export const requestPasswordReset = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    const email = (data as { email?: string }).email;
+    if (!email || typeof email !== "string" || !email.includes("@")) throw new Error("A valid email is required.");
+    return email.trim().toLowerCase();
+  })
+  .handler(async ({ data }) => {
+    const user = getUserByEmail(data);
+    // Always return the same response to avoid revealing which addresses have accounts.
+    if (user) {
+      const token = crypto.randomUUID();
+      createPasswordResetToken(user.id, token, new Date(Date.now() + RESET_TOKEN_MAX_AGE).toISOString());
+      const queuePath = join("/home", "team", "shared", "pending-password-reset-emails.txt");
+      appendFileSync(queuePath, JSON.stringify({ email: user.email, resetUrl: `${PUBLIC_SITE_URL}/reset-password?token=${encodeURIComponent(token)}`, timestamp: new Date().toISOString() }) + "\n");
+    }
+    return { success: true };
+  });
+
+export const resetPassword = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    const d = data as { token?: string; newPassword?: string };
+    if (!d.token || typeof d.token !== "string") throw new Error("Reset token is required.");
+    if (!d.newPassword || typeof d.newPassword !== "string" || d.newPassword.length < 8) throw new Error("Password must be at least 8 characters.");
+    return { token: d.token, newPassword: d.newPassword };
+  })
+  .handler(async ({ data }) => {
+    const userId = consumePasswordResetToken(data.token);
+    if (!userId) throw new Error("This reset link is invalid or has expired. Please request a new one.");
+    const passwordHash = await Bun.password.hash(data.newPassword, { algorithm: "bcrypt", cost: 10 });
+    updatePasswordHash(userId, passwordHash);
+    return { success: true };
   });
 
 // ── Logout ──

@@ -45,6 +45,15 @@ export function getDb(): Database {
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expiry ON password_reset_tokens(expires_at);
+
     CREATE TABLE IF NOT EXISTS profiles (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -129,6 +138,24 @@ export function getPasswordHash(email: string): string | null {
     .query("SELECT password_hash FROM users WHERE email = ?")
     .get(email) as { password_hash: string } | undefined;
   return row?.password_hash ?? null;
+}
+
+export function createPasswordResetToken(userId: string, token: string, expiresAt: string): void {
+  const d = getDb();
+  d.run("DELETE FROM password_reset_tokens WHERE user_id = ? OR expires_at < datetime('now')", [userId]);
+  d.run("INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)", [token, userId, expiresAt]);
+}
+
+export function consumePasswordResetToken(token: string): string | null {
+  const d = getDb();
+  const row = d.query("SELECT user_id FROM password_reset_tokens WHERE token = ? AND expires_at > datetime('now')").get(token) as { user_id: string } | undefined;
+  if (!row) return null;
+  d.run("DELETE FROM password_reset_tokens WHERE token = ?", [token]);
+  return row.user_id;
+}
+
+export function updatePasswordHash(userId: string, passwordHash: string): void {
+  getDb().run("UPDATE users SET password_hash = ? WHERE id = ?", [passwordHash, userId]);
 }
 
 export function createSession(userId: string, token: string, expiresAt: string): Session {

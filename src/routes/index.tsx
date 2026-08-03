@@ -295,7 +295,7 @@ function Home() {
                     aria-controls="profile-preview-panel"
                     onClick={() => setActivePreview(preview.filename)}
                     className={`shrink-0 border-r border-gray-800 px-5 py-3 font-mono text-xs transition-colors ${
-                      isActive ? "bg-gray-950 text-emerald-400" : "text-gray-500 hover:bg-gray-800 hover:text-gray-300"
+                      isActive ? "bg-gray-950 text-emerald-400" : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
                     }`}
                   >
                     {preview.filename}

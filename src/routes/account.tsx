@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { getCurrentUser, fetchUserLimits, logout, getEntitlements, claimPurchase } from "./-auth";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
+import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -77,6 +78,7 @@ function AccountPage() {
             <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Loading...</p>
           </div>
         </main>
+        <TrustFooter />
       </div>
     );
   }
@@ -104,7 +106,7 @@ function AccountPage() {
             <>
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700"><h2 className="font-semibold text-gray-900 dark:text-gray-100">Purchases &amp; Entitlements</h2></div>
-                <div className="px-5 py-4 space-y-4"><p className="text-sm text-gray-600 dark:text-gray-400">{entitlements.length ? entitlements.map((e) => e.replace(/_/g, " ")).join(", ") : "No entitlements recorded yet."}</p><button type="button" onClick={async () => { setClaimMsg("Claiming..."); try { await claimPurchase({ data: { product: "meos_build" } }); setEntitlements(await getEntitlements()); setClaimMsg("MeOS Build claimed."); } catch (e) { setClaimMsg(e instanceof Error ? e.message : "Unable to claim purchase."); } }} className="rounded-lg border border-emerald-600 px-4 py-2 font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950">{claimMsg || "Claim MeOS Build purchase"}</button><p className="text-xs text-gray-500 dark:text-gray-400">Self-serve activation for V1; Stripe verification is coming.</p></div>
+                <div className="px-5 py-4 space-y-4"><p className="text-sm text-gray-600 dark:text-gray-400">{entitlements.length ? entitlements.map((e) => e.replace(/_/g, " ")).join(", ") : "No entitlements recorded yet."}</p><button type="button" onClick={async () => { setClaimMsg("Claiming..."); try { await claimPurchase({ data: { product: "meos_build" } }); setEntitlements(await getEntitlements()); setClaimMsg("MeOS Build claimed."); } catch (e) { setClaimMsg(e instanceof Error ? e.message : "Unable to claim purchase."); } }} className="rounded-lg border border-emerald-600 px-4 py-2 font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50">{claimMsg || "Claim MeOS Build purchase"}</button><p className="text-xs text-gray-500 dark:text-gray-400">Self-serve activation for V1; Stripe verification is coming.</p></div>
               </div>
               {/* User info card */}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
@@ -202,7 +204,7 @@ function AccountPage() {
                       <button
                         type="button"
                         onClick={handleRefresh}
-                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 font-mono text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 font-mono text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
                       >
                         {refreshMsg || "Refresh account"}
                       </button>
@@ -230,7 +232,7 @@ function AccountPage() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="font-mono text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  className="font-mono text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors focus-visible:ring-2 focus-visible:ring-red-500/50 dark:focus-visible:ring-red-400/50 rounded"
                 >
                   Sign out
                 </button>
@@ -239,6 +241,7 @@ function AccountPage() {
           )}
         </div>
       </main>
+      <TrustFooter />
     </div>
   );
 }

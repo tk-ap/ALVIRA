@@ -5,6 +5,7 @@ import JSZip from "jszip";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
+import { TrustFooter } from "~/components/TrustFooter";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { extractClaims, type ExtractionResult } from "./-extractor";
@@ -1048,6 +1049,7 @@ function AppPage() {
           </div>
         </main>
         <SignupPromptBanner show={authUser === null} />
+        <TrustFooter />
       </div>
     );
   }
@@ -1132,6 +1134,7 @@ function AppPage() {
           </div>
         </main>
         <SignupPromptBanner show={authUser === null} />
+        <TrustFooter />
       </div>
     );
   }
@@ -1156,7 +1159,7 @@ function AppPage() {
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
             {/* Chat area */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
                 <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
                   {seededInfo}
@@ -1243,7 +1246,7 @@ function AppPage() {
                     <button
                       type="button"
                       onClick={handleSkip}
-                      className="font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-2 py-1"
+                      className="font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-2 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 rounded"
                     >
                       Skip →
                     </button>
@@ -1252,7 +1255,7 @@ function AppPage() {
                     type="button"
                     onClick={handleGenerate}
                     disabled={compiling || !state || state.history.length < 2}
-                    className={`font-mono text-xs transition-colors ${
+                    className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 ${
                       state && state.history.length >= 2
                         ? "text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300"
                         : "text-gray-500 dark:text-gray-400 cursor-not-allowed"
@@ -1328,13 +1331,14 @@ function AppPage() {
                     disabled={waiting}
                     enterKeyHint="enter"
                     aria-label="Your answer"
-                    className="flex-1 resize-none rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 max-h-40 overflow-y-auto"
+                    className="flex-1 resize-none rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 max-h-40 overflow-y-auto"
                   />
                   <button
                     type="button"
                     onClick={handleSend}
                     disabled={!answer.trim() || waiting}
-                    className="flex-shrink-0 flex h-[46px] w-[46px] items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label="Send answer"
+                    className="flex-shrink-0 flex h-[46px] w-[46px] items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
@@ -1346,6 +1350,7 @@ function AppPage() {
           </div>
         </main>
         <SignupPromptBanner show={authUser === null} />
+        <TrustFooter />
       </div>
     );
   }
@@ -1483,7 +1488,7 @@ function AppPage() {
                               onChange={(ev) => setSeedDecisions((x) => ({ ...x, [index]: { status: "revise", text: ev.target.value } }))}
                               rows={2}
                               autoFocus
-                              className="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
+                              className="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
                             />
                           )}
                         </div>
@@ -1499,7 +1504,7 @@ function AppPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
                 {approvedCount} approved · {skippedCount} skipped
                 {approvedCount > 0 && (
-                  <span className="block mt-0.5 text-xs text-gray-500 dark:text-gray-500">
+                  <span className="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     Approved claims seed your interview as high-confidence answers — remaining domains are asked normally.
                   </span>
                 )}
@@ -1516,6 +1521,7 @@ function AppPage() {
           </div>
         </main>
         <SignupPromptBanner show={authUser === null} />
+        <TrustFooter />
       </div>
     );
   }
@@ -1584,7 +1590,7 @@ function AppPage() {
                 {offering === "meos" ? "Describe your current chapter in your own words" : "What should your AI know about you?"}
               </label>
               {offering === "meos" && <input
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
                 placeholder={'e.g. "I\'m navigating a career transition and need clarity on my direction"'}
                 value={topic}
                 onChange={(e) => { setTopic(e.target.value); setStartError(""); }}
@@ -1679,7 +1685,7 @@ function AppPage() {
                       }}
                       placeholder="Add your own topic..."
                       autoFocus
-                      className="min-w-0 flex-1 border-b border-gray-200 bg-transparent py-1 text-xs text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-emerald-400"
+                      className="min-w-0 flex-1 border-b border-gray-200 bg-transparent py-1 text-xs text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-emerald-400 dark:focus-visible:ring-emerald-400/40"
                     />
                   </label>
                 </fieldset>
@@ -1693,7 +1699,7 @@ function AppPage() {
               type="button"
               onClick={handleStart}
               disabled={!topic.trim()}
-              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
             >
               {offering === "meos" ? "Start my MeOS interview" : "Start interview"}
             </button>
@@ -1717,7 +1723,7 @@ function AppPage() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading || !topic.trim()}
-                      className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
                     >
                       {uploading ? "Extracting knowledge…" : "Choose file…"}
                     </button>
@@ -1739,27 +1745,27 @@ function AppPage() {
                   <div>
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">overview.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Who you are</span></div>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your identity, background, goals, key relationships, and communication style. This is the file your AI reads first to understand context.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “My communication style and decision-making process”; “My key relationships and how I collaborate with others”</p>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My communication style and decision-making process”; “My key relationships and how I collaborate with others”</p>
                   </div>
                   <div>
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">requirements.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— What you need to know</span></div>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Domain knowledge, specialized terminology, and frequently asked questions. Helps AI use the right vocabulary and understand your field.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “Key concepts and terminology from my field of work”; “Our team’s development standards and code review process”</p>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “Key concepts and terminology from my field of work”; “Our team’s development standards and code review process”</p>
                   </div>
                   <div>
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">constraints.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— What won’t change</span></div>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your boundaries, non-negotiables, limitations, and explicit unknowns. Tells AI what not to do and what assumptions need verification.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “My values, boundaries, and what I won’t compromise on”; “Our organization’s compliance rules and security policies”</p>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My values, boundaries, and what I won’t compromise on”; “Our organization’s compliance rules and security policies”</p>
                   </div>
                   <div>
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">business-rules.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you decide</span></div>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your decision frameworks, priorities, and how you evaluate tradeoffs. Gives AI your rulebook for making judgment calls.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “My goals, priorities, and how I evaluate tradeoffs”; “Our department’s approval chains and decision thresholds”</p>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My goals, priorities, and how I evaluate tradeoffs”; “Our department’s approval chains and decision thresholds”</p>
                   </div>
                   <div>
                     <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">workflows.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you work</span></div>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your processes, daily routines, tools, and recurring workflows. Helps AI understand your operational context.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-500"><span className="font-semibold">Examples:</span> “My daily routines, habits, and personal workflows”; “Our cross-department workflows and vendor relationships”</p>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My daily routines, habits, and personal workflows”; “Our cross-department workflows and vendor relationships”</p>
                   </div>
                 </div>
               </aside>

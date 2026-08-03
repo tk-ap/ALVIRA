@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header";
+import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/interview")({
   head: () => ({
@@ -311,6 +312,7 @@ function InterviewPage() {
           </a>
         </section>
       </main>
+      <TrustFooter />
     </div>
   );
 }

@@ -79,7 +79,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss"
-          className="absolute top-3 right-3 font-mono text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+          className="absolute top-3 right-3 font-mono text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
         >
           ×
         </button>
@@ -130,7 +130,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
       <button
         type="button"
         onClick={handleDismiss}
-        className="absolute top-4 right-4 font-mono text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+        className="absolute top-4 right-4 font-mono text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
       >
         Not now
       </button>

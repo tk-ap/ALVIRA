@@ -79,6 +79,7 @@
      this via the utilities layer. */
   a:focus-visible,
   button:focus-visible,
+  input:focus-visible,
   summary:focus-visible,
   select:focus-visible,
   textarea:focus-visible,
@@ -89,6 +90,7 @@
   }
   .dark a:focus-visible,
   .dark button:focus-visible,
+  .dark input:focus-visible,
   .dark summary:focus-visible,
   .dark select:focus-visible,
   .dark textarea:focus-visible,

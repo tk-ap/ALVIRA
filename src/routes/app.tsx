@@ -1635,7 +1635,7 @@ function AppPage() {
               {/* Tier — locked to Personal for public launch */}
               {offering === "context" && (
                 <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Team and enterprise coming soon. <a href="mailto:hello@alvira.ai" className="underline hover:text-gray-600 dark:hover:text-gray-300">Join the pilot →</a>
+                  Team and enterprise coming soon. <a href="/team" className="underline hover:text-gray-600 dark:hover:text-gray-300">Join the pilot →</a>
                 </p>
               )}
 

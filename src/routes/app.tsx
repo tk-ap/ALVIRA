@@ -301,6 +301,7 @@ function AppPage() {
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
   const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
+  const seedOfferingRef = useRef<"context" | "meos">("context");
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
   const autosaveAnswerCountRef = useRef(0);
@@ -609,7 +610,9 @@ function AppPage() {
       if (!text.trim()) {
         throw new Error("That file appears to be empty — nothing to extract.");
       }
-      const result = await extractClaims({ data: { text, tier, topic: topic.trim() } });
+      const seedOffering = offering === "meos" ? "meos" : "context";
+      const result = await extractClaims({ data: { text, tier, topic: topic.trim(), offering: seedOffering } });
+      seedOfferingRef.current = seedOffering;
       setExtraction(result);
       setSeedDecisions({});
       setScreen("seed-review");
@@ -629,8 +632,9 @@ function AppPage() {
   const handleSeedContinue = async () => {
     if (!extraction) return;
 
-    const currentGraph = getKnowledgeGraph(tier);
-    const initialState = createInitialState(tier, topic.trim(), "context");
+    const seedOffering = seedOfferingRef.current;
+    const currentGraph = seedOffering === "meos" ? getMeosGraph() : getKnowledgeGraph(tier);
+    const initialState = createInitialState(tier, topic.trim(), seedOffering);
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {
@@ -1704,8 +1708,8 @@ function AppPage() {
               {offering === "meos" ? "Start my MeOS interview" : "Start interview"}
             </button>
 
-            {/* Upload-to-seed option — only for AI Context Profile */}
-            {offering === "context" && (
+            {/* Upload-to-seed option */}
+            {(offering === "context" || offering === "meos") && (
               <div className="pt-2">
                 <div className="flex items-center gap-3">
                   <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
@@ -1713,7 +1717,7 @@ function AppPage() {
                   <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                 </div>
                 <div className="mt-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-4">
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Upload a resume, bio, or notes</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{offering === "meos" ? "Upload a journal, self-assessment, or coaching notes" : "Upload a resume, bio, or notes"}</p>
                   <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
                     ALVIRA extracts what it can from a .txt, .md, or .docx file — you review the claims, then the interview only asks about what's missing. Your file is never stored.
                   </p>

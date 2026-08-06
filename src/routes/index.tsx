@@ -108,6 +108,9 @@ function Home() {
             </a>
           </div>
           <p className="mt-5 font-mono text-xs text-warm-gray-dark dark:text-warm-gray">
+            Already have notes, a résumé, or a journal? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Upload it and skip ahead.</a>
+          </p>
+          <p className="mt-2 font-mono text-xs text-warm-gray-dark/70 dark:text-warm-gray/70">
             Free to start · No credit card
           </p>
         </div>

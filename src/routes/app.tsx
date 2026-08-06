@@ -21,15 +21,15 @@ import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
-import { getMeosGraph, getMeosPlaybook } from "./-meosGraph";
+import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
 // Max height (px) of the answer textarea before it scrolls instead of growing.
 const MAX_ANSWER_INPUT_HEIGHT = 160;
 
 // ── Initialize empty interview state ──
-function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context"): InterviewState {
-  const graph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(tier);
+function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context", preview = false): InterviewState {
+  const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
   const domains: InterviewState["domains"] = {};
   for (const d of graph) {
     domains[d.id] = { answers: [], confidence: 0, covered: false };
@@ -149,7 +149,7 @@ export const Route = createFileRoute("/app")({
   head: () => ({
     meta: [{ title: 'ALVIRA Interview' }, { name: "description", content: 'Build your AI profile.' }],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined }),
+  validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined, preview: search.preview === "true" }),
   component: AppPage,
 });
 
@@ -284,7 +284,8 @@ function AppPage() {
   // so both groups remain available for that scope.
   const selectedGroups = TOPIC_GROUPS.filter((group) => group.topics.some((topicOption) => selectedTopics.includes(topicOption)));
   const activeGroup = selectedGroups.length === 1 ? selectedGroups[0] : null;
-  const { offering: offeringSearch } = Route.useSearch();
+  const { offering: offeringSearch, preview: previewSearch } = Route.useSearch();
+  const isPreview = offeringSearch === "meos" && previewSearch === true;
   const [offering, setOffering] = useState<"context" | "meos" | null>(offeringSearch === "meos" ? "meos" : null);
   type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
   const [meosPhase, setMeosPhase] = useState<MeosPhase>("core");
@@ -332,7 +333,7 @@ function AppPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Computed values
-  const graph = state ? (offering === "meos" ? getMeosGraph() : getKnowledgeGraph(state.tier)) : [];
+  const graph = state ? (offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(state.tier)) : [];
   const playbook = offering === "meos" ? getMeosPlaybook() : (state ? getPlaybook(state.tier) : getPlaybook("personal"));
   const confThreshold = playbook.completion.minimumConfidence;
   const coveredCount = state ? countCovered(graph, state, confThreshold) : 0;
@@ -408,7 +409,7 @@ function AppPage() {
       if (cancelled) return;
       if (u) {
         setAuthUser({ id: u.id, email: u.email, tier: u.tier });
-        if (offeringSearch === "meos") getEntitlements().then((items) => setMeosAuthorized((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build"))).catch(() => setMeosAuthorized(false));
+        if (offeringSearch === "meos" && !previewSearch) getEntitlements().then((items) => setMeosAuthorized((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build"))).catch(() => setMeosAuthorized(false));
         setInterviewCount(u.interviewCount ?? 0);
 
         // Fetch detailed limits for the banner
@@ -476,7 +477,7 @@ function AppPage() {
 
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
   const askNextQuestion = async (currentState: InterviewState, isClarification = false) => {
-    const currentGraph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(currentState.tier);
+    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(currentState.tier);
     const currentPlaybook = offering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
     const currentGaps = detectGaps(currentGraph, currentState, currentPlaybook.completion.minimumConfidence);
     if (currentGaps.length === 0) return null;
@@ -517,7 +518,7 @@ function AppPage() {
     if (!state || !authUser || saving) return;
     setSaving(true);
     try {
-      const result = await saveProfile({ data: { topic: state.topic, tier: state.tier, state, offering: offering === "meos" ? "meos" : "context", portrait: offering === "meos" ? meosPortrait : undefined } });
+      const result = await saveProfile({ data: { topic: state.topic, tier: state.tier, state, offering: offering === "meos" ? "meos" : "context", preview: isPreview, portrait: offering === "meos" ? meosPortrait : undefined } });
       // Check for limit_reached error
       const r = result as { id?: string; error?: string; limit?: string };
       if (r.error === "limit_reached") {
@@ -537,7 +538,7 @@ function AppPage() {
 
   const handleStart = async () => {
     const trimmed = topic.trim();
-    if (offering === "meos" && !meosAuthorized) { setStartError("MeOS requires an active Pro or Lifetime plan plus MeOS Build ($149 one-time). Purchase access on the MeOS page."); return; }
+    if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("MeOS requires an active Pro or Lifetime plan plus MeOS Build ($149 one-time). Purchase access on the MeOS page."); return; }
     if (!trimmed) return;
 
     // MeOS topics are introspective/philosophical — skip the context-oriented validation
@@ -562,7 +563,7 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(tier, topic.trim(), offering === "meos" ? "meos" : "context");
+    const initialState = createInitialState(tier, topic.trim(), offering === "meos" ? "meos" : "context", isPreview);
 
     try {
       const result = await askNextQuestion(initialState);
@@ -633,8 +634,8 @@ function AppPage() {
     if (!extraction) return;
 
     const seedOffering = seedOfferingRef.current;
-    const currentGraph = seedOffering === "meos" ? getMeosGraph() : getKnowledgeGraph(tier);
-    const initialState = createInitialState(tier, topic.trim(), seedOffering);
+    const currentGraph = seedOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
+    const initialState = createInitialState(tier, topic.trim(), seedOffering, isPreview);
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {
@@ -931,7 +932,7 @@ function AppPage() {
     }
 
     setCompiling(true);
-    const currentGraph = offering === "meos" ? getMeosGraph() : getKnowledgeGraph(compileState.tier);
+    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
     let files: Record<string, string>;
     if (offering === "meos") {
       files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };

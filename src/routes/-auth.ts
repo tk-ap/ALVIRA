@@ -210,13 +210,13 @@ export const authorizeMeos = createServerFn({ method: "GET" }).handler(async () 
 
 export const saveProfile = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { topic?: string; tier?: string; state?: unknown; portrait?: unknown; offering?: string };
+    const d = data as { topic?: string; tier?: string; state?: unknown; portrait?: unknown; offering?: string; preview?: boolean };
     if (!d.topic || typeof d.topic !== "string" || !d.tier || !d.state) throw new Error("Topic, tier, and state are required.");
-    return { topic: d.topic.trim(), tier: d.tier, state: d.state, portrait: d.portrait, offering: d.offering === "meos" ? "meos" as const : "context" as const };
+    return { topic: d.topic.trim(), tier: d.tier, state: d.state, portrait: d.portrait, preview: d.preview === true, offering: d.offering === "meos" ? "meos" as const : "context" as const };
   })
   .handler(async ({ data }) => {
     const user = await requireUser();
-    if (data.offering === "meos") {
+    if (data.offering === "meos" && !data.preview) {
       const { requireMeos } = await import("./-entitlements.server");
       requireMeos(user);
     }
@@ -250,8 +250,6 @@ export const listProfiles = createServerFn({ method: "GET" }).handler(async () =
 
 export const getMeosProfiles = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  const { requireMeos } = await import("./-entitlements.server");
-  requireMeos(user);
   const rows = getDb().query("SELECT id, topic, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = ? AND offering = 'meos' ORDER BY updated_at DESC").all(user.id) as Array<{ id: string; topic: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
   return rows.map(row => ({ ...row, state: JSON.parse(row.state_json), portrait: row.portrait_json ? JSON.parse(row.portrait_json) : null }));
 });
@@ -260,8 +258,6 @@ export const saveMeosPortrait = createServerFn({ method: "POST" })
   .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait }))
   .handler(async ({ data }) => {
     const user = await requireUser();
-    const { requireMeos } = await import("./-entitlements.server");
-    requireMeos(user);
     getDb().run("UPDATE profiles SET portrait_json = ?, offering = 'meos', updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(data.portrait), data.profileId, user.id]);
     return { success: true };
   });

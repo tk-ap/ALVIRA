@@ -13,6 +13,10 @@ export function requireEntitlement(user: { id: string }, product: string): void 
   }
 }
 
+export function requireMeosPreview(user: { id: string }): void {
+  if (!user?.id) throw new Error("Authentication required.");
+}
+
 export function requireMeos(user: { id: string; tier: string }): void {
   if (user.tier !== "pro" && user.tier !== "lifetime") {
     throw new Error("MeOS requires an active Pro or Lifetime plan.");

@@ -23,26 +23,17 @@ const definitions: Array<[string, string, string, boolean, number]> = [
   ["validation", "Validation", "Self-validation: agree, question, reject, or revise claims.", false, 12],
 ];
 
-export function getMeosGraph(): Domain[] {
-  return definitions.map(([id, label, description, required, priority]) => ({
-    id, label, description,
-    promptHint: description,
-    required,
-    minAnswers: 1,
-    priority,
-    outputFile: "overview",
-  }));
+function toDomain([id, label, description, required, priority]: Array<string | boolean | number>): Domain {
+  return { id: id as string, label: label as string, description: description as string, promptHint: description as string, required: required as boolean, minAnswers: 1, priority: priority as number, outputFile: "overview" };
+}
+export function getMeosGraph(): Domain[] { return definitions.map(toDomain); }
+
+/** The free entry point: only the three most relatable MeOS domains. */
+export function getMeosPreviewGraph(): Domain[] {
+  return definitions.filter(([id]) => ["values", "decisionPatterns", "goals"].includes(id)).map(toDomain);
 }
 
 export function getMeosPlaybook(): MeosPlaybook {
-  return {
-    tier: "meos",
-    phases: definitions.map(([id]) => id),
-    knowledgePriorities: ["values", "boundaries", "definitionOfSuccess"],
-    completion: { minimumConfidence: 0.85, unresolvedGaps: 0 },
-    outputs: ["markdown", "integratedPortrait", "meosSite"],
-  };
+  return { tier: "meos", phases: definitions.map(([id]) => id), knowledgePriorities: ["values", "boundaries", "definitionOfSuccess"], completion: { minimumConfidence: 0.85, unresolvedGaps: 0 }, outputs: ["markdown", "integratedPortrait", "meosSite"] };
 }
-
-/** MeOS state is structurally identical to the standard interview state. */
 export type MeosInterviewState = Omit<InterviewState, "tier"> & { tier: "meos" };

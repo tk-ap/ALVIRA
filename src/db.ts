@@ -95,7 +95,18 @@ export function getDb(): Database {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_team_waitlist_email ON team_waitlist(email);
+
+    CREATE TABLE IF NOT EXISTS meos_comps (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
+
+  // Seed recovery compensation offers; INSERT OR IGNORE keeps existing expiry dates stable.
+  db.run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, datetime('now', '+30 days'))", ["meos-comp-courtnee", "courtneeowens22@gmail.com"]);
+  db.run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, datetime('now', '+30 days'))", ["meos-comp-hipopmarkets", "hipopmarkets@gmail.com"]);
 
   // ── Migration: add interview_count to existing users table ──
   try {
@@ -152,11 +163,29 @@ export function getUserByEmail(email: string): User | null {
   return row ?? null;
 }
 
+export interface MeosComp {
+  id: string;
+  email: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export function insertMeosComp(email: string, expiresAt: string): void {
+  getDb().run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, ?)", [crypto.randomUUID(), email.trim().toLowerCase(), expiresAt]);
+}
+
+export function getMeosComp(email: string): MeosComp | null {
+  const row = getDb().query("SELECT id, email, expires_at, created_at FROM meos_comps WHERE email = ? AND expires_at > datetime('now')").get(email.trim().toLowerCase()) as MeosComp | undefined;
+  return row ?? null;
+}
+
 export interface OwnerMetrics {
   userCounts: { total: number; free: number; pro: number; lifetime: number };
   profileCount: number;
   pendingInterviews: number;
   waitlistCount: number;
+  activeCompCount: number;
+  activeComps: Array<{ email: string; expires_at: string }>;
   recentWaitlist: Array<{ name: string; email: string; company: string | null; team_size: string | null; created_at: string }>;
   recentUsers: Array<{ email: string; tier: string; created_at: string }>;
 }
@@ -174,6 +203,8 @@ export function getOwnerMetrics(): OwnerMetrics {
     profileCount: count("SELECT COUNT(*) AS count FROM profiles"),
     pendingInterviews: count("SELECT COUNT(*) AS count FROM profiles WHERE state_json IS NOT NULL"),
     waitlistCount: count("SELECT COUNT(*) AS count FROM team_waitlist"),
+    activeCompCount: count("SELECT COUNT(*) AS count FROM meos_comps WHERE expires_at > datetime('now')"),
+    activeComps: d.query("SELECT email, expires_at FROM meos_comps WHERE expires_at > datetime('now') ORDER BY expires_at ASC").all() as OwnerMetrics["activeComps"],
     recentWaitlist: d.query("SELECT name, email, company, team_size, created_at FROM team_waitlist ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentWaitlist"],
     recentUsers: d.query("SELECT email, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentUsers"],
   };

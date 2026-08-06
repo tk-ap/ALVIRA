@@ -16,6 +16,7 @@ import {
   getSessionByToken,
   getUserByEmail,
   getUserById,
+  getMeosComp,
   getProfileCount,
   incrementInterviewCount,
   getUserLimits,
@@ -197,7 +198,9 @@ export const claimPurchase = createServerFn({ method: "POST" })
 
 export const getEntitlements = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  return listEntitlements(user.id);
+  const entitlements = listEntitlements(user.id);
+  if (getMeosComp(user.email) && !entitlements.includes("meos_build")) entitlements.push("meos_build");
+  return entitlements;
 });
 
 export const authorizeMeos = createServerFn({ method: "GET" }).handler(async () => {

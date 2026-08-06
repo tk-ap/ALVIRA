@@ -1,6 +1,6 @@
 // ── Team waitlist server function ──
 // S1 Team waitlist. Stores submissions in SQLite and queues a confirmation
-// email to the submitter plus a notification to hello@alvira.ai via the
+// email to the submitter plus a notification to contextforge-18281ce4@ctomail.io via the
 // file-based email bridge (same pattern as -auth.ts welcome emails).
 
 import { appendFileSync } from "node:fs";
@@ -63,11 +63,11 @@ export const joinTeamWaitlist = createServerFn({ method: "POST" })
       }) + "\n",
     );
 
-    // Queue notification to hello@alvira.ai.
+    // Queue notification to contextforge-18281ce4@ctomail.io.
     appendFileSync(
       EMAIL_QUEUE_PATH,
       JSON.stringify({
-        to: "hello@alvira.ai",
+        to: "contextforge-18281ce4@ctomail.io",
         subject: `Team waitlist signup: ${data.name}${data.company ? ` (${data.company})` : ""}`,
         body: `New team waitlist submission:\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || "(not provided)"}\nTeam size: ${data.teamSize || "(not provided)"}\nUse case: ${data.useCase || "(not provided)"}`,
         timestamp,

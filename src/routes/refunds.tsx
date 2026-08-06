@@ -18,7 +18,7 @@ function Refunds() {
     <p>If you cancel mid-year, your Pro benefits continue through the end of your paid term. There are no partial refunds for unused months.</p>
 
     <h2>Lifetime</h2>
-    <p>Request a full refund within 14 days of purchase by emailing <a href="mailto:hello@alvira.ai">hello@alvira.ai</a>. After 14 days, Lifetime purchases are final.</p>
+    <p>Request a full refund within 14 days of purchase by emailing <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>. After 14 days, Lifetime purchases are final.</p>
 
     <h2>MeOS Build</h2>
     <p>Request a refund within 7 days of purchase. After 7 days, MeOS Build purchases are final.</p>
@@ -27,7 +27,7 @@ function Refunds() {
     <p>Cancel anytime before the next renewal. The current month is not refunded.</p>
 
     <h2>How to cancel or request a refund</h2>
-    <p>Email <a href="mailto:hello@alvira.ai">hello@alvira.ai</a>. Include your account email and what you’d like to cancel or refund. We’ll respond within 2 business days.</p>
+    <p>Email <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>. Include your account email and what you’d like to cancel or refund. We’ll respond within 2 business days.</p>
   </Page>;
 }
 

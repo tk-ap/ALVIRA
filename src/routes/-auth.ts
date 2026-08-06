@@ -21,6 +21,7 @@ import {
   getUserLimits,
   recordPurchase,
   listEntitlements,
+  getOwnerMetrics as queryOwnerMetrics,
 } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
@@ -304,6 +305,12 @@ export const clearInterviewDraft = createServerFn({ method: "POST" }).handler(as
   const user = await requireUser();
   getDb().run("DELETE FROM interview_drafts WHERE user_id = ?", [user.id]);
   return { success: true };
+});
+
+export const getOwnerMetrics = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireUser();
+  if (user.email !== "tahlia.ashwood@gmail.com") throw new Error("Not authorized.");
+  return queryOwnerMetrics();
 });
 
 export const getCurrentUser = createServerFn({ method: "GET" }).handler(async () => {

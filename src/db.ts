@@ -152,6 +152,33 @@ export function getUserByEmail(email: string): User | null {
   return row ?? null;
 }
 
+export interface OwnerMetrics {
+  userCounts: { total: number; free: number; pro: number; lifetime: number };
+  profileCount: number;
+  pendingInterviews: number;
+  waitlistCount: number;
+  recentWaitlist: Array<{ name: string; email: string; company: string | null; team_size: string | null; created_at: string }>;
+  recentUsers: Array<{ email: string; tier: string; created_at: string }>;
+}
+
+export function getOwnerMetrics(): OwnerMetrics {
+  const d = getDb();
+  const count = (sql: string) => Number((d.query(sql).get() as { count: number }).count);
+  return {
+    userCounts: {
+      total: count("SELECT COUNT(*) AS count FROM users"),
+      free: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'free'"),
+      pro: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'pro'"),
+      lifetime: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'lifetime'"),
+    },
+    profileCount: count("SELECT COUNT(*) AS count FROM profiles"),
+    pendingInterviews: count("SELECT COUNT(*) AS count FROM profiles WHERE state_json IS NOT NULL"),
+    waitlistCount: count("SELECT COUNT(*) AS count FROM team_waitlist"),
+    recentWaitlist: d.query("SELECT name, email, company, team_size, created_at FROM team_waitlist ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentWaitlist"],
+    recentUsers: d.query("SELECT email, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentUsers"],
+  };
+}
+
 export function createUser(
   id: string,
   email: string,

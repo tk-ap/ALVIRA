@@ -3,21 +3,25 @@ import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
-import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft } from "./-auth";
+import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft, getOwnerMetrics } from "./-auth";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({
-    meta: [{ title: 'Dashboard — ALVIRA' }, { name: "description", content: 'Your AI profiles and interview history.' }],
-  }), component: DashboardPage });
+  head: () => ({ meta: [{ title: "Dashboard — ALVIRA" }, { name: "description", content: "Your AI profiles and interview history." }] }),
+  component: DashboardPage,
+});
 
 type Profile = { id: string; topic: string; tier: string; updated_at: string };
+type OwnerMetrics = Awaited<ReturnType<typeof getOwnerMetrics>>;
 
 function DashboardPage() {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [draft, setDraft] = useState<{ offering: string; topic: string; updated_at: string } | null>(null);
+  const [owner, setOwner] = useState(false);
+  const [metrics, setMetrics] = useState<OwnerMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   useEffect(() => {
     getCurrentUser().then(async (user) => {
       if (!user) { navigate({ to: "/login" }); return; }
@@ -25,19 +29,45 @@ function DashboardPage() {
       setProfiles(rows as Profile[]);
       const inProgress = await getInterviewDraft();
       if (inProgress) setDraft(inProgress as { offering: string; topic: string; updated_at: string });
+      if (user.email === "tahlia.ashwood@gmail.com") {
+        setOwner(true);
+        setMetrics(await getOwnerMetrics());
+      }
     }).catch((e) => setError(e instanceof Error ? e.message : "Unable to load profiles.")).finally(() => setLoading(false));
   }, [navigate]);
+
   const remove = async (id: string) => {
     if (!confirm("Delete this profile?")) return;
     await deleteProfile({ data: { profileId: id } });
     setProfiles((p) => p.filter((x) => x.id !== id));
   };
-  return <div className="min-h-dvh flex flex-col"><Header /><main id="main-content" className="flex-1 px-6 py-10"><div className="mx-auto max-w-3xl">
-    <div className="flex items-center justify-between mb-8"><div><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1><p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">Your saved knowledge profiles</p></div><div className="flex items-center gap-3"><a href="/account" className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 font-mono text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Account</a><a href="/app" className="rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2.5 font-mono text-sm text-white hover:bg-emerald-800 dark:hover:bg-emerald-500">+ New interview</a></div></div>
+
+  return <div className="min-h-dvh flex flex-col"><Header /><main id="main-content" className="flex-1 px-6 py-10"><div className="mx-auto max-w-4xl">
+    <div className="flex items-center justify-between mb-8"><div><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{owner ? "Owner dashboard" : "Dashboard"}</h1><p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">{owner ? "ALVIRA business overview" : "Your saved knowledge profiles"}</p></div><div className="flex items-center gap-3"><a href="/account" className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 font-mono text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Account</a><a href="/app" className="rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2.5 font-mono text-sm text-white hover:bg-emerald-800 dark:hover:bg-emerald-500">+ New interview</a></div></div>
     {loading ? <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Loading...</p> : error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : <>
-    {draft && <div className="mb-5 flex items-center justify-between gap-4 border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-5 py-4"><div><p className="font-mono text-sm font-semibold text-emerald-800 dark:text-emerald-200">Interview in progress</p><p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300">{draft.topic} · Updated {new Date(draft.updated_at).toLocaleDateString()}</p></div><a href={`/app?offering=${draft.offering}`} className="font-mono text-sm text-emerald-700 dark:text-emerald-300 underline">Resume →</a></div>}
-    {profiles.length === 0 ? <div className="border border-gray-200 dark:border-gray-700 px-6 py-12 text-center"><p className="text-gray-600 dark:text-gray-400">No saved profiles yet. Start your first interview.</p><a href="/app" className="mt-4 inline-block font-mono text-sm text-emerald-700 dark:text-emerald-400 underline">Start an interview →</a></div> : <div className="space-y-3">{profiles.map((p) => <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-200 dark:border-gray-700 px-5 py-4"><div><h2 className="font-mono text-gray-900 dark:text-gray-100">{p.topic}</h2><div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400"><span className="border border-emerald-600 dark:border-emerald-400 px-2 py-0.5 text-emerald-700 dark:text-emerald-400">{p.tier}</span><span>Updated {new Date(p.updated_at).toLocaleDateString()}</span></div></div><div className="flex gap-4"><a href={`/app?profile=${p.id}`} className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300">Resume →</a><button type="button" onClick={() => remove(p.id)} className="font-mono text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">Delete</button></div></div>)}</div>}
-    <div className="mt-8"><MeOSCTA placement="dashboard" variant="compact" /></div>
+      {owner && metrics && <OwnerDashboard metrics={metrics} />}
+      <ProfileSection profiles={profiles} draft={draft} remove={remove} owner={owner} />
     </>}
-    </div></main><TrustFooter /></div>;
+  </div></main><TrustFooter /></div>;
+}
+
+function OwnerDashboard({ metrics }: { metrics: OwnerMetrics }) {
+  const stats = [
+    ["Total users", metrics.userCounts.total], ["Free users", metrics.userCounts.free], ["Pro users", metrics.userCounts.pro],
+    ["Lifetime users", metrics.userCounts.lifetime], ["Total profiles", metrics.profileCount], ["Pending interviews", metrics.pendingInterviews],
+  ];
+  const date = (value: string) => new Date(value).toLocaleDateString();
+  return <div className="mb-10 space-y-8">
+    <section><h2 className="mb-3 font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Metrics at a glance</h2><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{stats.map(([label, value]) => <div key={label} className="border border-[#d8cbb8] bg-[#f7f1e8] px-4 py-5 dark:border-gray-700 dark:bg-gray-800"><p className="text-3xl font-bold text-[#3d342b] dark:text-gray-100">{value}</p><p className="mt-1 font-mono text-xs text-gray-600 dark:text-gray-400">{label}</p></div>)}</div></section>
+    <section><div className="mb-3 flex items-baseline justify-between"><h2 className="font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Team waitlist</h2><span className="font-mono text-sm text-gray-600 dark:text-gray-400">{metrics.waitlistCount} total</span></div><div className="overflow-x-auto border border-gray-200 dark:border-gray-700"><table className="w-full text-left text-sm"><thead className="bg-[#f7f1e8] font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400"><tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">Company</th><th className="px-4 py-3">Team size</th><th className="px-4 py-3">Date</th></tr></thead><tbody>{metrics.recentWaitlist.map((entry) => <tr key={`${entry.email}-${entry.created_at}`} className="border-t border-gray-200 dark:border-gray-700"><td className="px-4 py-3 text-gray-900 dark:text-gray-100">{entry.name}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{entry.email}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{entry.company || "—"}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{entry.team_size || "—"}</td><td className="whitespace-nowrap px-4 py-3 text-gray-500 dark:text-gray-400">{date(entry.created_at)}</td></tr>)}</tbody></table>{metrics.recentWaitlist.length === 0 && <p className="px-4 py-5 text-sm text-gray-500">No waitlist signups yet.</p>}</div></section>
+    <section><h2 className="mb-3 font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Recent signups</h2><div className="border border-gray-200 dark:border-gray-700">{metrics.recentUsers.map((user) => <div key={`${user.email}-${user.created_at}`} className="flex items-center justify-between gap-4 border-b border-gray-200 px-4 py-3 last:border-0 dark:border-gray-700"><span className="text-sm text-gray-800 dark:text-gray-200">{user.email}</span><span className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400"><span className="border border-emerald-600 px-2 py-0.5 text-emerald-700 dark:text-emerald-400">{user.tier}</span><span>{date(user.created_at)}</span></span></div>)}</div></section>
+  </div>;
+}
+
+function ProfileSection({ profiles, draft, remove, owner }: { profiles: Profile[]; draft: { offering: string; topic: string; updated_at: string } | null; remove: (id: string) => Promise<void>; owner: boolean }) {
+  return <section className={owner ? "border-t border-gray-200 pt-8 dark:border-gray-700" : ""}>{owner && <h2 className="mb-4 font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Your profiles</h2>}
+    {draft && <div className="mb-5 flex items-center justify-between gap-4 border border-emerald-300 bg-emerald-50 px-5 py-4 dark:border-emerald-700 dark:bg-emerald-950/30"><div><p className="font-mono text-sm font-semibold text-emerald-800 dark:text-emerald-200">Interview in progress</p><p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300">{draft.topic} · Updated {new Date(draft.updated_at).toLocaleDateString()}</p></div><a href={`/app?offering=${draft.offering}`} className="font-mono text-sm text-emerald-700 underline dark:text-emerald-300">Resume →</a></div>}
+    {profiles.length === 0 ? <div className="border border-gray-200 px-6 py-12 text-center dark:border-gray-700"><p className="text-gray-600 dark:text-gray-400">No saved profiles yet. Start your first interview.</p><a href="/app" className="mt-4 inline-block font-mono text-sm text-emerald-700 underline dark:text-emerald-400">Start an interview →</a></div> : <div className="space-y-3">{profiles.map((p) => <div key={p.id} className="flex flex-col justify-between gap-4 border border-gray-200 px-5 py-4 dark:border-gray-700 sm:flex-row sm:items-center"><div><h2 className="font-mono text-gray-900 dark:text-gray-100">{p.topic}</h2><div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400"><span className="border border-emerald-600 px-2 py-0.5 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400">{p.tier}</span><span>Updated {new Date(p.updated_at).toLocaleDateString()}</span></div></div><div className="flex gap-4"><a href={`/app?profile=${p.id}`} className="font-mono text-sm text-emerald-700 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300">Resume →</a><button type="button" onClick={() => remove(p.id)} className="font-mono text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">Delete</button></div></div>)}</div>}
+    <div className="mt-8"><MeOSCTA placement="dashboard" variant="compact" /></div>
+  </section>;
 }

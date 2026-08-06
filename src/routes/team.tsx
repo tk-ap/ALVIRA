@@ -96,7 +96,7 @@ function TeamPage() {
     <div className="min-h-dvh flex flex-col">
       <Header />
       <main id="main-content" className="flex-1">
-        <section className="mx-auto grid max-w-6xl gap-12 px-6 pb-20 pt-16 sm:pt-24 lg:grid-cols-2 lg:gap-16">
+        <section className="mx-auto grid max-w-4xl gap-12 px-6 pb-20 pt-16 text-center sm:pt-24 lg:grid-cols-2 lg:gap-16">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.25em] text-system">&lt; team /&gt;</p>
             <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">
@@ -119,7 +119,7 @@ function TeamPage() {
               ))}
             </ul>
             <p className="mt-8 font-mono text-xs text-gray-500 dark:text-gray-400">
-              Pilot spots are limited. Early participants shape the product.
+              Early participants shape the product. Join the list and we'll reach out when the Team tier is ready.
             </p>
           </div>
           <div className="lg:pt-2">

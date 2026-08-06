@@ -59,7 +59,7 @@ function WhyAlviraPage() {
         </section>
 
         <section id="arguments" className="scroll-mt-20 bg-gray-50 dark:bg-gray-900 px-6 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-5xl space-y-20 sm:space-y-28">
+          <div className="mx-auto max-w-5xl text-center space-y-20 sm:space-y-28">
             {arguments_.map((item, index) => (
               <article key={item.number} className={`grid gap-8 md:grid-cols-[120px_1fr] ${index > 0 ? "border-t border-gray-200 dark:border-gray-800 pt-20 sm:pt-28" : ""}`}>
                 <div className="flex items-start gap-4 md:block">
@@ -76,7 +76,7 @@ function WhyAlviraPage() {
         </section>
 
         <section className="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-6 py-20 sm:px-8">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-5xl text-center">
             <p className="mb-10 font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Already useful in the real world</p>
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {useCases.map(([label, body]) => <div key={label}><h3 className="font-mono text-sm text-gray-900 dark:text-gray-100">{label}</h3><p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{body}</p></div>)}
@@ -85,7 +85,7 @@ function WhyAlviraPage() {
         </section>
 
         <section id="comparison" className="scroll-mt-20 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-6 py-20 sm:px-8 sm:py-28">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-5xl text-center">
             <div className="mb-10">
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How ALVIRA compares</span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Context you can keep — everywhere.</h2>
@@ -108,7 +108,7 @@ function WhyAlviraPage() {
         </section>
 
         <section className="bg-gray-50 dark:bg-gray-900 px-6 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-5xl text-center">
             <div className="mb-14"><span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Choose your plan</span><h2 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Ready to stop repeating yourself?</h2><p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context working for you across every conversation, platform, and project.</p></div>
             <div className="grid gap-6 md:grid-cols-2">
               <PricingCard name="Pro" price="$20" suffix="/mo" description="For an AI profile that grows with how you work." features={["Unlimited interviews", "Multiple AI profiles", "Markdown exports (JSON coming soon)", "Version history (coming soon)", "Continuous updates"]} href={STRIPE_LINKS.pro} />
@@ -117,9 +117,10 @@ function WhyAlviraPage() {
           </div>
         </section>
 
-        <section className="bg-gray-950 px-6 py-20 text-center sm:px-8">
+        <section className="bg-gray-950 px-6 py-20 text-center sm:px-8"><div className="mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Start building your AI profile</h2>
           <a href="/app" className="mt-8 inline-flex rounded-lg bg-emerald-600 px-7 py-3.5 font-semibold text-white hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 transition-colors">Get started <Arrow /></a>
+          </div>
         </section>
       </main>
       <TrustFooter />

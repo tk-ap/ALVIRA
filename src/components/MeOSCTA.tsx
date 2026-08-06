@@ -31,10 +31,6 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
     track("meos_cta_click", { placement, action: "primary" });
   };
 
-  const handleSecondaryClick = () => {
-    track("meos_cta_click", { placement, action: "secondary" });
-  };
-
   const handleDismiss = () => {
     track("meos_cta_dismiss", { placement });
     setDismissed(true);
@@ -106,24 +102,15 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
         ALVIRA helps AI understand you. MeOS helps you understand and apply what ALVIRA discovers — across your decisions, direction, work, and daily life.
       </p>
 
-      {/* CTAs */}
-      <div className="mt-6 flex flex-col sm:flex-row gap-3">
-        <a
-          href="/meos"
-          onClick={handlePrimaryClick}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
-        >
-          Explore MeOS
-          <span aria-hidden="true">→</span>
-        </a>
-        <a
-          href="/meos"
-          onClick={handleSecondaryClick}
-          className="inline-flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-3 font-mono text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
-        >
-          How MeOS works
-        </a>
-      </div>
+      {/* CTA */}
+      <a
+        href="/meos"
+        onClick={handlePrimaryClick}
+        className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
+      >
+        Explore MeOS
+        <span aria-hidden="true">→</span>
+      </a>
 
       {/* Dismiss */}
       {dismissible && (

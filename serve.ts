@@ -9,6 +9,10 @@
 // with an already-running server. Every sandbox user has passwordless sudo, so
 // the takeover works across user boundaries.
 import handler from "./dist/server/server.js";
+// Server-only email queue processor (see src/emailQueue.ts). Serves POST/GET
+// /api/send-email directly — this is a plain Bun server, so we handle the
+// endpoint here instead of relying on framework API-route support.
+import { handleSendEmail } from "./src/emailQueue.ts";
 
 // Pinned, NOT read from the environment. The published preview URL
 // (<label>.<PUBLIC_SITE_DOMAIN>) is reverse-proxied to 0.0.0.0:3000 inside the
@@ -41,6 +45,9 @@ for (let attempt = 1; ; attempt++) {
       hostname: HOST,
       async fetch(req) {
         const { pathname } = new URL(req.url);
+        if (pathname === "/api/send-email") {
+          return handleSendEmail(req);
+        }
         if (pathname !== "/") {
           const file = Bun.file(CLIENT_DIR + pathname);
           if (await file.exists()) return new Response(file);

@@ -47,7 +47,7 @@ export function Header() {
   };
 
   const closeMenu = () => setMenuOpen(false);
-  const mobileCtaHref = user ? "/dashboard" : "/signup";
+  const mobileCtaHref = user ? "/dashboard" : "/app";
   const mobileCtaLabel = user ? "Dashboard" : "Get Started";
 
   return (

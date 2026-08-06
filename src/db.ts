@@ -102,11 +102,28 @@ export function getDb(): Database {
       expires_at TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS draft_transfers (
+      id TEXT PRIMARY KEY,
+      target_email TEXT NOT NULL,
+      source_user_id TEXT NOT NULL,
+      source_offering TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // Seed recovery compensation offers; INSERT OR IGNORE keeps existing expiry dates stable.
   db.run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, datetime('now', '+30 days'))", ["meos-comp-courtnee", "courtneeowens22@gmail.com"]);
   db.run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, datetime('now', '+30 days'))", ["meos-comp-hipopmarkets", "hipopmarkets@gmail.com"]);
+
+  // Seed the draft transfer for hipopmarkets' recovered interview draft (currently orphaned under
+  // Tahlia's user id after the DB corruption recovery). Only seed while the source draft actually
+  // exists — once the transfer has been executed (row deleted), a server restart must not re-seed it.
+  db.run(
+    `INSERT OR IGNORE INTO draft_transfers (id, target_email, source_user_id, source_offering)
+     SELECT 'transfer-hipopmarkets', 'hipopmarkets@gmail.com', '1d76633b-2602-47bf-8f5c-adb76603e41e', 'context'
+     WHERE EXISTS (SELECT 1 FROM interview_drafts WHERE user_id = '1d76633b-2602-47bf-8f5c-adb76603e41e' AND offering = 'context')`
+  );
 
   // ── Migration: add interview_count to existing users table ──
   try {
@@ -365,4 +382,75 @@ export function insertTeamWaitlistEntry(entry: TeamWaitlistEntry): void {
     "INSERT INTO team_waitlist (id, name, email, company, team_size, use_case) VALUES (?, ?, ?, ?, ?, ?)",
     [crypto.randomUUID(), entry.name, entry.email, entry.company, entry.team_size, entry.use_case],
   );
+}
+
+// ── Draft transfers ──
+// Transfers an orphaned interview draft (recovered under the wrong user id after the DB
+// corruption incident) to the correct account when its owner re-registers.
+
+export interface PendingDraftTransfer {
+  id: string;
+  target_email: string;
+  source_user_id: string;
+  source_offering: string;
+}
+
+export interface DraftTransferResult {
+  transferred: boolean;
+  reason?: "source_gone" | "transfer_gone" | "already_owned";
+}
+
+export function getPendingDraftTransfer(email: string): PendingDraftTransfer | undefined {
+  const d = getDb();
+  return d
+    .query("SELECT id, target_email, source_user_id, source_offering FROM draft_transfers WHERE target_email = ?")
+    .get(email.trim().toLowerCase()) as PendingDraftTransfer | undefined;
+}
+
+export function executeDraftTransfer(transferId: string, targetUserId: string): DraftTransferResult {
+  const d = getDb();
+
+  const transfer = d
+    .query("SELECT id, target_email, source_user_id, source_offering FROM draft_transfers WHERE id = ?")
+    .get(transferId) as PendingDraftTransfer | undefined;
+  if (!transfer) return { transferred: false, reason: "transfer_gone" };
+
+  // The transfer is a no-op if the source and target are the same account.
+  if (transfer.source_user_id === targetUserId) {
+    d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
+    return { transferred: false, reason: "already_owned" };
+  }
+
+  // Read the source draft.
+  const sourceDraft = d
+    .query("SELECT topic, state_json, updated_at FROM interview_drafts WHERE user_id = ? AND offering = ?")
+    .get(transfer.source_user_id, transfer.source_offering) as { topic: string; state_json: string; updated_at: string } | undefined;
+
+  // No source draft to move — clean up the pending transfer and report.
+  if (!sourceDraft) {
+    d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
+    return { transferred: false, reason: "source_gone" };
+  }
+
+  // Edge case: target already has a draft with the same offering (fresh accounts shouldn't,
+  // but be safe). Rename the transferred draft's offering so it doesn't clash with the
+  // (user_id, offering) primary key and both drafts survive.
+  let offering = transfer.source_offering;
+  const conflict = d
+    .query("SELECT 1 FROM interview_drafts WHERE user_id = ? AND offering = ? LIMIT 1")
+    .get(targetUserId, transfer.source_offering);
+  if (conflict) {
+    offering = `${transfer.source_offering}_transferred_${Date.now()}`;
+  }
+
+  // Move the draft to the new owner, then remove the source row (the PK is (user_id, offering),
+  // so inserting under a different user_id leaves the orphaned source row behind unless deleted).
+  d.run(
+    "INSERT OR REPLACE INTO interview_drafts (user_id, offering, topic, state_json, updated_at) VALUES (?, ?, ?, ?, ?)",
+    [targetUserId, offering, sourceDraft.topic, sourceDraft.state_json, sourceDraft.updated_at],
+  );
+  d.run("DELETE FROM interview_drafts WHERE user_id = ? AND offering = ?", [transfer.source_user_id, transfer.source_offering]);
+  d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
+
+  return { transferred: true };
 }

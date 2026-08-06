@@ -23,6 +23,8 @@ import {
   recordPurchase,
   listEntitlements,
   getOwnerMetrics as queryOwnerMetrics,
+  getPendingDraftTransfer,
+  executeDraftTransfer,
 } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
@@ -76,6 +78,13 @@ export const signup = createServerFn({ method: "POST" })
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000).toISOString();
     createSession(userId, token, expiresAt);
+
+    // Check for a pending draft transfer (e.g. hipopmarkets' recovered draft that is currently
+    // orphaned under another user id after the DB corruption recovery). Execute it if present.
+    const pendingTransfer = getPendingDraftTransfer(data.email);
+    if (pendingTransfer) {
+      executeDraftTransfer(pendingTransfer.id, userId);
+    }
 
     return {
       user: { id: user.id, email: user.email, tier: user.tier },

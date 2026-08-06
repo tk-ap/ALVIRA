@@ -87,7 +87,7 @@ function Home() {
           </h1>
 
           <p className="mt-6 sm:mt-8 text-base leading-relaxed text-warm-gray-dark dark:text-warm-gray sm:text-lg max-w-2xl mx-auto">
-            ALVIRA interviews you to uncover how you think, work, communicate, and decide—then turns that knowledge into a living AI profile you can use across ChatGPT, Claude, Gemini, Cursor, and future AI tools.
+            A 10–15 minute guided interview uncovers how you think, work, and decide — then compiles it into a portable AI profile for ChatGPT, Claude, Gemini, and Cursor.
           </p>
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
@@ -108,7 +108,7 @@ function Home() {
             </a>
           </div>
           <p className="mt-5 font-mono text-xs text-warm-gray-dark dark:text-warm-gray">
-            Free to start · No credit card · Portable Markdown
+            Free to start · No credit card
           </p>
         </div>
       </section>
@@ -116,7 +116,7 @@ function Home() {
       {/* ================================================================ */}
       {/* 2. Problem / benefit summary */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-white px-6 py-28 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-36">
+      <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="mx-auto max-w-4xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Why ALVIRA</span>
@@ -124,20 +124,18 @@ function Home() {
               Stop starting from scratch with AI.
             </h2>
             <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              Every new conversation begins with the same problem: your AI doesn't know how you think, what matters to you, or how you want it to help. ALVIRA learns that context through a guided conversation and turns it into a reusable AI profile. Bring it to your favorite AI tools so they can give you more relevant, consistent, and personal help.
+              Every new chat starts the same way: your AI doesn't know how you think or how you want it to help. ALVIRA finds that context once and makes it reusable.
             </p>
           </div>
 
-          <div className="mt-20 grid gap-x-16 gap-y-14 sm:grid-cols-2  lg:max-w-5xl">
+          <div className="mt-20 grid gap-x-16 gap-y-14 sm:grid-cols-2">
             {[
-              ["Spend less time explaining yourself", "Stop repeatedly typing your preferences, background, goals, working style, and instructions into every new conversation."],
-              ["Get answers that fit you", "Give AI the context it needs to tailor its writing, recommendations, plans, and decisions to your actual needs."],
-              ["Discover context you would have missed", "ALVIRA asks adaptive questions that uncover useful details most people would never think to include in a prompt."],
-              ["Use it with the AI tools you already have", "Your profile works across ChatGPT, Claude, Gemini, Cursor, and future AI tools. You are not locked into one platform."],
-              ["Keep it accurate as your life changes", "Update your profile when your priorities, work, routines, or preferences change instead of rebuilding everything from scratch."],
-              ["Own the knowledge—not just the account", "Your profile can be exported as readable Markdown. You can inspect it, edit it, save it, and take it with you."],
+              ["Stop re-explaining yourself", "No more retyping your background, goals, and working style into every new chat. Keep instructions in one organized AI profile."],
+              ["Discover context you'd have missed", "Adaptive interviews surface knowledge and patterns you wouldn't think to tell an AI on your own."],
+              ["Stays current as you change", "Update your profile anytime instead of rebuilding from scratch. Your knowledge evolves with you."],
+              ["Get answers shaped around you", "When your AI knows how you think and decide, every answer is more relevant and personal."],
             ].map(([headline, body], index) => (
-              <div key={headline} className="border-t border-gray-200 pt-5 dark:border-gray-800">
+              <div key={headline} className="border-t border-gray-200 pt-5 text-left dark:border-gray-800">
                 <p className="font-mono text-sm tabular-nums text-emerald-700 dark:text-emerald-400">
                   {String(index + 1).padStart(2, "0")}
                 </p>
@@ -146,54 +144,13 @@ function Home() {
               </div>
             ))}
           </div>
-
-          <div className="mt-24 overflow-x-auto border-y border-gray-200 dark:border-gray-800">
-            <table className="w-full min-w-[30rem] border-collapse text-left">
-              <thead>
-                <tr className="font-mono text-xs uppercase tracking-wide">
-                  <th scope="col" className="w-1/2 border-b border-r border-gray-200 bg-gray-50 px-5 py-4 text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">Without ALVIRA</th>
-                  <th scope="col" className="w-1/2 border-b border-gray-200 bg-emerald-50 px-5 py-4 text-emerald-800 dark:border-gray-800 dark:bg-emerald-950/40 dark:text-emerald-300">With ALVIRA</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                {[
-                  ["Re-explain yourself in every chat", "Create reusable context once"],
-                  ["Receive generic answers", "Receive answers shaped around you"],
-                  ["Keep instructions scattered across chats", "Maintain one organized AI profile"],
-                  ["Lose context when switching tools", "Bring your knowledge to any AI"],
-                  ["Guess what information AI needs", "Let adaptive interviews uncover it"],
-                ].map(([without, withAlvira]) => (
-                  <tr key={without}>
-                    <td className="border-b border-r border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-950">{without}</td>
-                    <td className="border-b border-gray-200 bg-emerald-50/60 px-5 py-4 dark:border-gray-800 dark:bg-emerald-950/20">{withAlvira}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-16 text-center">
-            <a
-              href="/app"
-              className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
-            >
-              Build my AI profile
-              <span aria-hidden="true" className="ml-2">→</span>
-            </a>
-            <p className="mt-4 font-mono text-xs text-gray-500 dark:text-gray-400">Free to start · No credit card required</p>
-          </div>
         </div>
       </section>
 
       {/* ================================================================ */}
-      {/* 3. Interactive interview example (live demo) */}
-      {/* ================================================================ */}
-
-
-      {/* ================================================================ */}
       {/* 4. Example profile artifact */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-white px-6 py-28 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-36">
+      <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Example profile</span>
@@ -255,7 +212,7 @@ function Home() {
       {/* ================================================================ */}
       {/* 5. Portability comparison */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-gray-50 px-6 py-28 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-36">
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="mx-auto max-w-4xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Comparison</span>
@@ -277,23 +234,18 @@ function Home() {
             </div>
             <div className="mt-10 w-full max-w-3xl"><PortabilityGraphic /></div>
           </div>
-
-          <p className="mt-12 max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-            Platform memory features are designed to keep you on their platform. ALVIRA's Markdown knowledge files are designed to go wherever you go — into any AI tool, any editor, any workflow.{" "}
-            <span className="text-gray-700 dark:text-gray-300">You own the files. You control the updates. Your exports go anywhere.</span>
-          </p>
         </div>
       </section>
 
       {/* ================================================================ */}
       {/* 6. Free-plan CTA */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+      <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Start free</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-              Everything you need to build your first AI profile.
+              Start free. Upgrade when it sticks.
             </h2>
             <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
               Start free — no credit card, no time limit. When ALVIRA becomes part of how you work, upgrade for more profiles and continuous updates.
@@ -313,7 +265,6 @@ function Home() {
                   "3 guided interviews",
                   "All 19 personal knowledge domains",
                   "Portable Markdown output",
-                  "No credit card required",
                 ].map((feature) => (
                   <li key={feature} className="flex gap-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                     <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
@@ -364,9 +315,9 @@ function Home() {
               ["03", "Portable format", "Open Markdown means no vendor lock-in. Read, edit, and use your files with any tool."],
               ["04", "You control sharing", "Share files with specific AI tools or team members, or keep them completely private. Your data is never shared or sold — there's nothing to opt out of."],
             ].map(([number, title, body]) => (
-              <div key={title} className="border-t border-gray-200 pt-5 dark:border-gray-800">
+              <div key={title} className="border-l-2 border-emerald-200 pl-4 text-left dark:border-emerald-800">
                 <div className="flex items-start gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-600 font-mono text-xs font-semibold text-emerald-700 dark:border-emerald-500 dark:text-emerald-400" aria-hidden="true">
+                  <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400" aria-hidden="true">
                     {number}
                   </span>
                   <div>
@@ -377,28 +328,15 @@ function Home() {
               </div>
             ))}
           </div>
-
-          <p className="mt-12 max-w-3xl border-l-2 border-emerald-500 pl-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            ALVIRA is built on the belief that your knowledge should belong to you — not to us, and not to any AI platform.
-          </p>
         </div>
       </section>
 
       {/* ================================================================ */}
       {/* 8. MeOS expansion card (cross-sell) */}
       {/* ================================================================ */}
-      <section className="border-t border-human/30 bg-human-soft/70 px-6 py-28 dark:border-human-dark/40 dark:bg-human-dark/10 sm:px-8 sm:py-36">
+      <section className="border-t border-human/30 bg-human-soft/70 px-6 py-20 dark:border-human-dark/40 dark:bg-human-dark/10 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-6xl text-center">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="font-mono text-xs uppercase tracking-wide text-human-dark dark:text-human">Go deeper</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-              Beyond the AI profile.
-            </h2>
-            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              ALVIRA helps AI understand you. MeOS takes it further — turning what ALVIRA discovers into a personal operating system for decisions, direction, work, and daily life.
-            </p>
-          </div>
-          <div className="mt-10 flex justify-center">
+          <div className="flex justify-center">
             <MeOSCTA placement="homepage" variant="default" dismissible={false} />
           </div>
         </div>
@@ -407,7 +345,7 @@ function Home() {
       {/* ================================================================ */}
       {/* 9. FAQ and final CTA */}
       {/* ================================================================ */}
-      <section id="faq" className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
+      <section id="faq" className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-12">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">FAQ</span>
@@ -463,11 +401,13 @@ function Home() {
           </div>
 
           <div className="mt-12 text-center">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Ready to build your AI profile?</h3>
             <a
               href="/app"
-              className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
+              className="mt-4 inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
             >
-              Ready to build your AI profile? → Start free
+              Start free
+              <span aria-hidden="true" className="ml-2">→</span>
             </a>
           </div>
         </div>
@@ -475,21 +415,6 @@ function Home() {
 
       </main>
 
-      {/* --- Footer --- */}
-      <footer className="bg-gray-950 py-8 px-8 border-t border-gray-800">
-        <div className="mx-auto max-w-7xl flex flex-col items-center gap-3">
-          <img
-            src="/brand/alvira-wordmark-primary-dark.svg"
-            alt=""
-            aria-hidden="true"
-            className="h-6 w-auto"
-          />
-          <p className="font-mono text-xs text-gray-400">Human context for AI.</p>
-          <p className="font-mono text-xs text-gray-400 tabular-nums">
-            &copy; {new Date().getFullYear()}
-          </p>
-        </div>
-      </footer>
       <TrustFooter />
     </div>
   );

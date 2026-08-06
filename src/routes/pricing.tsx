@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
+import { ComparisonTable } from "~/components/ComparisonTable";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -44,6 +45,25 @@ const lifetimePlan = {
   cta: "Go Lifetime",
   href: STRIPE_LINKS.lifetime,
 } as const;
+
+const arguments_ = [
+  { number: "01", title: "Stop repeating yourself.", body: "Every time you switch AI tools or start a new conversation, you're starting from zero. ALVIRA captures how you think, work, communicate, and decide — once — then gives every AI you use the context it needs from the first message. No more explaining your background, your preferences, or your constraints over and over." },
+  { number: "02", title: "Get help that fits you.", body: "Generic AI gives generic answers. ALVIRA profiles your communication style, values, boundaries, decision frameworks, and workflows — so every AI you use responds as if it already knows you. Your AI stops guessing and starts working with you, not at you." },
+  { number: "03", title: "Use and own it anywhere.", body: "Platform-native memory features lock your context inside one tool. ALVIRA generates portable Markdown files that work across ChatGPT, Claude, Gemini, Cursor, and future AI tools. Your knowledge is yours — not trapped inside someone else's ecosystem." },
+];
+
+const useCases = [
+  ["Developers use ALVIRA to...", "keep coding standards, architecture decisions, and working preferences available in every coding session."],
+  ["Consultants use ALVIRA to...", "move between clients and AI tools without rebuilding their voice, process, or expertise from scratch."],
+  ["Teams use ALVIRA to...", "turn scattered operational knowledge into durable context every teammate and AI agent can use."],
+  ["Creators use ALVIRA to...", "make every draft sound like them, with their audience, values, and boundaries in view."],
+];
+
+const adjacentPlayers = [
+  ["Windsurf", "portable plain-Markdown rules, but developer-only — no elicitation or validation"],
+  ["Khoj", "AI search over your personal notes — no structured, reusable profile"],
+  ["Obsidian", "a knowledge store you assemble by hand — ALVIRA builds yours for you"],
+];
 
 const faqs = [
   ["Can I switch plans?", "Yes. Upgrade or downgrade anytime."],
@@ -211,6 +231,40 @@ function Pricing() {
               <strong>Pro</strong> is best for ongoing use, multiple profiles, and unlimited interviews.{' '}
               <strong>Lifetime</strong> is best for one permanent profile — it pays for itself in about two years of annual Pro.
             </p>
+          </div>
+        </section>
+
+        <section id="why-alvira" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-5xl text-center">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">The case for context</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Why pay for ALVIRA?</h2>
+            <div className="mt-16 space-y-16 sm:mt-20 sm:space-y-24">
+              {arguments_.map((item, index) => (
+                <article key={item.number} className={`grid gap-8 text-left md:grid-cols-[120px_1fr] ${index > 0 ? "border-t border-gray-200 pt-16 dark:border-gray-800 sm:pt-24" : ""}`}>
+                  <div className="flex items-start gap-4 md:block"><span className="font-mono text-3xl tabular-nums text-emerald-600 dark:text-emerald-400">{item.number}</span><span className="mt-4 hidden h-px w-12 bg-emerald-500 md:block" aria-hidden="true" /></div>
+                  <div className="max-w-3xl"><h3 className="text-3xl font-bold tracking-tight sm:text-4xl">{item.title}</h3><p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-gray-400">{item.body}</p></div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-5xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Already useful in the real world.</h2>
+            <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {useCases.map(([label, body]) => <div key={label}><h3 className="font-mono text-sm">{label}</h3><p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{body}</p></div>)}
+            </div>
+          </div>
+        </section>
+
+        <section id="comparison" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-5xl text-center">
+            <div className="mb-10"><span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How ALVIRA compares</span><h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Context you can keep — everywhere.</h2><p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, and export structured files you own.</p></div>
+            <ComparisonTable />
+            <p className="mx-auto mt-10 max-w-2xl text-lg font-semibold leading-snug">Most tools don’t let you elicit, validate, and export your AI context to use everywhere.</p>
+            <p className="mx-auto mt-6 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Adjacent players: {adjacentPlayers.map(([name, detail], index) => <span key={name}>{index > 0 ? <span className="mx-2 text-gray-300 dark:text-gray-600" aria-hidden="true">·</span> : null}<strong className="font-mono text-xs font-semibold">{name}</strong> — {detail}</span>)}</p>
+            <p className="mt-8 font-mono text-xs text-gray-500 dark:text-gray-400">Last reviewed: August 2026</p>
           </div>
         </section>
 

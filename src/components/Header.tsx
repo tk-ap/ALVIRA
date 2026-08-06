@@ -78,9 +78,6 @@ export function Header() {
             <a href="/interview" className={linkClass}>
               Interview
             </a>
-            <a href="/why-alvira" className={linkClass}>
-              Why ALVIRA
-            </a>
             <a href="/pricing" className={linkClass}>
               Pricing
             </a>
@@ -156,9 +153,6 @@ export function Header() {
         >
           <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>
             Interview
-          </a>
-          <a href="/why-alvira" onClick={closeMenu} className={mobileLinkClass}>
-            Why ALVIRA
           </a>
           <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>
             Pricing

@@ -195,7 +195,7 @@ function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; e
         </p>
         <div className="flex gap-2 flex-shrink-0 items-center">
           <a
-            href="/why-alvira"
+            href="/pricing#why-alvira"
             className="font-mono text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2"
           >
             Why upgrade?
@@ -236,7 +236,7 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
         </p>
         <div className="space-y-3">
           <a
-            href="/why-alvira"
+            href="/pricing#why-alvira"
             className="block text-center font-mono text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2"
           >
             Why upgrade?

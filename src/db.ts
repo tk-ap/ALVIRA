@@ -84,6 +84,17 @@ export function getDb(): Database {
       PRIMARY KEY (user_id, offering),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS team_waitlist (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      company TEXT,
+      team_size TEXT,
+      use_case TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_team_waitlist_email ON team_waitlist(email);
   `);
 
   // ── Migration: add interview_count to existing users table ──
@@ -278,4 +289,22 @@ export function getUserLimits(userId: string): UserLimits | null {
     maxProfiles: user.tier === "free" ? 1 : Infinity,
     maxInterviews: user.tier === "free" ? 3 : Infinity,
   };
+}
+
+// ── Team waitlist ──
+
+export interface TeamWaitlistEntry {
+  name: string;
+  email: string;
+  company: string | null;
+  team_size: string | null;
+  use_case: string | null;
+}
+
+export function insertTeamWaitlistEntry(entry: TeamWaitlistEntry): void {
+  const d = getDb();
+  d.run(
+    "INSERT INTO team_waitlist (id, name, email, company, team_size, use_case) VALUES (?, ?, ?, ?, ?, ?)",
+    [crypto.randomUUID(), entry.name, entry.email, entry.company, entry.team_size, entry.use_case],
+  );
 }

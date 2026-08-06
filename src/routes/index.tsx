@@ -118,8 +118,8 @@ function Home() {
       {/* 2. Problem / benefit summary */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-28 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-36">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-4xl lg:ml-[8%]">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mx-auto max-w-4xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Why ALVIRA</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Stop starting from scratch with AI.
@@ -129,7 +129,7 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-20 grid gap-x-16 gap-y-14 sm:grid-cols-2 lg:ml-[8%] lg:max-w-5xl">
+          <div className="mt-20 grid gap-x-16 gap-y-14 sm:grid-cols-2  lg:max-w-5xl">
             {[
               ["Spend less time explaining yourself", "Stop repeatedly typing your preferences, background, goals, working style, and instructions into every new conversation."],
               ["Get answers that fit you", "Give AI the context it needs to tailor its writing, recommendations, plans, and decisions to your actual needs."],
@@ -190,8 +190,8 @@ function Home() {
       {/* 3. Interactive interview example (live demo) */}
       {/* ================================================================ */}
       <section id="how-it-works" className="border-t border-gray-100 bg-gray-50 px-6 py-28 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-36">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl lg:ml-[8%]">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mx-auto max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How it works</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">See ALVIRA in action</h2>
             <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
@@ -199,12 +199,12 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-20 grid items-center gap-12 border-y border-gray-200 py-12 dark:border-gray-800 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:pl-[8%]">
+          <div className="mt-20 grid items-center gap-12 border-y border-gray-200 py-12 dark:border-gray-800 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] ">
             <p className="max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Your words are not lost in the chat. ALVIRA compiles the conversation into clear, reusable files your AI can understand.</p>
             <ConversationToKnowledgeGraphic />
           </div>
 
-          <ol className="mt-24 max-w-4xl space-y-14 border-l border-gray-300 pl-6 dark:border-gray-700 sm:ml-[12%] sm:pl-12">
+          <ol className="mt-24 max-w-4xl space-y-14 border-l border-gray-300 pl-6 dark:border-gray-700  sm:pl-12">
             {[
               {
                 title: "ALVIRA asks",
@@ -245,7 +245,7 @@ function Home() {
             ))}
           </ol>
 
-          <div className="mt-24 lg:ml-[8%]">
+          <div className="mt-24 ">
             <h3 className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">The difference in practice</h3>
             <div className="mt-5 grid gap-10 border-y border-gray-200 py-8 md:grid-cols-2 dark:border-gray-700">
               <div className="border-l border-gray-300 pl-5 dark:border-gray-700">
@@ -272,7 +272,7 @@ function Home() {
       {/* 4. Example profile artifact */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-28 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-36">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Example profile</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
@@ -319,11 +319,11 @@ function Home() {
             Sample profile — your results will reflect your unique knowledge.
           </p>
 
-          <div className="mt-24 grid items-center gap-14 border-t border-gray-200 pt-12 dark:border-gray-800 lg:ml-[8%] lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="mt-24 grid items-center gap-14 border-t border-gray-200 pt-12 dark:border-gray-800  lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Living profile</span>
               <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">Your AI profile grows with you.</h3>
-              <p className="mt-3 max-w-xl text-center text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. A visible version history of your updates is coming soon.</p>
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. A visible version history of your updates is coming soon.</p>
             </div>
             <VersionHistoryGraphic />
           </div>
@@ -334,8 +334,8 @@ function Home() {
       {/* 5. Portability comparison */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-gray-50 px-6 py-28 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-36">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-4xl lg:ml-[8%]">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mx-auto max-w-4xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Comparison</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Your knowledge, not their platform
@@ -367,7 +367,7 @@ function Home() {
       {/* 6. Free-plan CTA */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Start free</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
@@ -424,7 +424,7 @@ function Home() {
       {/* 7. Privacy & trust */}
       {/* ================================================================ */}
       <section id="privacy" className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Privacy &amp; trust</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
@@ -467,7 +467,7 @@ function Home() {
       {/* ================================================================ */}
       <section className="border-t border-human/30 bg-human-soft/70 px-6 py-28 dark:border-human-dark/40 dark:bg-human-dark/10 sm:px-8 sm:py-36">
         <div className="mx-auto max-w-6xl text-center">
-          <div className="mx-auto max-w-3xl">
+          <div className="mx-auto max-w-3xl text-center">
             <span className="font-mono text-xs uppercase tracking-wide text-human-dark dark:text-human">Go deeper</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Beyond the AI profile.
@@ -486,7 +486,7 @@ function Home() {
       {/* 9. FAQ and final CTA */}
       {/* ================================================================ */}
       <section id="faq" className="border-t border-gray-100 bg-white px-6 py-24 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-32">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-3xl text-center">
           <div className="mb-12">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">FAQ</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Questions, answered.</h2>

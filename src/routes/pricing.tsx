@@ -89,7 +89,7 @@ function Pricing() {
       <Header />
       <main id="main-content">
         <section className="px-6 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-5xl text-center">
             <div className="max-w-3xl">
               <span className="inline-block rounded-md border border-emerald-200 px-3 py-1.5 font-mono text-xs tracking-wide text-emerald-700 dark:border-emerald-800 dark:text-emerald-400">
                 &lt;pricing /&gt;
@@ -215,7 +215,7 @@ function Pricing() {
         </section>
 
         <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-4xl text-center">
             <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">FAQ</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Questions, answered.</h2>
             <div className="mt-10 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">

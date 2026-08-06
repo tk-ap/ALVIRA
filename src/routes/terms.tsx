@@ -45,7 +45,7 @@ function Terms() {
     <p>We’ll notify you of material changes by email. Continued use of ALVIRA after changes means you accept the updated terms.</p>
 
     <h2>Contact</h2>
-    <p>Questions about these terms can be sent to <a href="mailto:hello@alvira.ai">hello@alvira.ai</a>.</p>
+    <p>Questions about these terms can be sent to <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>.</p>
   </Page>;
 }
 

@@ -24,13 +24,13 @@ function Privacy() {
     <p>We use OpenAI for interview question generation and document extraction, so your answers and document text are sent to their API. We use Stripe for payment processing; Stripe receives your payment details, not ALVIRA. OpenAI and Stripe are covered by their own privacy policies.</p>
 
     <h2>Data retention</h2>
-    <p>Your profile and interview data are stored while your account is active. You can delete your account and all associated data at any time by emailing <a href="mailto:hello@alvira.ai">hello@alvira.ai</a>. Deletion is permanent.</p>
+    <p>Your profile and interview data are stored while your account is active. You can delete your account and all associated data at any time by emailing <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>. Deletion is permanent.</p>
 
     <h2>Cookies</h2>
     <p>We use essential session cookies for authentication. We do not use tracking cookies, analytics cookies, or third-party advertising cookies.</p>
 
     <h2>Your rights</h2>
-    <p>You can access, correct, export, or delete your data at any time. You can export your knowledge files from the app, or request full account deletion by emailing <a href="mailto:hello@alvira.ai">hello@alvira.ai</a>.</p>
+    <p>You can access, correct, export, or delete your data at any time. You can export your knowledge files from the app, or request full account deletion by emailing <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>.</p>
 
     <h2>Children</h2>
     <p>ALVIRA is not intended for users under 13.</p>
@@ -39,7 +39,7 @@ function Privacy() {
     <p>We’ll notify you of material changes by email. Continued use of ALVIRA after changes means you accept the updated policy.</p>
 
     <h2>Contact</h2>
-    <p>Questions about this policy can be sent to <a href="mailto:hello@alvira.ai">hello@alvira.ai</a>.</p>
+    <p>Questions about this policy can be sent to <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>.</p>
   </Policy>;
 }
 

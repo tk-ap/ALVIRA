@@ -360,9 +360,9 @@ function Home() {
           <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
             {[
               ["01", "Secure storage", "Your interviews and profiles are stored securely on ALVIRA's servers. Export them as Markdown files anytime — the files are yours to keep and take anywhere."],
-              ["02", "No training", "We never use your knowledge to train AI models. Your data is yours, period."],
-              ["03", "Portable format", "Open Markdown means no vendor lock-in. Read, edit, and use your files with any tool, forever."],
-              ["04", "You control sharing", "Share files with specific AI tools or team members, or keep them completely private. There is no opt-out because you are never opted in."],
+              ["02", "No training", "We never use your knowledge to train AI models. Your answers are processed by OpenAI's API for question generation — they do not train on your data. Your data belongs to you: export or delete it anytime."],
+              ["03", "Portable format", "Open Markdown means no vendor lock-in. Read, edit, and use your files with any tool."],
+              ["04", "You control sharing", "Share files with specific AI tools or team members, or keep them completely private. Your data is never shared or sold — there's nothing to opt out of."],
             ].map(([number, title, body]) => (
               <div key={title} className="border-t border-gray-200 pt-5 dark:border-gray-800">
                 <div className="flex items-start gap-4">

@@ -18,7 +18,6 @@ export const Route = createFileRoute("/")({
 // --- Components ---
 function Home() {
   const [activePreview, setActivePreview] = useState("overview.md");
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const profilePreviews = [
     {
@@ -151,17 +150,17 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 4. Example profile artifact */}
+      {/* 3. Profile preview, comparison, and portability */}
       {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Example profile</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">What you get</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-              See what your knowledge becomes.
+              See what your knowledge becomes
             </h2>
             <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              ALVIRA turns a conversation into practical context your AI can actually use — not a vague personality summary.
+              Structured, portable Markdown files that work across every AI tool — not lossy memory features locked to one platform.
             </p>
           </div>
 
@@ -209,24 +208,8 @@ function Home() {
             </div>
             <VersionHistoryGraphic />
           </div>
-        </div>
-      </section>
 
-      {/* ================================================================ */}
-      {/* 5. Portability comparison */}
-      {/* ================================================================ */}
-      <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mx-auto max-w-4xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Comparison</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-              Your knowledge, not their platform
-            </h2>
-            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              Most AI platforms turn your context into lossy model-generated prose. ALVIRA builds structured, user-owned Markdown files that work everywhere and stay current.
-            </p>
-          </div>
-
+      <div className="mt-24 border-t border-gray-200 pt-12 dark:border-gray-800">
           <ComparisonTable competitors={COMPARISON_COMPETITORS} dimensions={COMPARISON_DIMENSIONS} highlightRow={5} />
 
           <div className="mt-24 flex flex-col items-center border-t border-gray-200 pt-14 dark:border-gray-800">
@@ -238,10 +221,11 @@ function Home() {
             <div className="mt-10 w-full max-w-3xl"><PortabilityGraphic /></div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* ================================================================ */}
-      {/* 6. Free-plan CTA */}
+      {/* 4. Free-plan CTA */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
@@ -297,7 +281,7 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 7. Privacy & trust */}
+      {/* 5. Privacy & trust */}
       {/* ================================================================ */}
       <section id="privacy" className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
@@ -335,7 +319,7 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 8. MeOS expansion card (cross-sell) */}
+      {/* 6. MeOS expansion card (cross-sell) */}
       {/* ================================================================ */}
       <section className="border-t border-human/30 bg-human-soft/70 px-6 py-20 dark:border-human-dark/40 dark:bg-human-dark/10 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-6xl text-center">
@@ -346,76 +330,21 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 9. FAQ and final CTA */}
       {/* ================================================================ */}
-      <section id="faq" className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
+      {/* 7. Final CTA */}
+      {/* ================================================================ */}
+      <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-12">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">FAQ</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">Questions, answered.</h2>
-          </div>
-
-          <div className="border-t border-gray-200 dark:border-gray-800">
-            {[
-              {
-                question: "How is this different from ChatGPT's memory?",
-                answer: "ALVIRA builds portable, editable Markdown files you own — not hidden memory tied to one platform. You can inspect, update, and take your profile anywhere.",
-              },
-              {
-                question: "What happens to my data?",
-                answer: "Your data is stored on ALVIRA's servers and never used to train AI models. You can export it as Markdown files you control at any time.",
-              },
-              {
-                question: "Can I use this with Claude, Gemini, or Cursor?",
-                answer: "Yes. Markdown works everywhere, so you can copy-paste your profile into Claude, Gemini, Cursor, ChatGPT, or any other AI tool.",
-              },
-              {
-                question: "How long does an interview take?",
-                answer: "About 10–15 minutes gives you a solid foundation. Return anytime to go deeper or update your profile as things change.",
-              },
-              {
-                question: "Is there a free plan?",
-                answer: "Yes: 1 profile, 3 interviews, and all 19 knowledge domains — with no credit card required.",
-              },
-              {
-                question: "What's the difference between ALVIRA Personal and MeOS?",
-                answer: "ALVIRA Personal builds your AI profile. MeOS turns what ALVIRA discovers into a personal operating system for decisions, direction, work, and daily life.",
-              },
-            ].map((item, index) => {
-              const isOpen = activeFaq === index;
-              return (
-                <div key={item.question} className="border-b border-gray-200 dark:border-gray-800">
-                  <button
-                    type="button"
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-${index}`}
-                    onClick={() => setActiveFaq(isOpen ? null : index)}
-                    className="flex w-full items-center justify-between gap-6 py-5 text-left text-base font-semibold text-gray-900 transition-colors hover:text-emerald-700 dark:text-gray-100 dark:hover:text-emerald-400 sm:text-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400"
-                  >
-                    <span>{item.question}</span>
-                    <span className="shrink-0 font-mono text-xl font-normal text-emerald-700 dark:text-emerald-400" aria-hidden="true">{isOpen ? "−" : "+"}</span>
-                  </button>
-                  {isOpen && (
-                    <p id={`faq-${index}`} className="max-w-2xl pb-5 pr-10 text-base leading-relaxed text-gray-600 dark:text-gray-400">{item.answer}</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-12 text-center">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Ready to build your AI profile?</h3>
-            <a
-              href="/app"
-              className="mt-4 inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
-            >
-              Start free
-              <span aria-hidden="true" className="ml-2">→</span>
-            </a>
-          </div>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Ready to build your AI profile?</h3>
+          <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">The first interview takes about 10–15 minutes. You can pause anytime and pick up where you left off.</p>
+          <a
+            href="/app"
+            className="mt-7 inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
+          >
+            Start free <span aria-hidden="true" className="ml-2">→</span>
+          </a>
         </div>
       </section>
-
       </main>
 
       <TrustFooter />

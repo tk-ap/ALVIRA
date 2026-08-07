@@ -157,10 +157,10 @@ export const Route = createFileRoute("/app")({
 function AuthPromptBanner({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <div className="border-b border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-1.5">
-      <p className="text-xs text-emerald-800 dark:text-emerald-200 text-center">
+    <div className="border-b border-system dark:border-system-dark bg-system-soft dark:bg-ink/30 px-4 py-1.5">
+      <p className="text-xs text-system-dark dark:text-system text-center">
         Sign in to save your interview progress.{" "}
-        <a href="/login" className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
+        <a href="/login" className="text-system-dark dark:text-system hover:text-system dark:hover:text-system underline underline-offset-2 transition-colors">
           Sign in →
         </a>
       </p>
@@ -172,10 +172,10 @@ function AuthPromptBanner({ show }: { show: boolean }) {
 function SignupPromptBanner({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <div className="border-t border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-1.5">
-      <p className="text-xs text-emerald-800 dark:text-emerald-200 text-center">
+    <div className="border-t border-system dark:border-system-dark bg-system-soft dark:bg-ink/30 px-4 py-1.5">
+      <p className="text-xs text-system-dark dark:text-system text-center">
         Don&apos;t have an account?{" "}
-        <a href="/signup" className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
+        <a href="/signup" className="text-system-dark dark:text-system hover:text-system dark:hover:text-system underline underline-offset-2 transition-colors">
           Create one →
         </a>
       </p>
@@ -196,7 +196,7 @@ function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; e
         <div className="flex gap-2 flex-shrink-0 items-center">
           <a
             href="/pricing#why-alvira"
-            className="font-mono text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2"
+            className="font-mono text-xs text-system-dark dark:text-system hover:text-system dark:hover:text-system underline underline-offset-2"
           >
             Why upgrade?
           </a>
@@ -204,7 +204,7 @@ function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; e
             href={STRIPE_LINKS.pro + prefilled}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-1.5 font-mono text-xs font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors"
+            className="rounded-lg bg-system-dark dark:bg-system px-4 py-1.5 font-mono text-xs font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors"
           >
             Upgrade to Pro
           </a>
@@ -237,7 +237,7 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
         <div className="space-y-3">
           <a
             href="/pricing#why-alvira"
-            className="block text-center font-mono text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2"
+            className="block text-center font-mono text-xs text-system-dark dark:text-system hover:text-system dark:hover:text-system underline underline-offset-2"
           >
             Why upgrade?
           </a>
@@ -245,7 +245,7 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
             href={STRIPE_LINKS.pro + prefilled}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full text-center rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2.5 font-mono text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors"
+            className="block w-full text-center rounded-lg bg-system-dark dark:bg-system px-4 py-2.5 font-mono text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors"
           >
             Upgrade to Pro — $20/mo
           </a>
@@ -428,7 +428,11 @@ function AppPage() {
           try {
             const localRaw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
             const serverDraft = await getInterviewDraft().catch(() => null);
-            const draft = localRaw ? JSON.parse(localRaw) : serverDraft;
+            const draft = serverDraft ?? (localRaw ? JSON.parse(localRaw) : null);
+            // Clear stale localStorage when server returns null (e.g. draft pending transfer)
+            if (!serverDraft && localRaw) {
+              window.localStorage.removeItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
+            }
             if (draft?.state && !cancelled) {
               setOffering(draft.offering === "meos" ? "meos" : "context");
               setTopic(draft.topic ?? draft.state.topic);
@@ -1166,7 +1170,7 @@ function AppPage() {
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
-                <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
+                <div className="rounded-lg border border-system dark:border-system-dark bg-system-soft dark:bg-ink/30 px-4 py-3 text-sm text-system-dark dark:text-system">
                   {seededInfo}
                 </div>
               )}
@@ -1251,7 +1255,7 @@ function AppPage() {
                     <button
                       type="button"
                       onClick={handleSkip}
-                      className="font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-2 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 rounded"
+                      className="font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-2 py-1 focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50 rounded"
                     >
                       Skip →
                     </button>
@@ -1260,9 +1264,9 @@ function AppPage() {
                     type="button"
                     onClick={handleGenerate}
                     disabled={compiling || !state || state.history.length < 2}
-                    className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 ${
+                    className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50 ${
                       state && state.history.length >= 2
-                        ? "text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300"
+                        ? "text-system-dark dark:text-system hover:text-system dark:hover:text-system"
                         : "text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     }`}
                   >
@@ -1290,7 +1294,7 @@ function AppPage() {
 
               {/* Interview complete banner */}
               {!hasGaps && !waiting && (
-                <div className="mb-4 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
+                <div className="mb-4 rounded-lg bg-system-soft dark:bg-ink border border-system dark:border-system-dark px-4 py-3 text-sm text-system-dark dark:text-system flex items-center justify-between">
                   <span>
                     {requiredCovered
                       ? "✓ All domains covered. Ready to generate your knowledge files."
@@ -1300,7 +1304,7 @@ function AppPage() {
                     type="button"
                     onClick={handleGenerate}
                     disabled={compiling}
-                    className="flex-shrink-0 ml-4 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-60"
+                    className="flex-shrink-0 ml-4 rounded-lg bg-system-dark dark:bg-system px-4 py-1.5 text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors disabled:opacity-60"
                   >
                     {compiling ? "Compiling..." : "Generate"}
                   </button>
@@ -1309,14 +1313,14 @@ function AppPage() {
 
               {/* Signup reminder — shown when interview is complete but user isn't signed in */}
               {!hasGaps && !waiting && authUser === null && (
-                <div className="mb-4 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3">
-                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                <div className="mb-4 rounded-lg border border-system dark:border-system-dark bg-system-soft dark:bg-ink/30 px-4 py-3">
+                  <p className="text-sm text-system-dark dark:text-system">
                     <strong>Your interview is complete.</strong>{" "}
                     Create a free account to save your results and link them to your profile — it only takes a minute.
                   </p>
                   <a
                     href="/signup"
-                    className="mt-2 inline-block rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors"
+                    className="mt-2 inline-block rounded-lg bg-system-dark dark:bg-system px-4 py-1.5 text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors"
                   >
                     Create account →
                   </a>
@@ -1336,14 +1340,14 @@ function AppPage() {
                     disabled={waiting}
                     enterKeyHint="enter"
                     aria-label="Your answer"
-                    className="flex-1 resize-none rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 max-h-40 overflow-y-auto"
+                    className="flex-1 resize-none rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-system dark:focus:border-system outline-none transition-colors focus-visible:ring-2 focus-visible:ring-system/40 dark:focus-visible:ring-system/40 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 max-h-40 overflow-y-auto"
                   />
                   <button
                     type="button"
                     onClick={handleSend}
                     disabled={!answer.trim() || waiting}
                     aria-label="Send answer"
-                    className="flex-shrink-0 flex h-[46px] w-[46px] items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+                    className="flex-shrink-0 flex h-[46px] w-[46px] items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
@@ -1413,7 +1417,7 @@ function AppPage() {
             {/* Summary strip */}
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
-                <div className="font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-400">{claims.length}</div>
+                <div className="font-mono text-2xl font-bold text-system-dark dark:text-system">{claims.length}</div>
                 <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">claims extracted</div>
               </div>
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
@@ -1443,7 +1447,7 @@ function AppPage() {
               {orderedGroups.map(({ domain, items }) => (
                 <div key={domain.id} className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-4 py-2.5">
-                    <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">{domain.label}</span>
+                    <span className="font-mono text-xs font-semibold text-system-dark dark:text-system">{domain.label}</span>
                     <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">&lt;{domain.id} /&gt;</span>
                   </div>
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -1456,7 +1460,7 @@ function AppPage() {
                             <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">{claim.text}</p>
                             <span className={`flex-shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] ${
                               highConf
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                ? "bg-gray-100 text-system-dark dark:bg-system-dark/40 dark:text-system"
                                 : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
                             }`}>
                               {highConf ? `high · ${Math.round(claim.confidence * 100)}%` : `verify · ${Math.round(claim.confidence * 100)}%`}
@@ -1476,7 +1480,7 @@ function AppPage() {
                                 className={`rounded border px-2 py-1 font-mono text-xs transition-colors ${
                                   decision.status === s
                                     ? s === "agree"
-                                      ? "border-emerald-600 dark:border-emerald-400 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40"
+                                      ? "border-system dark:border-system text-system-dark dark:text-system bg-system-soft dark:bg-ink/40"
                                       : s === "revise"
                                         ? "border-amber-600 dark:border-amber-400 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40"
                                         : "border-gray-500 dark:border-gray-400 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900"
@@ -1493,7 +1497,7 @@ function AppPage() {
                               onChange={(ev) => setSeedDecisions((x) => ({ ...x, [index]: { status: "revise", text: ev.target.value } }))}
                               rows={2}
                               autoFocus
-                              className="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
+                              className="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-system dark:focus:border-system outline-none transition-colors focus-visible:ring-2 focus-visible:ring-system/40 dark:focus-visible:ring-system/40"
                             />
                           )}
                         </div>
@@ -1568,34 +1572,34 @@ function AppPage() {
                 onClick={() => { setOffering(item.key); setStartError(""); }}
                 className={`text-left rounded-lg border p-4 transition-colors ${offering === item.key
                   ? item.key === "context"
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 ring-2 ring-emerald-500/30"
+                    ? "border-system bg-system-soft dark:bg-ink/30 ring-2 ring-system/30"
                     : "border-human-dark bg-human-soft dark:border-human dark:bg-human-dark/10 ring-2 ring-human/40"
                   : item.key === "context"
-                    ? "border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-800 hover:border-emerald-400"
+                    ? "border-system dark:border-system-dark bg-white dark:bg-gray-800 hover:border-system"
                     : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600"}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="font-semibold text-gray-900 dark:text-gray-100">{item.title}</div>
                   {offering === item.key && (
-                    <span aria-hidden="true" className={`flex-shrink-0 font-mono text-sm font-bold ${item.key === "context" ? "text-emerald-700 dark:text-emerald-400" : "text-human-dark dark:text-human"}`}>✓</span>
+                    <span aria-hidden="true" className={`flex-shrink-0 font-mono text-sm font-bold ${item.key === "context" ? "text-system-dark dark:text-system" : "text-human-dark dark:text-human"}`}>✓</span>
                   )}
                 </div>
-                <div className="mt-2 font-mono text-xs text-emerald-700 dark:text-emerald-400">{item.label}</div>
+                <div className="mt-2 font-mono text-xs text-system-dark dark:text-system">{item.label}</div>
                 <div className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">{item.description}</div>
               </button>
             ))}
           </div>
-          {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
+          {offering === "meos" && <p className="mb-5 rounded-lg border border-system dark:border-system-dark bg-system-soft dark:bg-ink/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
 
           {/* Topic input */}
           {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>
             <div className="space-y-5">
             <div>
-              <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
+              <label className="block font-mono text-xs text-system dark:text-system tracking-wide uppercase mb-1.5">
                 {offering === "meos" ? "Describe your current chapter in your own words" : "What should your AI know about you?"}
               </label>
               {offering === "meos" && <input
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-system dark:focus:border-system outline-none transition-colors focus-visible:ring-2 focus-visible:ring-system/40 dark:focus-visible:ring-system/40"
                 placeholder={'e.g. "I\'m navigating a career transition and need clarity on my direction"'}
                 value={topic}
                 onChange={(e) => { setTopic(e.target.value); setStartError(""); }}
@@ -1625,7 +1629,7 @@ function AppPage() {
                           setTopic(next.join(", "));
                           setStartError("");
                         }}
-                        className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-system"
                       />
                       <span>{suggestion}</span>
                     </label>
@@ -1650,7 +1654,7 @@ function AppPage() {
                     const groupLocked = Boolean(activeGroup && activeGroup.label !== group.label);
                     return (
                     <div key={group.label} className="space-y-1.5">
-                      <p className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{group.label}</p>
+                      <p className="font-mono text-xs text-system dark:text-system">{group.label}</p>
                       <div className="space-y-1">
                         {group.topics.map((topicOption) => (
                           <label key={topicOption} className={`flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 ${groupLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"}`}>
@@ -1668,7 +1672,7 @@ function AppPage() {
                                 const selectedGroups = TOPIC_GROUPS.filter((candidate) => candidate.topics.some((item) => nextTopics.includes(item)));
                                 if (selectedGroups.length === 1) setTier(selectedGroups[0].tier);
                               }}
-                              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-system"
                             />
                             <span>{topicOption}</span>
                           </label>
@@ -1678,7 +1682,7 @@ function AppPage() {
                     );
                     })}
                     <label className="flex items-center gap-2 pt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    <span className="text-emerald-600 dark:text-emerald-400">+</span>
+                    <span className="text-system dark:text-system">+</span>
                     <input
                       type="text"
                       value={customTopic}
@@ -1690,21 +1694,21 @@ function AppPage() {
                       }}
                       placeholder="Add your own topic..."
                       autoFocus
-                      className="min-w-0 flex-1 border-b border-gray-200 bg-transparent py-1 text-xs text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-emerald-400 dark:focus-visible:ring-emerald-400/40"
+                      className="min-w-0 flex-1 border-b border-gray-200 bg-transparent py-1 text-xs text-gray-900 outline-none placeholder:text-gray-500 focus:border-system focus-visible:ring-2 focus-visible:ring-system/40 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-system dark:focus-visible:ring-system/40"
                     />
                   </label>
                 </fieldset>
               )}
             </div>
 
-            {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline">Or resume a saved profile →</a></div>}
+            {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-system-dark dark:text-system hover:text-system dark:hover:text-system underline">Or resume a saved profile →</a></div>}
 
             {/* Start button */}
             <button
               type="button"
               onClick={handleStart}
               disabled={!topic.trim()}
-              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+              className="w-full rounded-lg bg-system-dark dark:bg-system px-6 py-3.5 text-base font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50"
             >
               {offering === "meos" ? "Start my MeOS interview" : "Start interview"}
             </button>
@@ -1728,7 +1732,7 @@ function AppPage() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading || !topic.trim()}
-                      className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+                      className="rounded-lg border border-system dark:border-system px-4 py-2 font-mono text-xs font-semibold text-system-dark dark:text-system hover:bg-system-soft dark:hover:bg-ink/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50"
                     >
                       {uploading ? "Extracting knowledge…" : "Choose file…"}
                     </button>
@@ -1743,7 +1747,7 @@ function AppPage() {
             {offering === "context" && (
               <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
                 <div className="mb-5">
-                  <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">&lt;output-files /&gt;</span>
+                  <span className="font-mono text-xs font-semibold tracking-wide text-system-dark dark:text-system">&lt;output-files /&gt;</span>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Five focused files give your AI the context it needs to work with you.</p>
                 </div>
                 <div className="space-y-5">
@@ -1779,7 +1783,7 @@ function AppPage() {
             {offering === "meos" && (
               <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
                 <div className="mb-5">
-                  <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">&lt;output-files /&gt;</span>
+                  <span className="font-mono text-xs font-semibold tracking-wide text-system-dark dark:text-system">&lt;output-files /&gt;</span>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your interview produces these files — a complete personal operating system.</p>
                 </div>
                 <div className="space-y-5">
@@ -1820,6 +1824,6 @@ function AppPage() {
 
 // ── Style constants ──
 const btnPrimary =
-  "inline-flex items-center gap-2 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors";
+  "inline-flex items-center gap-2 rounded-lg bg-system-dark dark:bg-system px-6 py-2.5 text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors";
 const btnSecondary =
   "inline-flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors";

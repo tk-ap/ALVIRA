@@ -309,7 +309,18 @@ export const autosaveInterview = createServerFn({ method: "POST" })
 
 export const getInterviewDraft = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  const row = getDb().query("SELECT offering, topic, state_json, updated_at FROM interview_drafts WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1").get(user.id) as { offering: string; topic: string; state_json: string; updated_at: string } | undefined;
+  // Skip drafts that are the source of a pending transfer — they belong
+  // to the target user, not the current user.
+  const row = getDb().query(
+    `SELECT d.offering, d.topic, d.state_json, d.updated_at
+     FROM interview_drafts d
+     WHERE d.user_id = ?
+       AND NOT EXISTS (
+         SELECT 1 FROM draft_transfers t
+         WHERE t.source_user_id = d.user_id AND t.source_offering = d.offering
+       )
+     ORDER BY d.updated_at DESC LIMIT 1`
+  ).get(user.id) as { offering: string; topic: string; state_json: string; updated_at: string } | undefined;
   return row ? { ...row, state: JSON.parse(row.state_json) } : null;
 });
 

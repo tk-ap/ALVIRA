@@ -86,7 +86,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
 
   // ── Default (full card) ──
   return (
-    <div className="relative rounded-xl border border-emerald-500/50 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-950/20 dark:to-gray-950 px-6 py-6 sm:px-8 sm:py-7">
+    <div className="relative rounded-xl border border-system/50 dark:border-system-dark/40 bg-gradient-to-br from-system-soft/80 to-white dark:from-ink/20 dark:to-gray-950 px-6 py-6 sm:px-8 sm:py-7">
       {/* Eyebrow */}
       <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-system-dark dark:text-system">
         GO DEEPER WITH MEOS

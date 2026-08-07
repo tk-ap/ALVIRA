@@ -121,7 +121,7 @@ function Home() {
       <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="mx-auto max-w-4xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Why ALVIRA</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Why ALVIRA</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Stop starting from scratch with AI.
             </h2>
@@ -138,7 +138,7 @@ function Home() {
               ["Get answers shaped around you", "When your AI knows how you think and decide, every answer is more relevant and personal."],
             ].map(([headline, body], index) => (
               <div key={headline} className="border-t border-gray-200 pt-5 text-left dark:border-gray-800">
-                <p className="font-mono text-sm tabular-nums text-emerald-700 dark:text-emerald-400">
+                <p className="font-mono text-sm tabular-nums text-system-dark dark:text-system">
                   {String(index + 1).padStart(2, "0")}
                 </p>
                 <h3 className="mt-3 text-xl font-bold text-gray-900 dark:text-gray-100">{headline}</h3>
@@ -155,7 +155,7 @@ function Home() {
       <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">What you get</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">What you get</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               See what your knowledge becomes
             </h2>
@@ -178,7 +178,7 @@ function Home() {
                     aria-controls="profile-preview-panel"
                     onClick={() => setActivePreview(preview.filename)}
                     className={`shrink-0 border-r border-gray-800 px-5 py-3 font-mono text-xs transition-colors ${
-                      isActive ? "bg-gray-950 text-emerald-400" : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                      isActive ? "bg-gray-950 text-system" : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
                     }`}
                   >
                     {preview.filename}
@@ -188,7 +188,7 @@ function Home() {
             </div>
             <div className="min-h-[16rem] p-5 sm:p-8" id="profile-preview-panel" role="tabpanel" aria-labelledby={`profile-tab-${activePreview}`}>
               <div className="mb-5 flex items-center gap-2 font-mono text-xs text-gray-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                <span className="h-2 w-2 rounded-full bg-system" aria-hidden="true" />
                 {profilePreviews.find((p) => p.filename === activePreview)?.label}
               </div>
               <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-xs leading-7 text-gray-300 sm:text-sm">
@@ -202,7 +202,7 @@ function Home() {
 
           <div className="mt-24 grid items-center gap-14 border-t border-gray-200 pt-12 dark:border-gray-800  lg:grid-cols-[0.8fr_1.2fr]">
             <div>
-              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Living profile</span>
+              <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Living profile</span>
               <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">Your AI profile grows with you.</h3>
               <p className="mt-3 max-w-xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Keep your context current as your work, priorities, and preferences evolve. A visible version history of your updates is coming soon.</p>
             </div>
@@ -214,7 +214,7 @@ function Home() {
 
           <div className="mt-24 flex flex-col items-center border-t border-gray-200 pt-14 dark:border-gray-800">
             <div>
-              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Works everywhere</span>
+              <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Works everywhere</span>
               <h3 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">One profile. Every AI tool.</h3>
               <p className="mt-3 max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Open Markdown keeps your knowledge useful across the tools you already use — and the ones you have not met yet.</p>
             </div>
@@ -230,7 +230,7 @@ function Home() {
       <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Start free</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Start free</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Start free. Upgrade when it sticks.
             </h2>
@@ -239,14 +239,14 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-14 max-w-2xl border-y border-emerald-500/40 py-8 dark:border-emerald-400/30 sm:py-10">
+          <div className="mt-14 max-w-2xl border-y border-system/40 py-8 dark:border-system/30 sm:py-10">
             <div>
               <h3 className="font-mono text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">$0</span>
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">forever</span>
               </div>
-              <ul className="mt-6 space-y-3 border-t border-emerald-200/60 pt-5 dark:border-emerald-800/40">
+              <ul className="mt-6 space-y-3 border-t border-system/60 pt-5 dark:border-system-dark/40">
                 {[
                   "1 AI profile",
                   "3 guided interviews",
@@ -254,7 +254,7 @@ function Home() {
                   "Portable Markdown output",
                 ].map((feature) => (
                   <li key={feature} className="flex gap-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-system dark:text-system" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                     </svg>
                     <span>{feature}</span>
@@ -263,7 +263,7 @@ function Home() {
               </ul>
               <a
                 href="/app"
-                className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 transition-colors duration-200 dark:bg-emerald-500 dark:text-gray-950 dark:hover:bg-emerald-400 dark:focus-visible:outline-emerald-400"
+                className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-system px-5 py-3 text-sm font-semibold text-white hover:bg-system-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200 dark:bg-system dark:text-gray-950 dark:hover:bg-system dark:focus-visible:outline-system"
               >
                 Start building — free
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
@@ -271,7 +271,7 @@ function Home() {
                 </svg>
               </a>
               <p className="mt-3 text-center">
-                <a href="/pricing" className="font-mono text-xs text-gray-500 hover:text-emerald-700 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400">
+                <a href="/pricing" className="font-mono text-xs text-gray-500 hover:text-system-dark dark:text-gray-400 dark:hover:text-system transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
                   Compare plans →
                 </a>
               </p>
@@ -286,7 +286,7 @@ function Home() {
       <section id="privacy" className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Privacy &amp; trust</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Privacy &amp; trust</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               Your knowledge stays yours.
             </h2>
@@ -302,9 +302,9 @@ function Home() {
               ["03", "Portable format", "Open Markdown means no vendor lock-in. Read, edit, and use your files with any tool."],
               ["04", "You control sharing", "Share files with specific AI tools or team members, or keep them completely private. Your data is never shared or sold — there's nothing to opt out of."],
             ].map(([number, title, body]) => (
-              <div key={title} className="border-l-2 border-emerald-200 pl-4 text-left dark:border-emerald-800">
+              <div key={title} className="border-l-2 border-system pl-4 text-left dark:border-system-dark">
                 <div className="flex items-start gap-4">
-                  <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400" aria-hidden="true">
+                  <span className="font-mono text-xs font-semibold text-system-dark dark:text-system" aria-hidden="true">
                     {number}
                   </span>
                   <div>
@@ -339,7 +339,7 @@ function Home() {
           <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">The first interview takes about 10–15 minutes. You can pause anytime and pick up where you left off.</p>
           <a
             href="/app"
-            className="mt-7 inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
+            className="mt-7 inline-flex items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:focus-visible:outline-system"
           >
             Start free <span aria-hidden="true" className="ml-2">→</span>
           </a>

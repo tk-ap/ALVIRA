@@ -62,7 +62,7 @@ function LoginPage() {
           </div>
 
           {resetSuccess && (
-            <div className="mb-5 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
+            <div className="mb-5 rounded-lg bg-system-soft dark:bg-ink border border-system dark:border-system-dark px-4 py-3 text-sm text-system-dark dark:text-system">
               Your password has been updated. You can now sign in.
             </div>
           )}
@@ -71,7 +71,7 @@ function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5"
+                className="block font-mono text-xs text-system dark:text-system tracking-wide uppercase mb-1.5"
               >
                 Email
               </label>
@@ -83,14 +83,14 @@ function LoginPage() {
                 placeholder="you@company.com"
                 autoFocus
                 autoComplete="email"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-system dark:focus:border-system outline-none transition-colors focus-visible:ring-2 focus-visible:ring-system/40 dark:focus-visible:ring-system/40"
               />
             </div>
 
             <div>
               <label
                 htmlFor="password"
-                className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5"
+                className="block font-mono text-xs text-system dark:text-system tracking-wide uppercase mb-1.5"
               >
                 Password
               </label>
@@ -101,7 +101,7 @@ function LoginPage() {
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-system dark:focus:border-system outline-none transition-colors focus-visible:ring-2 focus-visible:ring-system/40 dark:focus-visible:ring-system/40"
               />
             </div>
 
@@ -114,21 +114,21 @@ function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+              className="w-full rounded-lg bg-system-dark dark:bg-system px-6 py-3.5 text-base font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50"
             >
               {submitting ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
           <p className="mt-4 text-center text-sm">
-            <a href="/forgot-password" className="font-mono text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">
+            <a href="/forgot-password" className="font-mono text-system-dark dark:text-system hover:text-system dark:hover:text-system transition-colors">
               Forgot password?
             </a>
           </p>
 
           <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
             Don&apos;t have an account?{" "}
-            <a href="/signup" className="font-mono text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">
+            <a href="/signup" className="font-mono text-system-dark dark:text-system hover:text-system dark:hover:text-system transition-colors">
               Create one →
             </a>
           </p>

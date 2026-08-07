@@ -29,10 +29,10 @@ const TEAM_OFFERS = [
 ];
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40";
+  "w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-system dark:focus:border-system outline-none transition-colors focus-visible:ring-2 focus-visible:ring-system/40 dark:focus-visible:ring-system/40";
 
 const labelClass =
-  "block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5";
+  "block font-mono text-xs text-system dark:text-system tracking-wide uppercase mb-1.5";
 
 function TeamPage() {
   const [name, setName] = useState("");
@@ -202,7 +202,7 @@ function TeamPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full rounded-lg bg-emerald-700 px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:focus-visible:ring-emerald-400/50"
+                  className="w-full rounded-lg bg-system-dark px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-system-dark disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-system/50 dark:bg-system dark:hover:bg-system dark:focus-visible:ring-system/50"
                 >
                   {submitting ? "Joining..." : "Join the waitlist"}
                 </button>

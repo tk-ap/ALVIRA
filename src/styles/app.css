@@ -33,7 +33,7 @@
   --color-gray-900: #1a1816;
   --color-gray-950: #0e0c0a;
 
-  /* Accent scales — derived from hero hue (mineral-dark #8b6548, H=26° S=33%) */
+  /* Warm accent scale — reserved for human / MeOS surfaces */
   --color-warm-50: #faf5f1;
   --color-warm-100: #efe3d7;
   --color-warm-200: #ddc8b2;
@@ -57,15 +57,15 @@
   --color-green-900: #362316;
   --color-green-950: #1d110a;
 
-  /* System accent — same hue as mineral-dark */
-  --color-system: #a47a55;
-  --color-system-soft: #faf5f1;
-  --color-system-dark: #8b6548;
+  /* System accent — logo teal for AI Profile / system UI */
+  --color-system: #2d9b8c;
+  --color-system-soft: #f0f8f7;
+  --color-system-dark: #217a6e;
 
-  /* Human accent — kept distinct for MeOS sections */
-  --color-human: #c9a87c;
-  --color-human-soft: #faf6f0;
-  --color-human-dark: #755437;
+  /* Human accent — logo warm tan for MeOS / human elements */
+  --color-human: #b0886c;
+  --color-human-soft: #faf6f1;
+  --color-human-dark: #8b6548;
 }
 
 @layer base {

@@ -111,7 +111,7 @@ function Pricing() {
         <section className="px-6 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
           <div className="mx-auto max-w-5xl text-center">
             <div className="max-w-3xl">
-              <span className="inline-block rounded-md border border-emerald-200 px-3 py-1.5 font-mono text-xs tracking-wide text-emerald-700 dark:border-emerald-800 dark:text-emerald-400">
+              <span className="inline-block rounded-md border border-system px-3 py-1.5 font-mono text-xs tracking-wide text-system-dark dark:border-system-dark dark:text-system">
                 &lt;pricing /&gt;
               </span>
               <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
@@ -122,7 +122,7 @@ function Pricing() {
               </p>
               <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">
                 For MeOS pricing, see the{" "}
-                <a href="/meos" className="text-emerald-700 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400">
+                <a href="/meos" className="text-system-dark hover:text-system dark:text-system dark:hover:text-system underline underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
                   MeOS page
                 </a>
                 .
@@ -137,7 +137,7 @@ function Pricing() {
                   onClick={() => setBilling("monthly")}
                   role="radio"
                   aria-checked={billing === "monthly"}
-                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 ${
+                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system ${
                     billing === "monthly"
                       ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -150,7 +150,7 @@ function Pricing() {
                   onClick={() => setBilling("annual")}
                   role="radio"
                   aria-checked={billing === "annual"}
-                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 ${
+                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system ${
                     billing === "annual"
                       ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -167,12 +167,12 @@ function Pricing() {
                   key={plan.name}
                   className={`relative flex h-full flex-col border p-6 sm:p-8 ${
                     plan.featured
-                      ? "border-emerald-600 bg-emerald-50/50 shadow-lg shadow-emerald-950/10 dark:border-emerald-500 dark:bg-emerald-950/20 dark:shadow-black/20"
+                      ? "border-system bg-system-soft/50 shadow-lg shadow-ink/10 dark:border-system dark:bg-ink/20 dark:shadow-black/20"
                       : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40"
                   }`}
                 >
                   {plan.featured && (
-                    <span className="absolute -top-3 left-6 bg-emerald-700 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-emerald-600 dark:text-gray-950">
+                    <span className="absolute -top-3 left-6 bg-system-dark px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-system dark:text-gray-950">
                       Most popular
                     </span>
                   )}
@@ -183,7 +183,7 @@ function Pricing() {
                       <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{plan.cadence}</span>
                     </div>
                     {"annual" in plan && plan.annual && (
-                      <span className="mt-2 inline-block font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                      <span className="mt-2 inline-block font-mono text-[11px] text-system-dark dark:text-system">
                         Save 20% — $16/mo equivalent
                       </span>
                     )}
@@ -197,7 +197,7 @@ function Pricing() {
                   <ul className="mt-8 flex-1 space-y-3 border-t border-gray-200 pt-6 text-sm dark:border-gray-800">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex gap-3 leading-relaxed">
-                        <span className="font-mono text-emerald-700 dark:text-emerald-400" aria-hidden="true">✓</span>
+                        <span className="font-mono text-system-dark dark:text-system" aria-hidden="true">✓</span>
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -215,9 +215,9 @@ function Pricing() {
                   <a
                     href={plan.href}
                     {...(plan.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
-                    className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 ${
+                    className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system ${
                       plan.featured
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-gray-950 dark:hover:bg-emerald-400"
+                        ? "bg-system text-white hover:bg-system-dark dark:bg-system dark:text-gray-950 dark:hover:bg-system"
                         : "border border-gray-300 bg-gray-900 text-white hover:bg-gray-800 dark:border-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200"
                     }`}
                   >
@@ -236,12 +236,12 @@ function Pricing() {
 
         <section id="why-alvira" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
           <div className="mx-auto max-w-5xl text-center">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">The case for context</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">The case for context</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Why pay for ALVIRA?</h2>
             <div className="mt-16 space-y-16 sm:mt-20 sm:space-y-24">
               {arguments_.map((item, index) => (
                 <article key={item.number} className={`grid gap-8 text-left md:grid-cols-[120px_1fr] ${index > 0 ? "border-t border-gray-200 pt-16 dark:border-gray-800 sm:pt-24" : ""}`}>
-                  <div className="flex items-start gap-4 md:block"><span className="font-mono text-3xl tabular-nums text-emerald-600 dark:text-emerald-400">{item.number}</span><span className="mt-4 hidden h-px w-12 bg-emerald-500 md:block" aria-hidden="true" /></div>
+                  <div className="flex items-start gap-4 md:block"><span className="font-mono text-3xl tabular-nums text-system dark:text-system">{item.number}</span><span className="mt-4 hidden h-px w-12 bg-system md:block" aria-hidden="true" /></div>
                   <div className="max-w-3xl"><h3 className="text-3xl font-bold tracking-tight sm:text-4xl">{item.title}</h3><p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-gray-400">{item.body}</p></div>
                 </article>
               ))}
@@ -260,7 +260,7 @@ function Pricing() {
 
         <section id="comparison" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
           <div className="mx-auto max-w-5xl text-center">
-            <div className="mb-10"><span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How ALVIRA compares</span><h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Context you can keep — everywhere.</h2><p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, and export structured files you own.</p></div>
+            <div className="mb-10"><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">How ALVIRA compares</span><h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Context you can keep — everywhere.</h2><p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, and export structured files you own.</p></div>
             <ComparisonTable />
             <p className="mx-auto mt-10 max-w-2xl text-lg font-semibold leading-snug">Most tools don’t let you elicit, validate, and export your AI context to use everywhere.</p>
             <p className="mx-auto mt-6 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Adjacent players: {adjacentPlayers.map(([name, detail], index) => <span key={name}>{index > 0 ? <span className="mx-2 text-gray-300 dark:text-gray-600" aria-hidden="true">·</span> : null}<strong className="font-mono text-xs font-semibold">{name}</strong> — {detail}</span>)}</p>
@@ -270,14 +270,14 @@ function Pricing() {
 
         <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
           <div className="mx-auto max-w-4xl text-center">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">FAQ</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">FAQ</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Questions, answered.</h2>
             <div className="mt-10 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
               {faqs.map(([question, answer]) => (
                 <details key={question} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 [&::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-system dark:focus-visible:outline-system [&::-webkit-details-marker]:hidden">
                     {question}
-                    <span className="font-mono text-xl font-normal text-emerald-700 transition-transform group-open:rotate-45 dark:text-emerald-400" aria-hidden="true">+</span>
+                    <span className="font-mono text-xl font-normal text-system-dark transition-transform group-open:rotate-45 dark:text-system" aria-hidden="true">+</span>
                   </summary>
                   <p className="mt-3 max-w-2xl pr-8 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{answer}</p>
                 </details>
@@ -292,7 +292,7 @@ function Pricing() {
             <p className="mt-4 text-base text-gray-600 dark:text-gray-400">Build once. Bring your context everywhere.</p>
             <a
               href="/app"
-              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
+              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200 dark:focus-visible:outline-system"
             >
               Build my AI profile <span aria-hidden="true" className="ml-2">→</span>
             </a>

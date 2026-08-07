@@ -29,7 +29,7 @@ function InterviewPage() {
         <section className="border-b border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1fr_1.05fr]">
             <div>
-              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">
                 The ALVIRA interview
               </span>
               <h1 className="mt-5 max-w-xl text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-gray-100 sm:text-6xl">
@@ -42,7 +42,7 @@ function InterviewPage() {
               <div className="mt-9 flex flex-wrap items-center gap-4">
                 <a
                   href="/app"
-                  className="inline-flex rounded-lg bg-gray-900 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+                  className="inline-flex rounded-lg bg-gray-900 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-system dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
                 >
                   Start the interview <Arrow />
                 </a>
@@ -58,7 +58,7 @@ function InterviewPage() {
         <section className="bg-gray-50 px-6 py-20 dark:bg-gray-900 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-4xl text-center">
           <div className="mx-auto max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">01 / How it works</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">01 / How it works</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">See ALVIRA in action</h2>
             <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
               A guided conversation uncovers what matters — then turns it into context your AI can use.
@@ -97,13 +97,13 @@ function InterviewPage() {
               },
             ].map((step, index) => (
               <li key={step.title} className="relative">
-                <span className="absolute -left-[2.15rem] flex h-8 w-8 items-center justify-center rounded-full border border-emerald-600 bg-gray-50 font-mono text-sm font-semibold text-emerald-700 dark:border-emerald-500 dark:bg-gray-900 dark:text-emerald-400 sm:-left-[3.15rem]" aria-hidden="true">
+                <span className="absolute -left-[2.15rem] flex h-8 w-8 items-center justify-center rounded-full border border-system bg-gray-50 font-mono text-sm font-semibold text-system-dark dark:border-system dark:bg-gray-900 dark:text-system sm:-left-[3.15rem]" aria-hidden="true">
                   {index + 1}
                 </span>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{step.title}</h3>
                 <p className="mt-2 max-w-3xl text-base leading-relaxed text-gray-600 dark:text-gray-400">{step.body}</p>
                 {step.quote && (
-                  <p className="mt-4 max-w-3xl border-l-2 border-emerald-500 pl-4 py-3 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                  <p className="mt-4 max-w-3xl border-l-2 border-system pl-4 py-3 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                     {step.quote}
                   </p>
                 )}
@@ -120,8 +120,8 @@ function InterviewPage() {
                   "To make better decisions, try listing pros and cons. Consider asking a mentor for advice. Trust your gut."
                 </blockquote>
               </div>
-              <div className="border-l-2 border-emerald-600 pl-5 dark:border-emerald-500">
-                <p className="font-mono text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-300">With your ALVIRA profile</p>
+              <div className="border-l-2 border-system pl-5 dark:border-system">
+                <p className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">With your ALVIRA profile</p>
                 <blockquote className="mt-5 text-base leading-relaxed text-gray-800 dark:text-gray-200">
                   "Since you've said speed is your priority for reversible decisions, I'll give you a quick recommendation: option A based on what you've shared. For the bigger call — given your preference for consulting two trusted people — here are the specific questions worth running by them before you commit."
                 </blockquote>
@@ -137,7 +137,7 @@ function InterviewPage() {
         <section className="border-b border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-2xl">
-              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">
                 02 / In practice
               </span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -162,20 +162,20 @@ function InterviewPage() {
                   reversible, I prefer to move quickly and learn. If it is hard
                   to undo, I need time to hear from people I trust.
                 </div>
-                <div className="mt-5 flex items-center gap-2 font-mono text-xs text-emerald-700 dark:text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />{" "}
+                <div className="mt-5 flex items-center gap-2 font-mono text-xs text-system-dark dark:text-system">
+                  <span className="h-2 w-2 rounded-full bg-system" />{" "}
                   Answer saved
                 </div>
               </div>
               <div className="p-6">
-                <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                <p className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">
                   Next question
                 </p>
                 <p className="mt-5 text-base font-medium leading-relaxed">
                   Who do you typically consult for the decisions that are hard
                   to undo — and what do you want from their input?
                 </p>
-                <p className="mt-8 border-l-2 border-emerald-500 pl-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                <p className="mt-8 border-l-2 border-system pl-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                   One answer gives ALVIRA enough signal to ask a better next
                   question.
                 </p>
@@ -187,7 +187,7 @@ function InterviewPage() {
         <section className="px-6 py-20 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-2xl">
-              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">
                 03 / Good answers
               </span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -224,11 +224,11 @@ function InterviewPage() {
               </div>
 
               {/* Good examples */}
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-6 dark:border-emerald-800 dark:bg-emerald-950/20">
-                <p className="font-mono text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              <div className="rounded-lg border border-system bg-system-soft/60 p-6 dark:border-system-dark dark:bg-ink/20">
+                <p className="font-mono text-xs font-semibold uppercase tracking-wide text-system-dark dark:text-system">
                   Much more useful
                 </p>
-                <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-300">
+                <p className="mt-1 text-xs text-system dark:text-system">
                   Specific, honest, and personal — your AI can actually use this.
                 </p>
                 <div className="mt-5 space-y-4">
@@ -238,7 +238,7 @@ function InterviewPage() {
                     ["Q: How do you prefer to communicate?", "A: Writing over meetings when I can. I like time to think before responding — especially if the topic is new or sensitive."],
                     ["Q: What gives you energy?", "A: Solving a hard problem with someone who is just as invested. Also: a clean slate in the morning and a clear win before lunch."],
                   ].map(([q, a]) => (
-                    <div key={q} className="rounded border border-emerald-200 bg-white p-3 dark:border-emerald-800 dark:bg-gray-950">
+                    <div key={q} className="rounded border border-system bg-white p-3 dark:border-system-dark dark:bg-gray-950">
                       <p className="text-xs text-gray-500 dark:text-gray-400">{q}</p>
                       <p className="mt-1 text-sm text-gray-800 dark:text-gray-200">{a}</p>
                     </div>
@@ -263,7 +263,7 @@ function InterviewPage() {
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-start">
               <div>
-                <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">
                   04 / Your output
                 </span>
                 <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -297,7 +297,7 @@ function InterviewPage() {
         <section className="border-t border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-2xl">
-              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">
                 05 / Portable by design
               </span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -309,16 +309,16 @@ function InterviewPage() {
               </p>
             </div>
             <div className="mt-12 flex flex-col items-center gap-5 sm:flex-row sm:items-stretch sm:justify-center">
-              <div className="flex w-full max-w-xs items-center justify-center rounded-lg border-2 border-emerald-500 bg-emerald-50 p-6 text-center dark:bg-emerald-950/30">
+              <div className="flex w-full max-w-xs items-center justify-center rounded-lg border-2 border-system bg-system-soft p-6 text-center dark:bg-ink/30">
                 <div>
                   <p className="font-mono text-lg font-semibold">ALVIRA</p>
-                  <p className="mt-2 font-mono text-xs text-emerald-700 dark:text-emerald-400">
+                  <p className="mt-2 font-mono text-xs text-system-dark dark:text-system">
                     your Markdown profile
                   </p>
                 </div>
               </div>
               <div
-                className="flex items-center text-2xl text-emerald-600"
+                className="flex items-center text-2xl text-system"
                 aria-hidden="true"
               >
                 →
@@ -343,7 +343,7 @@ function InterviewPage() {
           </p>
           <a
             href="/app"
-            className="mt-8 inline-flex rounded-lg bg-emerald-600 px-7 py-3.5 font-semibold text-white transition-colors hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-emerald-400"
+            className="mt-8 inline-flex rounded-lg bg-system px-7 py-3.5 font-semibold text-white transition-colors hover:bg-system focus-visible:outline-2 focus-visible:outline-system"
           >
             Start your free interview <Arrow />
           </a>
@@ -361,7 +361,7 @@ function InterviewCard() {
         <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
           ALVIRA / interview
         </span>
-        <span className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+        <span className="font-mono text-xs text-system-dark dark:text-system">
           03 / 19 domains
         </span>
       </div>
@@ -373,11 +373,11 @@ function InterviewCard() {
         having decisions made and clear next steps.
       </p>
       <div className="mt-5 flex items-center justify-between">
-        <span className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+        <span className="font-mono text-xs text-system-dark dark:text-system">
           ✓ captured
         </span>
         <span className="h-1.5 w-28 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-          <span className="block h-full w-1/4 rounded-full bg-emerald-500" />
+          <span className="block h-full w-1/4 rounded-full bg-system" />
         </span>
       </div>
     </div>

@@ -926,68 +926,75 @@ function AppPage() {
     if (compilingRef.current) return;
     compilingRef.current = true;
     try {
-    const compileState = stateOverride || state;
-    if (!compileState) return;
+      const compileState = stateOverride || state;
+      if (!compileState) return;
 
-    // Track interview count (for limits)
-    if (authUser) {
-      try {
-        const result = await trackInterview();
-        const r = result as { interviewCount?: number; error?: string; limit?: string };
-        if (r.error === "limit_reached") {
-          setLimitModal("interviews");
-          setLimitBanner("interviews");
-          return;
-        }
-        if (r.interviewCount !== undefined) {
-          setInterviewCount(r.interviewCount);
-          // Check if we just hit the limit
-          if (authUser.tier === "free" && r.interviewCount >= 3) {
+      // Track interview count (for limits)
+      if (authUser) {
+        try {
+          const result = await trackInterview();
+          const r = result as { interviewCount?: number; error?: string; limit?: string };
+          if (r.error === "limit_reached") {
+            setLimitModal("interviews");
             setLimitBanner("interviews");
+            return;
           }
+          if (r.interviewCount !== undefined) {
+            setInterviewCount(r.interviewCount);
+            // Check if we just hit the limit
+            if (authUser.tier === "free" && r.interviewCount >= 3) {
+              setLimitBanner("interviews");
+            }
+          }
+        } catch {
+          // If tracking fails (e.g., not logged in), proceed anyway
         }
-      } catch {
-        // If tracking fails (e.g., not logged in), proceed anyway
       }
-    }
 
-    setCompiling(true);
-    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
-    let files: Record<string, string>;
-    if (offering === "meos") {
-      files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
-      setPortraitError(false);
-      try {
-        const result = await generatePortrait(compileState);
-        if ("error" in result) {
+      setCompiling(true);
+      const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
+      let files: Record<string, string>;
+      if (offering === "meos") {
+        files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
+        setPortraitError(false);
+        try {
+          const result = await generatePortrait(compileState);
+          if ("error" in result) {
+            setMeosPortrait(null);
+            setPortraitError(true);
+          } else {
+            setMeosPortrait(result);
+            files["portrait.json"] = JSON.stringify(result, null, 2);
+          }
+        } catch {
           setMeosPortrait(null);
           setPortraitError(true);
-        } else {
-          setMeosPortrait(result);
-          files["portrait.json"] = JSON.stringify(result, null, 2);
         }
-      } catch {
-        setMeosPortrait(null);
-        setPortraitError(true);
+      } else {
+        files = compileKnowledge(compileState, currentGraph);
       }
-    } else {
-      files = compileKnowledge(compileState, currentGraph);
-    }
-    setGenerated(files);
-    setActiveTab(offering === "meos" ? "portrait.md" : "overview");
-    setScreen("output");
-    setCompiling(false);
+      setGenerated(files);
+      setActiveTab(offering === "meos" ? "portrait.md" : "overview");
+      setScreen("output");
+      setInterviewError("");
 
-    // First-party funnel event: interview completed (safe aggregate coverage only).
-    const totalDomains = currentGraph.length;
-    const coveredDomains = currentGraph.filter((d) => compileState.domains[d.id]?.covered).length;
-    trackEvent("interview_completed", {
-      offering: offering === "meos" ? "meos" : "context",
-      tier: compileState.tier,
-      covered: coveredDomains,
-      total: totalDomains,
-    });
+      // First-party funnel event: interview completed (safe aggregate coverage only).
+      const totalDomains = currentGraph.length;
+      const coveredDomains = currentGraph.filter((d) => compileState.domains[d.id]?.covered).length;
+      trackEvent("interview_completed", {
+        offering: offering === "meos" ? "meos" : "context",
+        tier: compileState.tier,
+        covered: coveredDomains,
+        total: totalDomains,
+      });
+    } catch {
+      // Any throw from the compile path surfaces a concise message instead of an
+      // unhandled rejection; the finally below resets the UI state on every path.
+      setInterviewError("We couldn't compile your knowledge files. Please try again.");
     } finally {
+      // Reset UI state on every path (success, early return, throw) so the
+      // button never stays stuck on "Compiling...".
+      setCompiling(false);
       compilingRef.current = false;
     }
   };

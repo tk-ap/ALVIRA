@@ -24,15 +24,15 @@ function Privacy() {
     <p>We use OpenAI for interview question generation and document extraction, so your answers and document text are sent to their API. We use Stripe for payment processing; Stripe receives your payment details, not ALVIRA. OpenAI and Stripe are covered by their own privacy policies.</p>
 
     <h2>Data retention</h2>
-    <p>Your profile and interview data are stored while your account is active. You can delete your account and all associated data at any time by emailing <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>. Deletion is permanent.</p>
+    <p>Your profile and interview data are stored while your account is active. You can delete your account at any time by emailing <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>. Your account and profile content are permanently deleted; only de-identified first-party analytics events may remain, for up to 180 days (see Product analytics below).</p>
 
     <h2>Cookies</h2>
     <p>We use essential session cookies for authentication. We do not use tracking cookies, third-party analytics cookies, or advertising cookies.</p>
 
     <h2>Product analytics</h2>
-    <p>To understand how people use ALVIRA, we collect lightweight first-party analytics events: account signup, interview start and completion, profile export, and clicks on our call-to-action buttons. Events carry only non-sensitive aggregate properties (for example, plan tier and whether you uploaded a document). They never include interview answers, uploaded document content, or knowledge profiles.</p>
+    <p>To understand how people use ALVIRA, we collect lightweight first-party analytics events: account signup, interview start and completion, profile export, and views (impressions), dismissals, and clicks on our call-to-action prompts. Events carry only non-sensitive aggregate properties (for example, plan tier and whether you uploaded a document). They never include interview answers, uploaded document content, or knowledge profiles.</p>
     <p>Before you sign in, events are associated with a pseudonymous identifier stored in your browser's local storage (not a cookie). When you create an account, that identifier is associated with your account at signup so we can count unique users. We do not use third-party analytics cookies, scripts, or SDKs, and we do not share these events with advertisers.</p>
-    <p>Analytics events are deleted automatically after 180 days. You can clear the pseudonymous identifier at any time by clearing your browser's local storage.</p>
+    <p>De-identified analytics events are deleted automatically after 180 days, including any that remain after account deletion. You can clear the pseudonymous identifier at any time by clearing your browser's local storage.</p>
 
     <h2>Your rights</h2>
     <p>You can access, correct, export, or delete your data at any time. You can export your knowledge files from the app, or request full account deletion by emailing <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>.</p>

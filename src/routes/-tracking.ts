@@ -10,8 +10,10 @@
 //
 // Integrity guards (in db.recordEvent): every event must carry at least one
 // identifier (user_id or anonymous_id) or it is dropped; per-identity writes are
-// rate-limited (240/hour) so a runaway client cannot flood the table; and rows
-// older than 180 days are pruned on DB init so the table cannot grow forever.
+// rate-limited (240/hour) — a blunt cap that limits buggy or repeating clients,
+// not full hostile-bot protection; and rows older than 180 days are pruned at
+// startup plus opportunistically once a day on event writes so the table cannot
+// grow forever, even on a long-lived server.
 //
 // Fail-open: any tracking failure (network, DB, validation) is swallowed and the
 // user's funnel action proceeds. Server-side insert failures log a warning only.

@@ -10,15 +10,21 @@ const DB_PATH = join(DB_DIR, "alvira.db");
 
 // ── Event retention / rate limits (metrics integrity) ──
 // Bounded retention keeps the events table from growing forever: rows older than
-// this are pruned on every DB initialization. 180 days comfortably covers the
-// 7d/30d owner funnel windows while bounding storage.
+// this are pruned at startup and then opportunistically at most once per day on
+// event writes (see maybePruneEvents), so a long-lived server stays bounded too.
+// 180 days comfortably covers the 7d/30d owner funnel windows while bounding storage.
 export const EVENT_RETENTION_DAYS = 180;
-// Cheap abuse guard per identity (user_id or anonymous_id): at most this many
-// event writes per rolling window before excess writes are dropped. Normal use
-// generates a handful of events per session (a heavy day is well under 50), so
-// 240/hour can never be hit organically — it only stops runaway/scripted floods.
+// Blunt per-identity cap (user_id or anonymous_id): at most this many event writes
+// per rolling window before excess writes are dropped. This limits buggy or
+// repeating clients from inflating metrics — it is NOT full hostile-bot
+// protection. Normal use generates a handful of events per session (a heavy day
+// is well under 50), so 240/hour can never be hit organically.
 export const EVENT_RATE_LIMIT_WINDOW_MINUTES = 60;
 export const EVENT_RATE_LIMIT_MAX = 240;
+// Opportunistic daily-prune anchor: event writes prune at most once per day (see
+// maybePruneEvents below); startup pruning in getDb covers restarts.
+let lastEventPruneAt = 0;
+const EVENT_PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 let db: Database | null = null;
 
@@ -188,6 +194,27 @@ export function getDb(): Database {
 /** Delete funnel events older than the retention window. Idempotent and safe to call anytime. */
 export function pruneOldEvents(): void {
   getDb().run("DELETE FROM events WHERE created_at < datetime('now', ?)", [`-${EVENT_RETENTION_DAYS} days`]);
+}
+/**
+ * Opportunistic retention prune, at most once per day per server process.
+ * Startup pruning (getDb) handles restarts; this keeps long-lived servers bounded
+ * without running a prune on every request. Never throws — retention is
+ * opportunistic and must not break a metrics write.
+ */
+function maybePruneEvents(): void {
+  const now = Date.now();
+  if (now - lastEventPruneAt < EVENT_PRUNE_INTERVAL_MS) return;
+  lastEventPruneAt = now;
+  try {
+    pruneOldEvents();
+  } catch (err) {
+    console.warn("[events] opportunistic prune failed", String(err));
+  }
+}
+
+/** Test hook for scripts/verify-tracking.ts: force the next event write to prune. */
+export function forceNextEventPruneForTest(): void {
+  lastEventPruneAt = 0;
 }
 
 // ── Helpers ──
@@ -549,6 +576,7 @@ export interface TrackEventInput {
 
 /** Insert a funnel event. Never store interview answers or other sensitive content. */
 export function insertEvent(name: string, input: TrackEventInput = {}): void {
+  maybePruneEvents(); // opportunistic once-per-day retention, not on every request
   getDb().run(
     "INSERT INTO events (id, name, user_id, anonymous_id, props_json) VALUES (?, ?, ?, ?, ?)",
     [crypto.randomUUID(), name, input.userId ?? null, input.anonymousId ?? null, JSON.stringify(input.props ?? {})],
@@ -558,7 +586,9 @@ export function insertEvent(name: string, input: TrackEventInput = {}): void {
 /**
  * True when the identity (user_id or anonymous_id) has already written at least
  * EVENT_RATE_LIMIT_MAX events within the rolling window. Exceeds nothing under
- * normal use — a human generates a handful of events per session.
+ * normal use — a human generates a handful of events per session. This is a
+ * blunt per-identity cap for buggy/repeating clients, not full hostile-bot
+ * protection.
  */
 export function isEventRateLimited(userId: string | null, anonymousId: string | null): boolean {
   if (!userId && !anonymousId) return true; // no identifier → treat as un-writable

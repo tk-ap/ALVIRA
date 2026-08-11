@@ -9,10 +9,12 @@
 //     identifier-less rows excluded) + pendingInterviews draft-count fix
 //   - recordEvent identifier requirement and per-identity rate limiting
 //   - bounded retention: pruneOldEvents + prune-on-DB-init (restart simulation)
-//   - FK deletion behavior: user delete SET NULLs events.user_id (no identified
-//     event row is left behind), CASCADE rules still honored
+//     + opportunistic daily prune on event writes (long-lived server, not restart)
+//   - FK deletion behavior: user delete SET NULLs events.user_id so the event
+//     survives de-identified, retaining only its pseudonymous anonymous_id;
+//     CASCADE rules still honored
 //   - draft-transfer/recovery still works with FK enforcement ON
-//   - hardened email queue (configurable dir + fail-closed enqueue)
+//   - hardened email queue (configurable dir + fail-open/non-throwing enqueue)
 // Env vars are restored and temp data removed in `finally` no matter what.
 import { mkdtempSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -47,6 +49,7 @@ try {
     createUser,
     recordEvent,
     pruneOldEvents,
+    forceNextEventPruneForTest,
     isEventRateLimited,
     executeDraftTransfer,
     EVENT_RATE_LIMIT_MAX,
@@ -82,7 +85,7 @@ try {
   check("funnel.interviewStarted.d30 = 2", m.funnel.interviewStarted.d30 === 2);
   check("funnel.interviewCompleted.d7 = 1", m.funnel.interviewCompleted.d7 === 1);
   check("funnel.exportPerformed.d30 = 1", m.funnel.exportPerformed.d30 === 1);
-  check("pendingInterviews = 0 with no drafts (not profiles)", m.pendingInterviews === 0);
+  check("pendingInterviews = 0 with no drafts or profiles yet", m.pendingInterviews === 0);
 
   // Repeated actions by the same person must count once (five exports ≠ five people).
   insertEvent("interview_started", { userId: "u1", props: {} });
@@ -129,25 +132,43 @@ try {
   // Restart simulation: a fresh module init (fresh getDb) prunes stale rows.
   const prevDir = process.env.ALVIRA_DATA_DIR;
   process.env.ALVIRA_DATA_DIR = dataDir2;
-  // -ignore: query-string import busts Bun module cache (runtime-only; tsc cannot resolve it)
+  // @ts-ignore query-string import busts Bun module cache (runtime-only; tsc cannot resolve it)
   const db2 = (await import(`../src/db.ts?restart=1`)).getDb();
   db2.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-old2', '{}', datetime('now', '-200 days'))", [crypto.randomUUID()]);
   db2.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-new2', '{}', datetime('now', '-1 days'))", [crypto.randomUUID()]);
-  // -ignore: query-string import busts Bun module cache (runtime-only; tsc cannot resolve it)
+  // @ts-ignore query-string import busts Bun module cache (runtime-only; tsc cannot resolve it)
   const db3 = (await import(`../src/db.ts?restart=2`)).getDb(); // second init == server restart
   check("DB init prunes events older than 180 days", (db3.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-old2'").get() as { count: number }).count === 0);
   check("DB init keeps events inside retention window", (db3.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-new2'").get() as { count: number }).count === 1);
   process.env.ALVIRA_DATA_DIR = prevDir;
 
+  // Opportunistic daily prune on event writes: advancing the last-prune condition
+  // makes the next write prune old rows — so a long-lived server stays bounded
+  // without a restart and without pruning on every request.
+  db.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-daily', '{}', datetime('now', '-200 days'))", [crypto.randomUUID()]);
+  check("old (>180d) event present before daily-prune check", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-daily'").get() as { count: number }).count === 1);
+  forceNextEventPruneForTest(); // reset the module-level last-prune timestamp
+  insertEvent("interview_started", { anonymousId: "anon-daily-trigger", props: {} }); // any write triggers the prune
+  check("event write prunes >180d rows after last-prune advanced (daily prune)", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-daily'").get() as { count: number }).count === 0);
+  check("daily prune keeps the triggering write itself", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-daily-trigger'").get() as { count: number }).count === 1);
+
   // ── FK deletion behavior: ON DELETE SET NULL for events.user_id ──
+  // The event carries BOTH identifiers: after account deletion the user link is
+  // removed (user_id → NULL) while the de-identified row survives with only its
+  // pseudonymous anonymous_id — matching the privacy copy (account/profile content
+  // permanently deleted; de-identified analytics may remain up to 180 days).
   createUser("u-fk", "fk@example.com", "hash");
-  insertEvent("signup_completed", { userId: "u-fk", props: { tier: "free", marker: "fk" } });
+  insertEvent("signup_completed", { userId: "u-fk", anonymousId: "anon-fk", props: { tier: "free", marker: "fk" } });
   check("event row attributed to u-fk exists", (db.query("SELECT COUNT(*) AS count FROM events WHERE user_id = 'u-fk'").get() as { count: number }).count === 1);
   db.run("DELETE FROM users WHERE id = 'u-fk'");
-  check("deleting user leaves NO identified event row behind", (db.query("SELECT COUNT(*) AS count FROM events WHERE user_id = 'u-fk'").get() as { count: number }).count === 0);
-  check("deleted user's event survives with user_id = NULL (ON DELETE SET NULL)", (db.query("SELECT COUNT(*) AS count FROM events WHERE name = 'signup_completed' AND user_id IS NULL AND anonymous_id IS NULL AND props_json LIKE '%\"marker\":\"fk\"%'").get() as { count: number }).count === 1);
+  check("deleting user NULLs events.user_id (no identified link remains)", (db.query("SELECT COUNT(*) AS count FROM events WHERE user_id = 'u-fk'").get() as { count: number }).count === 0);
+  check("de-identified event survives with user_id = NULL, retaining only anonymous_id", (db.query("SELECT COUNT(*) AS count FROM events WHERE name = 'signup_completed' AND user_id IS NULL AND anonymous_id = 'anon-fk' AND props_json LIKE '%\"marker\":\"fk\"%'").get() as { count: number }).count === 1);
 
-  // ── pendingInterviews counts interview_drafts (1) ──
+  // ── pendingInterviews counts interview_drafts, not profiles ──
+  createUser("u-prof", "profile-only@example.com", "hash");
+  db.run("INSERT INTO profiles (id, user_id, topic, tier, state_json) VALUES ('u-prof-p', 'u-prof', 'context', 'free', '{}')");
+  m = getOwnerMetrics();
+  check("pendingInterviews = 0 with a profile but no draft (profiles don't count)", m.pendingInterviews === 0);
   createUser("u-draft", "draft-test@example.com", "hash");
   db.run("INSERT INTO interview_drafts (user_id, offering, topic, state_json) VALUES ('u-draft', 'context', 't', '{}')");
   m = getOwnerMetrics();

@@ -3,7 +3,9 @@ import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-const DB_DIR = join(process.cwd(), ".data");
+// Data directory is overridable (used by scripts/verify-tracking.ts so tests never
+// touch the production DB). Defaults to ./.data for backward compatibility.
+const DB_DIR = process.env.ALVIRA_DATA_DIR ?? join(process.cwd(), ".data");
 const DB_PATH = join(DB_DIR, "alvira.db");
 
 let db: Database | null = null;
@@ -110,6 +112,22 @@ export function getDb(): Database {
       source_offering TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    -- First-party funnel events (signup, interview start/completion, exports,
+    -- MeOS CTA impressions/clicks). Only non-sensitive aggregate props are stored —
+    -- never interview answers or other sensitive content.
+    CREATE TABLE IF NOT EXISTS events (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      user_id TEXT,
+      anonymous_id TEXT,
+      props_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_events_name_created_at ON events(name, created_at);
+    CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_events_anonymous_id ON events(anonymous_id);
   `);
 
   // Seed recovery compensation offers; INSERT OR IGNORE keeps existing expiry dates stable.
@@ -205,11 +223,24 @@ export interface OwnerMetrics {
   activeComps: Array<{ email: string; expires_at: string }>;
   recentWaitlist: Array<{ name: string; email: string; company: string | null; team_size: string | null; created_at: string }>;
   recentUsers: Array<{ email: string; tier: string; created_at: string }>;
+  funnel: FunnelMetrics;
+}
+
+/** 7-day and 30-day counts for the four core funnel events. */
+export interface FunnelMetrics {
+  signupCompleted: { d7: number; d30: number };
+  interviewStarted: { d7: number; d30: number };
+  interviewCompleted: { d7: number; d30: number };
+  exportPerformed: { d7: number; d30: number };
 }
 
 export function getOwnerMetrics(): OwnerMetrics {
   const d = getDb();
   const count = (sql: string) => Number((d.query(sql).get() as { count: number }).count);
+  const eventCounts = (name: string) => ({
+    d7: count("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days')"),
+    d30: count("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days')"),
+  });
   return {
     userCounts: {
       total: count("SELECT COUNT(*) AS count FROM users"),
@@ -218,12 +249,19 @@ export function getOwnerMetrics(): OwnerMetrics {
       lifetime: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'lifetime'"),
     },
     profileCount: count("SELECT COUNT(*) AS count FROM profiles"),
-    pendingInterviews: count("SELECT COUNT(*) AS count FROM profiles WHERE state_json IS NOT NULL"),
+    // Pending interviews = saved in-progress interview drafts, not every profile.
+    pendingInterviews: count("SELECT COUNT(*) AS count FROM interview_drafts"),
     waitlistCount: count("SELECT COUNT(*) AS count FROM team_waitlist"),
     activeCompCount: count("SELECT COUNT(*) AS count FROM meos_comps WHERE expires_at > datetime('now')"),
     activeComps: d.query("SELECT email, expires_at FROM meos_comps WHERE expires_at > datetime('now') ORDER BY expires_at ASC").all() as OwnerMetrics["activeComps"],
     recentWaitlist: d.query("SELECT name, email, company, team_size, created_at FROM team_waitlist ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentWaitlist"],
     recentUsers: d.query("SELECT email, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentUsers"],
+    funnel: {
+      signupCompleted: eventCounts("signup_completed"),
+      interviewStarted: eventCounts("interview_started"),
+      interviewCompleted: eventCounts("interview_completed"),
+      exportPerformed: eventCounts("export_performed"),
+    },
   };
 }
 
@@ -453,4 +491,45 @@ export function executeDraftTransfer(transferId: string, targetUserId: string): 
   d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
 
   return { transferred: true };
+}
+
+// ── First-party funnel events ──
+
+export interface EventRecord {
+  id: string;
+  name: string;
+  user_id: string | null;
+  anonymous_id: string | null;
+  props_json: string;
+  created_at: string;
+}
+
+export interface TrackEventInput {
+  userId?: string | null;
+  anonymousId?: string | null;
+  /** Non-sensitive, allowlisted-in-caller props only (strings, numbers, booleans). */
+  props?: Record<string, string | number | boolean>;
+}
+
+/** Insert a funnel event. Never store interview answers or other sensitive content. */
+export function insertEvent(name: string, input: TrackEventInput = {}): void {
+  getDb().run(
+    "INSERT INTO events (id, name, user_id, anonymous_id, props_json) VALUES (?, ?, ?, ?, ?)",
+    [crypto.randomUUID(), name, input.userId ?? null, input.anonymousId ?? null, JSON.stringify(input.props ?? {})],
+  );
+}
+
+/** Count events of a given name within the last `days` days. */
+export function countEvent(name: string, days: number): number {
+  const row = getDb()
+    .query("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', ?)")
+    .get(name, `-${days} days`) as { count: number };
+  return row.count;
+}
+
+/** Most recent events (owner dashboard / debugging); limited for memory-safety. */
+export function recentEvents(limit = 50): EventRecord[] {
+  return getDb()
+    .query("SELECT id, name, user_id, anonymous_id, props_json, created_at FROM events ORDER BY created_at DESC LIMIT ?")
+    .all(limit) as EventRecord[];
 }

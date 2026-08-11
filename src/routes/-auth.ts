@@ -1,6 +1,4 @@
 // ── Auth server functions ──
-import { appendFileSync } from "node:fs";
-import { join } from "node:path";
 import { createServerFn } from "@tanstack/react-start";
 import { deleteCookie, getCookie } from "@tanstack/react-start/server";
 import {
@@ -25,7 +23,9 @@ import {
   getOwnerMetrics as queryOwnerMetrics,
   getPendingDraftTransfer,
   executeDraftTransfer,
+  insertEvent,
 } from "~/db";
+import { enqueueEmail } from "~/emailQueue";
 
 const SESSION_COOKIE = "alvira_session";
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
@@ -44,14 +44,19 @@ function getSessionTokenFromRequest(): string | null {
 
 export const signup = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { email?: string; password?: string };
+    const d = data as { email?: string; password?: string; anonymousId?: string };
     if (!d.email || typeof d.email !== "string" || !d.email.includes("@")) {
       throw new Error("A valid email is required.");
     }
     if (!d.password || typeof d.password !== "string" || d.password.length < 8) {
       throw new Error("Password must be at least 8 characters.");
     }
-    return { email: d.email.trim().toLowerCase(), password: d.password };
+    // Optional anonymous id links pre-signup funnel activity to the new account.
+    const anonymousId =
+      typeof d.anonymousId === "string" && /^[a-zA-Z0-9._:-]{1,128}$/.test(d.anonymousId.trim())
+        ? d.anonymousId.trim()
+        : undefined;
+    return { email: d.email.trim().toLowerCase(), password: d.password, anonymousId };
   })
   .handler(async ({ data }) => {
     // Check if user already exists
@@ -70,9 +75,17 @@ export const signup = createServerFn({ method: "POST" })
     const userId = crypto.randomUUID();
     const user = createUser(userId, data.email, passwordHash);
 
-    // Queue welcome email (file-based bridge to email agent)
-    const queuePath = join("/home", "team", "shared", "pending-welcome-emails.txt");
-    appendFileSync(queuePath, JSON.stringify({ email: data.email, timestamp: new Date().toISOString() }) + "\n");
+    // Queue welcome email (file-based bridge to email agent). enqueueEmail never
+    // throws — a filesystem failure must not break an otherwise successful signup.
+    enqueueEmail("welcome", { email: data.email, timestamp: new Date().toISOString() });
+
+    // First-party funnel event: signup_completed, server-side right after user
+    // creation (user_id known). Tracking failures never block signup.
+    try {
+      insertEvent("signup_completed", { userId, anonymousId: data.anonymousId, props: { tier: "free" } });
+    } catch (err) {
+      console.warn("[events] signup_completed persistence failed", String(err));
+    }
 
     // Create session
     const token = crypto.randomUUID();
@@ -148,8 +161,13 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
     if (user) {
       const token = crypto.randomUUID();
       createPasswordResetToken(user.id, token, new Date(Date.now() + RESET_TOKEN_MAX_AGE).toISOString());
-      const queuePath = join("/home", "team", "shared", "pending-password-reset-emails.txt");
-      appendFileSync(queuePath, JSON.stringify({ email: user.email, resetUrl: `${PUBLIC_SITE_URL}/reset-password?token=${encodeURIComponent(token)}`, timestamp: new Date().toISOString() }) + "\n");
+      // enqueueEmail never throws — a queue filesystem failure must not 500 an
+      // otherwise successful reset request (the user can request again later).
+      enqueueEmail("reset", {
+        email: user.email,
+        resetUrl: `${PUBLIC_SITE_URL}/reset-password?token=${encodeURIComponent(token)}`,
+        timestamp: new Date().toISOString(),
+      });
     }
     return { success: true };
   });

@@ -24,6 +24,7 @@ import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
+import { trackEvent } from "./-tracking";
 // Max height (px) of the answer textarea before it scrolls instead of growing.
 const MAX_ANSWER_INPUT_HEIGHT = 160;
 
@@ -563,6 +564,8 @@ function AppPage() {
     setStartError("");
     meaningfulAnswerCountRef.current = 0;
     setShowInsightCTA(false);
+    // First-party funnel event (fire-and-forget; never blocks starting).
+    trackEvent("interview_started", { offering: offering === "meos" ? "meos" : "context", tier, seeded: false });
     setScreen("interview");
     setWaiting(true);
     setInterviewError("");
@@ -668,6 +671,8 @@ function AppPage() {
         ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} pre-filled from your document. Answer the remaining questions to finish your profile.`
         : "No claims were selected — starting a fresh interview.",
     );
+    // First-party funnel event for the upload-seeded interview start.
+    trackEvent("interview_started", { offering: seedOffering, tier, seeded: true, domainsSeeded: seededDomainCount });
     setScreen("interview");
     setWaiting(true);
     setInterviewError("");
@@ -961,11 +966,22 @@ function AppPage() {
     setActiveTab(offering === "meos" ? "portrait.md" : "overview");
     setScreen("output");
     setCompiling(false);
+
+    // First-party funnel event: interview completed (safe aggregate coverage only).
+    const totalDomains = currentGraph.length;
+    const coveredDomains = currentGraph.filter((d) => compileState.domains[d.id]?.covered).length;
+    trackEvent("interview_completed", {
+      offering: offering === "meos" ? "meos" : "context",
+      tier: compileState.tier,
+      covered: coveredDomains,
+      total: totalDomains,
+    });
   };
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      trackEvent("export_performed", { kind: "copy", output: label });
       setCopyMsg(`Copied ${label}!`);
       setTimeout(() => setCopyMsg(""), 2000);
     } catch {
@@ -992,6 +1008,7 @@ function AppPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    trackEvent("export_performed", { kind: "zip", output: offering === "meos" ? "meos" : "context" });
   };
 
   const startNew = () => {

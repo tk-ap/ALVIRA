@@ -35,7 +35,10 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-const SHARED_DIR = "/home/team/shared";
+// Queue base directory — configurable via EMAIL_QUEUE_DIR (used by tests and by
+// any deployment that wants queues somewhere other than the shared team dir).
+// Defaults to /home/team/shared for backward compatibility with the current setup.
+const SHARED_DIR = process.env.EMAIL_QUEUE_DIR?.trim() || "/home/team/shared";
 
 export const QUEUES = {
   welcome: {
@@ -78,6 +81,24 @@ This link expires in one hour. If you didn't request this, you can ignore this e
 
 function queuePath(queue: QueueName): string {
   return join(SHARED_DIR, QUEUES[queue].file);
+}
+
+/**
+ * Append an entry to a queue file without ever throwing. A filesystem failure
+ * (missing dir, read-only disk, full disk) logs a server-side warning (queue
+ * name + error code only — never the entry contents) and returns false so the
+ * caller can continue; it must never 500 an otherwise successful request.
+ */
+export function enqueueEmail(queue: QueueName, entry: Record<string, unknown>): boolean {
+  try {
+    if (!existsSync(SHARED_DIR)) mkdirSync(SHARED_DIR, { recursive: true });
+    appendFileSync(queuePath(queue), JSON.stringify(entry) + "\n");
+    return true;
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException)?.code ?? "unknown";
+    console.warn(`[email-queue] enqueue ${queue} failed (${code}); proceeding without queueing`);
+    return false;
+  }
 }
 
 function json(data: unknown, status = 200): Response {

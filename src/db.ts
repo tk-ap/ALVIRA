@@ -237,9 +237,10 @@ export interface FunnelMetrics {
 export function getOwnerMetrics(): OwnerMetrics {
   const d = getDb();
   const count = (sql: string) => Number((d.query(sql).get() as { count: number }).count);
+  const countWhere = (sql: string, ...params: unknown[]) => Number((d.query(sql).get(...params) as { count: number }).count);
   const eventCounts = (name: string) => ({
-    d7: count("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days')"),
-    d30: count("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days')"),
+    d7: countWhere("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days')", name),
+    d30: countWhere("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days')", name),
   });
   return {
     userCounts: {

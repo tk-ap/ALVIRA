@@ -37,8 +37,11 @@ import { join } from "node:path";
 
 // Queue base directory — configurable via EMAIL_QUEUE_DIR (used by tests and by
 // any deployment that wants queues somewhere other than the shared team dir).
+// Read at call time so a test/deploy can point it at a fresh directory.
 // Defaults to /home/team/shared for backward compatibility with the current setup.
-const SHARED_DIR = process.env.EMAIL_QUEUE_DIR?.trim() || "/home/team/shared";
+function emailQueueDir(): string {
+  return process.env.EMAIL_QUEUE_DIR?.trim() || "/home/team/shared";
+}
 
 export const QUEUES = {
   welcome: {
@@ -58,8 +61,8 @@ export const QUEUES = {
 export type QueueName = keyof typeof QUEUES;
 
 const PUBLIC_SITE_URL = "https://alvira.ctonew.app";
-const LOG_FILE = join(SHARED_DIR, "recent-emails.log");
-const TOKEN_FILE = join(SHARED_DIR, ".email-cron-token");
+const LOG_FILE = () => join(emailQueueDir(), "recent-emails.log");
+const TOKEN_FILE = () => join(emailQueueDir(), ".email-cron-token");
 
 const WELCOME_BODY = `Hi there,
 
@@ -80,7 +83,7 @@ ${resetUrl}
 This link expires in one hour. If you didn't request this, you can ignore this email.`;
 
 function queuePath(queue: QueueName): string {
-  return join(SHARED_DIR, QUEUES[queue].file);
+  return join(emailQueueDir(), QUEUES[queue].file);
 }
 
 /**
@@ -91,7 +94,8 @@ function queuePath(queue: QueueName): string {
  */
 export function enqueueEmail(queue: QueueName, entry: Record<string, unknown>): boolean {
   try {
-    if (!existsSync(SHARED_DIR)) mkdirSync(SHARED_DIR, { recursive: true });
+    const dir = emailQueueDir();
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     appendFileSync(queuePath(queue), JSON.stringify(entry) + "\n");
     return true;
   } catch (err) {
@@ -114,8 +118,8 @@ function sleep(ms: number): Promise<void> {
 
 // ── Access control ──
 function authorized(req: Request): boolean {
-  if (!existsSync(TOKEN_FILE)) return true; // dev mode: no token configured
-  const expected = readFileSync(TOKEN_FILE, "utf-8").trim();
+  if (!existsSync(TOKEN_FILE())) return true; // dev mode: no token configured
+  const expected = readFileSync(TOKEN_FILE(), "utf-8").trim();
   if (!expected) return true;
   const bearer = req.headers.get("authorization") ?? "";
   const x = req.headers.get("x-email-token") ?? "";
@@ -153,7 +157,7 @@ function recordLog(m: { to: string; subject: string; body: string; mode: "api" |
   const flag = m.mode === "api" ? "SENT" : "SIMULATED";
   const line = `[${new Date().toISOString()}] ${flag} queue=${m.queue} to=${m.to} subject=${JSON.stringify(m.subject)} body=${JSON.stringify(m.body)}`;
   try {
-    appendFileSync(LOG_FILE, line + "\n");
+    appendFileSync(LOG_FILE(), line + "\n");
   } catch {
     // never let logging break queue processing
   }

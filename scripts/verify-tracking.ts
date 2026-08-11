@@ -129,9 +129,11 @@ try {
   // Restart simulation: a fresh module init (fresh getDb) prunes stale rows.
   const prevDir = process.env.ALVIRA_DATA_DIR;
   process.env.ALVIRA_DATA_DIR = dataDir2;
+  // -ignore: query-string import busts Bun module cache (runtime-only; tsc cannot resolve it)
   const db2 = (await import(`../src/db.ts?restart=1`)).getDb();
   db2.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-old2', '{}', datetime('now', '-200 days'))", [crypto.randomUUID()]);
   db2.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-new2', '{}', datetime('now', '-1 days'))", [crypto.randomUUID()]);
+  // -ignore: query-string import busts Bun module cache (runtime-only; tsc cannot resolve it)
   const db3 = (await import(`../src/db.ts?restart=2`)).getDb(); // second init == server restart
   check("DB init prunes events older than 180 days", (db3.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-old2'").get() as { count: number }).count === 0);
   check("DB init keeps events inside retention window", (db3.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-new2'").get() as { count: number }).count === 1);

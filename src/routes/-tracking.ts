@@ -8,12 +8,17 @@
 // non-sensitive aggregates (offering/tier/seeded/kind/output). Interview answers
 // are never logged here. The privacy page copy ("no tracking cookies") stays true.
 //
+// Integrity guards (in db.recordEvent): every event must carry at least one
+// identifier (user_id or anonymous_id) or it is dropped; per-identity writes are
+// rate-limited (240/hour) so a runaway client cannot flood the table; and rows
+// older than 180 days are pruned on DB init so the table cannot grow forever.
+//
 // Fail-open: any tracking failure (network, DB, validation) is swallowed and the
 // user's funnel action proceeds. Server-side insert failures log a warning only.
 
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
-import { getSessionByToken, insertEvent } from "~/db";
+import { getSessionByToken, recordEvent } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
 const ANON_ID_KEY = "alvira_anon_id";
@@ -94,8 +99,11 @@ export const logEvent = createServerFn({ method: "POST" })
       } catch {
         // no session context available
       }
-      insertEvent(data.name, { userId, anonymousId: data.anonymousId, props: data.props });
-      return { ok: true };
+      // recordEvent applies the identifier requirement + per-identity rate limit
+      // and never throws; a dropped event still returns ok so the funnel action
+      // is never blocked by metrics hygiene.
+      const persisted = recordEvent(data.name, { userId, anonymousId: data.anonymousId, props: data.props });
+      return { ok: true, dropped: !persisted };
     } catch (err) {
       // Tracking must never block the funnel action — drop the event, log a warning.
       console.warn(`[events] failed to persist "${data.name}"`, String(err));

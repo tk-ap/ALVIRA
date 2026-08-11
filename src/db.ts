@@ -8,6 +8,18 @@ import { join } from "node:path";
 const DB_DIR = process.env.ALVIRA_DATA_DIR ?? join(process.cwd(), ".data");
 const DB_PATH = join(DB_DIR, "alvira.db");
 
+// ── Event retention / rate limits (metrics integrity) ──
+// Bounded retention keeps the events table from growing forever: rows older than
+// this are pruned on every DB initialization. 180 days comfortably covers the
+// 7d/30d owner funnel windows while bounding storage.
+export const EVENT_RETENTION_DAYS = 180;
+// Cheap abuse guard per identity (user_id or anonymous_id): at most this many
+// event writes per rolling window before excess writes are dropped. Normal use
+// generates a handful of events per session (a heavy day is well under 50), so
+// 240/hour can never be hit organically — it only stops runaway/scripted floods.
+export const EVENT_RATE_LIMIT_WINDOW_MINUTES = 60;
+export const EVENT_RATE_LIMIT_MAX = 240;
+
 let db: Database | null = null;
 
 export function getDb(): Database {
@@ -21,6 +33,11 @@ export function getDb(): Database {
 
   // Enable WAL mode for better concurrent reads
   db.exec("PRAGMA journal_mode=WAL");
+
+  // Enforce foreign keys so ON DELETE SET NULL (events.user_id) and ON DELETE
+  // CASCADE (sessions, profiles, purchases, interview_drafts) actually work.
+  // Note: SQLite disables FK enforcement by default per connection.
+  db.exec("PRAGMA foreign_keys = ON");
 
   // ── Migrations: run CREATE TABLE IF NOT EXISTS on startup ──
   db.exec(`
@@ -160,7 +177,17 @@ export function getDb(): Database {
     // Column already exists — safe to ignore
   }
 
+  // Bounded event retention: prune rows older than EVENT_RETENTION_DAYS on every
+  // startup so the events table cannot grow forever. Cheap (indexed on name/created_at)
+  // and safe — the owner funnel only ever looks at 7/30-day windows.
+  pruneOldEvents();
+
   return db;
+}
+
+/** Delete funnel events older than the retention window. Idempotent and safe to call anytime. */
+export function pruneOldEvents(): void {
+  getDb().run("DELETE FROM events WHERE created_at < datetime('now', ?)", [`-${EVENT_RETENTION_DAYS} days`]);
 }
 
 // ── Helpers ──
@@ -226,7 +253,9 @@ export interface OwnerMetrics {
   funnel: FunnelMetrics;
 }
 
-/** 7-day and 30-day counts for the four core funnel events. */
+/** 7-day and 30-day counts of unique people for the four core funnel events.
+ *  A person is COALESCE(user_id, anonymous_id) — repeated actions by the same
+ *  person count once. Rows with neither identifier are excluded entirely. */
 export interface FunnelMetrics {
   signupCompleted: { d7: number; d30: number };
   interviewStarted: { d7: number; d30: number };
@@ -239,8 +268,14 @@ export function getOwnerMetrics(): OwnerMetrics {
   const count = (sql: string) => Number((d.query(sql).get() as { count: number }).count);
   const countWhere = (sql: string, ...params: unknown[]) => Number((d.query(sql).get(...params) as { count: number }).count);
   const eventCounts = (name: string) => ({
-    d7: countWhere("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days')", name),
-    d30: countWhere("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days')", name),
+    d7: countWhere(
+      "SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)",
+      name,
+    ),
+    d30: countWhere(
+      "SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)",
+      name,
+    ),
   });
   return {
     userCounts: {
@@ -518,6 +553,52 @@ export function insertEvent(name: string, input: TrackEventInput = {}): void {
     "INSERT INTO events (id, name, user_id, anonymous_id, props_json) VALUES (?, ?, ?, ?, ?)",
     [crypto.randomUUID(), name, input.userId ?? null, input.anonymousId ?? null, JSON.stringify(input.props ?? {})],
   );
+}
+
+/**
+ * True when the identity (user_id or anonymous_id) has already written at least
+ * EVENT_RATE_LIMIT_MAX events within the rolling window. Exceeds nothing under
+ * normal use — a human generates a handful of events per session.
+ */
+export function isEventRateLimited(userId: string | null, anonymousId: string | null): boolean {
+  if (!userId && !anonymousId) return true; // no identifier → treat as un-writable
+  const row = getDb()
+    .query(
+      `SELECT COUNT(*) AS count FROM events
+       WHERE created_at >= datetime('now', ?)
+         AND ((? IS NOT NULL AND user_id = ?) OR (? IS NOT NULL AND anonymous_id = ?))`,
+    )
+    .get(`-${EVENT_RATE_LIMIT_WINDOW_MINUTES} minutes`, userId, userId, anonymousId, anonymousId) as { count: number };
+  return row.count >= EVENT_RATE_LIMIT_MAX;
+}
+
+/**
+ * Guarded event write used by the public logEvent path (and the signup flow).
+ * Metrics-integrity rules:
+ *   - requires at least one identifier (user_id or anonymous_id) — rows with
+ *     neither are dropped so funnel counts stay attributable;
+ *   - enforces the per-identity rate limit above.
+ * Fails open: returns false instead of throwing, and the caller must never
+ * block the user's funnel action on tracking.
+ */
+export function recordEvent(name: string, input: TrackEventInput = {}): boolean {
+  try {
+    const userId = input.userId ?? null;
+    const anonymousId = input.anonymousId ?? null;
+    if (!userId && !anonymousId) {
+      console.warn(`[events] dropped "${name}": no user_id or anonymous_id`);
+      return false;
+    }
+    if (isEventRateLimited(userId, anonymousId)) {
+      console.warn(`[events] dropped "${name}": rate limit exceeded for identity`);
+      return false;
+    }
+    insertEvent(name, input);
+    return true;
+  } catch (err) {
+    console.warn(`[events] record "${name}" failed`, String(err));
+    return false;
+  }
 }
 
 /** Count events of a given name within the last `days` days. */

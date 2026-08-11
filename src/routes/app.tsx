@@ -308,6 +308,12 @@ function AppPage() {
   const meaningfulAnswerCountRef = useRef(0);
   const autosaveAnswerCountRef = useRef(0);
   const draftRestoredRef = useRef(false);
+  // Synchronous in-flight guard for handleGenerate: React state (`compiling`)
+  // updates asynchronously, so two rapid clicks can both observe `compiling ===
+  // false` before the rerender lands. The ref is set synchronously at entry and
+  // released in `finally`, so double-clicks cannot double-count the interview
+  // quota or emit duplicate interview_completed events.
+  const compilingRef = useRef(false);
   const [showInsightCTA, setShowInsightCTA] = useState(false);
 
   // Output state
@@ -915,6 +921,11 @@ function AppPage() {
   };
 
   const handleGenerate = async (stateOverride?: InterviewState) => {
+    // Synchronous in-flight guard (see compilingRef above). Check and set before
+    // any await so a second click in the same tick is dropped.
+    if (compilingRef.current) return;
+    compilingRef.current = true;
+    try {
     const compileState = stateOverride || state;
     if (!compileState) return;
 
@@ -976,6 +987,9 @@ function AppPage() {
       covered: coveredDomains,
       total: totalDomains,
     });
+    } finally {
+      compilingRef.current = false;
+    }
   };
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -1279,7 +1293,7 @@ function AppPage() {
                   )}
                   <button
                     type="button"
-                    onClick={handleGenerate}
+                    onClick={() => void handleGenerate()}
                     disabled={compiling || !state || state.history.length < 2}
                     className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50 ${
                       state && state.history.length >= 2
@@ -1319,7 +1333,7 @@ function AppPage() {
                   </span>
                   <button
                     type="button"
-                    onClick={handleGenerate}
+                    onClick={() => void handleGenerate()}
                     disabled={compiling}
                     className="flex-shrink-0 ml-4 rounded-lg bg-system-dark dark:bg-system px-4 py-1.5 text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors disabled:opacity-60"
                   >

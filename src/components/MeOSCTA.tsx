@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-
-// ── Tracking helper ──
-// TODO: Replace console.log with real analytics (e.g., PostHog, Plausible, or custom endpoint)
-function track(event: string, payload: Record<string, string>) {
-  console.log(`[MeOSCTA] ${event}`, payload);
-}
+import { trackEvent } from "../routes/-tracking";
 
 // ── Props ──
 export interface MeOSCTAProps {
@@ -22,17 +17,17 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
 
   // ── Impression tracking on mount ──
   useEffect(() => {
-    track("meos_cta_impression", { placement });
+    trackEvent("meos_cta_impression", { placement });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Handlers ──
   const handlePrimaryClick = () => {
-    track("meos_cta_click", { placement, action: "primary" });
+    trackEvent("meos_cta_click", { placement, action: "primary" });
   };
 
   const handleDismiss = () => {
-    track("meos_cta_dismiss", { placement });
+    trackEvent("meos_cta_dismiss", { placement });
     setDismissed(true);
   };
 

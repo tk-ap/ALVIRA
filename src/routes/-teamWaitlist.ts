@@ -3,10 +3,9 @@
 // email to the submitter plus a notification to contextforge-18281ce4@ctomail.io via the
 // file-based email bridge (same pattern as -auth.ts welcome emails).
 
-import { appendFileSync } from "node:fs";
-import { join } from "node:path";
 import { createServerFn } from "@tanstack/react-start";
 import { insertTeamWaitlistEntry } from "~/db";
+import { enqueueEmail } from "~/emailQueue";
 
 const TEAM_SIZES = ["5–10", "11–25", "26–50", "51–100", "100+"] as const;
 
@@ -17,8 +16,6 @@ export interface TeamWaitlistInput {
   teamSize: string;
   useCase: string;
 }
-
-const EMAIL_QUEUE_PATH = join("/home", "team", "shared", "pending-team-waitlist-emails.txt");
 
 export const joinTeamWaitlist = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
@@ -52,27 +49,22 @@ export const joinTeamWaitlist = createServerFn({ method: "POST" })
 
     const timestamp = new Date().toISOString();
 
-    // Queue confirmation to the submitter.
-    appendFileSync(
-      EMAIL_QUEUE_PATH,
-      JSON.stringify({
-        to: data.email,
-        subject: "You're on the ALVIRA Team waitlist",
-        body: `Hi ${data.name}, you're on the list. We'll reach out when the ALVIRA Team tier is ready for early access.`,
-        timestamp,
-      }) + "\n",
-    );
+    // Queue confirmation to the submitter. enqueueEmail never throws — a queue
+    // filesystem failure must not 500 an otherwise successful waitlist signup.
+    enqueueEmail("waitlist", {
+      to: data.email,
+      subject: "You're on the ALVIRA Team waitlist",
+      body: `Hi ${data.name}, you're on the list. We'll reach out when the ALVIRA Team tier is ready for early access.`,
+      timestamp,
+    });
 
     // Queue notification to contextforge-18281ce4@ctomail.io.
-    appendFileSync(
-      EMAIL_QUEUE_PATH,
-      JSON.stringify({
-        to: "contextforge-18281ce4@ctomail.io",
-        subject: `Team waitlist signup: ${data.name}${data.company ? ` (${data.company})` : ""}`,
-        body: `New team waitlist submission:\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || "(not provided)"}\nTeam size: ${data.teamSize || "(not provided)"}\nUse case: ${data.useCase || "(not provided)"}`,
-        timestamp,
-      }) + "\n",
-    );
+    enqueueEmail("waitlist", {
+      to: "contextforge-18281ce4@ctomail.io",
+      subject: `Team waitlist signup: ${data.name}${data.company ? ` (${data.company})` : ""}`,
+      body: `New team waitlist submission:\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || "(not provided)"}\nTeam size: ${data.teamSize || "(not provided)"}\nUse case: ${data.useCase || "(not provided)"}`,
+      timestamp,
+    });
 
     return { ok: true };
   });

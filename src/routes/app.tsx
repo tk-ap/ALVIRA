@@ -24,6 +24,7 @@ import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
+import { trackEvent } from "./-tracking";
 // Max height (px) of the answer textarea before it scrolls instead of growing.
 const MAX_ANSWER_INPUT_HEIGHT = 160;
 
@@ -307,6 +308,12 @@ function AppPage() {
   const meaningfulAnswerCountRef = useRef(0);
   const autosaveAnswerCountRef = useRef(0);
   const draftRestoredRef = useRef(false);
+  // Synchronous in-flight guard for handleGenerate: React state (`compiling`)
+  // updates asynchronously, so two rapid clicks can both observe `compiling ===
+  // false` before the rerender lands. The ref is set synchronously at entry and
+  // released in `finally`, so double-clicks cannot double-count the interview
+  // quota or emit duplicate interview_completed events.
+  const compilingRef = useRef(false);
   const [showInsightCTA, setShowInsightCTA] = useState(false);
 
   // Output state
@@ -563,6 +570,8 @@ function AppPage() {
     setStartError("");
     meaningfulAnswerCountRef.current = 0;
     setShowInsightCTA(false);
+    // First-party funnel event (fire-and-forget; never blocks starting).
+    trackEvent("interview_started", { offering: offering === "meos" ? "meos" : "context", tier, seeded: false });
     setScreen("interview");
     setWaiting(true);
     setInterviewError("");
@@ -668,6 +677,8 @@ function AppPage() {
         ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} pre-filled from your document. Answer the remaining questions to finish your profile.`
         : "No claims were selected — starting a fresh interview.",
     );
+    // First-party funnel event for the upload-seeded interview start.
+    trackEvent("interview_started", { offering: seedOffering, tier, seeded: true, domainsSeeded: seededDomainCount });
     setScreen("interview");
     setWaiting(true);
     setInterviewError("");
@@ -910,62 +921,88 @@ function AppPage() {
   };
 
   const handleGenerate = async (stateOverride?: InterviewState) => {
-    const compileState = stateOverride || state;
-    if (!compileState) return;
+    // Synchronous in-flight guard (see compilingRef above). Check and set before
+    // any await so a second click in the same tick is dropped.
+    if (compilingRef.current) return;
+    compilingRef.current = true;
+    try {
+      const compileState = stateOverride || state;
+      if (!compileState) return;
 
-    // Track interview count (for limits)
-    if (authUser) {
-      try {
-        const result = await trackInterview();
-        const r = result as { interviewCount?: number; error?: string; limit?: string };
-        if (r.error === "limit_reached") {
-          setLimitModal("interviews");
-          setLimitBanner("interviews");
-          return;
-        }
-        if (r.interviewCount !== undefined) {
-          setInterviewCount(r.interviewCount);
-          // Check if we just hit the limit
-          if (authUser.tier === "free" && r.interviewCount >= 3) {
+      // Track interview count (for limits)
+      if (authUser) {
+        try {
+          const result = await trackInterview();
+          const r = result as { interviewCount?: number; error?: string; limit?: string };
+          if (r.error === "limit_reached") {
+            setLimitModal("interviews");
             setLimitBanner("interviews");
+            return;
           }
+          if (r.interviewCount !== undefined) {
+            setInterviewCount(r.interviewCount);
+            // Check if we just hit the limit
+            if (authUser.tier === "free" && r.interviewCount >= 3) {
+              setLimitBanner("interviews");
+            }
+          }
+        } catch {
+          // If tracking fails (e.g., not logged in), proceed anyway
         }
-      } catch {
-        // If tracking fails (e.g., not logged in), proceed anyway
       }
-    }
 
-    setCompiling(true);
-    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
-    let files: Record<string, string>;
-    if (offering === "meos") {
-      files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
-      setPortraitError(false);
-      try {
-        const result = await generatePortrait(compileState);
-        if ("error" in result) {
+      setCompiling(true);
+      const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
+      let files: Record<string, string>;
+      if (offering === "meos") {
+        files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
+        setPortraitError(false);
+        try {
+          const result = await generatePortrait(compileState);
+          if ("error" in result) {
+            setMeosPortrait(null);
+            setPortraitError(true);
+          } else {
+            setMeosPortrait(result);
+            files["portrait.json"] = JSON.stringify(result, null, 2);
+          }
+        } catch {
           setMeosPortrait(null);
           setPortraitError(true);
-        } else {
-          setMeosPortrait(result);
-          files["portrait.json"] = JSON.stringify(result, null, 2);
         }
-      } catch {
-        setMeosPortrait(null);
-        setPortraitError(true);
+      } else {
+        files = compileKnowledge(compileState, currentGraph);
       }
-    } else {
-      files = compileKnowledge(compileState, currentGraph);
+      setGenerated(files);
+      setActiveTab(offering === "meos" ? "portrait.md" : "overview");
+      setScreen("output");
+      setInterviewError("");
+
+      // First-party funnel event: interview completed (safe aggregate coverage only).
+      const totalDomains = currentGraph.length;
+      const coveredDomains = currentGraph.filter((d) => compileState.domains[d.id]?.covered).length;
+      trackEvent("interview_completed", {
+        offering: offering === "meos" ? "meos" : "context",
+        tier: compileState.tier,
+        covered: coveredDomains,
+        total: totalDomains,
+      });
+    } catch {
+      // Any throw from the compile path surfaces a concise message instead of an
+      // unhandled rejection; the finally below resets the UI state on every path.
+      setInterviewError("We couldn't compile your knowledge files. Please try again.");
+    } finally {
+      // Reset UI state on every path (success, early return, throw) so the
+      // button never stays stuck on "Compiling...".
+      setCompiling(false);
+      compilingRef.current = false;
     }
-    setGenerated(files);
-    setActiveTab(offering === "meos" ? "portrait.md" : "overview");
-    setScreen("output");
-    setCompiling(false);
   };
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      trackEvent("export_performed", { kind: "copy", output: label });
       setCopyMsg(`Copied ${label}!`);
       setTimeout(() => setCopyMsg(""), 2000);
     } catch {
@@ -992,6 +1029,7 @@ function AppPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    trackEvent("export_performed", { kind: "zip", output: offering === "meos" ? "meos" : "context" });
   };
 
   const startNew = () => {
@@ -1262,7 +1300,7 @@ function AppPage() {
                   )}
                   <button
                     type="button"
-                    onClick={handleGenerate}
+                    onClick={() => void handleGenerate()}
                     disabled={compiling || !state || state.history.length < 2}
                     className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-system/50 dark:focus-visible:ring-system/50 ${
                       state && state.history.length >= 2
@@ -1302,7 +1340,7 @@ function AppPage() {
                   </span>
                   <button
                     type="button"
-                    onClick={handleGenerate}
+                    onClick={() => void handleGenerate()}
                     disabled={compiling}
                     className="flex-shrink-0 ml-4 rounded-lg bg-system-dark dark:bg-system px-4 py-1.5 text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system transition-colors disabled:opacity-60"
                   >

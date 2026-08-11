@@ -2,6 +2,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { signup } from "./-auth";
+import { getOrCreateAnonId } from "./-tracking";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 
@@ -39,7 +40,9 @@ function SignupPage() {
 
     setSubmitting(true);
     try {
-      const result = await signup({ data: { email, password } });
+      // Pass the stable anonymous id so the server-side signup_completed event
+      // can link pre-signup funnel activity to the new account.
+      const result = await signup({ data: { email, password, anonymousId: getOrCreateAnonId() } });
       const maxAge = 30 * 24 * 60 * 60;
       document.cookie = `alvira_session=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
       navigate({ to: "/app" });

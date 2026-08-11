@@ -3,8 +3,28 @@ import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-const DB_DIR = join(process.cwd(), ".data");
+// Data directory is overridable (used by scripts/verify-tracking.ts so tests never
+// touch the production DB). Defaults to ./.data for backward compatibility.
+const DB_DIR = process.env.ALVIRA_DATA_DIR ?? join(process.cwd(), ".data");
 const DB_PATH = join(DB_DIR, "alvira.db");
+
+// ── Event retention / rate limits (metrics integrity) ──
+// Bounded retention keeps the events table from growing forever: rows older than
+// this are pruned at startup and then opportunistically at most once per day on
+// event writes (see maybePruneEvents), so a long-lived server stays bounded too.
+// 180 days comfortably covers the 7d/30d owner funnel windows while bounding storage.
+export const EVENT_RETENTION_DAYS = 180;
+// Blunt per-identity cap (user_id or anonymous_id): at most this many event writes
+// per rolling window before excess writes are dropped. This limits buggy or
+// repeating clients from inflating metrics — it is NOT full hostile-bot
+// protection. Normal use generates a handful of events per session (a heavy day
+// is well under 50), so 240/hour can never be hit organically.
+export const EVENT_RATE_LIMIT_WINDOW_MINUTES = 60;
+export const EVENT_RATE_LIMIT_MAX = 240;
+// Opportunistic daily-prune anchor: event writes prune at most once per day (see
+// maybePruneEvents below); startup pruning in getDb covers restarts.
+let lastEventPruneAt = 0;
+const EVENT_PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 let db: Database | null = null;
 
@@ -19,6 +39,11 @@ export function getDb(): Database {
 
   // Enable WAL mode for better concurrent reads
   db.exec("PRAGMA journal_mode=WAL");
+
+  // Enforce foreign keys so ON DELETE SET NULL (events.user_id) and ON DELETE
+  // CASCADE (sessions, profiles, purchases, interview_drafts) actually work.
+  // Note: SQLite disables FK enforcement by default per connection.
+  db.exec("PRAGMA foreign_keys = ON");
 
   // ── Migrations: run CREATE TABLE IF NOT EXISTS on startup ──
   db.exec(`
@@ -110,6 +135,22 @@ export function getDb(): Database {
       source_offering TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    -- First-party funnel events (signup, interview start/completion, exports,
+    -- MeOS CTA impressions/clicks). Only non-sensitive aggregate props are stored —
+    -- never interview answers or other sensitive content.
+    CREATE TABLE IF NOT EXISTS events (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      user_id TEXT,
+      anonymous_id TEXT,
+      props_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_events_name_created_at ON events(name, created_at);
+    CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_events_anonymous_id ON events(anonymous_id);
   `);
 
   // Seed recovery compensation offers; INSERT OR IGNORE keeps existing expiry dates stable.
@@ -142,7 +183,38 @@ export function getDb(): Database {
     // Column already exists — safe to ignore
   }
 
+  // Bounded event retention: prune rows older than EVENT_RETENTION_DAYS on every
+  // startup so the events table cannot grow forever. Cheap (indexed on name/created_at)
+  // and safe — the owner funnel only ever looks at 7/30-day windows.
+  pruneOldEvents();
+
   return db;
+}
+
+/** Delete funnel events older than the retention window. Idempotent and safe to call anytime. */
+export function pruneOldEvents(): void {
+  getDb().run("DELETE FROM events WHERE created_at < datetime('now', ?)", [`-${EVENT_RETENTION_DAYS} days`]);
+}
+/**
+ * Opportunistic retention prune, at most once per day per server process.
+ * Startup pruning (getDb) handles restarts; this keeps long-lived servers bounded
+ * without running a prune on every request. Never throws — retention is
+ * opportunistic and must not break a metrics write.
+ */
+function maybePruneEvents(): void {
+  const now = Date.now();
+  if (now - lastEventPruneAt < EVENT_PRUNE_INTERVAL_MS) return;
+  lastEventPruneAt = now;
+  try {
+    pruneOldEvents();
+  } catch (err) {
+    console.warn("[events] opportunistic prune failed", String(err));
+  }
+}
+
+/** Test hook for scripts/verify-tracking.ts: force the next event write to prune. */
+export function forceNextEventPruneForTest(): void {
+  lastEventPruneAt = 0;
 }
 
 // ── Helpers ──
@@ -205,11 +277,33 @@ export interface OwnerMetrics {
   activeComps: Array<{ email: string; expires_at: string }>;
   recentWaitlist: Array<{ name: string; email: string; company: string | null; team_size: string | null; created_at: string }>;
   recentUsers: Array<{ email: string; tier: string; created_at: string }>;
+  funnel: FunnelMetrics;
+}
+
+/** 7-day and 30-day counts of unique people for the four core funnel events.
+ *  A person is COALESCE(user_id, anonymous_id) — repeated actions by the same
+ *  person count once. Rows with neither identifier are excluded entirely. */
+export interface FunnelMetrics {
+  signupCompleted: { d7: number; d30: number };
+  interviewStarted: { d7: number; d30: number };
+  interviewCompleted: { d7: number; d30: number };
+  exportPerformed: { d7: number; d30: number };
 }
 
 export function getOwnerMetrics(): OwnerMetrics {
   const d = getDb();
   const count = (sql: string) => Number((d.query(sql).get() as { count: number }).count);
+  const countWhere = (sql: string, ...params: unknown[]) => Number((d.query(sql).get(...params) as { count: number }).count);
+  const eventCounts = (name: string) => ({
+    d7: countWhere(
+      "SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)",
+      name,
+    ),
+    d30: countWhere(
+      "SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)",
+      name,
+    ),
+  });
   return {
     userCounts: {
       total: count("SELECT COUNT(*) AS count FROM users"),
@@ -218,12 +312,19 @@ export function getOwnerMetrics(): OwnerMetrics {
       lifetime: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'lifetime'"),
     },
     profileCount: count("SELECT COUNT(*) AS count FROM profiles"),
-    pendingInterviews: count("SELECT COUNT(*) AS count FROM profiles WHERE state_json IS NOT NULL"),
+    // Pending interviews = saved in-progress interview drafts, not every profile.
+    pendingInterviews: count("SELECT COUNT(*) AS count FROM interview_drafts"),
     waitlistCount: count("SELECT COUNT(*) AS count FROM team_waitlist"),
     activeCompCount: count("SELECT COUNT(*) AS count FROM meos_comps WHERE expires_at > datetime('now')"),
     activeComps: d.query("SELECT email, expires_at FROM meos_comps WHERE expires_at > datetime('now') ORDER BY expires_at ASC").all() as OwnerMetrics["activeComps"],
     recentWaitlist: d.query("SELECT name, email, company, team_size, created_at FROM team_waitlist ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentWaitlist"],
     recentUsers: d.query("SELECT email, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentUsers"],
+    funnel: {
+      signupCompleted: eventCounts("signup_completed"),
+      interviewStarted: eventCounts("interview_started"),
+      interviewCompleted: eventCounts("interview_completed"),
+      exportPerformed: eventCounts("export_performed"),
+    },
   };
 }
 
@@ -453,4 +554,94 @@ export function executeDraftTransfer(transferId: string, targetUserId: string): 
   d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
 
   return { transferred: true };
+}
+
+// ── First-party funnel events ──
+
+export interface EventRecord {
+  id: string;
+  name: string;
+  user_id: string | null;
+  anonymous_id: string | null;
+  props_json: string;
+  created_at: string;
+}
+
+export interface TrackEventInput {
+  userId?: string | null;
+  anonymousId?: string | null;
+  /** Non-sensitive, allowlisted-in-caller props only (strings, numbers, booleans). */
+  props?: Record<string, string | number | boolean>;
+}
+
+/** Insert a funnel event. Never store interview answers or other sensitive content. */
+export function insertEvent(name: string, input: TrackEventInput = {}): void {
+  maybePruneEvents(); // opportunistic once-per-day retention, not on every request
+  getDb().run(
+    "INSERT INTO events (id, name, user_id, anonymous_id, props_json) VALUES (?, ?, ?, ?, ?)",
+    [crypto.randomUUID(), name, input.userId ?? null, input.anonymousId ?? null, JSON.stringify(input.props ?? {})],
+  );
+}
+
+/**
+ * True when the identity (user_id or anonymous_id) has already written at least
+ * EVENT_RATE_LIMIT_MAX events within the rolling window. Exceeds nothing under
+ * normal use — a human generates a handful of events per session. This is a
+ * blunt per-identity cap for buggy/repeating clients, not full hostile-bot
+ * protection.
+ */
+export function isEventRateLimited(userId: string | null, anonymousId: string | null): boolean {
+  if (!userId && !anonymousId) return true; // no identifier → treat as un-writable
+  const row = getDb()
+    .query(
+      `SELECT COUNT(*) AS count FROM events
+       WHERE created_at >= datetime('now', ?)
+         AND ((? IS NOT NULL AND user_id = ?) OR (? IS NOT NULL AND anonymous_id = ?))`,
+    )
+    .get(`-${EVENT_RATE_LIMIT_WINDOW_MINUTES} minutes`, userId, userId, anonymousId, anonymousId) as { count: number };
+  return row.count >= EVENT_RATE_LIMIT_MAX;
+}
+
+/**
+ * Guarded event write used by the public logEvent path (and the signup flow).
+ * Metrics-integrity rules:
+ *   - requires at least one identifier (user_id or anonymous_id) — rows with
+ *     neither are dropped so funnel counts stay attributable;
+ *   - enforces the per-identity rate limit above.
+ * Fails open: returns false instead of throwing, and the caller must never
+ * block the user's funnel action on tracking.
+ */
+export function recordEvent(name: string, input: TrackEventInput = {}): boolean {
+  try {
+    const userId = input.userId ?? null;
+    const anonymousId = input.anonymousId ?? null;
+    if (!userId && !anonymousId) {
+      console.warn(`[events] dropped "${name}": no user_id or anonymous_id`);
+      return false;
+    }
+    if (isEventRateLimited(userId, anonymousId)) {
+      console.warn(`[events] dropped "${name}": rate limit exceeded for identity`);
+      return false;
+    }
+    insertEvent(name, input);
+    return true;
+  } catch (err) {
+    console.warn(`[events] record "${name}" failed`, String(err));
+    return false;
+  }
+}
+
+/** Count events of a given name within the last `days` days. */
+export function countEvent(name: string, days: number): number {
+  const row = getDb()
+    .query("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', ?)")
+    .get(name, `-${days} days`) as { count: number };
+  return row.count;
+}
+
+/** Most recent events (owner dashboard / debugging); limited for memory-safety. */
+export function recentEvents(limit = 50): EventRecord[] {
+  return getDb()
+    .query("SELECT id, name, user_id, anonymous_id, props_json, created_at FROM events ORDER BY created_at DESC LIMIT ?")
+    .all(limit) as EventRecord[];
 }

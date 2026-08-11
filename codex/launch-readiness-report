@@ -1,0 +1,535 @@
+# ALVIRA First-10 Launch Readiness Audit
+
+**Audit date:** 2026-08-07  
+**Market-context addendum:** 2026-08-08  
+**Live site reviewed:** https://alvira.ctonew.app/  
+**Decision:** **NO-GO for a self-serve first-10 launch until the P0 items below are fixed and retested.**  
+**Decision type:** Recommendation only. This audit does not approve or change product direction.  
+**Product-direction note:** Revision 11 is the last owner-ratified business-plan revision. Product and pricing details introduced after Revision 11 are treated here as working hypotheses unless separately owner-approved. This audit evaluates whether the current live implementation is safe to put in front of users; it does not ratify those hypotheses.
+
+## Executive Summary
+
+The site is materially more coherent and credible than the previous audited version. The homepage, pricing presentation, MeOS explanation, mobile navigation, selected states, legal pages, and adaptive interview behavior are all strong enough for a small cohort.
+
+The product is not yet ready for a self-serve first-10 launch because the core promised outcome fails in the tested guest flow: after the interface explicitly allowed knowledge-file generation, compilation threw a client-side exception and remained permanently stuck on `Compiling...` without an error message, retry, or recovery path.
+
+There are also two separate MeOS launch failures: the public `Try MeOS Preview — free` CTA resolves to `preview=false` and is then blocked by the paid-access gate, and selecting a theme overwrites the user's current-chapter answer. At checkout, the Pro description claims JSON export and version history without the site's `coming soon` qualifiers, and MeOS Build does not disclose its required base plan. Those discrepancies should be corrected before accepting payment.
+
+A market-positioning addendum also finds that Littlebird is a useful adjacent comparison, but not a direct product-mechanism comparison. Both products address the broader problem of AI lacking durable context, while Littlebird primarily builds context by observing digital activity and ALVIRA builds it through intentional elicitation, validation, and compilation into a user-controlled artifact. This finding does not change the launch recommendation or add a new P0 blocker. It does strengthen the need to make ALVIRA's distinct mechanism, ownership model, and recurring value understandable to a layperson.
+
+A subsequent direct-competitor review identifies Creed as the closest current competitor to ALVIRA Personal: it offers onboarding-generated personal context, owned Markdown, cross-agent access, user-approved updates, and hosted, self-hosted, company, and Lifetime options. Purpose is the clearest current outcome competitor for MeOS because it combines an initial personal assessment, persistent context, and ongoing guidance around values, goals, patterns, and decisions. These findings validate demand for the problem ALVIRA addresses, but they also mean that portability, persistent context, and “AI that knows you” are no longer sufficient differentiators on their own.
+
+### Recommended launch decision
+
+- **Do not invite the first 10 into a self-serve flow yet.**
+- A tightly managed **concierge alpha** is acceptable only if users are explicitly told the software is being tested, payment is handled or provisioned manually, answers are recoverable, and the team can manually deliver files when compilation fails.
+- Once the P0 gate below passes, proceed with 10 users. The remaining findings are suitable for monitored iteration during that cohort.
+
+## P0 — Must Be Resolved Before Inviting Users
+
+### P0.1 — Core knowledge compilation crashes
+
+**Observed behavior**
+
+1. A guest started an AI Context Profile interview.
+2. ALVIRA generated an appropriate first question and adaptive follow-up.
+3. After one answer, the interface enabled `Generate knowledge files →` and explicitly said generation could continue despite thin results.
+4. Clicking it changed the control to `Compiling...`.
+5. The page never recovered or produced output.
+6. The browser console reported: `TypeError: Cannot read properties of undefined (reading 'identity')`.
+
+**Why this blocks launch**
+
+Knowledge compilation is the product's central promise. A user can complete the interview work and receive neither the promised output nor an actionable error.
+
+**Required change**
+
+- Make compilation safe when interview coverage is sparse, including absent `identity` data.
+- If a minimum state is required, keep the generation control disabled until that minimum is met and state the exact requirement.
+- Add a user-visible error state with retry, support contact, and confirmation that existing answers were preserved.
+- Ensure a failed request cannot leave the button permanently disabled.
+- Log a traceable error identifier without exposing private interview content.
+
+**Acceptance criteria**
+
+- Generating from every UI-permitted state either succeeds or returns a recoverable, user-readable error.
+- A one-domain interview cannot reproduce the undefined `identity` exception.
+- Answers remain present after failure, reload, and retry.
+- At least one Markdown file can be previewed and downloaded in desktop and mobile smoke tests.
+
+![Compilation stuck after the permitted action](./10-knowledge-files-result.png)
+
+### P0.2 — The advertised free MeOS preview is not available
+
+**Observed behavior**
+
+- The MeOS landing-page CTA advertises `Try MeOS Preview — free` and points to `/app?offering=meos&preview=true`.
+- After navigation, the URL became `/app?offering=meos&preview=false`.
+- Starting the flow produced a paid-access message requiring a Pro or Lifetime plan plus MeOS Build.
+
+**Required decision**
+
+Choose one behavior and make every surface consistent:
+
+1. **Recommended:** restore a genuinely free, bounded MeOS preview and preserve `preview=true`; or
+2. remove the free-preview CTA and replace it with an accurate preview/demo description.
+
+**Acceptance criteria**
+
+- The CTA label, query state, onboarding behavior, and access policy all agree.
+- An unauthenticated user can complete the advertised preview without purchasing, if the CTA continues to say `free`.
+- The preview clearly states what is and is not saved or generated.
+
+![MeOS preview resolves to a paid-access gate](./14-meos-preview-access-gate.png)
+
+### P0.3 — MeOS onboarding corrupts user input
+
+**Observed behavior**
+
+- The current-chapter field was filled with a test sentence.
+- Selecting `Navigating a career pivot` replaced the field value with `Navigating a career pivot`.
+
+**Why this blocks launch**
+
+The onboarding step silently discards the user's primary free-form context before the interview begins.
+
+**Required change**
+
+- Store current-chapter text and selected themes in independent state fields.
+- Preserve typed text when themes are selected, deselected, or changed.
+- Preserve both values through navigation, validation errors, reload, and interview start.
+
+**Acceptance criteria**
+
+- Selecting any number of themes does not mutate the free-form answer.
+- Returning to the step restores the exact typed value and selected themes.
+- The interview receives both the free-form answer and the theme list as separate inputs.
+
+### P0.4 — Checkout copy overpromises and omits prerequisites
+
+**Observed behavior**
+
+- Monthly and annual Pro checkout descriptions advertise `Markdown/JSON exports` and `version history` as current capabilities.
+- The site pricing page labels JSON export and version history as `coming soon`.
+- MeOS Build checkout does not state that an eligible ALVIRA base plan is required.
+- The live site and legal pages disagree on whether Lifetime qualifies: the access gate says `Pro or Lifetime`, while Terms and the MeOS purchase explanation specify active Pro.
+
+**Required change**
+
+- Change Stripe product descriptions to list only currently delivered features.
+- Add `coming soon` only where appropriate, or omit unreleased features from the checkout entirely.
+- State the MeOS Build prerequisite on the checkout page itself and enforce it in entitlement logic.
+- Decide whether Lifetime qualifies for MeOS, then make the landing page, pricing, Terms, access gate, checkout, and provisioning logic identical.
+- Configure the checkout's public merchant identity so users understand they are paying ALVIRA. The tested checkout showed `cto.new` branding and a page title of `Tahlia Ash` rather than ALVIRA.
+
+**Acceptance criteria**
+
+- Checkout descriptions match the production feature set word-for-word.
+- A user cannot accidentally purchase MeOS Build or Care without the required prerequisite.
+- The merchant name and support identity are recognizable as ALVIRA or clearly disclosed as its legal operator.
+- A complete Stripe test transaction provisions the correct plan and returns the user to a working ALVIRA account.
+
+![Current Pro checkout and feature description](./15-pro-checkout-desktop.png)
+
+### P0.5 — Account and entitlement lifecycle needs a real transaction smoke test
+
+The public signup, login, validation, and password-reset entry pages were present, but this audit did not create an account, send email, or make a payment. Therefore the following launch-critical path remains unverified:
+
+- account creation and email delivery;
+- email verification, if required;
+- guest interview transfer into the created account;
+- password reset delivery and completion;
+- Stripe success/cancel return routes;
+- webhook processing and plan entitlement;
+- Pro, Lifetime, MeOS Build, and MeOS Care access boundaries;
+- cancellation, refund, export, and deletion operations.
+
+**Required test**
+
+Run the full lifecycle using a dedicated test account and Stripe test mode or an internal zero-dollar test product. Do not use a real customer as the first end-to-end payment test.
+
+**Acceptance criteria**
+
+- Every lifecycle item above is recorded as pass/fail with timestamps and screenshots.
+- Webhook retries are idempotent and cannot duplicate entitlements.
+- A failed or cancelled checkout does not grant access.
+- Support can locate a user by account email and resolve plan state without reading private interview content.
+
+## P1 — Fix Before or During the First-10 Cohort
+
+### P1.1 — Add explicit AI loading states
+
+The first interview question took approximately six seconds and temporarily displayed an empty conversation with `0 of 0 domains covered`. The adaptive follow-up took approximately eight seconds. The flow eventually worked, but it looked broken while waiting.
+
+**Recommendation**
+
+- Show `Preparing your first question...` before the knowledge graph is available.
+- Never render `0 of 0` as a stable-looking state.
+- Show an assistant typing/progress state after answer submission.
+- Add timeout and retry handling.
+
+### P1.2 — Clarify document-upload availability
+
+The onboarding prominently advertises document upload. The control is disabled before required setup choices are made, but the UI does not explain why. The homepage also links `Upload it and skip ahead` to the interview route.
+
+**Recommendation**
+
+- Explain the prerequisite beside the disabled control, or keep upload available independently.
+- Confirm `.txt`, `.md`, and `.docx` extraction, claim review, non-retention, size errors, and recovery in a separate upload smoke test.
+
+### P1.3 — Align purchase and legal language
+
+The legal pages are present and readable, but base-plan eligibility for MeOS is inconsistent. The signup form also does not place an agreement statement next to `Create account`; Terms and Privacy are available only in the page footer.
+
+**Recommendation**
+
+- Add a concise agreement line beside account creation.
+- Align all MeOS eligibility and refund language.
+- Have counsel review the final Terms, Privacy, refunds, AI-processing disclosure, age eligibility, and Lifetime language before scaling beyond a small alpha.
+
+### P1.4 — Remove checkout and header trust friction
+
+- Brand the Stripe checkout as ALVIRA or disclose the operating entity before handoff.
+- Replace header authentication placeholders with a stable skeleton that does not look like a broken blank control.
+- Replace `Loading your MeOS...` on the public landing page with a neutral page skeleton if authenticated state must be checked first.
+
+### P1.5 — Correct smaller copy and positioning inconsistencies
+
+- Change `transferrable` to `transferable`.
+- Reconcile the homepage comparison table with the more nuanced, dated pricing comparison.
+- Avoid absolute competitor claims that can become stale.
+- Shorten the homepage after launch data identifies which sections do not contribute to conversion.
+
+### P1.6 — Clarify ALVIRA's distinction from direct context products and ambient-memory assistants
+
+**Classification:** Recommendation only; not an approved product change.
+
+The market now includes both direct context-profile products and adjacent memory products:
+
+- **Creed is a direct competitor to ALVIRA Personal.** It creates an owned Markdown context profile from onboarding answers, connects that profile to multiple agents, and lets agents propose updates for user approval. Its hosted Personal plan is publicly listed below ALVIRA Pro's current monthly price.
+- **PersonalOS by OwnContext is a direct premium-service competitor.** It creates owned plain-file profiles, decision rules, workflows, and AI adapters for professionals through a high-touch engagement.
+- **CoreMem, Pecan, and MultiPass are emerging direct substitutes** for customers primarily seeking portable, permissioned context across multiple AI tools, although their collection mechanisms differ from ALVIRA's adaptive interview.
+- **Purpose is a direct outcome competitor for MeOS.** It uses personal assessment and persistent context to support reflection, goals, decisions, and ongoing personal guidance, but does not center an owned, portable knowledge repository.
+- **Littlebird is an adjacent, problem-level competitor rather than a direct product-mechanism competitor.** It primarily learns from screen activity, meetings, email, calendar, and integrations, then uses that memory inside its own assistant and workflows.
+
+The shared market thesis is that AI performs better when it has persistent personal context. ALVIRA should differentiate through how it discovers, validates, structures, and returns that knowledge:
+
+- ALVIRA intentionally asks adaptive questions, validates the answers, and compiles the resulting knowledge into a portable Markdown repository the user can own and use across AI tools.
+- Competitors now offer persistent context from free or low-cost self-hosted options through premium done-with-you services. ALVIRA cannot rely on price, portability, Markdown, or generic memory language alone to explain why it is the better choice.
+
+The positioning risk is that statements such as “AI is missing your context,” “one profile for every AI,” or “never repeat yourself” make ALVIRA sound interchangeable with increasingly numerous context products. ALVIRA should make clear that its principal value is the quality of understanding produced by adaptive elicitation, gap detection, validation, and compilation. Observed activity can reveal what someone did, but cannot reliably establish intentions, values, boundaries, preferences, decision criteria, or corrections.
+
+#### Recommended positioning changes
+
+- Make the mechanism explicit near the top of the funnel: ALVIRA asks, validates, organizes, and compiles.
+- Lead with knowledge elicitation and validated understanding rather than portable Markdown alone.
+- Show that the output is portable and user-controlled before the pricing decision.
+- Show a representative, production-accurate output repository and how its files are used in at least two supported AI tools.
+- Demonstrate the ongoing maintenance loop so the subscription is understood as continued knowledge upkeep, not payment for a one-time interview.
+- Make directly stated, user-confirmed, inferred, conflicting, outdated, and unresolved knowledge visibly distinguishable where supported by the product.
+- Compare against categories—vendor memory, ambient memory, manual instructions, and ALVIRA—rather than naming or attacking competitors on the homepage.
+- Position MeOS as a structured, inspectable personal operating system built from validated self-knowledge, not merely an AI coach or companion.
+- Support privacy and ownership language with specific, verifiable product behavior.
+- Do not add screen capture, meeting transcription, broad assistant features, or integration volume merely to imitate an adjacent competitor.
+- Do not reduce the current $20 Pro price solely in response to lower-priced competitors; first test whether users understand and value ALVIRA's deeper elicitation and validation.
+
+#### Suggested public-facing distinction
+
+> Some AI tools learn by watching what you do. ALVIRA learns by asking, validating, and giving the result back to you in a form you control.
+
+An alternative core line that also addresses direct context-profile competitors is:
+
+> AI memory records what happened. ALVIRA discovers what matters.
+
+#### Acceptance criteria
+
+- After reading the hero and “How it works,” a layperson can explain how ALVIRA differs from an AI memory or activity-capture tool.
+- A layperson can explain why ALVIRA is more valuable than asking an AI assistant to generate custom instructions or a profile manually.
+- Ownership and portability of the compiled knowledge are visible before the pricing section.
+- The adaptive interview, gap detection, validation, and compilation stages are visible without requiring technical knowledge.
+- The recurring value of maintaining the knowledge system is demonstrated with a concrete example or product state.
+- The website shows an accurate example of the files ALVIRA currently produces and does not imply unavailable outputs or integrations.
+- Any competitor, privacy, or portability claim is factual, supportable, and dated where appropriate.
+
+## What Is Working Well
+
+- The current homepage clearly explains the problem, action, output, supported AI tools, time commitment, and free entry point.
+- Monthly and annual price switching works; annual Pro displays `$192/year` and the 20% savings correctly.
+- Lifetime limitations are substantially clearer on the pricing page.
+- AI Context Profile and MeOS are differentiated at offering selection.
+- Selected cards expose a pressed/selected state.
+- Team/enterprise is clearly labeled as coming soon rather than appearing available.
+- The adaptive interview generated a relevant first question and a relevant follow-up.
+- Thin-output warnings are honest and specific.
+- Guest interview state persisted across navigation and the desktop-to-mobile viewport change during this session.
+- MeOS Build, MeOS Care, first-year total, and managed-hosting explanation are much clearer on the MeOS landing page.
+- Mobile navigation works and exposes an expanded state.
+- Privacy, Terms, Refunds, Support, and Data routes all returned readable content.
+- Signup, login, empty-field validation, and password-reset entry routes are present.
+
+## Market-Comp Addendum — Direct and Adjacent Competitors
+
+**Purpose:** Add competitive context to the readiness assessment without changing the confirmed launch blockers.
+
+### Competitive classification
+
+| Competitor | Relationship to ALVIRA | Principal overlap | Principal difference |
+|---|---|---|---|
+| [Creed](https://creed.md/home) | **Closest direct competitor to ALVIRA Personal** | Onboarding-generated personal context, owned Markdown, cross-agent access, approved updates, individual and company plans | Emphasizes a concise single profile and agent connectivity; ALVIRA's intended differentiation is deeper adaptive elicitation, validation, and multi-file compilation |
+| [PersonalOS by OwnContext](https://www.owncontext.co/) | **Direct premium-service competitor** | Owned plain files containing voice, preferences, boundaries, decisions, workflows, and AI adapters | High-touch done-with-you service beginning far above consumer SaaS pricing |
+| [CoreMem](https://coremem.app/) | **Near-direct context-management competitor** | Reusable context across AI tools, MCP distribution, user-approved agent updates | Centers user-created collections and documents rather than deep elicitation |
+| [Pecan](https://pecan.chat/) | **Emerging near-direct competitor** | Personal context, selective permissions, MCP access, user-confirmed changes | Earlier-stage and more focused on permissioned context infrastructure |
+| [MultiPass](https://multipass.host/) | **Near-direct portability competitor** | Portable profiles, granular consent, export, open protocol | More focused on memory and context infrastructure than adaptive interviewing |
+| [Purpose](https://apps.apple.com/us/app/purpose-ai-mentor-coach/id6749098156) | **Direct outcome competitor for MeOS** | Personal assessment, persistent context, values, patterns, goals, decisions, ongoing guidance | Centers an in-product mentor rather than an owned and portable knowledge artifact |
+| [Littlebird](https://littlebird.ai/) | **Adjacent problem-level competitor** | Persistent context intended to improve AI usefulness | Builds context primarily through observed digital activity rather than intentional elicitation |
+
+Creed is materially more direct than Littlebird. Its public product language, Markdown ownership model, onboarding flow, agent-update loop, integrations, and pricing overlap with important elements of ALVIRA's current proposition. The competitive response should therefore emphasize ALVIRA's interview intelligence, depth, validation, knowledge quality, and consumer accessibility—not just its output format.
+
+Purpose presents the more relevant comparison for MeOS. MeOS needs to demonstrate that it creates an inspectable, correctable personal knowledge system and durable portrait, rather than simply offering an AI conversation with personal memory.
+
+### Littlebird mechanism comparison
+
+| Dimension | ALVIRA | Littlebird |
+|---|---|---|
+| Context source | Intentional user answers and validation | Observed digital activity, meetings, email, calendar, and integrations |
+| Collection model | Adaptive interview and gap-driven elicitation | Ambient capture and connected data sources |
+| Best at | Articulating preferences, values, constraints, decision criteria, and professional context | Remembering and retrieving digital work activity |
+| Primary output | Structured, portable Markdown knowledge repository | Memory and assistance within Littlebird's product experience |
+| Competitive relationship | Knowledge elicitation and compilation | Ambient memory and context-aware assistant |
+
+The concepts are comparable enough to study because both promise to make AI more useful through durable context. They should not be treated as feature-for-feature equivalents. The most defensible ALVIRA position is not “better memory”; it is intentional, validated, portable knowledge that activity capture alone cannot reliably infer.
+
+Littlebird's publicly listed paid pricing begins around the same level as ALVIRA Pro. That provides some validation for a consumer willingness-to-pay band near $20 per month, but it also raises the proof burden for ALVIRA's subscription. The website must show why the knowledge remains useful after the initial build and what ongoing maintenance, updating, versioning, or cross-tool use the customer receives.
+
+Use Littlebird in investor materials, internal market research, and broader competitive mapping under “context-aware assistants” or “ambient memory.” On the consumer homepage, explain the category distinction without depending on a named-competitor comparison.
+
+**Direction-status note:** The “living knowledge system” and continuous-maintenance framing comes from the post–Revision 11 working hypothesis. It is not yet owner-ratified direction and should remain labeled as such until approved.
+
+For the detailed analysis, pricing comparison, and source links, see [LITTLEBIRD_MARKET_COMP_ANALYSIS.md](../../LITTLEBIRD_MARKET_COMP_ANALYSIS.md).
+
+## Recommended Competitive Response
+
+**Classification:** Recommendations only. These items do not supersede the P0 launch gate and are not owner-approved product requirements.
+
+### Phase A — Positioning and proof before or during the first-10 cohort
+
+#### A.1 Reframe the hero around elicitation
+
+**Recommended headline**
+
+> Turn what only you know into context every AI can use.
+
+**Recommended supporting copy**
+
+> ALVIRA interviews you, identifies the context your AI is missing, validates what it learns, and compiles it into a knowledge system you can use across ChatGPT, Claude, Gemini, Cursor, and whatever comes next.
+
+**Recommended CTAs**
+
+- Primary: `Build my AI profile — free`
+- Secondary: `See what ALVIRA creates`
+
+Do not lead with “one profile for every AI,” “portable AI memory,” or Markdown as the primary consumer benefit.
+
+#### A.2 Add a visible mechanism section
+
+Use a short, layperson-readable sequence:
+
+1. **Map** — Identify the knowledge domains that matter.
+2. **Ask** — Target the most important gaps.
+3. **Validate** — Confirm meaning, confidence, and consistency.
+4. **Compile** — Produce organized, reusable knowledge files.
+5. **Maintain** — Update the system as circumstances change.
+
+The fifth step relies on the post–Revision 11 working hypothesis and must not be represented as shipped until the corresponding product behavior exists.
+
+#### A.3 Show the real output
+
+- Add a production-accurate preview of the repository and files ALVIRA currently generates.
+- Explain why organized files are more useful than one oversized prompt.
+- Show how a customer uses the output in at least two supported AI tools.
+- Never show unavailable file types, integrations, or a real customer's private content.
+
+#### A.4 Add a category comparison
+
+Compare four approaches without naming competitors on the homepage:
+
+| Approach | How it learns | Principal limitation |
+|---|---|---|
+| Built-in AI memory | Remembers conversations inside one platform | Context remains controlled by that platform |
+| Ambient-memory tools | Observe screens, meetings, and activity | Activity cannot reliably reveal intent, values, or boundaries |
+| Manual instructions | User writes and maintains a prompt | Usually shallow, inconsistent, and quickly outdated |
+| **ALVIRA** | Asks, follows up, validates, and compiles | Requires intentional user participation |
+
+#### A.5 Differentiate MeOS from generic AI coaching
+
+**Recommended positioning line**
+
+> Build a private operating system for understanding your life—not another chatbot that gives advice.
+
+Emphasize the inspectable portrait, decision principles, boundaries, professional evidence, user validation, durable artifact, and optional status of symbolic frameworks. Add an explicit statement that MeOS is not therapy, medical care, diagnosis, or crisis support.
+
+### Phase B — Product differentiation after launch-critical reliability is established
+
+#### B.1 Make knowledge status visible
+
+Where supported by the product, distinguish:
+
+- directly stated;
+- user-confirmed;
+- inferred;
+- needs clarification;
+- potentially conflicting; and
+- potentially outdated.
+
+Do not silently turn an inference into an approved fact or replace approved knowledge without review.
+
+#### B.2 Establish tangible recurring Pro value
+
+Prioritize and validate the value of:
+
+- periodic gap review;
+- stale-knowledge detection;
+- suggested updates;
+- conflict review;
+- version history and restoration;
+- multiple profiles or contexts;
+- tool-specific export packages; and
+- scheduled profile health checks.
+
+Do not advertise these as delivered benefits until each capability is shipped and verified.
+
+#### B.3 Add lightweight cross-tool delivery
+
+Recommended sequence:
+
+1. Accurate tool-specific installation instructions.
+2. Optimized files or instructions for ChatGPT, Claude, Gemini, and Cursor.
+3. One-click copy or downloadable adapter packages.
+4. Read-only MCP access.
+5. Permissioned update proposals only after provenance and review controls are reliable.
+
+Do not prioritize ambient capture, meeting transcription, a general-purpose assistant, broad autonomous actions, or a large integration catalog solely in response to competitors.
+
+### Pricing recommendation
+
+Keep the current $20 Pro price as a hypothesis during the first cohort. Do not reduce it merely because Creed's hosted personal plan is lower. Test whether users perceive and value ALVIRA as a deeper elicitation and validation product. Revisit pricing if users consistently treat it as a simple profile-file utility or cannot identify recurring value after compilation.
+
+### Competitive-response acceptance criteria
+
+- At least 8 of the first 10 users describe ALVIRA as more than an AI memory, prompt, or context-file utility.
+- At least 7 of the first 10 can explain the benefit of validation.
+- Users can identify a concrete reason to return after the first compilation.
+- No participant incorrectly believes ALVIRA passively monitors their activity.
+- The homepage demonstrates the interview mechanism and real output before requiring a pricing decision.
+- MeOS is understood as an applied knowledge system with a companion, not only as an AI coach.
+
+## End-to-End Walkthrough Results
+
+| Step | Journey checkpoint | Health | Evidence / notes |
+|---:|---|---|---|
+| 1 | Desktop homepage and value proposition | **Pass with concerns** | Clear hero and CTA. Homepage remains long; comparison claims need maintenance. |
+| 2 | Mobile homepage | **Pass** | Responsive hero and CTA are readable at 390×844. Header is dense but usable. |
+| 3 | Mobile navigation | **Pass** | Menu opens, closes, exposes semantic expanded state, and contains Interview, Pricing, MeOS, and Sign In. |
+| 4 | Monthly/annual pricing selection | **Pass with concerns** | `$20/mo` and `$192/year` work. Several paid features remain labeled `coming soon`. |
+| 5 | Free CTA to offering selection | **Pass** | AI Context Profile and MeOS selection is understandable; sign-in-to-save message is visible. |
+| 6 | AI profile scope selection | **Pass with concerns** | Topic selection and start gating work. Upload prerequisite is unexplained while disabled. |
+| 7 | First AI-generated question | **Needs fix** | Eventually succeeds, but a roughly six-second blank `0 of 0` state looks broken. |
+| 8 | Answer submission and adaptive follow-up | **Pass** | Relevant follow-up generated; progress moved to 1 of 19 and 5%. |
+| 9 | Knowledge-file compilation | **FAIL — blocker** | Client exception reading `identity`; interface stuck on `Compiling...`. |
+| 10 | Guest progress continuity | **Pass in this session** | Interview state survived navigation and viewport changes. Cross-browser/restart persistence was not tested. |
+| 11 | Signup, login, and reset entry | **Partial** | Pages and local validation work. Account creation, email delivery, and reset completion were not executed. |
+| 12 | MeOS landing page and offer explanation | **Pass with concerns** | Offer and total cost are clearer. Base-plan eligibility still conflicts across surfaces. |
+| 13 | Free MeOS preview CTA | **FAIL — blocker** | `preview=true` became `preview=false`, then the paid-access gate appeared. |
+| 14 | MeOS onboarding data entry | **FAIL — blocker** | Selecting a theme overwrote the free-form current-chapter answer. |
+| 15 | Pro, Lifetime, MeOS Build, and Care checkout handoff | **Needs fix before payment** | Correct prices load, but checkout branding and feature/prerequisite copy are inconsistent. |
+| 16 | Legal, refund, support, and data pages | **Pass with concerns** | All routes load. MeOS base-plan rule is inconsistent; legal review was outside this UX audit. |
+| 17 | Mobile pricing and interview | **Pass with concerns** | Core controls remain usable. Interview footer and action region are dense on small screens. |
+| 18 | Paid entitlement, cancellation, export, and deletion | **Not verified** | Requires a controlled account and Stripe test transaction. |
+
+## Launch Gate: Required Smoke Test
+
+Run this exact test after the P0 fixes and record the result.
+
+### AI Context Profile
+
+1. Create a new account from a clean browser profile.
+2. Verify the account email and sign in.
+3. Start a free AI Context Profile interview.
+4. Submit at least three substantive answers.
+5. Reload and confirm the interview resumes without data loss.
+6. Generate knowledge files.
+7. Preview and download every generated Markdown file.
+8. Open the Markdown files and verify that content reflects the submitted answers, distinguishes direct statements from inference, and contains no content from another user.
+9. Run the same flow on a 390×844 viewport.
+
+### Payment and entitlement
+
+1. Upgrade the test account through Stripe test mode.
+2. Verify the correct product name, amount, renewal terms, merchant identity, and return URL.
+3. Confirm the webhook grants exactly the purchased entitlement.
+4. Retry the webhook and confirm no duplicate entitlement or billing state is created.
+5. Cancel or fail a second checkout and confirm access is not granted.
+6. Test cancellation, refund handling, export, and deletion.
+
+### MeOS
+
+1. Open the public free-preview CTA while signed out.
+2. Confirm `preview=true` remains active and the advertised preview is usable without payment.
+3. Enter a unique current-chapter sentence and select multiple themes.
+4. Confirm the sentence remains unchanged.
+5. Complete the bounded preview and verify the promised output.
+6. Purchase or provision the required base plan and MeOS Build in the intended order.
+7. Confirm MeOS access is granted only when the documented prerequisites are met.
+
+## First-10 Operating Recommendation After the Gate Passes
+
+Treat the first 10 as a monitored founding cohort, not an anonymous public launch.
+
+- Give each user a named support contact and a response-time expectation.
+- Ask permission before reviewing any private interview content for debugging.
+- Instrument only operational events needed to locate failures; do not log raw interview answers by default.
+- Track completion of onboarding, first answer, third answer, compilation, download, return visit, and support request.
+- Conduct short interviews after users reach the first output, not only after signup.
+- Ask each participant, in their own words, how ALVIRA differs from an AI memory or activity-capture tool after completing the core onboarding path.
+- Ask why they would use ALVIRA instead of asking ChatGPT or Claude to write a personal profile manually.
+- Ask whether the interview or the generated repository is more valuable and what would make them return after the first compilation.
+- Ask whether $20 per month feels justified and record the reason rather than only a yes/no response.
+- Keep manual recovery and file-delivery procedures ready for every participant.
+- Do not broaden acquisition until compilation, account lifecycle, and entitlement checks are consistently passing.
+
+## Evidence Index
+
+Primary accepted screenshots from this audit:
+
+- `03-pricing-desktop.png` — monthly pricing
+- `04-pricing-annual-desktop.png` — annual pricing
+- `05-offering-selection-desktop.png` — initial product selection
+- `06-ai-profile-scope-desktop.png` — AI Context Profile setup
+- `07-interview-first-question-desktop.png` — initialized first question
+- `08-interview-followup-desktop.png` — adaptive follow-up
+- `10-knowledge-files-result.png` — stuck compilation state
+- `11-signup-desktop.png` — account creation entry
+- `12-meos-desktop.png` — MeOS landing page
+- `13-meos-onboarding-desktop.png` — MeOS setup
+- `14-meos-preview-access-gate.png` — free-preview failure and overwritten field
+- `15-pro-checkout-desktop.png` — Stripe checkout
+- `16-home-mobile.png` — mobile homepage
+- `17-mobile-navigation-open.png` — mobile menu
+- `18-pricing-mobile.png` — mobile pricing
+- `19-interview-mobile.png` — mobile interview
+- `20-home-desktop-valid.png` — current desktop homepage
+
+The original `01-home-desktop.png` and `02-home-desktop-full.png` captures were rejected as invalid capture artifacts and were not used as audit evidence.
+
+## Audit Limits
+
+- No real account was created.
+- No email was sent.
+- No real or test payment was submitted.
+- No authenticated dashboard, profile management, version history, export history, subscription management, connector, cancellation, refund, or deletion flow was available for verification.
+- Visual inspection coered current desktop and a 390×844 mobile viewport, not the full device/browser matrix.
+- Accessibility checks were limited to visible contrast/layout review and accessible DOM signals such as headings, roles, selected/pressed state, expanded navigation state, and form labels. This was not a full WCAG audit and did not include screen-reader testing, full keyboard-only testing, automated contrast measurement, zoom/reflow at 200–400%, or reduced-motion verification.
+- Legal language was checked for internal consistency only; this is not legal advice or counsel review.
+- The Littlebird comparison is based on publicly available official product, pricing, integration, and privacy materials rather than hands-on product testing.
+- Direct-competitor classifications are based on publicly available official product and pricing materials. Creed, PersonalOS, CoreMem, Pecan, MultiPass, and Purpose were not independently tested hands-on in this audit.
+- The assessment reflects the live site state observed on the audit date and may become stale after deployment.

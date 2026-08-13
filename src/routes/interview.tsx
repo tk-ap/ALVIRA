@@ -294,7 +294,7 @@ function InterviewPage() {
           </div>
         </section>
 
-        <section className="border-t border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28">
+        <section id="portable" className="scroll-mt-20 border-t border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-2xl">
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">

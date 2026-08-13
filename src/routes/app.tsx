@@ -27,6 +27,14 @@ import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterv
 // Max height (px) of the answer textarea before it scrolls instead of growing.
 const MAX_ANSWER_INPUT_HEIGHT = 160;
 
+type ResumableDraft = {
+  offering: "context" | "meos";
+  topic: string;
+  state: InterviewState;
+  savedAt?: number;
+  source: "browser" | "account";
+};
+
 // ── Initialize empty interview state ──
 function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context", preview = false): InterviewState {
   const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
@@ -286,12 +294,13 @@ function AppPage() {
   const activeGroup = selectedGroups.length === 1 ? selectedGroups[0] : null;
   const { offering: offeringSearch, preview: previewSearch } = Route.useSearch();
   const isPreview = offeringSearch === "meos" && previewSearch === true;
-  const [offering, setOffering] = useState<"context" | "meos" | null>(offeringSearch === "meos" ? "meos" : null);
+  const [offering, setOffering] = useState<"context" | "meos" | null>(offeringSearch === "meos" ? "meos" : "context");
   type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
   const [meosPhase, setMeosPhase] = useState<MeosPhase>("core");
 
   // Interview state (the single source of truth)
   const [state, setState] = useState<InterviewState | null>(null);
+  const [resumeDraft, setResumeDraft] = useState<ResumableDraft | null>(null);
   const [answer, setAnswer] = useState("");
   const [waiting, setWaiting] = useState(false);
   const [interviewError, setInterviewError] = useState("");
@@ -338,6 +347,7 @@ function AppPage() {
   const confThreshold = playbook.completion.minimumConfidence;
   const coveredCount = state ? countCovered(graph, state, confThreshold) : 0;
   const totalDomains = graph.length;
+  const answerCount = state?.history.filter((message) => message.role === "user").length ?? 0;
   const gaps = state ? detectGaps(graph, state, confThreshold) : [];
   const hasGaps = gaps.length > 0;
   const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
@@ -430,14 +440,14 @@ function AppPage() {
             const serverDraft = await getInterviewDraft().catch(() => null);
             const draft = localRaw ? JSON.parse(localRaw) : serverDraft;
             if (draft?.state && !cancelled) {
-              setOffering(draft.offering === "meos" ? "meos" : "context");
-              setTopic(draft.topic ?? draft.state.topic);
-              setTier(draft.state.tier as Tier);
-              setState(draft.state as InterviewState);
-              setScreen("interview");
+              setResumeDraft({
+                offering: draft.offering === "meos" ? "meos" : "context",
+                topic: draft.topic ?? draft.state.topic,
+                state: draft.state as InterviewState,
+                savedAt: draft.savedAt,
+                source: localRaw ? "browser" : "account",
+              });
               draftRestoredRef.current = true;
-              window.localStorage.removeItem(`alvira-draft-${draft.offering === "meos" ? "meos" : "context"}`);
-              await clearInterviewDraft().catch(() => {});
             }
           } catch { /* malformed or unavailable draft */ }
         }
@@ -460,11 +470,13 @@ function AppPage() {
           if (raw) {
             const draft = JSON.parse(raw);
             if (draft?.state && !cancelled) {
-              setOffering(draft.offering === "meos" ? "meos" : "context");
-              setTopic(draft.topic ?? draft.state.topic);
-              setTier(draft.state.tier as Tier);
-              setState(draft.state as InterviewState);
-              setScreen("interview");
+              setResumeDraft({
+                offering: draft.offering === "meos" ? "meos" : "context",
+                topic: draft.topic ?? draft.state.topic,
+                state: draft.state as InterviewState,
+                savedAt: draft.savedAt,
+                source: "browser",
+              });
             }
           }
         } catch { /* malformed or unavailable draft */ }
@@ -474,6 +486,29 @@ function AppPage() {
     });
     return () => { cancelled = true; };
   }, []);
+
+  const handleResumeDraft = () => {
+    if (!resumeDraft) return;
+    setOffering(resumeDraft.offering);
+    setTopic(resumeDraft.topic);
+    setTier(resumeDraft.state.tier);
+    setState(resumeDraft.state);
+    setResumeDraft(null);
+    setScreen("interview");
+  };
+
+  const handleStartOver = async () => {
+    const draftOffering = resumeDraft?.offering ?? offering ?? "context";
+    try { window.localStorage.removeItem(`alvira-draft-${draftOffering}`); } catch { /* storage may be unavailable */ }
+    if (authUser) await clearInterviewDraft().catch(() => {});
+    setResumeDraft(null);
+    setState(null);
+    setTopic("");
+    setSelectedTopics([]);
+    setCustomTopic("");
+    setOffering(offeringSearch === "meos" ? "meos" : "context");
+    setScreen("start");
+  };
 
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
   const askNextQuestion = async (currentState: InterviewState, isClarification = false) => {
@@ -1218,7 +1253,7 @@ function AppPage() {
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="font-mono text-xs text-gray-600 dark:text-gray-400">
-                  {coveredCount} of {totalDomains} domains covered
+                  Starter profile progress · {answerCount} answer{answerCount === 1 ? "" : "s"}
                 </span>
                 {domainLabel && (
                   <span className="font-mono text-xs text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded">
@@ -1275,7 +1310,7 @@ function AppPage() {
               {hasQualityWarning && !waiting && (
                 <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-4 py-3">
                   <p className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">
-                    ⚠ Your knowledge files may not be very useful yet
+                    Your starter profile is taking shape
                   </p>
                   <ul className="text-sm text-amber-700 dark:text-amber-300 list-disc list-inside space-y-0.5">
                     {qualityWarnings.map((w, i) => (
@@ -1283,7 +1318,7 @@ function AppPage() {
                     ))}
                   </ul>
                   <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                    You can still generate now, but consider continuing the interview with more detailed responses for better results.
+                    You can generate now, or answer another question or two for a more specific result.
                   </p>
                 </div>
               )}
@@ -1540,51 +1575,40 @@ function AppPage() {
       {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
         <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
+          {resumeDraft && (
+            <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">
+              <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Saved progress found</p>
+              <h1 id="resume-heading" className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">Continue your previous interview?</h1>
+              <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+                {resumeDraft.topic} · {resumeDraft.state.history.filter((message) => message.role === "user").length} answers saved {resumeDraft.source === "browser" ? "in this browser" : "to your account"}.
+              </p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={handleResumeDraft} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                  Resume interview
+                </button>
+                <button type="button" onClick={() => void handleStartOver()} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:text-gray-100">
+                  Start a new interview
+                </button>
+              </div>
+            </section>
+          )}
           <div className="text-center mb-8">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            {!resumeDraft && <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
               {offering === "meos" ? "Build your personal operating system" : "Build your AI profile"}
-            </h1>
+            </h1>}
             <p className="text-gray-600 dark:text-gray-400">
               {offering === "meos"
                 ? "A guided interview that captures your values, patterns, goals, and direction — then compiles them into a private integrated portrait and decision companion."
-                : "ALVIRA interviews you to capture themes, ideas, voice, and context — then compiles it into structured Markdown knowledge files transferrable between any AI model."
+                : "Get a useful starter profile in about 10–15 minutes. You can deepen it over time, inspect every file, and use it across your AI tools."
               }
             </p>
           </div>
 
           {/* Offering selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {/* a11y: the selected card is announced via aria-pressed and shown via a distinct
-                border/tint/ring (emerald = AI Profile, human = MeOS) plus a ✓ indicator —
-                the selection never relies on color alone. */}
-            {[
-              { key: "context" as const, title: "AI Context Profile", label: "<ai-context-profile />", description: "Captures communication, decision-making, workflows, relationships, goals, values, and boundaries for use across AI agents." },
-              { key: "meos" as const, title: "MeOS — Personal Alignment System", label: "<me-os />", description: "Creates an integrated portrait and private interactive companion for personal and professional alignment." },
-            ].map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                aria-pressed={offering === item.key}
-                onClick={() => { setOffering(item.key); setStartError(""); }}
-                className={`text-left rounded-lg border p-4 transition-colors ${offering === item.key
-                  ? item.key === "context"
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 ring-2 ring-emerald-500/30"
-                    : "border-human-dark bg-human-soft dark:border-human dark:bg-human-dark/10 ring-2 ring-human/40"
-                  : item.key === "context"
-                    ? "border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-800 hover:border-emerald-400"
-                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600"}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="font-semibold text-gray-900 dark:text-gray-100">{item.title}</div>
-                  {offering === item.key && (
-                    <span aria-hidden="true" className={`flex-shrink-0 font-mono text-sm font-bold ${item.key === "context" ? "text-emerald-700 dark:text-emerald-400" : "text-human-dark dark:text-human"}`}>✓</span>
-                  )}
-                </div>
-                <div className="mt-2 font-mono text-xs text-emerald-700 dark:text-emerald-400">{item.label}</div>
-                <div className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">{item.description}</div>
-              </button>
-            ))}
-          </div>
+          {offering !== "meos" && <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-sm leading-relaxed text-gray-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-gray-300">
+            <strong className="text-gray-900 dark:text-gray-100">What you&apos;ll get:</strong> five editable Markdown files covering who you are, how you decide, what you need, your boundaries, and how you work.
+            <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal alignment and decision support? <a href="/meos" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore MeOS separately →</a></span>
+          </div>}
           {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
 
           {/* Topic input */}

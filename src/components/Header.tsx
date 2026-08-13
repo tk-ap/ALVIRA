@@ -48,7 +48,7 @@ export function Header() {
 
   const closeMenu = () => setMenuOpen(false);
   const mobileCtaHref = user ? "/dashboard" : "/signup";
-  const mobileCtaLabel = user ? "Dashboard" : "Get Started";
+  const mobileCtaLabel = user ? "Dashboard" : "Start free";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-warm-gray/20 bg-ink-light/90 backdrop-blur-sm dark:bg-ink/90">
@@ -118,7 +118,7 @@ export function Header() {
           <div className="flex items-center gap-2 md:hidden">
             <a
               href={mobileCtaHref}
-              className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
+              className="min-h-11 whitespace-nowrap inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
             >
               {mobileCtaLabel}
             </a>

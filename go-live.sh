@@ -3,7 +3,7 @@
 #
 # Contract:
 #   VERCEL_TOKEN   (required) — collected from the owner via the go-live flow.
-#   DATABASE_URL   (optional) — passed as a runtime env var when the site uses a DB.
+#   DATABASE_URL   (required) — Postgres connection string used by ALVIRA.
 #   VERCEL_SCOPE   (optional) — team slug; auto-resolved from the token if unset.
 #   VERCEL_TEAM_ID (optional) — team id; auto-resolved from the token if unset.
 #
@@ -16,6 +16,7 @@ cd "$(dirname "$0")"
 umask 002
 
 : "${VERCEL_TOKEN:?set VERCEL_TOKEN (collect it from the owner first)}"
+: "${DATABASE_URL:?set DATABASE_URL (connect a Postgres database before deploying)}"
 PROJECT_NAME="${VERCEL_PROJECT_NAME:-$(basename "$(pwd)")}"
 VERCEL="bunx vercel@latest"
 
@@ -38,24 +39,19 @@ if [ -z "${VERCEL_SCOPE:-}" ] || [ -z "${VERCEL_TEAM_ID:-}" ]; then
 fi
 
 echo "==> building Vercel bundle"
+bun run db:migrate
 bash ./build-vercel.sh
 
 echo "==> deploying${VERCEL_SCOPE:+ (scope: $VERCEL_SCOPE)}"
 # macOS still ships Bash 3.2, where expanding an empty array under `set -u`
 # raises "unbound variable". Use explicit branches so optional arguments are
 # only expanded when they have values.
-if [ -n "${VERCEL_SCOPE:-}" ] && [ -n "${DATABASE_URL:-}" ]; then
+if [ -n "${VERCEL_SCOPE:-}" ]; then
   DEPLOY_OUT="$($VERCEL deploy --prebuilt --yes --token "$VERCEL_TOKEN" \
     --name "$PROJECT_NAME" --scope "$VERCEL_SCOPE" -e "DATABASE_URL=$DATABASE_URL" 2>&1)" || DEPLOY_STATUS=$?
-elif [ -n "${VERCEL_SCOPE:-}" ]; then
-  DEPLOY_OUT="$($VERCEL deploy --prebuilt --yes --token "$VERCEL_TOKEN" \
-    --name "$PROJECT_NAME" --scope "$VERCEL_SCOPE" 2>&1)" || DEPLOY_STATUS=$?
-elif [ -n "${DATABASE_URL:-}" ]; then
-  DEPLOY_OUT="$($VERCEL deploy --prebuilt --yes --token "$VERCEL_TOKEN" \
-    --name "$PROJECT_NAME" -e "DATABASE_URL=$DATABASE_URL" 2>&1)" || DEPLOY_STATUS=$?
 else
   DEPLOY_OUT="$($VERCEL deploy --prebuilt --yes --token "$VERCEL_TOKEN" \
-    --name "$PROJECT_NAME" 2>&1)" || DEPLOY_STATUS=$?
+    --name "$PROJECT_NAME" -e "DATABASE_URL=$DATABASE_URL" 2>&1)" || DEPLOY_STATUS=$?
 fi
 if [ "${DEPLOY_STATUS:-0}" -ne 0 ]; then
   printf '%s\n' "$DEPLOY_OUT" >&2

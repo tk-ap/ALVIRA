@@ -17,7 +17,9 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from, to: [message.to], subject: message.subject, text: message.text }),
   });
-  if (!response.ok) throw new Error(`Email delivery failed (${response.status}): ${await response.text()}`);
+  if (!response.ok) {
+    console.error(`Email delivery failed (${response.status}): ${await response.text()}`);
+  }
 }
 
 export function sendWelcomeEmail(email: string): Promise<void> {

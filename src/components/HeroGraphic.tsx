@@ -16,12 +16,13 @@
  * reduced motion enabled, the graphic renders fully static and visible.
  */
 
-const FRAGMENTS: Array<{ id: string; text: string; y: number; size: number }> = [
-  { id: "f1", text: "I need context before I commit", y: 112, size: 19 },
-  { id: "f2", text: "I value directness over ceremony", y: 162, size: 16.5 },
-  { id: "f3", text: "My best work happens", y: 212, size: 16.5 },
-  { id: "f4", text: "with clear expectations", y: 241, size: 16.5 },
-];
+const FRAGMENTS: Array<{ id: string; text: string; y: number; size: number }> =
+  [
+    { id: "f1", text: "I need context before I commit", y: 112, size: 19 },
+    { id: "f2", text: "I value directness over ceremony", y: 162, size: 16.5 },
+    { id: "f3", text: "My best work happens", y: 212, size: 16.5 },
+    { id: "f4", text: "with clear expectations", y: 241, size: 16.5 },
+  ];
 
 const FILES: Array<{ id: string; label: string; y: number }> = [
   { id: "c1", label: "communication.md", y: 120 },
@@ -56,7 +57,12 @@ export function HeroGraphic() {
       `}</style>
 
       <defs>
-        <pattern id="hg-dotgrid" width="26" height="26" patternUnits="userSpaceOnUse">
+        <pattern
+          id="hg-dotgrid"
+          width="26"
+          height="26"
+          patternUnits="userSpaceOnUse"
+        >
           <circle cx="1.3" cy="1.3" r="0.9" fill="currentColor" />
         </pattern>
         <linearGradient id="hg-rule-fade" x1="0" y1="0" x2="0" y2="1">
@@ -107,7 +113,11 @@ export function HeroGraphic() {
 
       {/* Structured knowledge files — system teal, right */}
       {FILES.map((file, i) => (
-        <g key={file.id} className="hg-fade" style={{ animationDelay: `${0.6 + i * 0.12}s` }}>
+        <g
+          key={file.id}
+          className="hg-fade"
+          style={{ animationDelay: `${0.6 + i * 0.12}s` }}
+        >
           <rect
             x={FILE_X}
             y={file.y}

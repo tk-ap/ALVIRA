@@ -7,7 +7,14 @@ import { ComparisonTable } from "~/components/ComparisonTable";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
-    meta: [{ title: 'Pricing — ALVIRA' }, { name: "description", content: 'Free, Pro ($20/mo), and Lifetime ($399) plans for your AI profile.' }],
+    meta: [
+      { title: "Pricing — ALVIRA" },
+      {
+        name: "description",
+        content:
+          "Free, Pro ($20/mo), and Lifetime ($399) plans for your AI profile.",
+      },
+    ],
   }),
   component: Pricing,
 });
@@ -47,22 +54,55 @@ const lifetimePlan = {
 } as const;
 
 const arguments_ = [
-  { number: "01", title: "Stop repeating yourself.", body: "Every time you switch AI tools or start a new conversation, you're starting from zero. ALVIRA captures how you think, work, communicate, and decide — once — then gives every AI you use the context it needs from the first message. No more explaining your background, your preferences, or your constraints over and over." },
-  { number: "02", title: "Get help that fits you.", body: "Generic AI gives generic answers. ALVIRA profiles your communication style, values, boundaries, decision frameworks, and workflows — so every AI you use responds as if it already knows you. Your AI stops guessing and starts working with you, not at you." },
-  { number: "03", title: "Use and own it anywhere.", body: "Platform-native memory features lock your context inside one tool. ALVIRA generates portable Markdown files that work across ChatGPT, Claude, Gemini, Cursor, and future AI tools. Your knowledge is yours — not trapped inside someone else's ecosystem." },
+  {
+    number: "01",
+    title: "Stop repeating yourself.",
+    body: "Every time you switch AI tools or start a new conversation, you're starting from zero. ALVIRA captures how you think, work, communicate, and decide — once — then gives every AI you use the context it needs from the first message. No more explaining your background, your preferences, or your constraints over and over.",
+  },
+  {
+    number: "02",
+    title: "Get help that fits you.",
+    body: "Generic AI gives generic answers. ALVIRA profiles your communication style, values, boundaries, decision frameworks, and workflows — so every AI you use responds as if it already knows you. Your AI stops guessing and starts working with you, not at you.",
+  },
+  {
+    number: "03",
+    title: "Use and own it anywhere.",
+    body: "Platform-native memory features lock your context inside one tool. ALVIRA generates portable Markdown files that work across ChatGPT, Claude, Gemini, Cursor, and future AI tools. Your knowledge is yours — not trapped inside someone else's ecosystem.",
+  },
 ];
 
 const useCases = [
-  ["Developers use ALVIRA to...", "keep coding standards, architecture decisions, and working preferences available in every coding session."],
-  ["Consultants use ALVIRA to...", "move between clients and AI tools without rebuilding their voice, process, or expertise from scratch."],
-  ["Teams use ALVIRA to...", "turn scattered operational knowledge into durable context every teammate and AI agent can use."],
-  ["Creators use ALVIRA to...", "make every draft sound like them, with their audience, values, and boundaries in view."],
+  [
+    "Developers use ALVIRA to...",
+    "keep coding standards, architecture decisions, and working preferences available in every coding session.",
+  ],
+  [
+    "Consultants use ALVIRA to...",
+    "move between clients and AI tools without rebuilding their voice, process, or expertise from scratch.",
+  ],
+  [
+    "Teams use ALVIRA to...",
+    "turn scattered operational knowledge into durable context every teammate and AI agent can use.",
+  ],
+  [
+    "Creators use ALVIRA to...",
+    "make every draft sound like them, with their audience, values, and boundaries in view.",
+  ],
 ];
 
 const adjacentPlayers = [
-  ["Windsurf", "portable plain-Markdown rules, but developer-only — no elicitation or validation"],
-  ["Khoj", "AI search over your personal notes — no structured, reusable profile"],
-  ["Obsidian", "a knowledge store you assemble by hand — ALVIRA builds yours for you"],
+  [
+    "Windsurf",
+    "portable plain-Markdown rules, but developer-only — no elicitation or validation",
+  ],
+  [
+    "Khoj",
+    "AI search over your personal notes — no structured, reusable profile",
+  ],
+  [
+    "Obsidian",
+    "a knowledge store you assemble by hand — ALVIRA builds yours for you",
+  ],
 ];
 
 const faqs = [
@@ -122,7 +162,10 @@ function Pricing() {
               </p>
               <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">
                 For MeOS pricing, see the{" "}
-                <a href="/meos" className="text-emerald-700 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400">
+                <a
+                  href="/meos"
+                  className="text-emerald-700 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400"
+                >
                   MeOS page
                 </a>
                 .
@@ -131,7 +174,11 @@ function Pricing() {
 
             {/* Billing toggle */}
             <div className="mt-10 flex justify-center">
-              <div role="radiogroup" aria-label="Billing period" className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
+              <div
+                role="radiogroup"
+                aria-label="Billing period"
+                className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50"
+              >
                 <button
                   type="button"
                   onClick={() => setBilling("monthly")}
@@ -177,28 +224,46 @@ function Pricing() {
                     </span>
                   )}
                   <div>
-                    <h2 className="font-mono text-lg font-semibold">{plan.name}</h2>
+                    <h2 className="font-mono text-lg font-semibold">
+                      {plan.name}
+                    </h2>
                     <div className="mt-5 flex items-baseline gap-2">
-                      <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                      <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{plan.cadence}</span>
+                      <span className="text-4xl font-bold tracking-tight">
+                        {plan.price}
+                      </span>
+                      <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
+                        {plan.cadence}
+                      </span>
                     </div>
                     {"annual" in plan && plan.annual && (
                       <div className="mt-2 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
                         <span className="block">Billed $192 annually</span>
-                        <span className="block">$16/mo equivalent · save 20%</span>
+                        <span className="block">
+                          $16/mo equivalent · save 20%
+                        </span>
                       </div>
                     )}
-                    <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
+                    <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                      {plan.description}
+                    </p>
                     {plan.name === "Lifetime" && (
                       <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                        Lifetime access applies to the profile features included with this plan for as long as ALVIRA continues to offer the AI Context Profile service. Your exported profile remains yours permanently.
+                        Lifetime access applies to the profile features included
+                        with this plan for as long as ALVIRA continues to offer
+                        the AI Context Profile service. Your exported profile
+                        remains yours permanently.
                       </p>
                     )}
                   </div>
                   <ul className="mt-8 flex-1 space-y-3 border-t border-gray-200 pt-6 text-sm dark:border-gray-800">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex gap-3 leading-relaxed">
-                        <span className="font-mono text-emerald-700 dark:text-emerald-400" aria-hidden="true">✓</span>
+                        <span
+                          className="font-mono text-emerald-700 dark:text-emerald-400"
+                          aria-hidden="true"
+                        >
+                          ✓
+                        </span>
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -206,46 +271,100 @@ function Pricing() {
                   {plan.name === "Lifetime" && (
                     <>
                       <p className="mt-6 border-t border-amber-200 pt-5 text-xs leading-relaxed text-gray-600 dark:border-amber-900/60 dark:text-gray-400">
-                        MeOS, team workspaces, API access, additional profiles, third-party subscriptions, and future premium products are sold separately.
+                        MeOS, team workspaces, API access, additional profiles,
+                        third-party subscriptions, and future premium products
+                        are sold separately.
                       </p>
-                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">One-time payment. No automatic renewal. Your exported files remain yours permanently.</p>
+                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                        One-time payment. No automatic renewal. Your exported
+                        files remain yours permanently.
+                      </p>
                     </>
                   )}
                   <a
                     href={plan.href}
-                    {...(plan.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
+                    {...(plan.href.startsWith("http")
+                      ? { target: "_blank", rel: "noreferrer" }
+                      : {})}
                     className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 ${
                       plan.featured
                         ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-gray-950 dark:hover:bg-emerald-400"
                         : "border border-gray-300 bg-gray-900 text-white hover:bg-gray-800 dark:border-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200"
                     }`}
                   >
-                    {plan.cta}<span aria-hidden="true" className="ml-2">→</span>
+                    {plan.cta}
+                    <span aria-hidden="true" className="ml-2">
+                      →
+                    </span>
                   </a>
                 </article>
               ))}
             </div>
 
             <p className="mt-8 text-center font-mono text-xs text-gray-500 dark:text-gray-400">
-              <strong>Pro</strong> is best for ongoing use, multiple profiles, and unlimited interviews.{' '}
-              <strong>Lifetime</strong> is best for one permanent profile — it pays for itself in about two years of annual Pro.
+              <strong>Pro</strong> is best for ongoing use, multiple profiles,
+              and unlimited interviews. <strong>Lifetime</strong> is best for
+              one permanent profile — it pays for itself in about two years of
+              annual Pro.
             </p>
             <div className="mx-auto mt-6 max-w-3xl border-t border-gray-200 pt-5 text-left text-xs leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:text-center">
-              <p><strong className="text-gray-700 dark:text-gray-300">Billing:</strong> Pro renews monthly or annually until canceled. Cancel before renewal to avoid the next charge. Your exported Markdown remains yours.</p>
-              <p className="mt-2">Version history and JSON export are roadmap items and are not included in today&apos;s plan comparison. Review <a href="/refunds" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">refund eligibility</a> before purchase.</p>
+              <p>
+                <strong className="text-gray-700 dark:text-gray-300">
+                  Billing:
+                </strong>{" "}
+                Pro renews monthly or annually until canceled. Cancel before
+                renewal to avoid the next charge. Your exported Markdown remains
+                yours.
+              </p>
+              <p className="mt-2">
+                Version history and JSON export are roadmap items and are not
+                included in today&apos;s plan comparison. Review{" "}
+                <a
+                  href="/refunds"
+                  className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400"
+                >
+                  refund eligibility
+                </a>{" "}
+                before purchase.
+              </p>
             </div>
           </div>
         </section>
 
-        <section id="why-alvira" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
+        <section
+          id="why-alvira"
+          className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24"
+        >
           <div className="mx-auto max-w-5xl text-center">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">The case for context</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Why pay for ALVIRA?</h2>
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              The case for context
+            </span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+              Why pay for ALVIRA?
+            </h2>
             <div className="mt-16 space-y-16 sm:mt-20 sm:space-y-24">
               {arguments_.map((item, index) => (
-                <article key={item.number} className={`grid gap-8 text-left md:grid-cols-[120px_1fr] ${index > 0 ? "border-t border-gray-200 pt-16 dark:border-gray-800 sm:pt-24" : ""}`}>
-                  <div className="flex items-start gap-4 md:block"><span className="font-mono text-3xl tabular-nums text-emerald-600 dark:text-emerald-400">{item.number}</span><span className="mt-4 hidden h-px w-12 bg-emerald-500 md:block" aria-hidden="true" /></div>
-                  <div className="max-w-3xl"><h3 className="text-3xl font-bold tracking-tight sm:text-4xl">{item.title}</h3><p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-gray-400">{item.body}</p></div>
+                <article
+                  key={item.number}
+                  className={`grid gap-8 text-left md:grid-cols-[120px_1fr] ${index > 0 ? "border-t border-gray-200 pt-16 dark:border-gray-800 sm:pt-24" : ""}`}
+                >
+                  <div className="flex items-start gap-4 md:block">
+                    <span className="font-mono text-3xl tabular-nums text-emerald-600 dark:text-emerald-400">
+                      {item.number}
+                    </span>
+                    <span
+                      className="mt-4 hidden h-px w-12 bg-emerald-500 md:block"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="max-w-3xl">
+                    <h3 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                      {item.title}
+                    </h3>
+                    <p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+                      {item.body}
+                    </p>
+                  </div>
                 </article>
               ))}
             </div>
@@ -254,35 +373,93 @@ function Pricing() {
 
         <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
           <div className="mx-auto max-w-5xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Already useful in the real world.</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Already useful in the real world.
+            </h2>
             <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {useCases.map(([label, body]) => <div key={label}><h3 className="font-mono text-sm">{label}</h3><p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{body}</p></div>)}
+              {useCases.map(([label, body]) => (
+                <div key={label}>
+                  <h3 className="font-mono text-sm">{label}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                    {body}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <section id="comparison" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
+        <section
+          id="comparison"
+          className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24"
+        >
           <div className="mx-auto max-w-5xl text-center">
-            <div className="mb-10"><span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">How ALVIRA compares</span><h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Context you can keep — everywhere.</h2><p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, and export structured files you own.</p></div>
+            <div className="mb-10">
+              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                How ALVIRA compares
+              </span>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                Context you can keep — everywhere.
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
+                Platform memory can turn your context into lossy model-generated
+                prose. ALVIRA is designed to elicit, validate, and export
+                structured files you own.
+              </p>
+            </div>
             <ComparisonTable />
-            <p className="mx-auto mt-10 max-w-2xl text-lg font-semibold leading-snug">Most tools don’t let you elicit, validate, and export your AI context to use everywhere.</p>
-            <p className="mx-auto mt-6 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Adjacent players: {adjacentPlayers.map(([name, detail], index) => <span key={name}>{index > 0 ? <span className="mx-2 text-gray-300 dark:text-gray-600" aria-hidden="true">·</span> : null}<strong className="font-mono text-xs font-semibold">{name}</strong> — {detail}</span>)}</p>
-            <p className="mt-8 font-mono text-xs text-gray-500 dark:text-gray-400">Last reviewed: August 2026</p>
+            <p className="mx-auto mt-10 max-w-2xl text-lg font-semibold leading-snug">
+              Most tools don’t let you elicit, validate, and export your AI
+              context to use everywhere.
+            </p>
+            <p className="mx-auto mt-6 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+              Adjacent players:{" "}
+              {adjacentPlayers.map(([name, detail], index) => (
+                <span key={name}>
+                  {index > 0 ? (
+                    <span
+                      className="mx-2 text-gray-300 dark:text-gray-600"
+                      aria-hidden="true"
+                    >
+                      ·
+                    </span>
+                  ) : null}
+                  <strong className="font-mono text-xs font-semibold">
+                    {name}
+                  </strong>{" "}
+                  — {detail}
+                </span>
+              ))}
+            </p>
+            <p className="mt-8 font-mono text-xs text-gray-500 dark:text-gray-400">
+              Last reviewed: August 2026
+            </p>
           </div>
         </section>
 
         <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
           <div className="mx-auto max-w-4xl text-center">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">FAQ</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Questions, answered.</h2>
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              FAQ
+            </span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+              Questions, answered.
+            </h2>
             <div className="mt-10 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
               {faqs.map(([question, answer]) => (
                 <details key={question} className="group py-5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-400 [&::-webkit-details-marker]:hidden">
                     {question}
-                    <span className="font-mono text-xl font-normal text-emerald-700 transition-transform group-open:rotate-45 dark:text-emerald-400" aria-hidden="true">+</span>
+                    <span
+                      className="font-mono text-xl font-normal text-emerald-700 transition-transform group-open:rotate-45 dark:text-emerald-400"
+                      aria-hidden="true"
+                    >
+                      +
+                    </span>
                   </summary>
-                  <p className="mt-3 max-w-2xl pr-8 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{answer}</p>
+                  <p className="mt-3 max-w-2xl pr-8 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                    {answer}
+                  </p>
                 </details>
               ))}
             </div>
@@ -291,15 +468,24 @@ function Pricing() {
 
         <section className="px-6 py-20 text-center sm:px-8 sm:py-28">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to stop repeating yourself?</h2>
-            <p className="mt-4 text-base text-gray-600 dark:text-gray-400">Build once. Bring your context everywhere.</p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Ready to stop repeating yourself?
+            </h2>
+            <p className="mt-4 text-base text-gray-600 dark:text-gray-400">
+              Build once. Bring your context everywhere.
+            </p>
             <a
               href="/app"
               className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200 dark:focus-visible:outline-emerald-400"
             >
-              Build my AI profile <span aria-hidden="true" className="ml-2">→</span>
+              Build my AI profile{" "}
+              <span aria-hidden="true" className="ml-2">
+                →
+              </span>
             </a>
-            <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">Free to start · No credit card · Portable Markdown</p>
+            <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">
+              Free to start · No credit card · Portable Markdown
+            </p>
           </div>
         </section>
       </main>

@@ -81,7 +81,10 @@ export function Header() {
             <a href="/pricing" className={linkClass}>
               Pricing
             </a>
-            <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
+            <a
+              href="/meos"
+              className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
+            >
               MeOS
             </a>
             {user === undefined ? (
@@ -160,7 +163,11 @@ export function Header() {
           <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>
             Pricing
           </a>
-          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>
+          <a
+            href="/meos"
+            onClick={closeMenu}
+            className={`${mobileLinkClass} text-system dark:text-system`}
+          >
             MeOS
           </a>
           {user ? (
@@ -169,7 +176,11 @@ export function Header() {
             </a>
           ) : null}
           {user ? (
-            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>
+            <a
+              href="/integrations"
+              onClick={closeMenu}
+              className={mobileLinkClass}
+            >
               AI Integrations
             </a>
           ) : null}

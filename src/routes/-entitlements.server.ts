@@ -8,10 +8,15 @@ import { isOwnerEmail } from "~/lib/access";
 
 // User is resolved by the caller (in `-auth.ts`), so this module needs no
 // cookie/session plumbing of its own.
-export async function requireEntitlement(user: { id: string; email?: string }, product: string): Promise<void> {
+export async function requireEntitlement(
+  user: { id: string; email?: string },
+  product: string,
+): Promise<void> {
   if (isOwnerEmail(user.email)) return;
   if (!(await hasEntitlement(user.id, product))) {
-    throw new Error(`An active ${product.replace(/_/g, " ")} entitlement is required.`);
+    throw new Error(
+      `An active ${product.replace(/_/g, " ")} entitlement is required.`,
+    );
   }
 }
 
@@ -19,7 +24,11 @@ export function requireMeosPreview(user: { id: string }): void {
   if (!user?.id) throw new Error("Authentication required.");
 }
 
-export async function requireMeos(user: { id: string; email: string; tier: string }): Promise<void> {
+export async function requireMeos(user: {
+  id: string;
+  email: string;
+  tier: string;
+}): Promise<void> {
   if (isOwnerEmail(user.email)) return;
   const hasComp = !!(await getMeosComp(user.email));
   if (!hasComp && user.tier !== "pro" && user.tier !== "lifetime") {

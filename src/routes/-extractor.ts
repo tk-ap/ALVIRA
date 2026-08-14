@@ -50,7 +50,9 @@ export const extractClaims = createServerFn({ method: "POST" })
       throw new Error("Document text is required.");
     }
     if (d.text.length > MAX_INPUT_CHARS) {
-      throw new Error(`Document is too large — please upload a document under ${Math.round(MAX_INPUT_CHARS / 1000)}k characters.`);
+      throw new Error(
+        `Document is too large — please upload a document under ${Math.round(MAX_INPUT_CHARS / 1000)}k characters.`,
+      );
     }
     if (!d.tier || !["personal", "team", "enterprise"].includes(d.tier)) {
       throw new Error("Invalid tier.");
@@ -69,9 +71,12 @@ export const extractClaims = createServerFn({ method: "POST" })
 
     const openai = getOpenAIClient();
 
-    const graph = data.offering === "meos" ? getMeosGraph() : getKnowledgeGraph(data.tier);
+    const graph =
+      data.offering === "meos" ? getMeosGraph() : getKnowledgeGraph(data.tier);
     const domainIds = new Set(graph.map((d) => d.id));
-    const catalog = graph.map((d) => `- ${d.id}: ${d.label} — ${d.description}`).join("\n");
+    const catalog = graph
+      .map((d) => `- ${d.id}: ${d.label} — ${d.description}`)
+      .join("\n");
 
     const systemPrompt = `You are Alvira, an AI Knowledge Elicitation Agent. Your job is to extract knowledge claims from a document a user uploaded, so the claims can seed a knowledge interview.
 
@@ -110,7 +115,11 @@ Respond ONLY with a JSON object of the form:
 
     const raw = response.choices[0]?.message?.content || "{}";
 
-    let parsed: { claims?: unknown; uncoveredDomains?: unknown; summary?: unknown };
+    let parsed: {
+      claims?: unknown;
+      uncoveredDomains?: unknown;
+      summary?: unknown;
+    };
     try {
       parsed = JSON.parse(raw);
     } catch {
@@ -123,11 +132,13 @@ Respond ONLY with a JSON object of the form:
       for (const c of parsed.claims.slice(0, MAX_CLAIMS)) {
         const claim = c as Partial<ExtractionClaim>;
         if (!claim || typeof claim !== "object") continue;
-        const domainId = typeof claim.domainId === "string" ? claim.domainId : "";
+        const domainId =
+          typeof claim.domainId === "string" ? claim.domainId : "";
         const text = typeof claim.text === "string" ? claim.text.trim() : "";
         if (!domainIds.has(domainId) || !text || text.length < 8) continue;
         const confidence =
-          typeof claim.confidence === "number" && Number.isFinite(claim.confidence)
+          typeof claim.confidence === "number" &&
+          Number.isFinite(claim.confidence)
             ? Math.min(1, Math.max(0, claim.confidence))
             : 0.5;
         if (confidence < MIN_CLAIM_CONFIDENCE) continue;
@@ -135,16 +146,19 @@ Respond ONLY with a JSON object of the form:
           domainId,
           text: text.slice(0, 800),
           confidence,
-          evidence: typeof claim.evidence === "string" && claim.evidence.trim()
-            ? claim.evidence.trim().slice(0, 300)
-            : undefined,
+          evidence:
+            typeof claim.evidence === "string" && claim.evidence.trim()
+              ? claim.evidence.trim().slice(0, 300)
+              : undefined,
         });
       }
     }
 
     const uncoveredDomains = Array.isArray(parsed.uncoveredDomains)
       ? parsed.uncoveredDomains
-          .filter((id): id is string => typeof id === "string" && domainIds.has(id))
+          .filter(
+            (id): id is string => typeof id === "string" && domainIds.has(id),
+          )
           .slice(0, graph.length)
       : [];
 

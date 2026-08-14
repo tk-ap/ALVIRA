@@ -33,9 +33,15 @@ export const joinTeamWaitlist = createServerFn({ method: "POST" })
     return {
       name: d.name.trim().slice(0, 200),
       email: d.email.trim().toLowerCase().slice(0, 254),
-      company: (typeof d.company === "string" ? d.company.trim() : "").slice(0, 200),
+      company: (typeof d.company === "string" ? d.company.trim() : "").slice(
+        0,
+        200,
+      ),
       teamSize,
-      useCase: (typeof d.useCase === "string" ? d.useCase.trim() : "").slice(0, 2000),
+      useCase: (typeof d.useCase === "string" ? d.useCase.trim() : "").slice(
+        0,
+        2000,
+      ),
     };
   })
   .handler(async ({ data }) => {
@@ -48,8 +54,16 @@ export const joinTeamWaitlist = createServerFn({ method: "POST" })
     });
 
     await Promise.all([
-      sendEmail({ to: data.email, subject: "You're on the ALVIRA Team waitlist", text: `Hi ${data.name}, you're on the list. We'll reach out when the ALVIRA Team tier is ready for early access.` }),
-      sendEmail({ to: "contextforge-18281ce4@ctomail.io", subject: `Team waitlist signup: ${data.name}${data.company ? ` (${data.company})` : ""}`, text: `New team waitlist submission:\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || "(not provided)"}\nTeam size: ${data.teamSize || "(not provided)"}\nUse case: ${data.useCase || "(not provided)"}` }),
+      sendEmail({
+        to: data.email,
+        subject: "You're on the ALVIRA Team waitlist",
+        text: `Hi ${data.name}, you're on the list. We'll reach out when the ALVIRA Team tier is ready for early access.`,
+      }),
+      sendEmail({
+        to: "contextforge-18281ce4@ctomail.io",
+        subject: `Team waitlist signup: ${data.name}${data.company ? ` (${data.company})` : ""}`,
+        text: `New team waitlist submission:\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || "(not provided)"}\nTeam size: ${data.teamSize || "(not provided)"}\nUse case: ${data.useCase || "(not provided)"}`,
+      }),
     ]);
 
     return { ok: true };

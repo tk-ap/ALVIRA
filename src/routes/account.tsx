@@ -142,7 +142,12 @@ function AccountPage() {
               </div>
 
               {/* Upgrade section */}
-              {limits.tier === "free" && !limits.isOwner ? (
+              {limits.isOwner ? (
+                <div className="rounded-lg border border-violet-300 bg-violet-50/60 p-5 dark:border-violet-800 dark:bg-violet-950/30">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">Owner access overlay</h2>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">All features are unlocked for administration and testing. Your customer-facing plan reference remains <span className="font-mono uppercase">{limits.tier}</span>.</p>
+                </div>
+              ) : limits.tier === "free" ? (
                 <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 overflow-hidden">
                   <div className="px-5 py-4 border-b border-emerald-200 dark:border-emerald-800">
                     <h2 className="font-semibold text-gray-900 dark:text-gray-100">Upgrade your plan</h2>

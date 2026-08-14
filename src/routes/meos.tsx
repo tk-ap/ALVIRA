@@ -62,7 +62,7 @@ function MeosPage() {
         if (!user) { setLoading(false); return; }
         setAuthenticated(true);
         const entitlements = await getEntitlements().catch(() => []);
-        if ((user.tier === "pro" || user.tier === "lifetime") && entitlements.includes("meos_build")) { setCanAccess(true); }
+        if (user.isOwner || ((user.tier === "pro" || user.tier === "lifetime") && entitlements.includes("meos_build"))) { setCanAccess(true); }
         if (authenticated || user.id) {
           const result = await getMeosProfiles();
           setProfiles(result as Profile[]); setSelected((result[0] as Profile | undefined)?.id ?? "");

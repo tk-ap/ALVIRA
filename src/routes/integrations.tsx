@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser, listProfiles } from "./-auth";
+import { hasPaidFeatureAccess } from "~/lib/access";
 
 export const Route = createFileRoute("/integrations")({
   head: () => ({
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/integrations")({
 });
 
 type Profile = { id: string; topic: string; tier: string; updated_at: string };
-type User = { id: string; email: string; tier: string };
+type User = { id: string; email: string; tier: string; isOwner?: boolean };
 
 const providers = [
   { name: "ChatGPT", mark: "GPT", description: "Use your ALVIRA profile as durable instructions for conversations and custom GPT workflows.", url: "https://chatgpt.com/", status: "Guided setup" },
@@ -42,7 +43,7 @@ function IntegrationsPage() {
     }).catch((e) => setError(e instanceof Error ? e.message : "Unable to load integrations."));
   }, []);
 
-  const paid = user?.tier === "pro" || user?.tier === "lifetime";
+  const paid = hasPaidFeatureAccess(user);
   const profile = profiles.find((item) => item.id === selectedProfile);
 
   return <div className="min-h-dvh bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">

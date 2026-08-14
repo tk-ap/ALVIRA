@@ -1,6 +1,7 @@
 // ── Auth server functions ──
 import { compare, hash as hashPassword } from "bcryptjs";
 import { createServerFn } from "@tanstack/react-start";
+import { isOwnerEmail } from "~/lib/access";
 import { deleteCookie, getCookie } from "@tanstack/react-start/server";
 import {
   getDb,
@@ -202,6 +203,11 @@ export const claimPurchase = createServerFn({ method: "POST" })
 export const getEntitlements = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
   const entitlements = await listEntitlements(user.id);
+  if (isOwnerEmail(user.email)) {
+    for (const product of ["owner_all_access", "meos_build", "meos_care", "ai_integrations"]) {
+      if (!entitlements.includes(product)) entitlements.push(product);
+    }
+  }
   if ((await getMeosComp(user.email)) && !entitlements.includes("meos_build")) entitlements.push("meos_build");
   return entitlements;
 });
@@ -233,7 +239,7 @@ export const saveProfile = createServerFn({ method: "POST" })
     const existing = (await d.query("SELECT id FROM profiles WHERE user_id = $1 AND topic = $2", [user.id, data.topic]))[0] as { id: string } | undefined;
 
     // Free tier: can only have 1 profile (unless updating existing)
-    if (user.tier === "free" && !existing) {
+    if (!isOwnerEmail(user.email) && user.tier === "free" && !existing) {
       const count = await getProfileCount(user.id);
       if (count >= 1) {
         return { error: "limit_reached", limit: "profiles" };
@@ -338,7 +344,7 @@ export const getCurrentUser = createServerFn({ method: "GET" }).handler(async ()
   const user = await getUserById(session.user_id);
   if (!user) return null;
 
-  return { id: user.id, email: user.email, tier: user.tier, interviewCount: user.interview_count };
+  return { id: user.id, email: user.email, tier: user.tier, interviewCount: user.interview_count, isOwner: isOwnerEmail(user.email) };
 });
 
 // ── Interview count tracking ──
@@ -347,7 +353,7 @@ export const trackInterview = createServerFn({ method: "POST" }).handler(async (
   const user = await requireUser();
 
   // Free tier: check interview limit before incrementing
-  if (user.tier === "free" && user.interview_count >= 3) {
+  if (!isOwnerEmail(user.email) && user.tier === "free" && user.interview_count >= 3) {
     return { error: "limit_reached", limit: "interviews" };
   }
 
@@ -361,5 +367,7 @@ export const fetchUserLimits = createServerFn({ method: "GET" }).handler(async (
   const user = await requireUser();
   const limits = await getUserLimits(user.id);
   if (!limits) throw new Error("User not found.");
-  return limits;
+  return isOwnerEmail(user.email)
+    ? { ...limits, maxProfiles: Infinity, maxInterviews: Infinity, isOwner: true }
+    : { ...limits, isOwner: false };
 });

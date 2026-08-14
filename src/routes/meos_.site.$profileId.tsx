@@ -4,7 +4,7 @@ import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getHostedMeosProfile } from "./-auth";
 
-export const Route = createFileRoute("/meos/site/$profileId")({
+export const Route = createFileRoute("/meos_/site/$profileId")({
   component: HostedMeos,
 });
 type Hosted = {

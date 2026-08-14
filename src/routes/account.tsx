@@ -18,6 +18,7 @@ interface Limits {
   profileCount: number;
   maxProfiles: number;
   maxInterviews: number;
+  isOwner?: boolean;
 }
 
 const tierBadgeClass: Record<string, string> = {
@@ -104,6 +105,7 @@ function AccountPage() {
 
           {limits && (
             <>
+              {limits.isOwner && <div className="rounded-lg border border-violet-300 bg-violet-50 px-5 py-4 text-sm text-violet-900 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-200"><strong>Owner access is active.</strong> All site features and product entitlements are enabled for this account. The tier label remains unchanged so you can reference current customer availability.</div>}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700"><h2 className="font-semibold text-gray-900 dark:text-gray-100">Purchases &amp; Entitlements</h2></div>
                 <div className="px-5 py-4 space-y-4"><p className="text-sm text-gray-600 dark:text-gray-400">{entitlements.length ? entitlements.map((e) => e.replace(/_/g, " ")).join(", ") : "No entitlements recorded yet."}</p><button type="button" onClick={async () => { setClaimMsg("Claiming..."); try { await claimPurchase({ data: { product: "meos_build" } }); setEntitlements(await getEntitlements()); setClaimMsg("MeOS Build claimed."); } catch (e) { setClaimMsg(e instanceof Error ? e.message : "Unable to claim purchase."); } }} className="rounded-lg border border-emerald-600 px-4 py-2 font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50">{claimMsg || "Claim MeOS Build purchase"}</button><p className="text-xs text-gray-500 dark:text-gray-400">Self-serve activation for V1; Stripe verification is coming.</p></div>
@@ -140,7 +142,7 @@ function AccountPage() {
               </div>
 
               {/* Upgrade section */}
-              {limits.tier === "free" ? (
+              {limits.tier === "free" && !limits.isOwner ? (
                 <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 overflow-hidden">
                   <div className="px-5 py-4 border-b border-emerald-200 dark:border-emerald-800">
                     <h2 className="font-semibold text-gray-900 dark:text-gray-100">Upgrade your plan</h2>

@@ -330,7 +330,7 @@ function AppPage() {
   const [portraitError, setPortraitError] = useState(false);
 
   // Auth state
-  const [authUser, setAuthUser] = useState<{ id: string; email: string; tier: string } | null | undefined>(undefined);
+  const [authUser, setAuthUser] = useState<{ id: string; email: string; tier: string; isOwner?: boolean } | null | undefined>(undefined);
   const [meosAuthorized, setMeosAuthorized] = useState(false);
 
   // Limit state
@@ -419,16 +419,16 @@ function AppPage() {
     getCurrentUser().then(async (u) => {
       if (cancelled) return;
       if (u) {
-        setAuthUser({ id: u.id, email: u.email, tier: u.tier });
-        if (offeringSearch === "meos" && !previewSearch) getEntitlements().then((items) => setMeosAuthorized((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build"))).catch(() => setMeosAuthorized(false));
+        setAuthUser({ id: u.id, email: u.email, tier: u.tier, isOwner: u.isOwner });
+        if (offeringSearch === "meos" && !previewSearch) getEntitlements().then((items) => setMeosAuthorized(u.isOwner || ((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build")))).catch(() => setMeosAuthorized(false));
         setInterviewCount(u.interviewCount ?? 0);
 
         // Fetch detailed limits for the banner
         try {
           const limits = await fetchUserLimits();
           if (!cancelled) {
-            const lim = limits as { tier: string; interviewCount: number; profileCount: number; maxInterviews: number; maxProfiles: number };
-            if (lim.tier === "free" && lim.interviewCount >= lim.maxInterviews) {
+            const lim = limits as { tier: string; interviewCount: number; profileCount: number; maxInterviews: number; maxProfiles: number; isOwner?: boolean };
+            if (!lim.isOwner && lim.tier === "free" && lim.interviewCount >= lim.maxInterviews) {
               setLimitBanner("interviews");
             }
           }
@@ -958,7 +958,7 @@ function AppPage() {
         if (r.interviewCount !== undefined) {
           setInterviewCount(r.interviewCount);
           // Check if we just hit the limit
-          if (authUser.tier === "free" && r.interviewCount >= 3) {
+          if (!authUser.isOwner && authUser.tier === "free" && r.interviewCount >= 3) {
             setLimitBanner("interviews");
           }
         }

@@ -114,7 +114,54 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 2. Problem / benefit summary */}
+      {/* 2. Outcome proof */}
+      {/* Post–Revision 11 working hypothesis: concrete output proof improves activation. */}
+      {/* ================================================================ */}
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-16 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">See the result</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+              From one honest answer to useful AI context.
+            </h2>
+            <p className="mt-5 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+              ALVIRA turns your own words into context you can inspect, edit, and use immediately—not a hidden memory you have to trust.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-4 lg:grid-cols-3">
+            <article className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-950">
+              <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">01 · You answer</p>
+              <p className="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                “For reversible decisions, I prefer to move quickly and learn. For bigger calls, I want input from two people I trust.”
+              </p>
+            </article>
+            <article className="rounded-lg border border-emerald-300 bg-emerald-50/60 p-5 dark:border-emerald-800 dark:bg-emerald-950/30">
+              <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">02 · ALVIRA structures</p>
+              <pre className="mt-4 whitespace-pre-wrap font-mono text-xs leading-6 text-gray-700 dark:text-gray-300">{`## Decision style\n- Move quickly when reversible\n- Seek two trusted perspectives\n  before high-cost commitments`}</pre>
+            </article>
+            <article className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-950">
+              <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">03 · Your AI applies</p>
+              <p className="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                “This choice is reversible, so here is a fast recommendation and the signal that would tell you to change course.”
+              </p>
+            </article>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a href="/samples/alvira-sample-profile.md" download className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:border-gray-700 dark:text-gray-200 dark:hover:border-emerald-400 dark:hover:text-emerald-400">
+              Download the complete sample profile
+            </a>
+            <a href="/interview#portable" className="inline-flex min-h-11 items-center justify-center px-4 py-2.5 font-mono text-xs text-emerald-700 underline underline-offset-4 hover:text-emerald-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300">
+              See how to use it →
+            </a>
+          </div>
+          <p className="mt-3 text-center font-mono text-xs text-gray-500 dark:text-gray-400">Sample content · Your profile reflects your own words</p>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* 3. Problem / benefit summary */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">

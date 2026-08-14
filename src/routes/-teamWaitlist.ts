@@ -3,10 +3,9 @@
 // email to the submitter plus a notification to contextforge-18281ce4@ctomail.io via the
 // file-based email bridge (same pattern as -auth.ts welcome emails).
 
-import { appendFileSync } from "node:fs";
-import { join } from "node:path";
 import { createServerFn } from "@tanstack/react-start";
 import { insertTeamWaitlistEntry } from "~/db";
+import { sendEmail } from "~/email";
 
 const TEAM_SIZES = ["5–10", "11–25", "26–50", "51–100", "100+"] as const;
 
@@ -17,8 +16,6 @@ export interface TeamWaitlistInput {
   teamSize: string;
   useCase: string;
 }
-
-const EMAIL_QUEUE_PATH = join("/home", "team", "shared", "pending-team-waitlist-emails.txt");
 
 export const joinTeamWaitlist = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
@@ -42,7 +39,7 @@ export const joinTeamWaitlist = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
-    insertTeamWaitlistEntry({
+    await insertTeamWaitlistEntry({
       name: data.name,
       email: data.email,
       company: data.company || null,
@@ -50,29 +47,10 @@ export const joinTeamWaitlist = createServerFn({ method: "POST" })
       use_case: data.useCase || null,
     });
 
-    const timestamp = new Date().toISOString();
-
-    // Queue confirmation to the submitter.
-    appendFileSync(
-      EMAIL_QUEUE_PATH,
-      JSON.stringify({
-        to: data.email,
-        subject: "You're on the ALVIRA Team waitlist",
-        body: `Hi ${data.name}, you're on the list. We'll reach out when the ALVIRA Team tier is ready for early access.`,
-        timestamp,
-      }) + "\n",
-    );
-
-    // Queue notification to contextforge-18281ce4@ctomail.io.
-    appendFileSync(
-      EMAIL_QUEUE_PATH,
-      JSON.stringify({
-        to: "contextforge-18281ce4@ctomail.io",
-        subject: `Team waitlist signup: ${data.name}${data.company ? ` (${data.company})` : ""}`,
-        body: `New team waitlist submission:\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || "(not provided)"}\nTeam size: ${data.teamSize || "(not provided)"}\nUse case: ${data.useCase || "(not provided)"}`,
-        timestamp,
-      }) + "\n",
-    );
+    await Promise.all([
+      sendEmail({ to: data.email, subject: "You're on the ALVIRA Team waitlist", text: `Hi ${data.name}, you're on the list. We'll reach out when the ALVIRA Team tier is ready for early access.` }),
+      sendEmail({ to: "contextforge-18281ce4@ctomail.io", subject: `Team waitlist signup: ${data.name}${data.company ? ` (${data.company})` : ""}`, text: `New team waitlist submission:\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company || "(not provided)"}\nTeam size: ${data.teamSize || "(not provided)"}\nUse case: ${data.useCase || "(not provided)"}` }),
+    ]);
 
     return { ok: true };
   });

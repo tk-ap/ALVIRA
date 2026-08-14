@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "db:migrate": "bun run scripts/migrate-db.ts",
     "start": "bun run serve.ts",
     "publish": "bash ./publish.sh",
     "go-live": "bash ./go-live.sh",
@@ -15,6 +16,8 @@
     "@neondatabase/serverless": "^1.1.0",
     "@tanstack/react-router": "^1.158.1",
     "@tanstack/react-start": "^1.158.3",
+    "bcryptjs": "^3.0.3",
+    "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "marked": "^18.0.7",
     "openai": "^6.49.0",

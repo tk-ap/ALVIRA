@@ -38,8 +38,8 @@ const lifetimePlan = {
     "Up to 12 guided interviews in the first year",
     "Four AI-assisted refresh interviews per year after year one",
     "Unlimited manual edits",
-    "Markdown exports (JSON coming soon)",
-    "Up to 50 saved versions (coming soon)",
+    "Markdown exports",
+    "AI tool integration center (beta)",
     "Standard support",
   ],
   cta: "Go Lifetime",
@@ -92,8 +92,8 @@ function Pricing() {
     features: [
       "Unlimited interviews",
       "Multiple profiles",
-      "Markdown exports (JSON coming soon)",
-      "Version history (coming soon)",
+      "Markdown exports",
+      "Direct and guided AI tool integrations (beta)",
       "Continuous profile updates",
     ],
     cta: "Get Pro",
@@ -183,9 +183,10 @@ function Pricing() {
                       <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{plan.cadence}</span>
                     </div>
                     {"annual" in plan && plan.annual && (
-                      <span className="mt-2 inline-block font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
-                        Save 20% — $16/mo equivalent
-                      </span>
+                      <div className="mt-2 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                        <span className="block">Billed $192 annually</span>
+                        <span className="block">$16/mo equivalent · save 20%</span>
+                      </div>
                     )}
                     <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
                     {plan.name === "Lifetime" && (
@@ -207,9 +208,7 @@ function Pricing() {
                       <p className="mt-6 border-t border-amber-200 pt-5 text-xs leading-relaxed text-gray-600 dark:border-amber-900/60 dark:text-gray-400">
                         MeOS, team workspaces, API access, additional profiles, third-party subscriptions, and future premium products are sold separately.
                       </p>
-                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                        One-time payment. No automatic renewal. Lifetime access applies while ALVIRA operates the AI Context Profile service. Your exported files remain yours permanently. MeOS, additional profiles, future premium modules, API access, and third-party subscriptions are sold separately.
-                      </p>
+                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">One-time payment. No automatic renewal. Your exported files remain yours permanently.</p>
                     </>
                   )}
                   <a
@@ -231,6 +230,10 @@ function Pricing() {
               <strong>Pro</strong> is best for ongoing use, multiple profiles, and unlimited interviews.{' '}
               <strong>Lifetime</strong> is best for one permanent profile — it pays for itself in about two years of annual Pro.
             </p>
+            <div className="mx-auto mt-6 max-w-3xl border-t border-gray-200 pt-5 text-left text-xs leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:text-center">
+              <p><strong className="text-gray-700 dark:text-gray-300">Billing:</strong> Pro renews monthly or annually until canceled. Cancel before renewal to avoid the next charge. Your exported Markdown remains yours.</p>
+              <p className="mt-2">Version history and JSON export are roadmap items and are not included in today&apos;s plan comparison. Review <a href="/refunds" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">refund eligibility</a> before purchase.</p>
+            </div>
           </div>
         </section>
 

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
+import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
@@ -1025,6 +1026,25 @@ function AppPage() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadMeosBuilderKit = async () => {
+    if (!generated || offering !== "meos") return;
+    const zip = new JSZip();
+    const kit = createMeosBuilderKit({
+      topic: state?.topic || topic || "My MeOS",
+      portrait: meosPortrait,
+      interviewState: state,
+      content: Object.fromEntries(Object.entries(generated).filter(([name]) => name !== "portrait.json")),
+    });
+    for (const [name, content] of Object.entries(kit)) zip.file(name, content);
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(state?.topic || topic || "meos").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "meos"}-builder-kit.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const startNew = () => {
     setTopic("");
     setSelectedTopics([]);
@@ -1120,6 +1140,7 @@ function AppPage() {
                   <button type="button" onClick={downloadZip} className={btnSecondary}>
                     <span className="font-mono text-xs">⬇ Download .zip</span>
                   </button>
+                  {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>}
                   {authUser && offering !== "meos" && <a href="/integrations" className={btnSecondary}>Connect AI tools →</a>}
                   {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Save Profile"}</button>)}
                   {offering === "meos" && <a href="/meos" className={btnSecondary}>View your MeOS →</a>}

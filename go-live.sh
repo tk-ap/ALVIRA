@@ -47,10 +47,10 @@ echo "==> deploying${VERCEL_SCOPE:+ (scope: $VERCEL_SCOPE)}"
 # raises "unbound variable". Use explicit branches so optional arguments are
 # only expanded when they have values.
 if [ -n "${VERCEL_SCOPE:-}" ]; then
-  DEPLOY_OUT="$($VERCEL deploy --prebuilt --yes --token "$VERCEL_TOKEN" \
+  DEPLOY_OUT="$($VERCEL deploy --prebuilt --prod --yes --token "$VERCEL_TOKEN" \
     --name "$PROJECT_NAME" --scope "$VERCEL_SCOPE" -e "DATABASE_URL=$DATABASE_URL" 2>&1)" || DEPLOY_STATUS=$?
 else
-  DEPLOY_OUT="$($VERCEL deploy --prebuilt --yes --token "$VERCEL_TOKEN" \
+  DEPLOY_OUT="$($VERCEL deploy --prebuilt --prod --yes --token "$VERCEL_TOKEN" \
     --name "$PROJECT_NAME" -e "DATABASE_URL=$DATABASE_URL" 2>&1)" || DEPLOY_STATUS=$?
 fi
 if [ "${DEPLOY_STATUS:-0}" -ne 0 ]; then

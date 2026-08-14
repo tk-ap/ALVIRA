@@ -48,7 +48,7 @@ bun run go-live           # migrates DB, builds, deploys, and prints "LIVE: <url
 
 `go-live` bundles the SSR handler (via `vercel-entry.ts`, which adapts Vercel's Node function
 signature to the site's web fetch handler) into `.vercel/output` — no Git repo needed — then deploys
-it. It resolves the token's team scope automatically and makes the new project public (new Vercel
+it to the project's production alias. It resolves the token's team scope automatically and makes the new project public (new Vercel
 projects inherit org SSO protection, which would otherwise show a login wall), so the owner only ever
 pastes a `VERCEL_TOKEN`. ALVIRA requires `DATABASE_URL`; the script stops before deployment when it
 is missing, then applies the idempotent Postgres schema before building. The

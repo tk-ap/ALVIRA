@@ -137,4 +137,3 @@ Use Git commits, pull requests, and tagged releases for recovery. Use the archiv
 - Never delete a reference solely because a production derivative exists.
 - Never use a concept presentation PNG directly as a navigation logo when it contains a background or presentation whitespace.
 - Keep production assets and source references clearly separated.
-

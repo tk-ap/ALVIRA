@@ -16,6 +16,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@tanstack/react-router": "^1.158.1",
     "@tanstack/react-start": "^1.158.3",
+    "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",

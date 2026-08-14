@@ -7,7 +7,10 @@ import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
-    meta: [{ title: 'Log in — ALVIRA' }, { name: "description", content: 'Log in to your ALVIRA account.' }],
+    meta: [
+      { title: "Log in — ALVIRA" },
+      { name: "description", content: "Log in to your ALVIRA account." },
+    ],
   }),
   component: LoginPage,
 });
@@ -18,7 +21,11 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [resetSuccess, setResetSuccess] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reset") === "success");
+  const [resetSuccess, setResetSuccess] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("reset") === "success",
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +47,9 @@ function LoginPage() {
       document.cookie = `alvira_session=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
       navigate({ to: "/app" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -50,7 +59,10 @@ function LoginPage() {
     <div className="min-h-dvh flex flex-col">
       <Header />
 
-      <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
+      <main
+        id="main-content"
+        className="flex-1 flex items-center justify-center px-6 py-12"
+      >
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-10">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
@@ -79,7 +91,10 @@ function LoginPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
                 placeholder="you@company.com"
                 autoFocus
                 autoComplete="email"
@@ -98,7 +113,10 @@ function LoginPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
                 placeholder="••••••••"
                 autoComplete="current-password"
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
@@ -121,14 +139,20 @@ function LoginPage() {
           </form>
 
           <p className="mt-4 text-center text-sm">
-            <a href="/forgot-password" className="font-mono text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">
+            <a
+              href="/forgot-password"
+              className="font-mono text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+            >
               Forgot password?
             </a>
           </p>
 
           <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
             Don&apos;t have an account?{" "}
-            <a href="/signup" className="font-mono text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">
+            <a
+              href="/signup"
+              className="font-mono text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+            >
               Create one →
             </a>
           </p>

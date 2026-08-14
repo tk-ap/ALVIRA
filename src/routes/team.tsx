@@ -57,10 +57,14 @@ function TeamPage() {
     }
     setSubmitting(true);
     try {
-      await joinTeamWaitlist({ data: { name, email, company, teamSize, useCase } });
+      await joinTeamWaitlist({
+        data: { name, email, company, teamSize, useCase },
+      });
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -70,9 +74,14 @@ function TeamPage() {
     return (
       <div className="min-h-dvh flex flex-col">
         <Header />
-        <main id="main-content" className="flex flex-1 items-center justify-center px-6 py-24">
+        <main
+          id="main-content"
+          className="flex flex-1 items-center justify-center px-6 py-24"
+        >
           <div className="mx-auto w-full max-w-xl text-center">
-            <p className="font-mono text-xs uppercase tracking-[0.25em] text-system">&lt; team /&gt;</p>
+            <p className="font-mono text-xs uppercase tracking-[0.25em] text-system">
+              &lt; team /&gt;
+            </p>
             <h1 className="mt-5 text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
               You're on the list.
             </h1>
@@ -83,7 +92,10 @@ function TeamPage() {
               href="/"
               className="mt-10 inline-flex items-center rounded-md border border-system px-5 py-3 font-mono text-sm font-semibold text-system-dark dark:text-system transition hover:bg-system-soft/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system"
             >
-              Back to ALVIRA <span className="ml-3" aria-hidden="true">→</span>
+              Back to ALVIRA{" "}
+              <span className="ml-3" aria-hidden="true">
+                →
+              </span>
             </a>
           </div>
         </main>
@@ -98,28 +110,41 @@ function TeamPage() {
       <main id="main-content" className="flex-1">
         <section className="mx-auto grid max-w-4xl gap-12 px-6 pb-20 pt-16 text-center sm:pt-24 lg:grid-cols-2 lg:gap-16">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.25em] text-system">&lt; team /&gt;</p>
+            <p className="font-mono text-xs uppercase tracking-[0.25em] text-system">
+              &lt; team /&gt;
+            </p>
             <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">
               ALVIRA for Teams
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-gray-600 dark:text-gray-400">
-              Capture your team's operational knowledge so every AI tool works with the same context.
+              Capture your team's operational knowledge so every AI tool works
+              with the same context.
             </p>
             <p className="mt-5 max-w-xl text-base leading-7 text-gray-600 dark:text-gray-400">
-              ALVIRA Team is an early access pilot for companies of 5–100 employees. Your team's
-              processes, decisions, and domain knowledge get captured once — then every AI tool your
-              team uses answers from the same, always-current source of truth.
+              ALVIRA Team is an early access pilot for companies of 5–100
+              employees. Your team's processes, decisions, and domain knowledge
+              get captured once — then every AI tool your team uses answers from
+              the same, always-current source of truth.
             </p>
             <ul className="mt-8 space-y-3">
               {TEAM_OFFERS.map((offer) => (
-                <li key={offer} className="flex items-start gap-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
-                  <span className="font-mono text-system flex-shrink-0" aria-hidden="true">+</span>
+                <li
+                  key={offer}
+                  className="flex items-start gap-3 text-sm leading-6 text-gray-700 dark:text-gray-300"
+                >
+                  <span
+                    className="font-mono text-system flex-shrink-0"
+                    aria-hidden="true"
+                  >
+                    +
+                  </span>
                   <span>{offer}</span>
                 </li>
               ))}
             </ul>
             <p className="mt-8 font-mono text-xs text-gray-500 dark:text-gray-400">
-              Early participants shape the product. Join the list and we'll reach out when the Team tier is ready.
+              Early participants shape the product. Join the list and we'll
+              reach out when the Team tier is ready.
             </p>
           </div>
           <div className="lg:pt-2">
@@ -128,67 +153,96 @@ function TeamPage() {
               className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 sm:p-8"
               noValidate
             >
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Join the waitlist</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Join the waitlist
+              </h2>
               <p className="mt-1.5 text-sm text-gray-600 dark:text-gray-400">
                 We'll reach out when the Team tier opens for early access.
               </p>
               <div className="mt-7 space-y-5">
                 <div>
-                  <label htmlFor="team-name" className={labelClass}>Full name</label>
+                  <label htmlFor="team-name" className={labelClass}>
+                    Full name
+                  </label>
                   <input
                     id="team-name"
                     type="text"
                     value={name}
-                    onChange={(e) => { setName(e.target.value); setError(""); }}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setError("");
+                    }}
                     placeholder="Alex Rivera"
                     autoComplete="name"
                     className={inputClass}
                   />
                 </div>
                 <div>
-                  <label htmlFor="team-email" className={labelClass}>Work email</label>
+                  <label htmlFor="team-email" className={labelClass}>
+                    Work email
+                  </label>
                   <input
                     id="team-email"
                     type="email"
                     value={email}
-                    onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setError("");
+                    }}
                     placeholder="alex@company.com"
                     autoComplete="email"
                     className={inputClass}
                   />
                 </div>
                 <div>
-                  <label htmlFor="team-company" className={labelClass}>Company name</label>
+                  <label htmlFor="team-company" className={labelClass}>
+                    Company name
+                  </label>
                   <input
                     id="team-company"
                     type="text"
                     value={company}
-                    onChange={(e) => { setCompany(e.target.value); setError(""); }}
+                    onChange={(e) => {
+                      setCompany(e.target.value);
+                      setError("");
+                    }}
                     placeholder="Acme Inc."
                     autoComplete="organization"
                     className={inputClass}
                   />
                 </div>
                 <div>
-                  <label htmlFor="team-size" className={labelClass}>Team size</label>
+                  <label htmlFor="team-size" className={labelClass}>
+                    Team size
+                  </label>
                   <select
                     id="team-size"
                     value={teamSize}
-                    onChange={(e) => { setTeamSize(e.target.value); setError(""); }}
+                    onChange={(e) => {
+                      setTeamSize(e.target.value);
+                      setError("");
+                    }}
                     className={inputClass}
                   >
                     <option value="">Select team size</option>
                     {TEAM_SIZES.map((size) => (
-                      <option key={size} value={size}>{size} people</option>
+                      <option key={size} value={size}>
+                        {size} people
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="team-use-case" className={labelClass}>What would you use ALVIRA for?</label>
+                  <label htmlFor="team-use-case" className={labelClass}>
+                    What would you use ALVIRA for?
+                  </label>
                   <textarea
                     id="team-use-case"
                     value={useCase}
-                    onChange={(e) => { setUseCase(e.target.value); setError(""); }}
+                    onChange={(e) => {
+                      setUseCase(e.target.value);
+                      setError("");
+                    }}
                     placeholder="e.g. Onboarding new engineers, documenting our sales process, keeping support responses consistent..."
                     rows={4}
                     className={`${inputClass} resize-y`}

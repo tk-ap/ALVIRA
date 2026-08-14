@@ -122,7 +122,12 @@ Respond ONLY with a JSON object: {"question": "your question here"}`;
  */
 export const generateClarification = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier };
+    const d = data as {
+      userQuestion: string;
+      domainLabel: string;
+      history: Message[];
+      tier: Tier;
+    };
     if (!d.userQuestion || !d.domainLabel) {
       throw new Error("User question and domain label are required.");
     }

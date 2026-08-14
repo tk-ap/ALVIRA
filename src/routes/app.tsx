@@ -7,7 +7,14 @@ import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
-import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
+import {
+  FrameworkSelector,
+  BirthDataForm,
+  ReviewPanel,
+  ValidationCard,
+  FRAMEWORKS,
+  type FrameworkId,
+} from "~/components/MeosOverlays";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { extractClaims, type ExtractionResult } from "./-extractor";
 import {
@@ -22,9 +29,28 @@ import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
-import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
-import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
-import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
+import {
+  getMeosGraph,
+  getMeosPreviewGraph,
+  getMeosPlaybook,
+} from "./-meosGraph";
+import {
+  compileMeosKnowledge,
+  generatePortrait,
+  type MeosPortrait,
+} from "./-meosCompiler";
+import {
+  getCurrentUser,
+  saveProfile,
+  saveMeosPortrait,
+  loadProfile,
+  trackInterview,
+  fetchUserLimits,
+  autosaveInterview,
+  getInterviewDraft,
+  clearInterviewDraft,
+  getEntitlements,
+} from "./-auth";
 // Max height (px) of the answer textarea before it scrolls instead of growing.
 const MAX_ANSWER_INPUT_HEIGHT = 160;
 
@@ -37,8 +63,18 @@ type ResumableDraft = {
 };
 
 // ── Initialize empty interview state ──
-function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context", preview = false): InterviewState {
-  const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
+function createInitialState(
+  tier: Tier,
+  topic: string,
+  offering: "context" | "meos" = "context",
+  preview = false,
+): InterviewState {
+  const graph =
+    offering === "meos"
+      ? preview
+        ? getMeosPreviewGraph()
+        : getMeosGraph()
+      : getKnowledgeGraph(tier);
   const domains: InterviewState["domains"] = {};
   for (const d of graph) {
     domains[d.id] = { answers: [], confidence: 0, covered: false };
@@ -60,7 +96,8 @@ function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Could not read that file. Please try another one."));
+    reader.onerror = () =>
+      reject(new Error("Could not read that file. Please try another one."));
     reader.readAsText(file);
   });
 }
@@ -114,13 +151,22 @@ function TypingIndicator() {
           alt=""
           aria-label="ALVIRA"
           className="h-8 w-8"
-          />
+        />
       </div>
       <div className="rounded-lg rounded-tl-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3">
         <div className="flex gap-1">
-          <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: "0ms" }} />
-          <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: "150ms" }} />
-          <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+          <span
+            className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce"
+            style={{ animationDelay: "0ms" }}
+          />
+          <span
+            className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce"
+            style={{ animationDelay: "150ms" }}
+          />
+          <span
+            className="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce"
+            style={{ animationDelay: "300ms" }}
+          />
         </div>
       </div>
     </div>
@@ -137,7 +183,11 @@ const FILES = [
 ] as const;
 
 const TIERS: { value: Tier; label: string; description: string }[] = [
-  { value: "personal", label: "Personal", description: "Personal knowledge & preferences" },
+  {
+    value: "personal",
+    label: "Personal",
+    description: "Personal knowledge & preferences",
+  },
 ];
 const TOPIC_GROUPS = [
   {
@@ -156,9 +206,15 @@ const TOPIC_GROUPS = [
 // ── Page ──
 export const Route = createFileRoute("/app")({
   head: () => ({
-    meta: [{ title: 'ALVIRA Interview' }, { name: "description", content: 'Build your AI profile.' }],
+    meta: [
+      { title: "ALVIRA Interview" },
+      { name: "description", content: "Build your AI profile." },
+    ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined, preview: search.preview === "true" }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    offering: search.offering === "meos" ? ("meos" as const) : undefined,
+    preview: search.preview === "true",
+  }),
   component: AppPage,
 });
 
@@ -169,7 +225,10 @@ function AuthPromptBanner({ show }: { show: boolean }) {
     <div className="border-b border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-1.5">
       <p className="text-xs text-emerald-800 dark:text-emerald-200 text-center">
         Sign in to save your interview progress.{" "}
-        <a href="/login" className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
+        <a
+          href="/login"
+          className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors"
+        >
           Sign in →
         </a>
       </p>
@@ -184,7 +243,10 @@ function SignupPromptBanner({ show }: { show: boolean }) {
     <div className="border-t border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-1.5">
       <p className="text-xs text-emerald-800 dark:text-emerald-200 text-center">
         Don&apos;t have an account?{" "}
-        <a href="/signup" className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors">
+        <a
+          href="/signup"
+          className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors"
+        >
           Create one →
         </a>
       </p>
@@ -192,8 +254,16 @@ function SignupPromptBanner({ show }: { show: boolean }) {
   );
 }
 // ── Upgrade banner (free tier limit) ──
-function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; email?: string }) {
-  const prefilled = email ? `?prefilled_email=${encodeURIComponent(email)}` : "";
+function UpgradeBanner({
+  reason,
+  email,
+}: {
+  reason: "profiles" | "interviews";
+  email?: string;
+}) {
+  const prefilled = email
+    ? `?prefilled_email=${encodeURIComponent(email)}`
+    : "";
   return (
     <div className="border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-6 py-3">
       <div className="mx-auto max-w-3xl flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -232,12 +302,30 @@ function UpgradeBanner({ reason, email }: { reason: "profiles" | "interviews"; e
 }
 
 // ── Upgrade modal (shown when save fails with limit_reached) ──
-function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason: "profiles" | "interviews"; email?: string }) {
-  const prefilled = email ? `?prefilled_email=${encodeURIComponent(email)}` : "";
+function UpgradeModal({
+  onClose,
+  reason,
+  email,
+}: {
+  onClose: () => void;
+  reason: "profiles" | "interviews";
+  email?: string;
+}) {
+  const prefilled = email
+    ? `?prefilled_email=${encodeURIComponent(email)}`
+    : "";
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="mx-4 w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Upgrade to continue</h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="mx-4 w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          Upgrade to continue
+        </h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 font-mono">
           {reason === "profiles"
             ? "Free accounts can save 1 profile. Upgrade to Pro for unlimited profiles."
@@ -281,7 +369,9 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
 
 function AppPage() {
   // Screen state: "start" | "seed-review" | "interview" | "output" | "api-error"
-  const [screen, setScreen] = useState<"start" | "seed-review" | "interview" | "output" | "api-error">("start");
+  const [screen, setScreen] = useState<
+    "start" | "seed-review" | "interview" | "output" | "api-error"
+  >("start");
 
   // Start screen state
   const [topic, setTopic] = useState("");
@@ -291,12 +381,23 @@ function AppPage() {
   const [tier, setTier] = useState<Tier>("personal");
   // A single active topic group locks the other group. Enterprise selects both,
   // so both groups remain available for that scope.
-  const selectedGroups = TOPIC_GROUPS.filter((group) => group.topics.some((topicOption) => selectedTopics.includes(topicOption)));
+  const selectedGroups = TOPIC_GROUPS.filter((group) =>
+    group.topics.some((topicOption) => selectedTopics.includes(topicOption)),
+  );
   const activeGroup = selectedGroups.length === 1 ? selectedGroups[0] : null;
-  const { offering: offeringSearch, preview: previewSearch } = Route.useSearch();
+  const { offering: offeringSearch, preview: previewSearch } =
+    Route.useSearch();
   const isPreview = offeringSearch === "meos" && previewSearch === true;
-  const [offering, setOffering] = useState<"context" | "meos" | null>(offeringSearch === "meos" ? "meos" : "context");
-  type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
+  const [offering, setOffering] = useState<"context" | "meos" | null>(
+    offeringSearch === "meos" ? "meos" : "context",
+  );
+  type MeosPhase =
+    | "core"
+    | "frameworks"
+    | "birthData"
+    | "review"
+    | "validation"
+    | "compile";
   const [meosPhase, setMeosPhase] = useState<MeosPhase>("core");
 
   // Interview state (the single source of truth)
@@ -310,7 +411,9 @@ function AppPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
-  const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
+  const [seedDecisions, setSeedDecisions] = useState<
+    Record<number, { status: "agree" | "revise" | "skip"; text?: string }>
+  >({});
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
   const seedOfferingRef = useRef<"context" | "meos">("context");
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
@@ -320,7 +423,9 @@ function AppPage() {
   const [showInsightCTA, setShowInsightCTA] = useState(false);
 
   // Output state
-  const [generated, setGenerated] = useState<Record<string, string> | null>(null);
+  const [generated, setGenerated] = useState<Record<string, string> | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState("overview");
   const [compiling, setCompiling] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
@@ -330,12 +435,20 @@ function AppPage() {
   const [portraitError, setPortraitError] = useState(false);
 
   // Auth state
-  const [authUser, setAuthUser] = useState<{ id: string; email: string; tier: string; isOwner?: boolean } | null | undefined>(undefined);
+  const [authUser, setAuthUser] = useState<
+    | { id: string; email: string; tier: string; isOwner?: boolean }
+    | null
+    | undefined
+  >(undefined);
   const [meosAuthorized, setMeosAuthorized] = useState(false);
 
   // Limit state
-  const [limitBanner, setLimitBanner] = useState<"profiles" | "interviews" | null>(null);
-  const [limitModal, setLimitModal] = useState<"profiles" | "interviews" | null>(null);
+  const [limitBanner, setLimitBanner] = useState<
+    "profiles" | "interviews" | null
+  >(null);
+  const [limitModal, setLimitModal] = useState<
+    "profiles" | "interviews" | null
+  >(null);
   const [interviewCount, setInterviewCount] = useState(0);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -343,15 +456,29 @@ function AppPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Computed values
-  const graph = state ? (offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(state.tier)) : [];
-  const playbook = offering === "meos" ? getMeosPlaybook() : (state ? getPlaybook(state.tier) : getPlaybook("personal"));
+  const graph = state
+    ? offering === "meos"
+      ? isPreview
+        ? getMeosPreviewGraph()
+        : getMeosGraph()
+      : getKnowledgeGraph(state.tier)
+    : [];
+  const playbook =
+    offering === "meos"
+      ? getMeosPlaybook()
+      : state
+        ? getPlaybook(state.tier)
+        : getPlaybook("personal");
   const confThreshold = playbook.completion.minimumConfidence;
   const coveredCount = state ? countCovered(graph, state, confThreshold) : 0;
   const totalDomains = graph.length;
-  const answerCount = state?.history.filter((message) => message.role === "user").length ?? 0;
+  const answerCount =
+    state?.history.filter((message) => message.role === "user").length ?? 0;
   const gaps = state ? detectGaps(graph, state, confThreshold) : [];
   const hasGaps = gaps.length > 0;
-  const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
+  const requiredCovered = state
+    ? allRequiredCovered(graph, state, confThreshold)
+    : false;
 
   // ── Knowledge quality check ──
   // Warns when compiled files would be too thin to be useful.
@@ -369,12 +496,18 @@ function AppPage() {
     }
     if (domainsWithContent < 3 || totalChars < 200) {
       if (domainsWithContent === 0) {
-        qualityWarnings.push("You haven't provided enough detail yet — your knowledge files will be nearly empty.");
+        qualityWarnings.push(
+          "You haven't provided enough detail yet — your knowledge files will be nearly empty.",
+        );
       } else if (domainsWithContent < 3) {
-        qualityWarnings.push(`Only ${domainsWithContent} domain${domainsWithContent === 1 ? "" : "s"} with enough detail. Your knowledge files will be very thin.`);
+        qualityWarnings.push(
+          `Only ${domainsWithContent} domain${domainsWithContent === 1 ? "" : "s"} with enough detail. Your knowledge files will be very thin.`,
+        );
       }
       if (totalChars < 200 && domainsWithContent > 0) {
-        qualityWarnings.push("Your answers are quite brief. More detailed responses produce more useful knowledge files that AI tools can actually work with.");
+        qualityWarnings.push(
+          "Your answers are quite brief. More detailed responses produce more useful knowledge files that AI tools can actually work with.",
+        );
       }
     }
   }
@@ -400,92 +533,152 @@ function AppPage() {
     // add the border so a single line exactly matches the 46px send button.
     const border = el.offsetHeight - el.clientHeight;
     el.style.height = `${Math.min(el.scrollHeight + border, MAX_ANSWER_INPUT_HEIGHT)}px`;
-    el.style.overflowY = el.scrollHeight + border >= MAX_ANSWER_INPUT_HEIGHT ? "auto" : "hidden";
+    el.style.overflowY =
+      el.scrollHeight + border >= MAX_ANSWER_INPUT_HEIGHT ? "auto" : "hidden";
   }, [answer]);
 
   // Persist every in-progress state locally; authenticated users also get a server draft.
   useEffect(() => {
     if (!state || typeof window === "undefined") return;
     const key = `alvira-draft-${offering ?? "context"}`;
-    try { window.localStorage.setItem(key, JSON.stringify({ offering: offering ?? "context", topic: state.topic, state, savedAt: Date.now() })); } catch { /* storage may be unavailable */ }
+    try {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({
+          offering: offering ?? "context",
+          topic: state.topic,
+          state,
+          savedAt: Date.now(),
+        }),
+      );
+    } catch {
+      /* storage may be unavailable */
+    }
     if (authUser) {
-      const timer = window.setTimeout(() => { autosaveInterview({ data: { offering: offering ?? "context", topic: state.topic, state } }).catch(() => {}); }, 500);
+      const timer = window.setTimeout(() => {
+        autosaveInterview({
+          data: { offering: offering ?? "context", topic: state.topic, state },
+        }).catch(() => {});
+      }, 500);
       return () => window.clearTimeout(timer);
     }
   }, [state, offering, authUser]);
   // Check auth state, resume profile, and fetch limits
   useEffect(() => {
     let cancelled = false;
-    getCurrentUser().then(async (u) => {
-      if (cancelled) return;
-      if (u) {
-        setAuthUser({ id: u.id, email: u.email, tier: u.tier, isOwner: u.isOwner });
-        if (offeringSearch === "meos" && !previewSearch) getEntitlements().then((items) => setMeosAuthorized(u.isOwner || ((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build")))).catch(() => setMeosAuthorized(false));
-        setInterviewCount(u.interviewCount ?? 0);
+    getCurrentUser()
+      .then(async (u) => {
+        if (cancelled) return;
+        if (u) {
+          setAuthUser({
+            id: u.id,
+            email: u.email,
+            tier: u.tier,
+            isOwner: u.isOwner,
+          });
+          if (offeringSearch === "meos" && !previewSearch)
+            getEntitlements()
+              .then((items) =>
+                setMeosAuthorized(
+                  u.isOwner ||
+                    ((u.tier === "pro" || u.tier === "lifetime") &&
+                      items.includes("meos_build")),
+                ),
+              )
+              .catch(() => setMeosAuthorized(false));
+          setInterviewCount(u.interviewCount ?? 0);
 
-        // Fetch detailed limits for the banner
-        try {
-          const limits = await fetchUserLimits();
-          if (!cancelled) {
-            const lim = limits as { tier: string; interviewCount: number; profileCount: number; maxInterviews: number; maxProfiles: number; isOwner?: boolean };
-            if (!lim.isOwner && lim.tier === "free" && lim.interviewCount >= lim.maxInterviews) {
-              setLimitBanner("interviews");
-            }
-          }
-        } catch { /* ignore */ }
-
-        // Restore a server draft first, or the anonymous local draft left before signup/login.
-        if (!draftRestoredRef.current) {
+          // Fetch detailed limits for the banner
           try {
-            const localRaw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
-            const serverDraft = await getInterviewDraft().catch(() => null);
-            const draft = localRaw ? JSON.parse(localRaw) : serverDraft;
-            if (draft?.state && !cancelled) {
-              setResumeDraft({
-                offering: draft.offering === "meos" ? "meos" : "context",
-                topic: draft.topic ?? draft.state.topic,
-                state: draft.state as InterviewState,
-                savedAt: draft.savedAt,
-                source: localRaw ? "browser" : "account",
-              });
-              draftRestoredRef.current = true;
-            }
-          } catch { /* malformed or unavailable draft */ }
-        }
-        const profileId = new URLSearchParams(window.location.search).get("profile");
-        if (profileId) {
-          try {
-            const profile = await loadProfile({ data: { profileId } });
+            const limits = await fetchUserLimits();
             if (!cancelled) {
-              setTopic(profile.topic);
-              setTier(profile.tier as Tier);
-              setState(profile.state as InterviewState);
-              setScreen("interview");
+              const lim = limits as {
+                tier: string;
+                interviewCount: number;
+                profileCount: number;
+                maxInterviews: number;
+                maxProfiles: number;
+                isOwner?: boolean;
+              };
+              if (
+                !lim.isOwner &&
+                lim.tier === "free" &&
+                lim.interviewCount >= lim.maxInterviews
+              ) {
+                setLimitBanner("interviews");
+              }
             }
-          } catch { /* dashboard remains the fallback */ }
-        }
-      } else {
-        setAuthUser(null);
-        try {
-          const raw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
-          if (raw) {
-            const draft = JSON.parse(raw);
-            if (draft?.state && !cancelled) {
-              setResumeDraft({
-                offering: draft.offering === "meos" ? "meos" : "context",
-                topic: draft.topic ?? draft.state.topic,
-                state: draft.state as InterviewState,
-                savedAt: draft.savedAt,
-                source: "browser",
-              });
+          } catch {
+            /* ignore */
+          }
+
+          // Restore a server draft first, or the anonymous local draft left before signup/login.
+          if (!draftRestoredRef.current) {
+            try {
+              const localRaw = window.localStorage.getItem(
+                `alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`,
+              );
+              const serverDraft = await getInterviewDraft().catch(() => null);
+              const draft = localRaw ? JSON.parse(localRaw) : serverDraft;
+              if (draft?.state && !cancelled) {
+                setResumeDraft({
+                  offering: draft.offering === "meos" ? "meos" : "context",
+                  topic: draft.topic ?? draft.state.topic,
+                  state: draft.state as InterviewState,
+                  savedAt: draft.savedAt,
+                  source: localRaw ? "browser" : "account",
+                });
+                draftRestoredRef.current = true;
+              }
+            } catch {
+              /* malformed or unavailable draft */
             }
           }
-        } catch { /* malformed or unavailable draft */ }
-      }
-    }).catch(() => {
-      if (!cancelled) setAuthUser(null);
-    });
-    return () => { cancelled = true; };
+          const profileId = new URLSearchParams(window.location.search).get(
+            "profile",
+          );
+          if (profileId) {
+            try {
+              const profile = await loadProfile({ data: { profileId } });
+              if (!cancelled) {
+                setTopic(profile.topic);
+                setTier(profile.tier as Tier);
+                setState(profile.state as InterviewState);
+                setScreen("interview");
+              }
+            } catch {
+              /* dashboard remains the fallback */
+            }
+          }
+        } else {
+          setAuthUser(null);
+          try {
+            const raw = window.localStorage.getItem(
+              `alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`,
+            );
+            if (raw) {
+              const draft = JSON.parse(raw);
+              if (draft?.state && !cancelled) {
+                setResumeDraft({
+                  offering: draft.offering === "meos" ? "meos" : "context",
+                  topic: draft.topic ?? draft.state.topic,
+                  state: draft.state as InterviewState,
+                  savedAt: draft.savedAt,
+                  source: "browser",
+                });
+              }
+            }
+          } catch {
+            /* malformed or unavailable draft */
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAuthUser(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleResumeDraft = () => {
@@ -500,7 +693,11 @@ function AppPage() {
 
   const handleStartOver = async () => {
     const draftOffering = resumeDraft?.offering ?? offering ?? "context";
-    try { window.localStorage.removeItem(`alvira-draft-${draftOffering}`); } catch { /* storage may be unavailable */ }
+    try {
+      window.localStorage.removeItem(`alvira-draft-${draftOffering}`);
+    } catch {
+      /* storage may be unavailable */
+    }
     if (authUser) await clearInterviewDraft().catch(() => {});
     setResumeDraft(null);
     setState(null);
@@ -512,10 +709,23 @@ function AppPage() {
   };
 
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
-  const askNextQuestion = async (currentState: InterviewState, isClarification = false) => {
-    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(currentState.tier);
-    const currentPlaybook = offering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
-    const currentGaps = detectGaps(currentGraph, currentState, currentPlaybook.completion.minimumConfidence);
+  const askNextQuestion = async (
+    currentState: InterviewState,
+    isClarification = false,
+  ) => {
+    const currentGraph =
+      offering === "meos"
+        ? isPreview
+          ? getMeosPreviewGraph()
+          : getMeosGraph()
+        : getKnowledgeGraph(currentState.tier);
+    const currentPlaybook =
+      offering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
+    const currentGaps = detectGaps(
+      currentGraph,
+      currentState,
+      currentPlaybook.completion.minimumConfidence,
+    );
     if (currentGaps.length === 0) return null;
 
     const topGap = currentGaps[0];
@@ -554,7 +764,16 @@ function AppPage() {
     if (!state || !authUser || saving) return;
     setSaving(true);
     try {
-      const result = await saveProfile({ data: { topic: state.topic, tier: state.tier, state, offering: offering === "meos" ? "meos" : "context", preview: isPreview, portrait: offering === "meos" ? meosPortrait : undefined } });
+      const result = await saveProfile({
+        data: {
+          topic: state.topic,
+          tier: state.tier,
+          state,
+          offering: offering === "meos" ? "meos" : "context",
+          preview: isPreview,
+          portrait: offering === "meos" ? meosPortrait : undefined,
+        },
+      });
       // Check for limit_reached error
       const r = result as { id?: string; error?: string; limit?: string };
       if (r.error === "limit_reached") {
@@ -565,28 +784,44 @@ function AppPage() {
       }
       setSavedProfileId(r.id ?? null);
       if (offering === "meos" && r.id && meosPortrait) {
-        await saveMeosPortrait({ data: { profileId: r.id, portrait: meosPortrait } });
+        await saveMeosPortrait({
+          data: { profileId: r.id, portrait: meosPortrait },
+        });
       }
     } catch (err) {
-      setInterviewError(err instanceof Error ? err.message : "Unable to save profile.");
-    } finally { setSaving(false); }
+      setInterviewError(
+        err instanceof Error ? err.message : "Unable to save profile.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleStart = async () => {
     const trimmed = topic.trim();
-    if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("MeOS requires an active Pro or Lifetime plan plus MeOS Build ($149 one-time). Purchase access on the MeOS page."); return; }
+    if (offering === "meos" && !isPreview && !meosAuthorized) {
+      setStartError(
+        "MeOS requires an active Pro or Lifetime plan plus MeOS Build ($149 one-time). Purchase access on the MeOS page.",
+      );
+      return;
+    }
     if (!trimmed) return;
 
     // MeOS topics are introspective/philosophical — skip the context-oriented validation
     if (offering !== "meos") {
       const validation = validateAnswer("start", trimmed, []);
       const wordCount = trimmed.split(/\s+/).length;
-      if (validation.needsClarification || wordCount < 3 || validation.confidence < 0.7) {
-        const msg = wordCount < 2
-          ? "Please describe what you want to capture in more detail — at least a few words. For example: \"My communication style and decision-making preferences.\""
-          : validation.insufficientKnowledge
-            ? "Please describe what knowledge you want to capture more specifically. What themes, context, or understanding should your AI have?"
-            : "That doesn't look like a real description. Try something like \"My communication preferences and values\" or \"How our team handles customer escalations.\"";
+      if (
+        validation.needsClarification ||
+        wordCount < 3 ||
+        validation.confidence < 0.7
+      ) {
+        const msg =
+          wordCount < 2
+            ? 'Please describe what you want to capture in more detail — at least a few words. For example: "My communication style and decision-making preferences."'
+            : validation.insufficientKnowledge
+              ? "Please describe what knowledge you want to capture more specifically. What themes, context, or understanding should your AI have?"
+              : 'That doesn\'t look like a real description. Try something like "My communication preferences and values" or "How our team handles customer escalations."';
         setStartError(msg);
         return;
       }
@@ -599,7 +834,12 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(tier, topic.trim(), offering === "meos" ? "meos" : "context", isPreview);
+    const initialState = createInitialState(
+      tier,
+      topic.trim(),
+      offering === "meos" ? "meos" : "context",
+      isPreview,
+    );
 
     try {
       const result = await askNextQuestion(initialState);
@@ -626,16 +866,22 @@ function AppPage() {
     if (!file) return;
 
     if (!topic.trim()) {
-      setUploadError("Describe what your AI should know first, then upload your document.");
+      setUploadError(
+        "Describe what your AI should know first, then upload your document.",
+      );
       return;
     }
     if (file.size > MAX_UPLOAD_BYTES) {
-      setUploadError("That file is larger than 5MB. Please upload a smaller document.");
+      setUploadError(
+        "That file is larger than 5MB. Please upload a smaller document.",
+      );
       return;
     }
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
     if (!(SUPPORTED_UPLOAD_EXTENSIONS as readonly string[]).includes(ext)) {
-      setUploadError("Only .txt, .md, and .docx files are supported right now.");
+      setUploadError(
+        "Only .txt, .md, and .docx files are supported right now.",
+      );
       return;
     }
 
@@ -643,18 +889,24 @@ function AppPage() {
     setUploadError("");
     setInterviewError("");
     try {
-      const text = ext === "docx" ? await parseDocx(file) : await readFileAsText(file);
+      const text =
+        ext === "docx" ? await parseDocx(file) : await readFileAsText(file);
       if (!text.trim()) {
         throw new Error("That file appears to be empty — nothing to extract.");
       }
       const seedOffering = offering === "meos" ? "meos" : "context";
-      const result = await extractClaims({ data: { text, tier, topic: topic.trim(), offering: seedOffering } });
+      const result = await extractClaims({
+        data: { text, tier, topic: topic.trim(), offering: seedOffering },
+      });
       seedOfferingRef.current = seedOffering;
       setExtraction(result);
       setSeedDecisions({});
       setScreen("seed-review");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Could not extract knowledge from that file.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Could not extract knowledge from that file.";
       if (msg === "API key not configured") {
         setScreen("api-error");
       } else {
@@ -670,26 +922,46 @@ function AppPage() {
     if (!extraction) return;
 
     const seedOffering = seedOfferingRef.current;
-    const currentGraph = seedOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
-    const initialState = createInitialState(tier, topic.trim(), seedOffering, isPreview);
+    const currentGraph =
+      seedOffering === "meos"
+        ? isPreview
+          ? getMeosPreviewGraph()
+          : getMeosGraph()
+        : getKnowledgeGraph(tier);
+    const initialState = createInitialState(
+      tier,
+      topic.trim(),
+      seedOffering,
+      isPreview,
+    );
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {
-      const decision = seedDecisions[index] ?? { status: claim.confidence >= 0.8 ? "agree" : "skip" };
+      const decision = seedDecisions[index] ?? {
+        status: claim.confidence >= 0.8 ? "agree" : "skip",
+      };
       if (decision.status === "skip") return;
       if (!currentGraph.some((d) => d.id === claim.domainId)) return; // safety: unknown domain
       const text =
-        decision.status === "revise" && decision.text?.trim() ? decision.text.trim() : claim.text;
+        decision.status === "revise" && decision.text?.trim()
+          ? decision.text.trim()
+          : claim.text;
       if (!text) return;
       const existing = domains[claim.domainId]?.answers ?? [];
       if (!existing.includes(text)) {
         // Approved claims are user-validated → confidence 1, covered true.
         // This is what lets gap detection skip the seeded domains (personal threshold 0.90).
-        domains[claim.domainId] = { answers: [...existing, text], confidence: 1, covered: true };
+        domains[claim.domainId] = {
+          answers: [...existing, text],
+          confidence: 1,
+          covered: true,
+        };
       }
     });
 
-    const seededDomainCount = Object.values(domains).filter((d) => d.covered).length;
+    const seededDomainCount = Object.values(domains).filter(
+      (d) => d.covered,
+    ).length;
     const seededState: InterviewState = { ...initialState, domains };
 
     setState(seededState);
@@ -730,7 +1002,10 @@ function AppPage() {
 
     const currentDomain = state.currentDomain;
 
-    const newHistory: Message[] = [...state.history, { role: "user", content: trimmed }];
+    const newHistory: Message[] = [
+      ...state.history,
+      { role: "user", content: trimmed },
+    ];
 
     let updatedDomains = { ...state.domains };
     let needsClarify = false;
@@ -747,7 +1022,8 @@ function AppPage() {
         setInterviewError("");
 
         try {
-          const domainLabel = graph.find((d) => d.id === currentDomain)?.label ?? "";
+          const domainLabel =
+            graph.find((d) => d.id === currentDomain)?.label ?? "";
           const clarificationResult = await generateClarification({
             data: {
               userQuestion: trimmed,
@@ -774,7 +1050,8 @@ function AppPage() {
             setState({ ...clarificationState, currentDomain: null });
           }
         } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Something went wrong.";
+          const msg =
+            err instanceof Error ? err.message : "Something went wrong.";
           if (msg !== "API key not configured") {
             setInterviewError(msg);
             setState({ ...state, history: newHistory, currentDomain });
@@ -801,8 +1078,7 @@ function AppPage() {
             covered: false,
           },
         };
-      }
-      else if (validation.needsClarification) {
+      } else if (validation.needsClarification) {
         needsClarify = true;
         const warningText =
           validation.warnings.length > 0
@@ -818,8 +1094,7 @@ function AppPage() {
             covered: false,
           },
         };
-      }
-      else {
+      } else {
         meaningfulAnswer = true;
         updatedDomains = {
           ...updatedDomains,
@@ -828,7 +1103,8 @@ function AppPage() {
             confidence: validation.confidence,
             covered:
               validation.confidence >= confThreshold &&
-              existing.length + 1 >= (graph.find((d) => d.id === currentDomain)?.minAnswers ?? 1),
+              existing.length + 1 >=
+                (graph.find((d) => d.id === currentDomain)?.minAnswers ?? 1),
           },
         };
       }
@@ -849,8 +1125,19 @@ function AppPage() {
     }
     // MeOS special flow begins once the eight required core domains are confidently covered.
     if (offering === "meos" && meosPhase === "core") {
-      const coreIds = ["currentChapter", "desiredOutcomes", "values", "boundaries", "goals", "decisionPatterns", "workHistory", "definitionOfSuccess"];
-      const coreComplete = coreIds.every(id => updatedState.domains[id]?.confidence >= 0.85);
+      const coreIds = [
+        "currentChapter",
+        "desiredOutcomes",
+        "values",
+        "boundaries",
+        "goals",
+        "decisionPatterns",
+        "workHistory",
+        "definitionOfSuccess",
+      ];
+      const coreComplete = coreIds.every(
+        (id) => updatedState.domains[id]?.confidence >= 0.85,
+      );
       if (coreComplete) {
         setMeosPhase("frameworks");
         return;
@@ -920,25 +1207,64 @@ function AppPage() {
 
   const meosClaims = useMemo(() => {
     if (!state || offering !== "meos") return [];
-    const direct = ["values", "boundaries"].flatMap(id => (state.domains[id]?.answers || []).map(text => ({ text, source: "user-supplied" as const })));
-    const inferred = ["decisionPatterns", "goals", "workHistory"].flatMap(id => (state.domains[id]?.answers || []).map(text => ({ text, source: "inferred" as const })));
+    const direct = ["values", "boundaries"].flatMap((id) =>
+      (state.domains[id]?.answers || []).map((text) => ({
+        text,
+        source: "user-supplied" as const,
+      })),
+    );
+    const inferred = ["decisionPatterns", "goals", "workHistory"].flatMap(
+      (id) =>
+        (state.domains[id]?.answers || []).map((text) => ({
+          text,
+          source: "inferred" as const,
+        })),
+    );
     return [...direct, ...inferred];
   }, [state, offering]);
   const updateMeosDomain = (id: string, values: string[]) => {
     if (!state) return;
-    setState({ ...state, domains: { ...state.domains, [id]: { answers: values, confidence: 1, covered: true } } });
+    setState({
+      ...state,
+      domains: {
+        ...state.domains,
+        [id]: { answers: values, confidence: 1, covered: true },
+      },
+    });
   };
   const handleFrameworks = (ids: FrameworkId[]) => {
     updateMeosDomain("frameworks", [JSON.stringify(ids)]);
-    if (ids.some(id => FRAMEWORKS.find(f => f.id === id)?.birth)) setMeosPhase("birthData");
+    if (ids.some((id) => FRAMEWORKS.find((f) => f.id === id)?.birth))
+      setMeosPhase("birthData");
     else setMeosPhase("review");
   };
-  const handleBirthData = (data: object) => { updateMeosDomain("birthData", [JSON.stringify(data)]); setMeosPhase("review"); };
-  const handleReview = (results: object[]) => { updateMeosDomain("review", results.map(x => JSON.stringify(x))); setMeosPhase("validation"); };
+  const handleBirthData = (data: object) => {
+    updateMeosDomain("birthData", [JSON.stringify(data)]);
+    setMeosPhase("review");
+  };
+  const handleReview = (results: object[]) => {
+    updateMeosDomain(
+      "review",
+      results.map((x) => JSON.stringify(x)),
+    );
+    setMeosPhase("validation");
+  };
   const handleValidation = (note: string) => {
     if (!state) return;
-    const next = { ...state, domains: { ...state.domains, validation: { answers: [note || "Validated by user."], confidence: 1, covered: true } } };
-    setState(next); setMeosPhase("compile"); handleGenerate(next);
+    const next = {
+      ...state,
+      domains: {
+        ...state.domains,
+        validation: {
+          answers: [note || "Validated by user."],
+          confidence: 1,
+          covered: true,
+        },
+      },
+    };
+    setState(next);
+    setMeosPhase("compile");
+    handleGenerate(next);
   };
 
   const handleGenerate = async (stateOverride?: InterviewState) => {
@@ -949,7 +1275,11 @@ function AppPage() {
     if (authUser) {
       try {
         const result = await trackInterview();
-        const r = result as { interviewCount?: number; error?: string; limit?: string };
+        const r = result as {
+          interviewCount?: number;
+          error?: string;
+          limit?: string;
+        };
         if (r.error === "limit_reached") {
           setLimitModal("interviews");
           setLimitBanner("interviews");
@@ -958,7 +1288,11 @@ function AppPage() {
         if (r.interviewCount !== undefined) {
           setInterviewCount(r.interviewCount);
           // Check if we just hit the limit
-          if (!authUser.isOwner && authUser.tier === "free" && r.interviewCount >= 3) {
+          if (
+            !authUser.isOwner &&
+            authUser.tier === "free" &&
+            r.interviewCount >= 3
+          ) {
             setLimitBanner("interviews");
           }
         }
@@ -968,7 +1302,12 @@ function AppPage() {
     }
 
     setCompiling(true);
-    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
+    const currentGraph =
+      offering === "meos"
+        ? isPreview
+          ? getMeosPreviewGraph()
+          : getMeosGraph()
+        : getKnowledgeGraph(compileState.tier);
     let files: Record<string, string>;
     if (offering === "meos") {
       files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
@@ -1009,9 +1348,18 @@ function AppPage() {
   const downloadZip = async () => {
     if (!generated) return;
     const zip = new JSZip();
-    const fileMap: [string, string][] = offering === "meos"
-      ? Object.entries(generated).map(([name, content]) => [name, content] as [string, string])
-      : [["overview.md", generated.overview], ["requirements.md", generated.requirements], ["constraints.md", generated.constraints], ["business-rules.md", generated.businessRules], ["workflows.md", generated.workflows]];
+    const fileMap: [string, string][] =
+      offering === "meos"
+        ? Object.entries(generated).map(
+            ([name, content]) => [name, content] as [string, string],
+          )
+        : [
+            ["overview.md", generated.overview],
+            ["requirements.md", generated.requirements],
+            ["constraints.md", generated.constraints],
+            ["business-rules.md", generated.businessRules],
+            ["workflows.md", generated.workflows],
+          ];
     for (const [name, content] of fileMap) {
       zip.file(name, content);
     }
@@ -1033,14 +1381,22 @@ function AppPage() {
       topic: state?.topic || topic || "My MeOS",
       portrait: meosPortrait,
       interviewState: state,
-      content: Object.fromEntries(Object.entries(generated).filter(([name]) => name !== "portrait.json")),
+      content: Object.fromEntries(
+        Object.entries(generated).filter(([name]) => name !== "portrait.json"),
+      ),
     });
     for (const [name, content] of Object.entries(kit)) zip.file(name, content);
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(state?.topic || topic || "meos").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "meos"}-builder-kit.zip`;
+    a.download = `${
+      (state?.topic || topic || "meos")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "meos"
+    }-builder-kit.zip`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1088,17 +1444,38 @@ function AppPage() {
       <div className="min-h-dvh flex flex-col">
         <Header />
         <AuthPromptBanner show={authUser === null} />
-        {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
-        <main id="main-content" className="flex-1 flex items-center justify-center px-6">
+        {limitBanner && (
+          <UpgradeBanner reason={limitBanner} email={authUser?.email} />
+        )}
+        <main
+          id="main-content"
+          className="flex-1 flex items-center justify-center px-6"
+        >
           <div className="text-center max-w-md">
             <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30 mx-auto mb-6">
-              <svg className="h-8 w-8 text-amber-700 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              <svg
+                className="h-8 w-8 text-amber-700 dark:text-amber-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">API Key Not Configured</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              API Key Not Configured
+            </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              The OpenAI API key is not set. Add <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono">OPENAI_API_KEY</code> to your environment to enable the knowledge elicitation engine.
+              The OpenAI API key is not set. Add{" "}
+              <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono">
+                OPENAI_API_KEY
+              </code>{" "}
+              to your environment to enable the knowledge elicitation engine.
             </p>
             <a
               href="/"
@@ -1116,41 +1493,96 @@ function AppPage() {
 
   // ── Render: Output Screen ──
   if (screen === "output" && generated) {
-    const outputFiles = offering === "meos"
-      ? Object.keys(generated).map((key) => ({ key, label: key }))
-      : FILES;
+    const outputFiles =
+      offering === "meos"
+        ? Object.keys(generated).map((key) => ({ key, label: key }))
+        : FILES;
     const activeContent = generated[activeTab] || "";
     return (
       <div className="min-h-dvh flex flex-col">
         <Header />
         <AuthPromptBanner show={authUser === null} />
-        {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
-        {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
+        {limitBanner && (
+          <UpgradeBanner reason={limitBanner} email={authUser?.email} />
+        )}
+        {limitModal && (
+          <UpgradeModal
+            onClose={() => setLimitModal(null)}
+            reason={limitModal}
+            email={authUser?.email}
+          />
+        )}
         <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Generated Knowledge Files</h1>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    Generated Knowledge Files
+                  </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-mono">
                     based on: {state?.topic || topic}
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" onClick={downloadZip} className={btnSecondary}>
+                  <button
+                    type="button"
+                    onClick={downloadZip}
+                    className={btnSecondary}
+                  >
                     <span className="font-mono text-xs">⬇ Download .zip</span>
                   </button>
-                  {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>}
-                  {authUser && offering !== "meos" && <a href="/integrations" className={btnSecondary}>Connect AI tools →</a>}
-                  {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Save Profile"}</button>)}
-                  {offering === "meos" && <a href="/meos" className={btnSecondary}>View your MeOS →</a>}
-                  <button type="button" onClick={startNew} className={btnPrimary}>
+                  {offering === "meos" && (
+                    <button
+                      type="button"
+                      onClick={downloadMeosBuilderKit}
+                      className={btnPrimary}
+                    >
+                      Download Builder Kit (beta)
+                    </button>
+                  )}
+                  {authUser && offering !== "meos" && (
+                    <a href="/integrations" className={btnSecondary}>
+                      Connect AI tools →
+                    </a>
+                  )}
+                  {authUser &&
+                    (savedProfileId ? (
+                      <a href="/dashboard" className={btnSecondary}>
+                        Profile saved → View dashboard
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        disabled={saving}
+                        className={btnPrimary}
+                      >
+                        {saving ? "Saving..." : "Save Profile"}
+                      </button>
+                    ))}
+                  {offering === "meos" && (
+                    <a href="/meos" className={btnSecondary}>
+                      View your MeOS →
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={startNew}
+                    className={btnPrimary}
+                  >
                     + Start new
                   </button>
                 </div>
               </div>
 
-              {offering === "meos" && portraitError && <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">Portrait generation encountered an issue. Your knowledge files are ready, and you can regenerate your portrait from your MeOS dashboard.</p>}
+              {offering === "meos" && portraitError && (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                  Portrait generation encountered an issue. Your knowledge files
+                  are ready, and you can regenerate your portrait from your MeOS
+                  dashboard.
+                </p>
+              )}
 
               {/* Tabs */}
               <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
@@ -1178,7 +1610,13 @@ function AppPage() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(activeContent, outputFiles.find((f) => f.key === activeTab)?.label || "")}
+                    onClick={() =>
+                      copyToClipboard(
+                        activeContent,
+                        outputFiles.find((f) => f.key === activeTab)?.label ||
+                          "",
+                      )
+                    }
                     className="text-xs font-mono text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                   >
                     {copyMsg || "Copy"}
@@ -1204,15 +1642,23 @@ function AppPage() {
   // ── Render: Interview Screen ──
   if (screen === "interview") {
     const domainLabel = state?.currentDomain
-      ? graph.find((d) => d.id === state.currentDomain)?.label ?? ""
+      ? (graph.find((d) => d.id === state.currentDomain)?.label ?? "")
       : "";
 
     return (
       <div className="min-h-dvh flex flex-col">
         <Header />
         <AuthPromptBanner show={authUser === null} />
-        {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
-        {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
+        {limitBanner && (
+          <UpgradeBanner reason={limitBanner} email={authUser?.email} />
+        )}
+        {limitModal && (
+          <UpgradeModal
+            onClose={() => setLimitModal(null)}
+            reason={limitModal}
+            email={authUser?.email}
+          />
+        )}
         <main id="main-content" className="flex-1 flex flex-col px-6">
           {/* a11y: interview page needs a single H1 — screen-reader-only, contextual to the active interview */}
           <h1 className="sr-only">
@@ -1221,7 +1667,11 @@ function AppPage() {
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
             {/* Chat area */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
+            <div
+              className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4"
+              aria-live="polite"
+              aria-label="Interview conversation"
+            >
               {seededInfo && (
                 <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
                   {seededInfo}
@@ -1240,7 +1690,7 @@ function AppPage() {
                         alt=""
                         aria-label="ALVIRA"
                         className="h-8 w-8"
-                        />
+                      />
                     </div>
                   ) : (
                     <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 dark:bg-gray-100 text-xs font-bold text-white dark:text-gray-900">
@@ -1248,7 +1698,9 @@ function AppPage() {
                     </div>
                   )}
                   {/* Bubble */}
-                  <div className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${chatBubbleClass(msg.role)}`}>
+                  <div
+                    className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${chatBubbleClass(msg.role)}`}
+                  >
                     <div className="whitespace-pre-wrap">{msg.content}</div>
                   </div>
                 </div>
@@ -1275,7 +1727,8 @@ function AppPage() {
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="font-mono text-xs text-gray-600 dark:text-gray-400">
-                  Starter profile progress · {answerCount} answer{answerCount === 1 ? "" : "s"}
+                  Starter profile progress · {answerCount} answer
+                  {answerCount === 1 ? "" : "s"}
                 </span>
                 {domainLabel && (
                   <span className="font-mono text-xs text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded">
@@ -1286,22 +1739,57 @@ function AppPage() {
               <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gray-900 dark:bg-gray-100 rounded-full transition-all duration-500"
-                  style={{ width: `${totalDomains > 0 ? (coveredCount / totalDomains) * 100 : 0}%` }}
+                  style={{
+                    width: `${totalDomains > 0 ? (coveredCount / totalDomains) * 100 : 0}%`,
+                  }}
                 />
               </div>
             </div>
 
-            {offering === "meos" && meosPhase === "frameworks" && state && <FrameworkSelector selected={(() => { try { return JSON.parse(state.domains.frameworks?.answers[0] || "[]"); } catch { return []; } })()} onContinue={handleFrameworks} />}
-            {offering === "meos" && meosPhase === "birthData" && state && <BirthDataForm onBack={() => setMeosPhase("frameworks")} onContinue={handleBirthData} />}
-            {offering === "meos" && meosPhase === "review" && <ReviewPanel claims={meosClaims} onBack={() => setMeosPhase("frameworks")} onContinue={handleReview} />}
-            {offering === "meos" && meosPhase === "validation" && <ValidationCard claims={meosClaims} onBack={() => setMeosPhase("review")} onComplete={handleValidation} />}
+            {offering === "meos" && meosPhase === "frameworks" && state && (
+              <FrameworkSelector
+                selected={(() => {
+                  try {
+                    return JSON.parse(
+                      state.domains.frameworks?.answers[0] || "[]",
+                    );
+                  } catch {
+                    return [];
+                  }
+                })()}
+                onContinue={handleFrameworks}
+              />
+            )}
+            {offering === "meos" && meosPhase === "birthData" && state && (
+              <BirthDataForm
+                onBack={() => setMeosPhase("frameworks")}
+                onContinue={handleBirthData}
+              />
+            )}
+            {offering === "meos" && meosPhase === "review" && (
+              <ReviewPanel
+                claims={meosClaims}
+                onBack={() => setMeosPhase("frameworks")}
+                onContinue={handleReview}
+              />
+            )}
+            {offering === "meos" && meosPhase === "validation" && (
+              <ValidationCard
+                claims={meosClaims}
+                onBack={() => setMeosPhase("review")}
+                onComplete={handleValidation}
+              />
+            )}
 
             {/* Input area */}
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
               {/* Generate button — always available */}
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
-                  {totalDomains > 0 ? Math.round((coveredCount / totalDomains) * 100) : 0}% complete
+                  {totalDomains > 0
+                    ? Math.round((coveredCount / totalDomains) * 100)
+                    : 0}
+                  % complete
                 </span>
                 <div className="flex gap-2">
                   {hasGaps && state?.currentDomain && !waiting && (
@@ -1340,7 +1828,8 @@ function AppPage() {
                     ))}
                   </ul>
                   <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                    You can generate now, or answer another question or two for a more specific result.
+                    You can generate now, or answer another question or two for
+                    a more specific result.
                   </p>
                 </div>
               )}
@@ -1368,8 +1857,9 @@ function AppPage() {
               {!hasGaps && !waiting && authUser === null && (
                 <div className="mb-4 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3">
                   <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                    <strong>Your interview is complete.</strong>{" "}
-                    Create a free account to save your results and link them to your profile — it only takes a minute.
+                    <strong>Your interview is complete.</strong> Create a free
+                    account to save your results and link them to your profile —
+                    it only takes a minute.
                   </p>
                   <a
                     href="/signup"
@@ -1389,7 +1879,11 @@ function AppPage() {
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={waiting ? "ALVIRA is thinking..." : "Type your answer...  (Shift+Enter for a new line)"}
+                    placeholder={
+                      waiting
+                        ? "ALVIRA is thinking..."
+                        : "Type your answer...  (Shift+Enter for a new line)"
+                    }
                     disabled={waiting}
                     enterKeyHint="enter"
                     aria-label="Your answer"
@@ -1402,8 +1896,18 @@ function AppPage() {
                     aria-label="Send answer"
                     className="flex-shrink-0 flex h-[46px] w-[46px] items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
                   >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -1421,7 +1925,10 @@ function AppPage() {
   if (screen === "seed-review" && extraction) {
     const reviewGraph = getKnowledgeGraph(tier);
     const claims = extraction.claims;
-    const grouped = new Map<string, { claim: (typeof claims)[number]; index: number }[]>();
+    const grouped = new Map<
+      string,
+      { claim: (typeof claims)[number]; index: number }[]
+    >();
     claims.forEach((claim, index) => {
       const list = grouped.get(claim.domainId) ?? [];
       list.push({ claim, index });
@@ -1431,14 +1938,21 @@ function AppPage() {
       .filter((d) => grouped.has(d.id))
       .map((d) => ({ domain: d, items: grouped.get(d.id)! }));
     const decisionFor = (index: number) =>
-      seedDecisions[index] ?? { status: claims[index].confidence >= 0.8 ? "agree" : "skip" };
-    const approvedCount = claims.filter((_, i) => decisionFor(i).status !== "skip").length;
+      seedDecisions[index] ?? {
+        status: claims[index].confidence >= 0.8 ? "agree" : "skip",
+      };
+    const approvedCount = claims.filter(
+      (_, i) => decisionFor(i).status !== "skip",
+    ).length;
     const skippedCount = claims.length - approvedCount;
     const uncoveredLabels = extraction.uncoveredDomains
       .map((id) => reviewGraph.find((d) => d.id === id)?.label ?? id)
       .slice(0, 8);
     const setDecision = (index: number, status: "agree" | "revise" | "skip") =>
-      setSeedDecisions((x) => ({ ...x, [index]: { status, text: x[index]?.text } }));
+      setSeedDecisions((x) => ({
+        ...x,
+        [index]: { status, text: x[index]?.text },
+      }));
     const abandonUpload = () => {
       setScreen("start");
       setExtraction(null);
@@ -1450,8 +1964,16 @@ function AppPage() {
       <div className="min-h-dvh flex flex-col">
         <Header />
         <AuthPromptBanner show={authUser === null} />
-        {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
-        {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
+        {limitBanner && (
+          <UpgradeBanner reason={limitBanner} email={authUser?.email} />
+        )}
+        {limitModal && (
+          <UpgradeModal
+            onClose={() => setLimitModal(null)}
+            reason={limitModal}
+            email={authUser?.email}
+          />
+        )}
         <main id="main-content" className="flex-1 px-6 py-10">
           <div className="mx-auto w-full max-w-3xl">
             <button
@@ -1462,31 +1984,50 @@ function AppPage() {
               ← Back
             </button>
 
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Review what was extracted</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              Review what was extracted
+            </h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              {extraction.summary || "Here's what your document contained."} Approve, revise, or skip each claim — only approved claims are pre-filled into your interview.
+              {extraction.summary || "Here's what your document contained."}{" "}
+              Approve, revise, or skip each claim — only approved claims are
+              pre-filled into your interview.
             </p>
 
             {/* Summary strip */}
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
-                <div className="font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-400">{claims.length}</div>
-                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">claims extracted</div>
+                <div className="font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                  {claims.length}
+                </div>
+                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">
+                  claims extracted
+                </div>
               </div>
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
-                <div className="font-mono text-2xl font-bold text-gray-900 dark:text-gray-100">{orderedGroups.length}</div>
-                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">domains covered</div>
+                <div className="font-mono text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {orderedGroups.length}
+                </div>
+                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">
+                  domains covered
+                </div>
               </div>
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
-                <div className="font-mono text-2xl font-bold text-amber-700 dark:text-amber-400">{extraction.uncoveredDomains.length}</div>
-                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">domains not in document</div>
+                <div className="font-mono text-2xl font-bold text-amber-700 dark:text-amber-400">
+                  {extraction.uncoveredDomains.length}
+                </div>
+                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">
+                  domains not in document
+                </div>
               </div>
             </div>
 
             {uncoveredLabels.length > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
                 Your document doesn't cover:{" "}
-                <span className="text-gray-700 dark:text-gray-300">{uncoveredLabels.join(", ")}</span>. These will be asked in the interview.
+                <span className="text-gray-700 dark:text-gray-300">
+                  {uncoveredLabels.join(", ")}
+                </span>
+                . These will be asked in the interview.
               </p>
             )}
 
@@ -1494,14 +2035,22 @@ function AppPage() {
             <div className="mt-6 space-y-4">
               {orderedGroups.length === 0 && (
                 <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                  Nothing usable was extracted from this document. Continue to start a fresh interview.
+                  Nothing usable was extracted from this document. Continue to
+                  start a fresh interview.
                 </p>
               )}
               {orderedGroups.map(({ domain, items }) => (
-                <div key={domain.id} className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div
+                  key={domain.id}
+                  className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                >
                   <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-4 py-2.5">
-                    <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">{domain.label}</span>
-                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">&lt;{domain.id} /&gt;</span>
+                    <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                      {domain.label}
+                    </span>
+                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">
+                      &lt;{domain.id} /&gt;
+                    </span>
                   </div>
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
                     {items.map(({ claim, index }) => {
@@ -1510,13 +2059,19 @@ function AppPage() {
                       return (
                         <div key={index} className="px-4 py-3.5">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">{claim.text}</p>
-                            <span className={`flex-shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] ${
-                              highConf
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                                : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                            }`}>
-                              {highConf ? `high · ${Math.round(claim.confidence * 100)}%` : `verify · ${Math.round(claim.confidence * 100)}%`}
+                            <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                              {claim.text}
+                            </p>
+                            <span
+                              className={`flex-shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] ${
+                                highConf
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                  : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                              }`}
+                            >
+                              {highConf
+                                ? `high · ${Math.round(claim.confidence * 100)}%`
+                                : `verify · ${Math.round(claim.confidence * 100)}%`}
                             </span>
                           </div>
                           {claim.evidence && (
@@ -1525,7 +2080,13 @@ function AppPage() {
                             </p>
                           )}
                           <div className="mt-2.5 flex flex-wrap gap-1.5">
-                            {([["agree", "✓ Agree"], ["revise", "✎ Revise"], ["skip", "⏭ Skip"]] as const).map(([s, label]) => (
+                            {(
+                              [
+                                ["agree", "✓ Agree"],
+                                ["revise", "✎ Revise"],
+                                ["skip", "⏭ Skip"],
+                              ] as const
+                            ).map(([s, label]) => (
                               <button
                                 key={s}
                                 type="button"
@@ -1547,7 +2108,15 @@ function AppPage() {
                           {decision.status === "revise" && (
                             <textarea
                               value={decision.text ?? claim.text}
-                              onChange={(ev) => setSeedDecisions((x) => ({ ...x, [index]: { status: "revise", text: ev.target.value } }))}
+                              onChange={(ev) =>
+                                setSeedDecisions((x) => ({
+                                  ...x,
+                                  [index]: {
+                                    status: "revise",
+                                    text: ev.target.value,
+                                  },
+                                }))
+                              }
                               rows={2}
                               autoFocus
                               className="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
@@ -1567,16 +2136,28 @@ function AppPage() {
                 {approvedCount} approved · {skippedCount} skipped
                 {approvedCount > 0 && (
                   <span className="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    Approved claims seed your interview as high-confidence answers — remaining domains are asked normally.
+                    Approved claims seed your interview as high-confidence
+                    answers — remaining domains are asked normally.
                   </span>
                 )}
               </p>
               <div className="flex gap-2 flex-shrink-0">
-                <button type="button" onClick={abandonUpload} className={btnSecondary}>
+                <button
+                  type="button"
+                  onClick={abandonUpload}
+                  className={btnSecondary}
+                >
                   Start fresh
                 </button>
-                <button type="button" onClick={handleSeedContinue} disabled={waiting} className={btnPrimary}>
-                  {waiting ? "Starting interview..." : "Continue to interview →"}
+                <button
+                  type="button"
+                  onClick={handleSeedContinue}
+                  disabled={waiting}
+                  className={btnPrimary}
+                >
+                  {waiting
+                    ? "Starting interview..."
+                    : "Continue to interview →"}
                 </button>
               </div>
             </div>
@@ -1593,270 +2174,564 @@ function AppPage() {
     <div className="min-h-dvh flex flex-col">
       <Header />
       <AuthPromptBanner show={authUser === null} />
-      {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
-      {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
-      <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
+      {limitBanner && (
+        <UpgradeBanner reason={limitBanner} email={authUser?.email} />
+      )}
+      {limitModal && (
+        <UpgradeModal
+          onClose={() => setLimitModal(null)}
+          reason={limitModal}
+          email={authUser?.email}
+        />
+      )}
+      <main
+        id="main-content"
+        className="flex-1 flex items-center justify-center px-6 py-12"
+      >
+        <div
+          className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}
+        >
           {resumeDraft && (
-            <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">
-              <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Saved progress found</p>
-              <h1 id="resume-heading" className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">Continue your previous interview?</h1>
+            <section
+              aria-labelledby="resume-heading"
+              className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6"
+            >
+              <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                Saved progress found
+              </p>
+              <h1
+                id="resume-heading"
+                className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100"
+              >
+                Continue your previous interview?
+              </h1>
               <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-                {resumeDraft.topic} · {resumeDraft.state.history.filter((message) => message.role === "user").length} answers saved {resumeDraft.source === "browser" ? "in this browser" : "to your account"}.
+                {resumeDraft.topic} ·{" "}
+                {
+                  resumeDraft.state.history.filter(
+                    (message) => message.role === "user",
+                  ).length
+                }{" "}
+                answers saved{" "}
+                {resumeDraft.source === "browser"
+                  ? "in this browser"
+                  : "to your account"}
+                .
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={handleResumeDraft} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                <button
+                  type="button"
+                  onClick={handleResumeDraft}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                >
                   Resume interview
                 </button>
-                <button type="button" onClick={() => void handleStartOver()} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:text-gray-100">
+                <button
+                  type="button"
+                  onClick={() => void handleStartOver()}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:text-gray-100"
+                >
                   Start a new interview
                 </button>
               </div>
             </section>
           )}
           <div className="text-center mb-8">
-            {!resumeDraft && <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-              {offering === "meos" ? "Build your personal operating system" : "Build your AI profile"}
-            </h1>}
+            {!resumeDraft && (
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                {offering === "meos"
+                  ? "Build your personal operating system"
+                  : "Build your AI profile"}
+              </h1>
+            )}
             <p className="text-gray-600 dark:text-gray-400">
               {offering === "meos"
                 ? "A guided interview that captures your values, patterns, goals, and direction — then compiles them into a private integrated portrait and decision companion."
-                : "Get a useful starter profile in about 10–15 minutes. You can deepen it over time, inspect every file, and use it across your AI tools."
-              }
+                : "Get a useful starter profile in about 10–15 minutes. You can deepen it over time, inspect every file, and use it across your AI tools."}
             </p>
           </div>
 
           {/* Offering selection */}
-          {offering !== "meos" && <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-sm leading-relaxed text-gray-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-gray-300">
-            <strong className="text-gray-900 dark:text-gray-100">What you&apos;ll get:</strong> five editable Markdown files covering who you are, how you decide, what you need, your boundaries, and how you work.
-            <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal alignment and decision support? <a href="/meos" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore MeOS separately →</a></span>
-          </div>}
-          {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
+          {offering !== "meos" && (
+            <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-sm leading-relaxed text-gray-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-gray-300">
+              <strong className="text-gray-900 dark:text-gray-100">
+                What you&apos;ll get:
+              </strong>{" "}
+              five editable Markdown files covering who you are, how you decide,
+              what you need, your boundaries, and how you work.
+              <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">
+                Looking for personal alignment and decision support?{" "}
+                <a
+                  href="/meos"
+                  className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400"
+                >
+                  Explore MeOS separately →
+                </a>
+              </span>
+            </div>
+          )}
+          {offering === "meos" && (
+            <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              Build your personal operating system. Turn your values, patterns,
+              goals, professional history, and optional self-knowledge
+              frameworks into a private daily companion for clearer personal and
+              professional decisions.
+            </p>
+          )}
 
           {/* Topic input */}
-          {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>
-            <div className="space-y-5">
-            <div>
-              <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
-                {offering === "meos" ? "Describe your current chapter in your own words" : "What should your AI know about you?"}
-              </label>
-              {offering === "meos" && <input
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
-                placeholder={'e.g. "I\'m navigating a career transition and need clarity on my direction"'}
-                value={topic}
-                onChange={(e) => { setTopic(e.target.value); setStartError(""); }}
-                onKeyDown={(e) => e.key === "Enter" && handleStart()}
-                autoFocus
-              />}
-              {startError && (
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{startError}</p>
-              )}
-
-              {/* Chapter suggestions */}
-              {offering === "meos" && (
-                <fieldset className="mt-3 space-y-1">
-                  <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                    Which themes apply? <span className="normal-case tracking-normal text-gray-500 dark:text-gray-400">(choose any)</span>
-                  </legend>
-                  {["Navigating a career pivot", "Starting something new", "Rebuilding after a setback", "Deep in a growth phase", "Feeling stuck and seeking direction"].map((suggestion) => (
-                    <label key={suggestion} className="flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
-                      <input
-                        type="checkbox"
-                        checked={chapterSuggestions.includes(suggestion)}
-                        onChange={() => {
-                          const next = chapterSuggestions.includes(suggestion)
-                            ? chapterSuggestions.filter(s => s !== suggestion)
-                            : [...chapterSuggestions, suggestion];
-                          setChapterSuggestions(next);
-                          setTopic(next.join(", "));
-                          setStartError("");
-                        }}
-                        className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
-                      />
-                      <span>{suggestion}</span>
-                    </label>
-                  ))}
-                </fieldset>
-              )}
-
-              {/* Tier — locked to Personal for public launch */}
-              {offering === "context" && (
-                <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Team and enterprise coming soon. <a href="/team" className="underline hover:text-gray-600 dark:hover:text-gray-300">Join the pilot →</a>
-                </p>
-              )}
-
-              {/* Example topic suggestions */}
-              {offering === "context" && (
-                <fieldset className="mt-3 space-y-3">
-                  <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    Examples of what ALVIRA helps you uncover (select all that apply)
-                  </legend>
-                  {TOPIC_GROUPS.map((group) => {
-                    const groupLocked = Boolean(activeGroup && activeGroup.label !== group.label);
-                    return (
-                    <div key={group.label} className="space-y-1.5">
-                      <p className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{group.label}</p>
-                      <div className="space-y-1">
-                        {group.topics.map((topicOption) => (
-                          <label key={topicOption} className={`flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 ${groupLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"}`}>
-                            <input
-                              type="checkbox"
-                              checked={selectedTopics.includes(topicOption)}
-                              disabled={groupLocked}
-                              onChange={(e) => {
-                                const nextTopics = e.target.checked
-                                  ? [...selectedTopics, topicOption]
-                                  : selectedTopics.filter((item) => item !== topicOption);
-                                setSelectedTopics(nextTopics);
-                                setTopic([...nextTopics, ...(customTopic.trim() ? [customTopic.trim()] : [])].join(", "));
-                                setStartError("");
-                                const selectedGroups = TOPIC_GROUPS.filter((candidate) => candidate.topics.some((item) => nextTopics.includes(item)));
-                                if (selectedGroups.length === 1) setTier(selectedGroups[0].tier);
-                              }}
-                              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
-                            />
-                            <span>{topicOption}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    );
-                    })}
-                    <label className="flex items-center gap-2 pt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    <span className="text-emerald-600 dark:text-emerald-400">+</span>
+          {offering && (
+            <div
+              className={
+                offering === "context"
+                  ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start"
+                  : "space-y-8"
+              }
+            >
+              <div className="space-y-5">
+                <div>
+                  <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
+                    {offering === "meos"
+                      ? "Describe your current chapter in your own words"
+                      : "What should your AI know about you?"}
+                  </label>
+                  {offering === "meos" && (
                     <input
-                      type="text"
-                      value={customTopic}
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
+                      placeholder={
+                        'e.g. "I\'m navigating a career transition and need clarity on my direction"'
+                      }
+                      value={topic}
                       onChange={(e) => {
-                        const value = e.target.value;
-                        setCustomTopic(value);
-                        setTopic([...selectedTopics, ...(value.trim() ? [value.trim()] : [])].join(", "));
+                        setTopic(e.target.value);
                         setStartError("");
                       }}
-                      placeholder="Add your own topic..."
+                      onKeyDown={(e) => e.key === "Enter" && handleStart()}
                       autoFocus
-                      className="min-w-0 flex-1 border-b border-gray-200 bg-transparent py-1 text-xs text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-emerald-400 dark:focus-visible:ring-emerald-400/40"
                     />
-                  </label>
-                </fieldset>
+                  )}
+                  {startError && (
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                      {startError}
+                    </p>
+                  )}
+
+                  {/* Chapter suggestions */}
+                  {offering === "meos" && (
+                    <fieldset className="mt-3 space-y-1">
+                      <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                        Which themes apply?{" "}
+                        <span className="normal-case tracking-normal text-gray-500 dark:text-gray-400">
+                          (choose any)
+                        </span>
+                      </legend>
+                      {[
+                        "Navigating a career pivot",
+                        "Starting something new",
+                        "Rebuilding after a setback",
+                        "Deep in a growth phase",
+                        "Feeling stuck and seeking direction",
+                      ].map((suggestion) => (
+                        <label
+                          key={suggestion}
+                          className="flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={chapterSuggestions.includes(suggestion)}
+                            onChange={() => {
+                              const next = chapterSuggestions.includes(
+                                suggestion,
+                              )
+                                ? chapterSuggestions.filter(
+                                    (s) => s !== suggestion,
+                                  )
+                                : [...chapterSuggestions, suggestion];
+                              setChapterSuggestions(next);
+                              setTopic(next.join(", "));
+                              setStartError("");
+                            }}
+                            className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
+                          />
+                          <span>{suggestion}</span>
+                        </label>
+                      ))}
+                    </fieldset>
+                  )}
+
+                  {/* Tier — locked to Personal for public launch */}
+                  {offering === "context" && (
+                    <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Team and enterprise coming soon.{" "}
+                      <a
+                        href="/team"
+                        className="underline hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        Join the pilot →
+                      </a>
+                    </p>
+                  )}
+
+                  {/* Example topic suggestions */}
+                  {offering === "context" && (
+                    <fieldset className="mt-3 space-y-3">
+                      <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Examples of what ALVIRA helps you uncover (select all
+                        that apply)
+                      </legend>
+                      {TOPIC_GROUPS.map((group) => {
+                        const groupLocked = Boolean(
+                          activeGroup && activeGroup.label !== group.label,
+                        );
+                        return (
+                          <div key={group.label} className="space-y-1.5">
+                            <p className="font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                              {group.label}
+                            </p>
+                            <div className="space-y-1">
+                              {group.topics.map((topicOption) => (
+                                <label
+                                  key={topicOption}
+                                  className={`flex items-start gap-2 rounded px-1 py-1 font-mono text-xs leading-relaxed text-gray-700 dark:text-gray-300 ${groupLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedTopics.includes(
+                                      topicOption,
+                                    )}
+                                    disabled={groupLocked}
+                                    onChange={(e) => {
+                                      const nextTopics = e.target.checked
+                                        ? [...selectedTopics, topicOption]
+                                        : selectedTopics.filter(
+                                            (item) => item !== topicOption,
+                                          );
+                                      setSelectedTopics(nextTopics);
+                                      setTopic(
+                                        [
+                                          ...nextTopics,
+                                          ...(customTopic.trim()
+                                            ? [customTopic.trim()]
+                                            : []),
+                                        ].join(", "),
+                                      );
+                                      setStartError("");
+                                      const selectedGroups =
+                                        TOPIC_GROUPS.filter((candidate) =>
+                                          candidate.topics.some((item) =>
+                                            nextTopics.includes(item),
+                                          ),
+                                        );
+                                      if (selectedGroups.length === 1)
+                                        setTier(selectedGroups[0].tier);
+                                    }}
+                                    className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"
+                                  />
+                                  <span>{topicOption}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <label className="flex items-center gap-2 pt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          +
+                        </span>
+                        <input
+                          type="text"
+                          value={customTopic}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setCustomTopic(value);
+                            setTopic(
+                              [
+                                ...selectedTopics,
+                                ...(value.trim() ? [value.trim()] : []),
+                              ].join(", "),
+                            );
+                            setStartError("");
+                          }}
+                          placeholder="Add your own topic..."
+                          autoFocus
+                          className="min-w-0 flex-1 border-b border-gray-200 bg-transparent py-1 text-xs text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-emerald-400 dark:focus-visible:ring-emerald-400/40"
+                        />
+                      </label>
+                    </fieldset>
+                  )}
+                </div>
+
+                {authUser && (
+                  <div className="text-center">
+                    <a
+                      href="/dashboard"
+                      className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline"
+                    >
+                      Or resume a saved profile →
+                    </a>
+                  </div>
+                )}
+
+                {/* Start button */}
+                <button
+                  type="button"
+                  onClick={handleStart}
+                  disabled={!topic.trim()}
+                  className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+                >
+                  {offering === "meos"
+                    ? "Start my MeOS interview"
+                    : "Start interview"}
+                </button>
+
+                {/* Upload-to-seed option */}
+                {(offering === "context" || offering === "meos") && (
+                  <div className="pt-2">
+                    <div className="flex items-center gap-3">
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                        or start from a document
+                      </span>
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                    <div className="mt-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-4">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                        {offering === "meos"
+                          ? "Upload a journal, self-assessment, or coaching notes"
+                          : "Upload a resume, bio, or notes"}
+                      </p>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                        ALVIRA extracts what it can from a .txt, .md, or .docx
+                        file — you review the claims, then the interview only
+                        asks about what's missing. Your file is never stored.
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".txt,.md,.docx"
+                          className="hidden"
+                          onChange={handleFileChange}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading || !topic.trim()}
+                          className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+                        >
+                          {uploading ? "Extracting knowledge…" : "Choose file…"}
+                        </button>
+                        <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">
+                          .txt · .md · .docx · max 5MB
+                        </span>
+                      </div>
+                      {uploadError && (
+                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                          {uploadError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {offering === "context" && (
+                <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
+                  <div className="mb-5">
+                    <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">
+                      &lt;output-files /&gt;
+                    </span>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                      Five focused files give your AI the context it needs to
+                      work with you.
+                    </p>
+                  </div>
+                  <div className="space-y-5">
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        overview.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — Who you are
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Your identity, background, goals, key relationships, and
+                        communication style. This is the file your AI reads
+                        first to understand context.
+                      </p>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Examples:</span> “My
+                        communication style and decision-making process”; “My
+                        key relationships and how I collaborate with others”
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        requirements.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — What you need to know
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Domain knowledge, specialized terminology, and
+                        frequently asked questions. Helps AI use the right
+                        vocabulary and understand your field.
+                      </p>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Examples:</span> “Key
+                        concepts and terminology from my field of work”; “Our
+                        team’s development standards and code review process”
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        constraints.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — What won’t change
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Your boundaries, non-negotiables, limitations, and
+                        explicit unknowns. Tells AI what not to do and what
+                        assumptions need verification.
+                      </p>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Examples:</span> “My
+                        values, boundaries, and what I won’t compromise on”;
+                        “Our organization’s compliance rules and security
+                        policies”
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        business-rules.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — How you decide
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Your decision frameworks, priorities, and how you
+                        evaluate tradeoffs. Gives AI your rulebook for making
+                        judgment calls.
+                      </p>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Examples:</span> “My
+                        goals, priorities, and how I evaluate tradeoffs”; “Our
+                        department’s approval chains and decision thresholds”
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        workflows.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — How you work
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Your processes, daily routines, tools, and recurring
+                        workflows. Helps AI understand your operational context.
+                      </p>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Examples:</span> “My
+                        daily routines, habits, and personal workflows”; “Our
+                        cross-department workflows and vendor relationships”
+                      </p>
+                    </div>
+                  </div>
+                </aside>
+              )}
+
+              {offering === "meos" && (
+                <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
+                  <div className="mb-5">
+                    <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">
+                      &lt;output-files /&gt;
+                    </span>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                      Your interview produces these files — a complete personal
+                      operating system.
+                    </p>
+                  </div>
+                  <div className="space-y-5">
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        portrait.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — Your integrated portrait
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        A cohesive narrative of who you are right now — your
+                        current chapter, values, desired outcomes, and what
+                        drives you.
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        purpose-statements.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — Personal &amp; professional purpose
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Clear articulations of what you're here to do, both
+                        personally and professionally. Gives AI your "why."
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        boundaries.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — Your non-negotiables
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        What you won't compromise on, your limits, and how you
+                        protect your energy and focus.
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        decision-compass.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — How you decide
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Your decision-making framework — the questions to ask
+                        yourself when facing a crossroad. Your personal compass.
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        career-tools.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — Career alignment
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Insights about your professional path, strengths, and
+                        how your work aligns with your purpose and values.
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        source-trace.md{" "}
+                        <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">
+                          — Where each claim came from
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        Full transparency: which statements came from you
+                        directly, which were inferred, and which you
+                        self-validated.
+                      </p>
+                    </div>
+                  </div>
+                </aside>
               )}
             </div>
-
-            {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline">Or resume a saved profile →</a></div>}
-
-            {/* Start button */}
-            <button
-              type="button"
-              onClick={handleStart}
-              disabled={!topic.trim()}
-              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
-            >
-              {offering === "meos" ? "Start my MeOS interview" : "Start interview"}
-            </button>
-
-            {/* Upload-to-seed option */}
-            {(offering === "context" || offering === "meos") && (
-              <div className="pt-2">
-                <div className="flex items-center gap-3">
-                  <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">or start from a document</span>
-                  <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-                </div>
-                <div className="mt-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-4">
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{offering === "meos" ? "Upload a journal, self-assessment, or coaching notes" : "Upload a resume, bio, or notes"}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                    ALVIRA extracts what it can from a .txt, .md, or .docx file — you review the claims, then the interview only asks about what's missing. Your file is never stored.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading || !topic.trim()}
-                      className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
-                    >
-                      {uploading ? "Extracting knowledge…" : "Choose file…"}
-                    </button>
-                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">.txt · .md · .docx · max 5MB</span>
-                  </div>
-                  {uploadError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{uploadError}</p>}
-                </div>
-              </div>
-            )}
-            </div>
-
-            {offering === "context" && (
-              <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
-                <div className="mb-5">
-                  <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">&lt;output-files /&gt;</span>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Five focused files give your AI the context it needs to work with you.</p>
-                </div>
-                <div className="space-y-5">
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">overview.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Who you are</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your identity, background, goals, key relationships, and communication style. This is the file your AI reads first to understand context.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My communication style and decision-making process”; “My key relationships and how I collaborate with others”</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">requirements.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— What you need to know</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Domain knowledge, specialized terminology, and frequently asked questions. Helps AI use the right vocabulary and understand your field.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “Key concepts and terminology from my field of work”; “Our team’s development standards and code review process”</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">constraints.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— What won’t change</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your boundaries, non-negotiables, limitations, and explicit unknowns. Tells AI what not to do and what assumptions need verification.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My values, boundaries, and what I won’t compromise on”; “Our organization’s compliance rules and security policies”</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">business-rules.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you decide</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your decision frameworks, priorities, and how you evaluate tradeoffs. Gives AI your rulebook for making judgment calls.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My goals, priorities, and how I evaluate tradeoffs”; “Our department’s approval chains and decision thresholds”</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">workflows.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you work</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your processes, daily routines, tools, and recurring workflows. Helps AI understand your operational context.</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><span className="font-semibold">Examples:</span> “My daily routines, habits, and personal workflows”; “Our cross-department workflows and vendor relationships”</p>
-                  </div>
-                </div>
-              </aside>
-            )}
-
-            {offering === "meos" && (
-              <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
-                <div className="mb-5">
-                  <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">&lt;output-files /&gt;</span>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your interview produces these files — a complete personal operating system.</p>
-                </div>
-                <div className="space-y-5">
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">portrait.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Your integrated portrait</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">A cohesive narrative of who you are right now — your current chapter, values, desired outcomes, and what drives you.</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">purpose-statements.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Personal &amp; professional purpose</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Clear articulations of what you're here to do, both personally and professionally. Gives AI your "why."</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">boundaries.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Your non-negotiables</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">What you won't compromise on, your limits, and how you protect your energy and focus.</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">decision-compass.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— How you decide</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Your decision-making framework — the questions to ask yourself when facing a crossroad. Your personal compass.</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">career-tools.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Career alignment</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Insights about your professional path, strengths, and how your work aligns with your purpose and values.</p>
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">source-trace.md <span className="font-sans font-normal italic text-gray-700 dark:text-gray-300">— Where each claim came from</span></div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Full transparency: which statements came from you directly, which were inferred, and which you self-validated.</p>
-                  </div>
-                </div>
-              </aside>
-            )}
-          </div>}
+          )}
         </div>
       </main>
       <SignupPromptBanner show={authUser === null} />

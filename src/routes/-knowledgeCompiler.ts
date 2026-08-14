@@ -21,7 +21,10 @@ interface Section {
  * Deterministic function: takes validated interview state and produces 5 Markdown files.
  * Same input always produces the same output — no LLM involved.
  */
-export function compileKnowledge(state: InterviewState, graph: Domain[]): MarkdownFiles {
+export function compileKnowledge(
+  state: InterviewState,
+  graph: Domain[],
+): MarkdownFiles {
   const projectName = state.topic || "My Project";
   const tierLabel =
     state.tier === "personal"
@@ -70,10 +73,7 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
     sections.businessRules,
   );
 
-  const workflows = buildFile(
-    "# Workflows & Processes\n",
-    sections.workflows,
-  );
+  const workflows = buildFile("# Workflows & Processes\n", sections.workflows);
 
   return { overview, requirements, constraints, businessRules, workflows };
 }

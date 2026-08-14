@@ -110,7 +110,9 @@ async function deliver(
   const api = (process.env.EMAIL_API_URL ?? "").trim();
   if (api) {
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
       const key = (process.env.EMAIL_API_KEY ?? "").trim();
       if (key) headers.Authorization = `Bearer ${key}`;
       const res = await fetch(api, {
@@ -119,16 +121,30 @@ async function deliver(
         body: JSON.stringify({ to, subject, body }),
       });
       if (res.ok) return { ok: true, mode: "api" };
-      return { ok: false, mode: "api", error: `email API returned HTTP ${res.status}` };
+      return {
+        ok: false,
+        mode: "api",
+        error: `email API returned HTTP ${res.status}`,
+      };
     } catch (err) {
-      return { ok: false, mode: "api", error: `email API request failed: ${String(err)}` };
+      return {
+        ok: false,
+        mode: "api",
+        error: `email API request failed: ${String(err)}`,
+      };
     }
   }
   return { ok: true, mode: "simulated" }; // no API configured → log + drain
 }
 
 // ── Logging (Part 4: lead visibility) ──
-function recordLog(m: { to: string; subject: string; body: string; mode: "api" | "simulated"; queue: string }): void {
+function recordLog(m: {
+  to: string;
+  subject: string;
+  body: string;
+  mode: "api" | "simulated";
+  queue: string;
+}): void {
   const flag = m.mode === "api" ? "SENT" : "SIMULATED";
   const line = `[${new Date().toISOString()}] ${flag} queue=${m.queue} to=${m.to} subject=${JSON.stringify(m.subject)} body=${JSON.stringify(m.body)}`;
   try {
@@ -145,7 +161,10 @@ function writeQueueFile(path: string, lines: string[]): void {
   renameSync(tmp, path); // atomic on the same filesystem
 }
 
-async function acquireLock(lockPath: string, timeoutMs: number): Promise<boolean> {
+async function acquireLock(
+  lockPath: string,
+  timeoutMs: number,
+): Promise<boolean> {
   const start = Date.now();
   for (;;) {
     try {
@@ -185,17 +204,28 @@ interface BuiltEmail {
   body: string;
 }
 
-function buildEmail(queue: QueueName, entry: Record<string, unknown>): BuiltEmail | null {
+function buildEmail(
+  queue: QueueName,
+  entry: Record<string, unknown>,
+): BuiltEmail | null {
   if (queue === "welcome") {
     const to = typeof entry.email === "string" ? entry.email.trim() : "";
     if (!to) return null;
-    return { to, subject: QUEUES.welcome.subject as string, body: WELCOME_BODY };
+    return {
+      to,
+      subject: QUEUES.welcome.subject as string,
+      body: WELCOME_BODY,
+    };
   }
   if (queue === "reset") {
     const to = typeof entry.email === "string" ? entry.email.trim() : "";
     const resetUrl = typeof entry.resetUrl === "string" ? entry.resetUrl : "";
     if (!to || !resetUrl) return null;
-    return { to, subject: QUEUES.reset.subject as string, body: RESET_BODY(resetUrl) };
+    return {
+      to,
+      subject: QUEUES.reset.subject as string,
+      body: RESET_BODY(resetUrl),
+    };
   }
   // waitlist: use the subject/body straight from the payload
   const to = typeof entry.to === "string" ? entry.to.trim() : "";
@@ -215,7 +245,9 @@ export async function handleSendEmail(req: Request): Promise<Response> {
     for (const queue of Object.keys(QUEUES) as QueueName[]) {
       const path = queuePath(queue);
       counts[queue] = existsSync(path)
-        ? readFileSync(path, "utf-8").split("\n").filter((l) => l.trim() !== "").length
+        ? readFileSync(path, "utf-8")
+            .split("\n")
+            .filter((l) => l.trim() !== "").length
         : 0;
     }
     return json({
@@ -225,7 +257,8 @@ export async function handleSendEmail(req: Request): Promise<Response> {
     });
   }
 
-  if (method !== "POST") return json({ error: "Method not allowed. Use POST or GET." }, 405);
+  if (method !== "POST")
+    return json({ error: "Method not allowed. Use POST or GET." }, 405);
   if (!authorized(req)) return json({ error: "Unauthorized" }, 401);
 
   let payload: unknown;
@@ -248,25 +281,41 @@ export async function handleSendEmail(req: Request): Promise<Response> {
     if (!result.ok) {
       return json({ ok: false, error: result.error, mode: result.mode }, 502);
     }
-    recordLog({ to, subject: d.subject, body: d.body, mode: result.mode, queue: "direct" });
+    recordLog({
+      to,
+      subject: d.subject,
+      body: d.body,
+      mode: result.mode,
+      queue: "direct",
+    });
     return json({ ok: true, sent: 1, remaining: 0, mode: result.mode });
   }
 
   // Queue mode: { queue: "welcome" | "reset" | "waitlist" }
   const queue = d.queue;
   if (queue !== "welcome" && queue !== "reset" && queue !== "waitlist") {
-    return json({ error: 'Invalid queue. Use { "queue": "welcome" | "reset" | "waitlist" }.' }, 400);
+    return json(
+      {
+        error:
+          'Invalid queue. Use { "queue": "welcome" | "reset" | "waitlist" }.',
+      },
+      400,
+    );
   }
   const path = queuePath(queue);
-  if (!existsSync(path)) return json({ ok: true, sent: 0, remaining: 0, queue });
+  if (!existsSync(path))
+    return json({ ok: true, sent: 0, remaining: 0, queue });
 
   const lockPath = `${path}.lock`;
   const locked = await acquireLock(lockPath, 10_000);
-  if (!locked) return json({ ok: false, error: "queue is locked by another run" }, 409);
+  if (!locked)
+    return json({ ok: false, error: "queue is locked by another run" }, 409);
   try {
     // Re-read under the lock so a concurrent writer's lines are not lost.
     const lines = existsSync(path)
-      ? readFileSync(path, "utf-8").split("\n").filter((l) => l.trim() !== "")
+      ? readFileSync(path, "utf-8")
+          .split("\n")
+          .filter((l) => l.trim() !== "")
       : [];
     const remaining: string[] = [];
     let sent = 0;
@@ -283,7 +332,13 @@ export async function handleSendEmail(req: Request): Promise<Response> {
         if (result.ok) {
           sent++;
           if (result.mode === "simulated") simulated++;
-          recordLog({ to: built.to, subject: built.subject, body: built.body, mode: result.mode, queue });
+          recordLog({
+            to: built.to,
+            subject: built.subject,
+            body: built.body,
+            mode: result.mode,
+            queue,
+          });
         } else {
           remaining.push(line); // real API failure → retry next run
         }

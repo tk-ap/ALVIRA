@@ -47,23 +47,62 @@ const INSUFFICIENT_KNOWLEDGE_PHRASES = [
 
 // Single-word deflection answers that don't engage with the question
 const DEFLECTION_WORDS = new Set([
-  "ok", "okay", "sure", "yes", "no", "maybe", "idk", "alright",
-  "fine", "whatever", "nah", "yep", "nope", "yeah",
+  "ok",
+  "okay",
+  "sure",
+  "yes",
+  "no",
+  "maybe",
+  "idk",
+  "alright",
+  "fine",
+  "whatever",
+  "nah",
+  "yep",
+  "nope",
+  "yeah",
 ]);
 
 // Negation keywords that might indicate contradiction
-const NEGATION_WORDS = ["not", "never", "don't", "doesn't", "won't", "can't", "shouldn't", "no "];
+const NEGATION_WORDS = [
+  "not",
+  "never",
+  "don't",
+  "doesn't",
+  "won't",
+  "can't",
+  "shouldn't",
+  "no ",
+];
 
 // Question-starting words that indicate the user is asking a clarifying question
 const QUESTION_STARTS = [
-  "what ", "how ", "why ", "when ", "where ", "who ",
-  "can you ", "could you ", "would you ", "do you ", "does ",
-  "is ", "are ", "explain ", "clarify ", "elaborate", "example",
+  "what ",
+  "how ",
+  "why ",
+  "when ",
+  "where ",
+  "who ",
+  "can you ",
+  "could you ",
+  "would you ",
+  "do you ",
+  "does ",
+  "is ",
+  "are ",
+  "explain ",
+  "clarify ",
+  "elaborate",
+  "example",
 ];
 
 // Question phrases that can appear anywhere in the text
 const QUESTION_PHRASES = [
-  "what does", "what is", "what are", "how do", "how does",
+  "what does",
+  "what is",
+  "what are",
+  "how do",
+  "how does",
 ];
 
 /**
@@ -227,14 +266,18 @@ export function validateAnswer(
   const hasConcreteNouns = hasProperNouns || hasNumbers || wordCount > 10;
 
   if (!hasConcreteNouns && wordCount < 15) {
-    warnings.push("Answer lacks specific details — names, numbers, or concrete examples would help.");
+    warnings.push(
+      "Answer lacks specific details — names, numbers, or concrete examples would help.",
+    );
     score -= 0.15;
   }
 
   // 4. Vague phrase check
   for (const phrase of VAGUE_PHRASES) {
     if (lower.includes(phrase)) {
-      warnings.push(`Answer contains vague phrasing ("${phrase}") — try to be more definitive.`);
+      warnings.push(
+        `Answer contains vague phrasing ("${phrase}") — try to be more definitive.`,
+      );
       score -= 0.1;
       break; // Only penalize once for vagueness
     }
@@ -261,13 +304,19 @@ export function validateAnswer(
       // Check for negation patterns: if an existing answer says "we use X" and new says "we don't use X"
       // Look for overlapping significant words with negation in one but not the other
       const hasNegInNew = NEGATION_WORDS.some((nw) => lower.includes(nw));
-      const hasNegInExisting = NEGATION_WORDS.some((nw) => existingLower.includes(nw));
+      const hasNegInExisting = NEGATION_WORDS.some((nw) =>
+        existingLower.includes(nw),
+      );
 
       if (hasNegInNew !== hasNegInExisting) {
         // One has negation, the other doesn't — check for shared key terms
         const sharedWords: string[] = [];
         for (const w of answerWords) {
-          if (existingWords.has(w) && w.length > 3 && !NEGATION_WORDS.includes(w)) {
+          if (
+            existingWords.has(w) &&
+            w.length > 3 &&
+            !NEGATION_WORDS.includes(w)
+          ) {
             sharedWords.push(w);
           }
         }
@@ -288,5 +337,11 @@ export function validateAnswer(
   // needsClarification: true when confidence is too low for the answer to be usable
   const needsClarification = confidence < 0.4;
 
-  return { confidence, warnings, needsClarification, insufficientKnowledge, isUserQuestion: false };
+  return {
+    confidence,
+    warnings,
+    needsClarification,
+    insufficientKnowledge,
+    isUserQuestion: false,
+  };
 }

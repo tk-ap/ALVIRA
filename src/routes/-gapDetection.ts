@@ -50,7 +50,8 @@ export function detectGaps(
   // Sort by priority: coverage severity first, then domain priority (lower = ask first), then required status
   gaps.sort((a, b) => {
     const priorityScore = (gap: Gap): number => {
-      const coverageScore = gap.coverage === "uncovered" ? 0 : gap.coverage === "shallow" ? 1 : 2;
+      const coverageScore =
+        gap.coverage === "uncovered" ? 0 : gap.coverage === "shallow" ? 1 : 2;
       const reqScore = gap.domain.required ? 0 : 1;
       const domainPriority = gap.domain.priority ?? 50;
       return coverageScore * 1000 + reqScore * 100 + domainPriority;

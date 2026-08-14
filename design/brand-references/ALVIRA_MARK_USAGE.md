@@ -128,4 +128,3 @@ For implementation:
 - [ ] Reference PNGs remain unchanged and are not imported by application code.
 - [ ] The primary mark remains the default for navigation and compact product surfaces.
 - [ ] The secondary mark is reserved for larger editorial brand moments.
-

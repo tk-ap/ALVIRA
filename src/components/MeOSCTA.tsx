@@ -17,7 +17,11 @@ export interface MeOSCTAProps {
 }
 
 // ── Component ──
-export function MeOSCTA({ placement, variant = "default", dismissible = true }: MeOSCTAProps) {
+export function MeOSCTA({
+  placement,
+  variant = "default",
+  dismissible = true,
+}: MeOSCTAProps) {
   const [dismissed, setDismissed] = useState(false);
 
   // ── Impression tracking on mount ──
@@ -60,7 +64,8 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
             Turn your AI profile into a personal operating system.
           </h3>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            ALVIRA helps AI understand you. MeOS helps you apply what ALVIRA discovers.
+            ALVIRA helps AI understand you. MeOS helps you apply what ALVIRA
+            discovers.
           </p>
         </div>
         <a
@@ -71,14 +76,14 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
           Explore MeOS <span aria-hidden="true">→</span>
         </a>
         {dismissible && (
-        <button
-          type="button"
-          onClick={handleDismiss}
-          aria-label="Dismiss"
-          className="absolute top-3 right-3 font-mono text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
-        >
-          ×
-        </button>
+          <button
+            type="button"
+            onClick={handleDismiss}
+            aria-label="Dismiss"
+            className="absolute top-3 right-3 font-mono text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+          >
+            ×
+          </button>
         )}
       </div>
     );
@@ -99,7 +104,9 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
 
       {/* Body */}
       <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
-        ALVIRA helps AI understand you. MeOS helps you understand and apply what ALVIRA discovers — across your decisions, direction, work, and daily life.
+        ALVIRA helps AI understand you. MeOS helps you understand and apply what
+        ALVIRA discovers — across your decisions, direction, work, and daily
+        life.
       </p>
 
       {/* CTA */}
@@ -114,13 +121,13 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
 
       {/* Dismiss */}
       {dismissible && (
-      <button
-        type="button"
-        onClick={handleDismiss}
-        className="absolute top-4 right-4 font-mono text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
-      >
-        Not now
-      </button>
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className="absolute top-4 right-4 font-mono text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+        >
+          Not now
+        </button>
       )}
     </div>
   );

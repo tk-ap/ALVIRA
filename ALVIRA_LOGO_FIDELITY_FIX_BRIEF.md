@@ -126,13 +126,13 @@ These are starting targets, not rigid dimensions. Adjust within the existing hea
 
 Verify the homepage header in both light and dark modes at:
 
-| Viewport | Expected logo |
-|---|---|
-| 375 px | Icon-only mark, fully legible |
-| 480 px | Full lockup if controls fit; otherwise icon-only mark |
-| 591 px | Full lockup |
-| 768 px | Full lockup |
-| 1440 px | Full lockup with intended editorial presence |
+| Viewport | Expected logo                                         |
+| -------- | ----------------------------------------------------- |
+| 375 px   | Icon-only mark, fully legible                         |
+| 480 px   | Full lockup if controls fit; otherwise icon-only mark |
+| 591 px   | Full lockup                                           |
+| 768 px   | Full lockup                                           |
+| 1440 px  | Full lockup with intended editorial presence          |
 
 ## Acceptance Criteria
 

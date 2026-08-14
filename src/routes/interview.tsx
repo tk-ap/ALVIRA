@@ -5,7 +5,14 @@ import { ConversationToKnowledgeGraphic } from "~/components/ConversationToKnowl
 
 export const Route = createFileRoute("/interview")({
   head: () => ({
-    meta: [{ title: 'The Interview — ALVIRA' }, { name: "description", content: "ALVIRA's adaptive interview builds your AI profile through structured knowledge elicitation." }],
+    meta: [
+      { title: "The Interview — ALVIRA" },
+      {
+        name: "description",
+        content:
+          "ALVIRA's adaptive interview builds your AI profile through structured knowledge elicitation.",
+      },
+    ],
   }),
   component: InterviewPage,
 });
@@ -56,82 +63,115 @@ function InterviewPage() {
         </section>
 
         <section className="bg-gray-50 px-6 py-20 dark:bg-gray-900 sm:px-8 sm:py-28">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mx-auto max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">01 / How it works</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">See ALVIRA in action</h2>
-            <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              A guided conversation uncovers what matters — then turns it into context your AI can use.
-            </p>
-          </div>
-
-          <div className="mt-20 grid items-center gap-12 border-y border-gray-200 py-12 dark:border-gray-800 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] ">
-            <p className="max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Your words are not lost in the chat. ALVIRA compiles the conversation into clear, reusable files your AI can understand.</p>
-            <ConversationToKnowledgeGraphic />
-          </div>
-
-          <ol className="mt-24 max-w-4xl space-y-14 border-l border-gray-300 pl-6 dark:border-gray-700  sm:pl-12">
-            {[
-              {
-                title: "ALVIRA asks",
-                body: "An adaptive question targets what's missing:",
-                quote: '"When you\'re making a tough decision, what matters most to you — speed, certainty, consensus, or something else?"',
-              },
-              {
-                title: "You answer",
-                body: "You respond in your own words:",
-                quote: '"Speed matters most when the decision is reversible. For bigger calls, I want input from at least two people I trust before committing."',
-              },
-              {
-                title: "ALVIRA follows up",
-                body: "It probes for context you wouldn't have volunteered:",
-                quote: '"Who are the people you typically consult for those bigger decisions, and what kind of input do you look for from each?"',
-              },
-              {
-                title: "Your profile builds",
-                body: "Your answers are validated, organized, and compiled into structured knowledge. You own the files — readable Markdown, portable anywhere.",
-              },
-              {
-                title: "Your AI improves",
-                body: "When you share your profile with ChatGPT or Claude, responses reflect your actual decision-making style instead of generic advice.",
-              },
-            ].map((step, index) => (
-              <li key={step.title} className="relative">
-                <span className="absolute -left-[2.15rem] flex h-8 w-8 items-center justify-center rounded-full border border-emerald-600 bg-gray-50 font-mono text-sm font-semibold text-emerald-700 dark:border-emerald-500 dark:bg-gray-900 dark:text-emerald-400 sm:-left-[3.15rem]" aria-hidden="true">
-                  {index + 1}
-                </span>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{step.title}</h3>
-                <p className="mt-2 max-w-3xl text-base leading-relaxed text-gray-600 dark:text-gray-400">{step.body}</p>
-                {step.quote && (
-                  <p className="mt-4 max-w-3xl border-l-2 border-emerald-500 pl-4 py-3 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                    {step.quote}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ol>
-
-          <div className="mt-24 ">
-            <h3 className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">The difference in practice</h3>
-            <div className="mt-5 grid gap-10 border-y border-gray-200 py-8 md:grid-cols-2 dark:border-gray-700">
-              <div className="border-l border-gray-300 pl-5 dark:border-gray-700">
-                <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Without your ALVIRA profile</p>
-                <blockquote className="mt-5 text-base leading-relaxed text-gray-700 dark:text-gray-300">
-                  "To make better decisions, try listing pros and cons. Consider asking a mentor for advice. Trust your gut."
-                </blockquote>
-              </div>
-              <div className="border-l-2 border-emerald-600 pl-5 dark:border-emerald-500">
-                <p className="font-mono text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-300">With your ALVIRA profile</p>
-                <blockquote className="mt-5 text-base leading-relaxed text-gray-800 dark:text-gray-200">
-                  "Since you've said speed is your priority for reversible decisions, I'll give you a quick recommendation: option A based on what you've shared. For the bigger call — given your preference for consulting two trusted people — here are the specific questions worth running by them before you commit."
-                </blockquote>
-              </div>
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mx-auto max-w-3xl">
+              <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                01 / How it works
+              </span>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+                See ALVIRA in action
+              </h2>
+              <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
+                A guided conversation uncovers what matters — then turns it into
+                context your AI can use.
+              </p>
             </div>
-            <p className="mt-6 max-w-4xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-              ALVIRA builds this context through conversation. You don't write or organize it yourself. And because it's portable Markdown, it works across ChatGPT, Claude, Gemini, Cursor, and future AI tools.
-            </p>
+
+            <div className="mt-20 grid items-center gap-12 border-y border-gray-200 py-12 dark:border-gray-800 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] ">
+              <p className="max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">
+                Your words are not lost in the chat. ALVIRA compiles the
+                conversation into clear, reusable files your AI can understand.
+              </p>
+              <ConversationToKnowledgeGraphic />
+            </div>
+
+            <ol className="mt-24 max-w-4xl space-y-14 border-l border-gray-300 pl-6 dark:border-gray-700  sm:pl-12">
+              {[
+                {
+                  title: "ALVIRA asks",
+                  body: "An adaptive question targets what's missing:",
+                  quote:
+                    '"When you\'re making a tough decision, what matters most to you — speed, certainty, consensus, or something else?"',
+                },
+                {
+                  title: "You answer",
+                  body: "You respond in your own words:",
+                  quote:
+                    '"Speed matters most when the decision is reversible. For bigger calls, I want input from at least two people I trust before committing."',
+                },
+                {
+                  title: "ALVIRA follows up",
+                  body: "It probes for context you wouldn't have volunteered:",
+                  quote:
+                    '"Who are the people you typically consult for those bigger decisions, and what kind of input do you look for from each?"',
+                },
+                {
+                  title: "Your profile builds",
+                  body: "Your answers are validated, organized, and compiled into structured knowledge. You own the files — readable Markdown, portable anywhere.",
+                },
+                {
+                  title: "Your AI improves",
+                  body: "When you share your profile with ChatGPT or Claude, responses reflect your actual decision-making style instead of generic advice.",
+                },
+              ].map((step, index) => (
+                <li key={step.title} className="relative">
+                  <span
+                    className="absolute -left-[2.15rem] flex h-8 w-8 items-center justify-center rounded-full border border-emerald-600 bg-gray-50 font-mono text-sm font-semibold text-emerald-700 dark:border-emerald-500 dark:bg-gray-900 dark:text-emerald-400 sm:-left-[3.15rem]"
+                    aria-hidden="true"
+                  >
+                    {index + 1}
+                  </span>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 max-w-3xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
+                    {step.body}
+                  </p>
+                  {step.quote && (
+                    <p className="mt-4 max-w-3xl border-l-2 border-emerald-500 pl-4 py-3 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                      {step.quote}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-24 ">
+              <h3 className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                The difference in practice
+              </h3>
+              <div className="mt-5 grid gap-10 border-y border-gray-200 py-8 md:grid-cols-2 dark:border-gray-700">
+                <div className="border-l border-gray-300 pl-5 dark:border-gray-700">
+                  <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Without your ALVIRA profile
+                  </p>
+                  <blockquote className="mt-5 text-base leading-relaxed text-gray-700 dark:text-gray-300">
+                    "To make better decisions, try listing pros and cons.
+                    Consider asking a mentor for advice. Trust your gut."
+                  </blockquote>
+                </div>
+                <div className="border-l-2 border-emerald-600 pl-5 dark:border-emerald-500">
+                  <p className="font-mono text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
+                    With your ALVIRA profile
+                  </p>
+                  <blockquote className="mt-5 text-base leading-relaxed text-gray-800 dark:text-gray-200">
+                    "Since you've said speed is your priority for reversible
+                    decisions, I'll give you a quick recommendation: option A
+                    based on what you've shared. For the bigger call — given
+                    your preference for consulting two trusted people — here are
+                    the specific questions worth running by them before you
+                    commit."
+                  </blockquote>
+                </div>
+              </div>
+              <p className="mt-6 max-w-4xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                ALVIRA builds this context through conversation. You don't write
+                or organize it yourself. And because it's portable Markdown, it
+                works across ChatGPT, Claude, Gemini, Cursor, and future AI
+                tools.
+              </p>
+            </div>
           </div>
-        </div>
         </section>
 
         <section className="border-b border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28">
@@ -194,8 +234,9 @@ function InterviewPage() {
                 Give your AI something to work with.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-400">
-                The more real detail you share, the more useful your profile becomes.
-                A single sentence with specifics beats a one-word answer every time.
+                The more real detail you share, the more useful your profile
+                becomes. A single sentence with specifics beats a one-word
+                answer every time.
               </p>
             </div>
 
@@ -211,13 +252,23 @@ function InterviewPage() {
                 <div className="mt-5 space-y-4">
                   {[
                     ["Q: How do you make decisions?", "A: I think about it."],
-                    ["Q: What matters most in your work?", "A: Getting it done."],
+                    [
+                      "Q: What matters most in your work?",
+                      "A: Getting it done.",
+                    ],
                     ["Q: How do you prefer to communicate?", "A: Directly."],
                     ["Q: What gives you energy?", "A: idk."],
                   ].map(([q, a]) => (
-                    <div key={q} className="rounded border border-red-200 bg-white p-3 dark:border-red-800 dark:bg-gray-950">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{q}</p>
-                      <p className="mt-1 text-sm text-red-700 dark:text-red-300 line-through">{a}</p>
+                    <div
+                      key={q}
+                      className="rounded border border-red-200 bg-white p-3 dark:border-red-800 dark:bg-gray-950"
+                    >
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {q}
+                      </p>
+                      <p className="mt-1 text-sm text-red-700 dark:text-red-300 line-through">
+                        {a}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -229,18 +280,38 @@ function InterviewPage() {
                   Much more useful
                 </p>
                 <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-300">
-                  Specific, honest, and personal — your AI can actually use this.
+                  Specific, honest, and personal — your AI can actually use
+                  this.
                 </p>
                 <div className="mt-5 space-y-4">
                   {[
-                    ["Q: How do you make decisions?", "A: I list the trade-offs first, then sit with it overnight if it's reversible. For bigger calls, I talk to two or three people I trust before committing."],
-                    ["Q: What matters most in your work?", "A: Clarity of expectations and autonomy in how I get there. I do my best work when I know the destination but own the route."],
-                    ["Q: How do you prefer to communicate?", "A: Writing over meetings when I can. I like time to think before responding — especially if the topic is new or sensitive."],
-                    ["Q: What gives you energy?", "A: Solving a hard problem with someone who is just as invested. Also: a clean slate in the morning and a clear win before lunch."],
+                    [
+                      "Q: How do you make decisions?",
+                      "A: I list the trade-offs first, then sit with it overnight if it's reversible. For bigger calls, I talk to two or three people I trust before committing.",
+                    ],
+                    [
+                      "Q: What matters most in your work?",
+                      "A: Clarity of expectations and autonomy in how I get there. I do my best work when I know the destination but own the route.",
+                    ],
+                    [
+                      "Q: How do you prefer to communicate?",
+                      "A: Writing over meetings when I can. I like time to think before responding — especially if the topic is new or sensitive.",
+                    ],
+                    [
+                      "Q: What gives you energy?",
+                      "A: Solving a hard problem with someone who is just as invested. Also: a clean slate in the morning and a clear win before lunch.",
+                    ],
                   ].map(([q, a]) => (
-                    <div key={q} className="rounded border border-emerald-200 bg-white p-3 dark:border-emerald-800 dark:bg-gray-950">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{q}</p>
-                      <p className="mt-1 text-sm text-gray-800 dark:text-gray-200">{a}</p>
+                    <div
+                      key={q}
+                      className="rounded border border-emerald-200 bg-white p-3 dark:border-emerald-800 dark:bg-gray-950"
+                    >
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {q}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-800 dark:text-gray-200">
+                        {a}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -252,8 +323,9 @@ function InterviewPage() {
                 A good rule of thumb
               </p>
               <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                Answer like you are explaining yourself to a thoughtful colleague — not filling out a form.
-                If your answer is shorter than this tip, it is probably too short.
+                Answer like you are explaining yourself to a thoughtful
+                colleague — not filling out a form. If your answer is shorter
+                than this tip, it is probably too short.
               </p>
             </div>
           </div>
@@ -294,7 +366,10 @@ function InterviewPage() {
           </div>
         </section>
 
-        <section id="portable" className="scroll-mt-20 border-t border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28">
+        <section
+          id="portable"
+          className="scroll-mt-20 border-t border-gray-200 px-6 py-20 dark:border-gray-800 sm:px-8 sm:py-28"
+        >
           <div className="mx-auto max-w-6xl">
             <div className="max-w-2xl">
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">

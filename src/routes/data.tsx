@@ -1,8 +1,63 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Header } from "~/components/Header"; import { TrustFooter } from "~/components/TrustFooter";
+import { Header } from "~/components/Header";
+import { TrustFooter } from "~/components/TrustFooter";
 export const Route = createFileRoute("/data")({
   head: () => ({
-    meta: [{ title: 'Your Data — ALVIRA' }, { name: "description", content: 'How ALVIRA stores and protects your knowledge.' }],
-  }), component: Data });
-function Data() { return <Page title="Data & Privacy"><p>ALVIRA stores your account email, interview answers, profile content, uploaded-document claims, and service activity needed to operate your account. Account data is stored in a local SQLite database.</p><p>You can export your profile as portable Markdown from ALVIRA. To request a complete export, correction, or deletion of your data, email <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>. Deletion requests remove your account data subject to limited records we may need to retain by law.</p></Page>; }
-function Page({ title, children }: { title: string; children: React.ReactNode }) { return <div className="min-h-dvh flex flex-col"><Header /><main id="main-content" className="mx-auto w-full max-w-3xl flex-1 px-6 py-16"><p className="font-mono text-xs uppercase tracking-widest text-human">&lt; trust /&gt;</p><h1 className="mt-4 text-4xl font-semibold text-gray-900 dark:text-gray-100">{title}</h1><div className="mt-10 space-y-6 text-base leading-8 text-gray-600 dark:text-gray-400">{children}</div></main><TrustFooter /></div>; }
+    meta: [
+      { title: "Your Data — ALVIRA" },
+      {
+        name: "description",
+        content: "How ALVIRA stores and protects your knowledge.",
+      },
+    ],
+  }),
+  component: Data,
+});
+function Data() {
+  return (
+    <Page title="Data & Privacy">
+      <p>
+        ALVIRA stores your account email, interview answers, profile content,
+        uploaded-document claims, and service activity needed to operate your
+        account. Account data is stored in a local SQLite database.
+      </p>
+      <p>
+        You can export your profile as portable Markdown from ALVIRA. To request
+        a complete export, correction, or deletion of your data, email{" "}
+        <a href="mailto:contextforge-18281ce4@ctomail.io">
+          contextforge-18281ce4@ctomail.io
+        </a>
+        . Deletion requests remove your account data subject to limited records
+        we may need to retain by law.
+      </p>
+    </Page>
+  );
+}
+function Page({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-dvh flex flex-col">
+      <Header />
+      <main
+        id="main-content"
+        className="mx-auto w-full max-w-3xl flex-1 px-6 py-16"
+      >
+        <p className="font-mono text-xs uppercase tracking-widest text-human">
+          &lt; trust /&gt;
+        </p>
+        <h1 className="mt-4 text-4xl font-semibold text-gray-900 dark:text-gray-100">
+          {title}
+        </h1>
+        <div className="mt-10 space-y-6 text-base leading-8 text-gray-600 dark:text-gray-400">
+          {children}
+        </div>
+      </main>
+      <TrustFooter />
+    </div>
+  );
+}

@@ -1,14 +1,28 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
-import { getCurrentUser, fetchUserLimits, logout, getEntitlements, claimPurchase } from "./-auth";
+import {
+  getCurrentUser,
+  fetchUserLimits,
+  logout,
+  getEntitlements,
+  claimPurchase,
+} from "./-auth";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
-    meta: [{ title: 'Account — ALVIRA' }, { name: "description", content: 'Manage your ALVIRA subscription and entitlements.' }],
-  }), component: AccountPage });
+    meta: [
+      { title: "Account — ALVIRA" },
+      {
+        name: "description",
+        content: "Manage your ALVIRA subscription and entitlements.",
+      },
+    ],
+  }),
+  component: AccountPage,
+});
 
 interface Limits {
   id: string;
@@ -24,7 +38,8 @@ interface Limits {
 const tierBadgeClass: Record<string, string> = {
   free: "border-gray-400 dark:border-gray-500 text-gray-500 dark:text-gray-400",
   pro: "border-emerald-500 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400",
-  lifetime: "border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-400",
+  lifetime:
+    "border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-400",
 };
 
 function AccountPage() {
@@ -55,7 +70,9 @@ function AccountPage() {
     }
   };
 
-  useEffect(() => { loadLimits(); }, [navigate]);
+  useEffect(() => {
+    loadLimits();
+  }, [navigate]);
 
   const handleRefresh = async () => {
     setRefreshMsg("Refreshing...");
@@ -76,7 +93,9 @@ function AccountPage() {
         <Header />
         <main id="main-content" className="flex-1 px-6 py-10">
           <div className="mx-auto max-w-2xl">
-            <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+            <p className="font-mono text-sm text-gray-500 dark:text-gray-400">
+              Loading...
+            </p>
           </div>
         </main>
         <TrustFooter />
@@ -91,7 +110,9 @@ function AccountPage() {
         <div className="mx-auto max-w-2xl space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Account</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Account
+            </h1>
             <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
               Manage your plan and view usage
             </p>
@@ -105,37 +126,99 @@ function AccountPage() {
 
           {limits && (
             <>
-              {limits.isOwner && <div className="rounded-lg border border-violet-300 bg-violet-50 px-5 py-4 text-sm text-violet-900 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-200"><strong>Owner access is active.</strong> All site features and product entitlements are enabled for this account. The tier label remains unchanged so you can reference current customer availability.</div>}
+              {limits.isOwner && (
+                <div className="rounded-lg border border-violet-300 bg-violet-50 px-5 py-4 text-sm text-violet-900 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-200">
+                  <strong>Owner access is active.</strong> All site features and
+                  product entitlements are enabled for this account. The tier
+                  label remains unchanged so you can reference current customer
+                  availability.
+                </div>
+              )}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700"><h2 className="font-semibold text-gray-900 dark:text-gray-100">Purchases &amp; Entitlements</h2></div>
-                <div className="px-5 py-4 space-y-4"><p className="text-sm text-gray-600 dark:text-gray-400">{entitlements.length ? entitlements.map((e) => e.replace(/_/g, " ")).join(", ") : "No entitlements recorded yet."}</p><button type="button" onClick={async () => { setClaimMsg("Claiming..."); try { await claimPurchase({ data: { product: "meos_build" } }); setEntitlements(await getEntitlements()); setClaimMsg("MeOS Build claimed."); } catch (e) { setClaimMsg(e instanceof Error ? e.message : "Unable to claim purchase."); } }} className="rounded-lg border border-emerald-600 px-4 py-2 font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50">{claimMsg || "Claim MeOS Build purchase"}</button><p className="text-xs text-gray-500 dark:text-gray-400">Self-serve activation for V1; Stripe verification is coming.</p></div>
+                <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Purchases &amp; Entitlements
+                  </h2>
+                </div>
+                <div className="px-5 py-4 space-y-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {entitlements.length
+                      ? entitlements.map((e) => e.replace(/_/g, " ")).join(", ")
+                      : "No entitlements recorded yet."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setClaimMsg("Claiming...");
+                      try {
+                        await claimPurchase({
+                          data: { product: "meos_build" },
+                        });
+                        setEntitlements(await getEntitlements());
+                        setClaimMsg("MeOS Build claimed.");
+                      } catch (e) {
+                        setClaimMsg(
+                          e instanceof Error
+                            ? e.message
+                            : "Unable to claim purchase.",
+                        );
+                      }
+                    }}
+                    className="rounded-lg border border-emerald-600 px-4 py-2 font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+                  >
+                    {claimMsg || "Claim MeOS Build purchase"}
+                  </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Self-serve activation for V1; Stripe verification is coming.
+                  </p>
+                </div>
               </div>
               {/* User info card */}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">Profile</h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Profile
+                  </h2>
                 </div>
                 <div className="px-5 py-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Email</span>
-                    <span className="font-mono text-sm text-gray-900 dark:text-gray-100">{limits.email}</span>
+                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                      Email
+                    </span>
+                    <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
+                      {limits.email}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Tier</span>
-                    <span className={`font-mono text-xs uppercase tracking-wider border px-1.5 py-0.5 rounded ${tierBadgeClass[limits.tier] || tierBadgeClass.free}`}>
+                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                      Tier
+                    </span>
+                    <span
+                      className={`font-mono text-xs uppercase tracking-wider border px-1.5 py-0.5 rounded ${tierBadgeClass[limits.tier] || tierBadgeClass.free}`}
+                    >
                       {limits.tier}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Interviews used</span>
+                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                      Interviews used
+                    </span>
                     <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                      {limits.interviewCount}{limits.maxInterviews < Infinity ? ` / ${limits.maxInterviews}` : ""}
+                      {limits.interviewCount}
+                      {limits.maxInterviews < Infinity
+                        ? ` / ${limits.maxInterviews}`
+                        : ""}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Saved profiles</span>
+                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                      Saved profiles
+                    </span>
                     <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                      {limits.profileCount}{limits.maxProfiles < Infinity ? ` / ${limits.maxProfiles}` : ""}
+                      {limits.profileCount}
+                      {limits.maxProfiles < Infinity
+                        ? ` / ${limits.maxProfiles}`
+                        : ""}
                     </span>
                   </div>
                 </div>
@@ -144,15 +227,24 @@ function AccountPage() {
               {/* Upgrade section */}
               {limits.isOwner ? (
                 <div className="rounded-lg border border-violet-300 bg-violet-50/60 p-5 dark:border-violet-800 dark:bg-violet-950/30">
-                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">Owner access overlay</h2>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">All features are unlocked for administration and testing. Your customer-facing plan reference remains <span className="font-mono uppercase">{limits.tier}</span>.</p>
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Owner access overlay
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    All features are unlocked for administration and testing.
+                    Your customer-facing plan reference remains{" "}
+                    <span className="font-mono uppercase">{limits.tier}</span>.
+                  </p>
                 </div>
               ) : limits.tier === "free" ? (
                 <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 overflow-hidden">
                   <div className="px-5 py-4 border-b border-emerald-200 dark:border-emerald-800">
-                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">Upgrade your plan</h2>
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                      Upgrade your plan
+                    </h2>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Pro unlocks unlimited interviews and profiles. Lifetime gives you one permanent profile — no subscription.
+                      Pro unlocks unlimited interviews and profiles. Lifetime
+                      gives you one permanent profile — no subscription.
                     </p>
                   </div>
                   <div className="px-5 py-4 space-y-4">
@@ -160,8 +252,12 @@ function AccountPage() {
                       {/* Pro card */}
                       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">Pro</span>
-                          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">$20/mo</span>
+                          <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">
+                            Pro
+                          </span>
+                          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                            $20/mo
+                          </span>
                         </div>
                         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4 font-mono">
                           <li>· Unlimited interviews</li>
@@ -182,13 +278,19 @@ function AccountPage() {
                       {/* Lifetime card */}
                       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">Lifetime</span>
-                          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">{LIFETIME_PRICE} once</span>
+                          <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">
+                            Lifetime
+                          </span>
+                          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                            {LIFETIME_PRICE} once
+                          </span>
                         </div>
                         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4 font-mono">
                           <li>· One permanent personal AI profile</li>
                           <li>· Up to 12 guided interviews in year one</li>
-                          <li>· 4 refresh interviews per year after year one</li>
+                          <li>
+                            · 4 refresh interviews per year after year one
+                          </li>
                           <li>· Up to 50 saved versions (coming soon)</li>
                           <li>· No subscription</li>
                         </ul>
@@ -206,7 +308,8 @@ function AccountPage() {
                     {/* Post-purchase sync */}
                     <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                        Already purchased a plan? Refresh your account to apply it.
+                        Already purchased a plan? Refresh your account to apply
+                        it.
                       </p>
                       <button
                         type="button"
@@ -223,7 +326,8 @@ function AccountPage() {
                 <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 overflow-hidden">
                   <div className="px-5 py-4">
                     <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-                      You're on the {limits.tier === "pro" ? "Pro" : "Lifetime"} plan
+                      You're on the {limits.tier === "pro" ? "Pro" : "Lifetime"}{" "}
+                      plan
                     </h2>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                       {limits.tier === "pro"

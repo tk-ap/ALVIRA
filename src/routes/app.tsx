@@ -1120,6 +1120,7 @@ function AppPage() {
                   <button type="button" onClick={downloadZip} className={btnSecondary}>
                     <span className="font-mono text-xs">⬇ Download .zip</span>
                   </button>
+                  {authUser && offering !== "meos" && <a href="/integrations" className={btnSecondary}>Connect AI tools →</a>}
                   {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Save Profile"}</button>)}
                   {offering === "meos" && <a href="/meos" className={btnSecondary}>View your MeOS →</a>}
                   <button type="button" onClick={startNew} className={btnPrimary}>

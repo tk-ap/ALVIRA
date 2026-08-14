@@ -94,6 +94,9 @@ export function Header() {
                 <a href="/account" className={linkClass}>
                   Account
                 </a>
+                <a href="/integrations" className={linkClass}>
+                  Integrations
+                </a>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -163,6 +166,11 @@ export function Header() {
           {user ? (
             <a href="/account" onClick={closeMenu} className={mobileLinkClass}>
               Account
+            </a>
+          ) : null}
+          {user ? (
+            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>
+              AI Integrations
             </a>
           ) : null}
           {user ? (

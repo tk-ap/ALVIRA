@@ -420,9 +420,11 @@ export const clearInterviewDraft = createServerFn({ method: "POST" }).handler(as
   return { success: true };
 });
 
+const OWNER_EMAIL = (process.env.ALVIRA_OWNER_EMAIL ?? "tahlia.ashwood@gmail.com").trim().toLowerCase();
+
 export const getOwnerMetrics = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  if (user.email !== "tahlia.ashwood@gmail.com") throw new Error("Not authorized.");
+  if (user.email.toLowerCase() !== OWNER_EMAIL) throw new Error("Not authorized.");
   return queryOwnerMetrics();
 });
 

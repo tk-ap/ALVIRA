@@ -26,13 +26,14 @@ function DashboardPage() {
   const [exportStatus, setExportStatus] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
+    const ownerEmail = (process.env.ALVIRA_OWNER_EMAIL ?? "tahlia.ashwood@gmail.com").trim().toLowerCase();
     getCurrentUser().then(async (user) => {
       if (!user) { navigate({ to: "/login" }); return; }
       const rows = await listProfiles();
       setProfiles(rows as Profile[]);
       const inProgress = await getInterviewDraft();
       if (inProgress) setDraft(inProgress as { offering: string; topic: string; updated_at: string });
-      if (user.email === "tahlia.ashwood@gmail.com") {
+      if (user.email.toLowerCase() === ownerEmail) {
         setOwner(true);
         setMetrics(await getOwnerMetrics());
       }

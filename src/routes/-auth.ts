@@ -154,7 +154,11 @@ export const login = createServerFn({ method: "POST" })
 // ── Password reset ──
 
 const RESET_TOKEN_MAX_AGE = 60 * 60 * 1000;
-const PUBLIC_SITE_URL = "https://alvira.ctonew.app";
+const PUBLIC_SITE_URL = (() => {
+  const override = (process.env.PUBLIC_SITE_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL ?? "").trim();
+  if (!override) return "https://alvira.ctonew.app";
+  return override.startsWith("http://") || override.startsWith("https://") ? override : `https://${override}`;
+})();
 
 export const requestPasswordReset = createServerFn({ method: "POST" })
   .validator((data: unknown) => {

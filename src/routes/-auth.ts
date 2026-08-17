@@ -357,6 +357,54 @@ export const getInterviewDraft = createServerFn({ method: "GET" }).handler(async
   return row ? { ...row, state: JSON.parse(row.state_json) } : null;
 });
 
+export const finalizeInterviewDraft = createServerFn({ method: "POST" })
+  .validator((data: unknown) => ({
+    topic: typeof (data as { topic?: string }).topic === "string" ? (data as { topic?: string }).topic!.trim() : "",
+  }))
+  .handler(async ({ data }) => {
+    const user = await requireUser();
+    const row = getDb().query(
+     `SELECT offering, topic, state_json
+      FROM interview_drafts
+      WHERE user_id = ?
+        AND NOT EXISTS (
+          SELECT 1 FROM draft_transfers t
+          WHERE t.source_user_id = ? AND t.source_offering = interview_drafts.offering
+        )
+      ORDER BY updated_at DESC LIMIT 1`
+    ).get(user.id, user.id) as { offering: string; topic: string; state_json: string } | undefined;
+
+    if (!row) throw new Error("No interview in progress to save.");
+
+    const state = JSON.parse(row.state_json) as { domains?: Record<string, { answers?: string[] }> };
+    const topic = data.topic || row.topic || "My Profile";
+
+    if (user.tier === "free") {
+     const count = getProfileCount(user.id);
+     const existing = getDb().query("SELECT id FROM profiles WHERE user_id = ? AND topic = ?").get(user.id, topic) as { id: string } | undefined;
+     if (!existing && count >= 1) {
+       return { error: "limit_reached", limit: "profiles" };
+     }
+    }
+
+    const compiled = compileInterviewMarkdown(state as any, row.offering === "meos" ? getMeosGraph() : []);
+    const portrait = { markdownFiles: compiled.allFiles };
+    const existing = getDb().query("SELECT id FROM profiles WHERE user_id = ? AND topic = ?").get(user.id, topic) as { id: string } | undefined;
+    const id = existing?.id ?? crypto.randomUUID();
+
+    getDb().run(
+     existing
+       ? "UPDATE profiles SET offering = ?, tier = ?, state_json = ?, portrait_json = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?"
+       : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+     existing
+       ? [row.offering, user.tier, JSON.stringify(state), JSON.stringify(portrait), id, user.id]
+       : [id, user.id, topic, row.offering, user.tier, JSON.stringify(state), JSON.stringify(portrait)],
+    );
+
+    getDb().run("DELETE FROM interview_drafts WHERE user_id = ? AND offering = ?", [user.id, row.offering]);
+    return { id, topic };
+  });
+
 export const clearInterviewDraft = createServerFn({ method: "POST" }).handler(async () => {
   const user = await requireUser();
   getDb().run("DELETE FROM interview_drafts WHERE user_id = ?", [user.id]);

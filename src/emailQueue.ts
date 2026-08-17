@@ -33,14 +33,19 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // Queue base directory — configurable via EMAIL_QUEUE_DIR (used by tests and by
 // any deployment that wants queues somewhere other than the shared team dir).
 // Read at call time so a test/deploy can point it at a fresh directory.
-// Defaults to /home/team/shared for backward compatibility with the current setup.
+// Default to a writable temp dir in serverless deployments; local/server installs
+// still use /home/team/shared for backward compatibility.
 function emailQueueDir(): string {
-  return process.env.EMAIL_QUEUE_DIR?.trim() || "/home/team/shared";
+  const override = process.env.EMAIL_QUEUE_DIR?.trim();
+  if (override) return override;
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) return join(tmpdir(), "alvira-email-queue");
+  return "/home/team/shared";
 }
 
 export const QUEUES = {
@@ -131,7 +136,7 @@ function authorized(req: Request): boolean {
 }
 
 // ── Delivery ──
-async function deliver(
+export async function deliver(
   to: string,
   subject: string,
   body: string,

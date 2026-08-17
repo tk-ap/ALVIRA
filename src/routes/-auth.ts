@@ -26,7 +26,7 @@ import {
   executeDraftTransfer,
   insertEvent,
 } from "~/db";
-import { enqueueEmail } from "~/emailQueue";
+import { deliver, enqueueEmail } from "~/emailQueue";
 import { compileInterviewMarkdown } from "./-meosCompiler";
 import { getMeosGraph } from "./-meosGraph";
 
@@ -172,13 +172,24 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
     if (user) {
       const token = crypto.randomUUID();
       createPasswordResetToken(user.id, token, new Date(Date.now() + RESET_TOKEN_MAX_AGE).toISOString());
-      // enqueueEmail never throws — a queue filesystem failure must not 500 an
-      // otherwise successful reset request (the user can request again later).
-      enqueueEmail("reset", {
-        email: user.email,
-        resetUrl: `${PUBLIC_SITE_URL}/reset-password?token=${encodeURIComponent(token)}`,
-        timestamp: new Date().toISOString(),
-      });
+      const resetUrl = `${PUBLIC_SITE_URL}/reset-password?token=${encodeURIComponent(token)}`;
+      const result = (process.env.EMAIL_API_URL ?? "").trim()
+        ? await deliver(user.email, "Reset your ALVIRA password", `We received a request to reset your ALVIRA password. Click the link below to choose a new password:\n\n${resetUrl}\n\nThis link expires in one hour. If you didn't request this, you can ignore this email.`)
+        : (() => {
+            const queued = enqueueEmail("reset", {
+              email: user.email,
+              resetUrl,
+              timestamp: new Date().toISOString(),
+            });
+            if (!queued) {
+              throw new Error("Password reset emails are not configured for this deployment. Set EMAIL_API_URL and EMAIL_API_KEY, or configure the queue processor.");
+            }
+            return { ok: true, mode: "simulated" as const };
+          })();
+
+      if (!result.ok) {
+        throw new Error(result.error ?? "Unable to send password reset email.");
+      }
     }
     return { success: true };
   });

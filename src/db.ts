@@ -1,9 +1,17 @@
 // ── Database: Bun + Node-compatible SQLite wrapper ──
 import { createRequire } from "node:module";
 import { existsSync, mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const require = createRequire(import.meta.url);
+
+const DEFAULT_DB_DIR =
+  process.env.ALVIRA_DATA_DIR ??
+  (process.env.VERCEL ? join(tmpdir(), "alvira-data") : join(process.cwd(), ".data"));
+
+let activeDbDir = DEFAULT_DB_DIR;
+let activeDbPath = join(activeDbDir, "alvira.db");
 
 function loadDatabaseConstructor() {
   if (typeof Bun !== "undefined") {
@@ -61,9 +69,8 @@ function adaptSqliteConnection(conn: any): SqliteDatabaseLike {
 }
 
 // Data directory is overridable (used by scripts/verify-tracking.ts so tests never
-// touch the production DB). Defaults to ./.data for backward compatibility.
-const DB_DIR = process.env.ALVIRA_DATA_DIR ?? join(process.cwd(), ".data");
-const DB_PATH = join(DB_DIR, "alvira.db");
+// touch the production DB). In serverless environments, writable /tmp is safer than
+// a read-only working directory such as /var/task.
 
 // ── Event retention / rate limits (metrics integrity) ──
 // Bounded retention keeps the events table from growing forever: rows older than
@@ -88,12 +95,22 @@ let db: SqliteDatabaseLike | null = null;
 export function getDb(): SqliteDatabaseLike {
   if (db) return db;
 
-  if (!existsSync(DB_DIR)) {
-    mkdirSync(DB_DIR, { recursive: true });
+  const dirToUse = activeDbDir;
+  try {
+    if (!existsSync(dirToUse)) {
+      mkdirSync(dirToUse, { recursive: true });
+    }
+  } catch {
+    const fallbackDir = join(tmpdir(), "alvira-data");
+    if (fallbackDir !== dirToUse) {
+      mkdirSync(fallbackDir, { recursive: true });
+      activeDbDir = fallbackDir;
+      activeDbPath = join(fallbackDir, "alvira.db");
+    }
   }
 
   const DatabaseCtor = loadDatabaseConstructor();
-  db = adaptSqliteConnection(new DatabaseCtor(DB_PATH));
+  db = adaptSqliteConnection(new DatabaseCtor(activeDbPath));
 
   // Enable WAL mode for better concurrent reads
   db.exec("PRAGMA journal_mode=WAL");

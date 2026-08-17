@@ -1,4 +1,5 @@
 // ── Auth server functions ──
+import bcrypt from "bcryptjs";
 import { createServerFn } from "@tanstack/react-start";
 import { deleteCookie, getCookie } from "@tanstack/react-start/server";
 import {
@@ -31,6 +32,14 @@ import { getMeosGraph } from "./-meosGraph";
 
 const SESSION_COOKIE = "alvira_session";
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
+  return bcrypt.compare(password, passwordHash);
+}
 
 // ── Helpers ──
 
@@ -67,11 +76,7 @@ export const signup = createServerFn({ method: "POST" })
       throw new Error("An account with this email already exists.");
     }
 
-    // Hash password with Bun
-    const passwordHash = await Bun.password.hash(data.password, {
-      algorithm: "bcrypt",
-      cost: 10,
-    });
+    const passwordHash = await hashPassword(data.password);
 
     // Create user
     const userId = crypto.randomUUID();
@@ -127,7 +132,7 @@ export const login = createServerFn({ method: "POST" })
       throw new Error("Invalid email or password.");
     }
 
-    const valid = await Bun.password.verify(data.password, hash);
+    const valid = await verifyPassword(data.password, hash);
     if (!valid) {
       throw new Error("Invalid email or password.");
     }
@@ -184,7 +189,7 @@ export const resetPassword = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const userId = consumePasswordResetToken(data.token);
     if (!userId) throw new Error("This reset link is invalid or has expired. Please request a new one.");
-    const passwordHash = await Bun.password.hash(data.newPassword, { algorithm: "bcrypt", cost: 10 });
+    const passwordHash = await hashPassword(data.newPassword);
     updatePasswordHash(userId, passwordHash);
     return { success: true };
   });

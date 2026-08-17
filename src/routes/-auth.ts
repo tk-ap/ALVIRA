@@ -26,6 +26,8 @@ import {
   insertEvent,
 } from "~/db";
 import { enqueueEmail } from "~/emailQueue";
+import { compileInterviewMarkdown } from "./-meosCompiler";
+import { getMeosGraph } from "./-meosGraph";
 
 const SESSION_COOKIE = "alvira_session";
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
@@ -264,12 +266,22 @@ export const saveProfile = createServerFn({ method: "POST" })
       }
     }
 
+    let portrait = data.portrait;
+    const state = data.state as { domains?: Record<string, { answers?: string[] }> } | undefined;
+    if (state && typeof state === "object") {
+      const compiled = compileInterviewMarkdown(state as any, data.offering === "meos" ? getMeosGraph() : []);
+      portrait = {
+        ...(typeof portrait === "object" && portrait ? (portrait as Record<string, unknown>) : {}),
+        markdownFiles: compiled.allFiles,
+      };
+    }
+
     const id = existing?.id ?? crypto.randomUUID();
     d.run(
       existing
         ? "UPDATE profiles SET offering = ?, tier = ?, state_json = ?, portrait_json = COALESCE(?, portrait_json), updated_at = datetime('now') WHERE id = ? AND user_id = ?"
         : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      existing ? [data.offering, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null, id, user.id] : [id, user.id, data.topic, data.offering, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null],
+      existing ? [data.offering, data.tier, JSON.stringify(data.state), portrait ? JSON.stringify(portrait) : null, id, user.id] : [id, user.id, data.topic, data.offering, data.tier, JSON.stringify(data.state), portrait ? JSON.stringify(portrait) : null],
     );
     return { id };
   });
@@ -286,10 +298,13 @@ export const getMeosProfiles = createServerFn({ method: "GET" }).handler(async (
 });
 
 export const saveMeosPortrait = createServerFn({ method: "POST" })
-  .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait }))
+  .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait, markdownFiles: (data as { markdownFiles?: Record<string, string> }).markdownFiles }))
   .handler(async ({ data }) => {
     const user = await requireUser();
-    getDb().run("UPDATE profiles SET portrait_json = ?, offering = 'meos', updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(data.portrait), data.profileId, user.id]);
+    const payload = data.markdownFiles
+      ? { ...(typeof data.portrait === "object" && data.portrait ? (data.portrait as Record<string, unknown>) : {}), markdownFiles: data.markdownFiles }
+      : data.portrait;
+    getDb().run("UPDATE profiles SET portrait_json = ?, offering = 'meos', updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(payload), data.profileId, user.id]);
     return { success: true };
   });
 

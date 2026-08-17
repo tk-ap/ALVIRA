@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import JSZip from "jszip";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
-import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft, getOwnerMetrics } from "./-auth";
+import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft, getOwnerMetrics, loadProfile } from "./-auth";
+import { compileInterviewMarkdown } from "./-meosCompiler";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — ALVIRA" }, { name: "description", content: "Your AI profiles and interview history." }] }),
@@ -72,10 +74,27 @@ function OwnerDashboard({ metrics }: { metrics: OwnerMetrics }) {
   </div>;
 }
 
+async function exportProfileKnowledge(profile: Profile) {
+  const row = await loadProfile({ data: { profileId: profile.id } });
+  const state = row.state as any;
+  const files = compileInterviewMarkdown(state && typeof state === "object" ? state : { topic: row.topic, domains: {} }, []).allFiles;
+  const zip = new JSZip();
+  Object.entries(files).forEach(([name, content]) => zip.file(name, content));
+  const blob = await zip.generateAsync({ type: "blob" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = `${(row.topic || "profile").replace(/\s+/g, "-").toLowerCase()}-knowledge-files.zip`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function ProfileSection({ profiles, draft, remove, owner }: { profiles: Profile[]; draft: { offering: string; topic: string; updated_at: string } | null; remove: (id: string) => Promise<void>; owner: boolean }) {
   return <section className={owner ? "border-t border-gray-200 pt-8 dark:border-gray-700" : ""}>{owner && <h2 className="mb-4 font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Your profiles</h2>}
     {draft && <div className="mb-5 flex items-center justify-between gap-4 border border-system bg-system-soft px-5 py-4 dark:border-system-dark dark:bg-ink/30"><div><p className="font-mono text-sm font-semibold text-system-dark dark:text-system">Interview in progress</p><p className="mt-1 text-sm text-system-dark dark:text-system">{draft.topic} · Updated {new Date(draft.updated_at).toLocaleDateString()}</p></div><a href={`/app?offering=${draft.offering}`} className="font-mono text-sm text-system-dark underline dark:text-system">Resume →</a></div>}
-    {profiles.length === 0 ? <div className="border border-gray-200 px-6 py-12 text-center dark:border-gray-700"><p className="text-gray-600 dark:text-gray-400">No saved profiles yet. Start your first interview.</p><a href="/app" className="mt-4 inline-block font-mono text-sm text-system-dark underline dark:text-system">Start an interview →</a></div> : <div className="space-y-3">{profiles.map((p) => <div key={p.id} className="flex flex-col justify-between gap-4 border border-gray-200 px-5 py-4 dark:border-gray-700 sm:flex-row sm:items-center"><div><h2 className="font-mono text-gray-900 dark:text-gray-100">{p.topic}</h2><div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400"><span className="border border-system px-2 py-0.5 text-system-dark dark:border-system dark:text-system">{p.tier}</span><span>Updated {new Date(p.updated_at).toLocaleDateString()}</span></div></div><div className="flex gap-4"><a href={`/app?profile=${p.id}`} className="font-mono text-sm text-system-dark hover:text-system dark:text-system dark:hover:text-system">Resume →</a><button type="button" onClick={() => remove(p.id)} className="font-mono text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">Delete</button></div></div>)}</div>}
+    {profiles.length === 0 ? <div className="border border-gray-200 px-6 py-12 text-center dark:border-gray-700"><p className="text-gray-600 dark:text-gray-400">No saved profiles yet. Start your first interview.</p><a href="/app" className="mt-4 inline-block font-mono text-sm text-system-dark underline dark:text-system">Start an interview →</a></div> : <div className="space-y-3">{profiles.map((p) => <div key={p.id} className="flex flex-col justify-between gap-4 border border-gray-200 px-5 py-4 dark:border-gray-700 sm:flex-row sm:items-center"><div><h2 className="font-mono text-gray-900 dark:text-gray-100">{p.topic}</h2><div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400"><span className="border border-system px-2 py-0.5 text-system-dark dark:border-system dark:text-system">{p.tier}</span><span>Updated {new Date(p.updated_at).toLocaleDateString()}</span></div></div><div className="flex flex-wrap items-center gap-4"><a href={`/app?profile=${p.id}`} className="font-mono text-sm text-system-dark hover:text-system dark:text-system dark:hover:text-system">Resume →</a><button type="button" onClick={() => void exportProfileKnowledge(p)} className="font-mono text-sm text-system-dark hover:text-system dark:text-system dark:hover:text-system">Generate knowledge files</button><button type="button" onClick={() => void remove(p.id)} className="font-mono text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">Delete</button></div></div>)}</div>}
     <div className="mt-8"><MeOSCTA placement="dashboard" variant="compact" /></div>
   </section>;
 }

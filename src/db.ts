@@ -1,7 +1,64 @@
-// ── Database: Bun-native SQLite ──
-import { Database } from "bun:sqlite";
+// ── Database: Bun + Node-compatible SQLite wrapper ──
+import { createRequire } from "node:module";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+
+const require = createRequire(import.meta.url);
+
+function loadDatabaseConstructor() {
+  if (typeof Bun !== "undefined") {
+    const { Database } = require("bun:sqlite");
+    return Database;
+  }
+
+  const sqliteMod = require("node:sqlite");
+  return sqliteMod.DatabaseSync ?? sqliteMod.Database ?? sqliteMod.default?.DatabaseSync ?? sqliteMod.default?.Database;
+}
+
+type QueryHandle = {
+  get: (...args: unknown[]) => unknown;
+  all: (...args: unknown[]) => unknown[];
+  run: (...args: unknown[]) => unknown;
+};
+
+type SqliteDatabaseLike = {
+  exec: (sql: string) => void;
+  run: (sql: string, params?: unknown[] | Record<string, unknown>) => unknown;
+  query: (sql: string) => QueryHandle;
+};
+
+function normalizeSqlParams(args: unknown[]) {
+  if (args.length === 1 && Array.isArray(args[0])) return args[0];
+  if (args.length === 1 && args[0] && typeof args[0] === "object" && !Array.isArray(args[0])) {
+    return Object.values(args[0] as Record<string, unknown>);
+  }
+  return args;
+}
+
+function wrapQuery(conn: any, sql: string): QueryHandle {
+  if (typeof conn.query === "function") {
+    return conn.query(sql);
+  }
+
+  const statement = conn.prepare(sql);
+  return {
+    get: (...args: unknown[]) => statement.get(...normalizeSqlParams(args)),
+    all: (...args: unknown[]) => statement.all(...normalizeSqlParams(args)),
+    run: (...args: unknown[]) => statement.run(...normalizeSqlParams(args)),
+  };
+}
+
+function adaptSqliteConnection(conn: any): SqliteDatabaseLike {
+  return {
+    exec: (sql: string) => conn.exec(sql),
+    run: (sql: string, params?: unknown[] | Record<string, unknown>) => {
+      if (typeof conn.run === "function") return conn.run(sql, params ?? []);
+      const statement = conn.prepare(sql);
+      return statement.run(...normalizeSqlParams(Array.isArray(params) ? params : (params ? Object.values(params) : [])));
+    },
+    query: (sql: string) => wrapQuery(conn, sql),
+  };
+}
 
 // Data directory is overridable (used by scripts/verify-tracking.ts so tests never
 // touch the production DB). Defaults to ./.data for backward compatibility.
@@ -26,16 +83,17 @@ export const EVENT_RATE_LIMIT_MAX = 240;
 let lastEventPruneAt = 0;
 const EVENT_PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-let db: Database | null = null;
+let db: SqliteDatabaseLike | null = null;
 
-export function getDb(): Database {
+export function getDb(): SqliteDatabaseLike {
   if (db) return db;
 
   if (!existsSync(DB_DIR)) {
     mkdirSync(DB_DIR, { recursive: true });
   }
 
-  db = new Database(DB_PATH);
+  const DatabaseCtor = loadDatabaseConstructor();
+  db = adaptSqliteConnection(new DatabaseCtor(DB_PATH));
 
   // Enable WAL mode for better concurrent reads
   db.exec("PRAGMA journal_mode=WAL");

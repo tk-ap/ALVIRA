@@ -434,19 +434,21 @@ function AppPage() {
           }
         } catch { /* ignore */ }
 
-        // Restore a server draft first, or the anonymous local draft left before signup/login.
+        // An authenticated account draft takes precedence over a browser-local
+        // anonymous draft, which may otherwise mask a saved interview after login.
         if (!draftRestoredRef.current) {
           try {
             const localRaw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
             const serverDraft = await getInterviewDraft().catch(() => null);
-            const draft = localRaw ? JSON.parse(localRaw) : serverDraft;
+            const localDraft = localRaw ? JSON.parse(localRaw) : null;
+            const draft = serverDraft ?? localDraft;
             if (draft?.state && !cancelled) {
               setResumeDraft({
                 offering: draft.offering === "meos" ? "meos" : "context",
                 topic: draft.topic ?? draft.state.topic,
                 state: draft.state as InterviewState,
                 savedAt: draft.savedAt,
-                source: localRaw ? "browser" : "account",
+                source: serverDraft ? "account" : "browser",
               });
               draftRestoredRef.current = true;
             }

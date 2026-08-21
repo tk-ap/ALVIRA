@@ -18,6 +18,30 @@ Agent-compatible Markdown should:
 - State when direction relies on a post–Revision 11 working hypothesis rather than owner-ratified direction.
 - Avoid relying on surrounding conversational context when the Markdown is intended to serve as an implementation brief.
 
+## Owner-Approved Testing Policy
+
+This section is an owner-ratified requirement, not a post–Revision 11 working hypothesis.
+
+### Primary Acceptance User
+
+- Use `codex-smoke-1786676512909@example.com` as the default account when testing added, updated, or removed customer-facing features.
+- Treat this account as the canonical free-tier workflow. It represents the expected initial experience for the majority of launch customers.
+- Validate the complete free-user journey before relying on owner-account results, including applicable limits, upgrade prompts, persistence, navigation, and error states.
+- Do not store, commit, print, or document the test account password or authentication tokens. Obtain credentials through the approved secret-management or owner handoff flow when authentication is required.
+
+### Secondary Owner Verification
+
+- After the free-tier workflow passes, use the owner profile only as a secondary verification path for privileged access, entitlement overrides, administrative views, and owner-specific features.
+- A successful owner-profile test does not replace free-tier acceptance testing.
+- Features that are intentionally unavailable to free users must still be checked with the free account to confirm that tier labels, restrictions, and upgrade guidance are accurate before testing the unlocked owner experience.
+
+### Acceptance Criteria
+
+1. The default smoke test uses `codex-smoke-1786676512909@example.com` unless the feature cannot meaningfully be exercised by a free-tier user.
+2. Results explicitly distinguish free-tier behavior from owner-only behavior.
+3. Regressions affecting the free workflow block release even when the same feature works for the owner profile.
+4. Owner-profile testing is performed when the change affects privileged access, paid entitlements, administrative behavior, or owner overrides.
+
 ## Shared Repository Safety
 
 This repository may be accessed by multiple agents. Treat `main` as the stable integration branch.

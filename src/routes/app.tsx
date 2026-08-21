@@ -129,11 +129,16 @@ function TypingIndicator() {
 
 // ── Constants ──
 const FILES = [
+  { key: "aiProfile", label: "ai-working-profile.md" },
   { key: "overview", label: "overview.md" },
   { key: "requirements", label: "requirements.md" },
   { key: "constraints", label: "constraints.md" },
   { key: "businessRules", label: "business-rules.md" },
   { key: "workflows", label: "workflows.md" },
+  { key: "chatgpt", label: "chatgpt-instructions.md" },
+  { key: "claude", label: "claude-instructions.md" },
+  { key: "gemini", label: "gemini-instructions.md" },
+  { key: "cursor", label: "cursor-rules.md" },
 ] as const;
 
 const TIERS: { value: Tier; label: string; description: string }[] = [
@@ -1013,7 +1018,18 @@ function AppPage() {
     const zip = new JSZip();
     const fileMap: [string, string][] = offering === "meos"
       ? Object.entries(generated).map(([name, content]) => [name, content] as [string, string])
-      : [["overview.md", generated.overview], ["requirements.md", generated.requirements], ["constraints.md", generated.constraints], ["business-rules.md", generated.businessRules], ["workflows.md", generated.workflows]];
+      : [
+          ["ai-working-profile.md", generated.aiProfile],
+          ["overview.md", generated.overview],
+          ["requirements.md", generated.requirements],
+          ["constraints.md", generated.constraints],
+          ["business-rules.md", generated.businessRules],
+          ["workflows.md", generated.workflows],
+          ["chatgpt-instructions.md", generated.chatgpt],
+          ["claude-instructions.md", generated.claude],
+          ["gemini-instructions.md", generated.gemini],
+          ["cursor-rules.md", generated.cursor],
+        ];
     for (const [name, content] of fileMap) {
       zip.file(name, content);
     }
@@ -1133,9 +1149,9 @@ function AppPage() {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Generated Knowledge Files</h1>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Compiled AI profile</h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-mono">
-                    based on: {state?.topic || topic}
+                    Source-backed instructions and portable setup files · {state?.topic || topic}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -1144,7 +1160,7 @@ function AppPage() {
                   </button>
                   {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>}
                   {authUser && offering !== "meos" && <a href="/integrations" className={btnSecondary}>Connect AI tools →</a>}
-                  {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Save Profile"}</button>)}
+                  {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Confirm & save profile"}</button>)}
                   {offering === "meos" && <a href="/meos" className={btnSecondary}>View your MeOS →</a>}
                   <button type="button" onClick={startNew} className={btnPrimary}>
                     + Start new
@@ -1155,6 +1171,7 @@ function AppPage() {
               {offering === "meos" && portraitError && <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">Portrait generation encountered an issue. Your knowledge files are ready, and you can regenerate your portrait from your MeOS dashboard.</p>}
 
               {/* Tabs */}
+              {offering !== "meos" && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100"><strong>Review before saving.</strong> The AI Working Profile organizes direct interview evidence into operating guidance. Provider files are portable setup instructions—not a silent sync or connection.</div>}
               <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
                 {outputFiles.map((f) => (
                   <button

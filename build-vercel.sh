@@ -17,7 +17,11 @@ echo "[1/3] vite build (light — safe under the sandbox memory cap)"
 # The workspace starts as sources only (deps live with the image's pre-built
 # placeholder copy); no-op once node_modules is current.
 bun install
-bun run db:migrate
+if [ "${SKIP_DB_MIGRATE:-0}" = "1" ]; then
+  echo "skipping database migration (using an already-migrated production database)"
+else
+  bun run db:migrate
+fi
 bun run build
 
 echo "[2/3] assemble .vercel/output (Build Output API v3)"

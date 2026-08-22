@@ -4,23 +4,27 @@
 // ── Shared types ──
 export type Tier = "personal" | "team" | "enterprise";
 export type Role = "user" | "assistant";
+export type KnowledgeStatus = "known" | "uncertain" | "not_applicable" | "private" | "contradictory" | "skipped";
 
 export interface Message {
   role: Role;
   content: string;
 }
 
+export interface DomainState {
+  answers: string[];
+  confidence: number;
+  covered: boolean;
+  /** Explicit user state. Unknown/uncertain information is still valuable knowledge. */
+  status?: KnowledgeStatus;
+  /** True only when the user explicitly asks ALVIRA to defer this domain. */
+  skipped?: boolean;
+}
+
 export interface InterviewState {
   tier: Tier;
   topic: string;
-  domains: Record<
-    string,
-    {
-      answers: string[];
-      confidence: number;
-      covered: boolean;
-    }
-  >;
+  domains: Record<string, DomainState>;
   history: Message[];
   currentDomain: string | null;
 }
@@ -41,11 +45,11 @@ export interface Domain {
 // ── Playbook: tier-specific interview configuration ──
 export interface Playbook {
   tier: Tier;
-  phases: string[];           // ordered phases (domain IDs in interview order)
-  knowledgePriorities: string[]; // most critical domains
+  phases: string[];
+  knowledgePriorities: string[];
   completion: {
-    minimumConfidence: number; // 0-1
-    unresolvedGaps: number;    // max gaps allowed before interview is "complete"
+    minimumConfidence: number;
+    unresolvedGaps: number;
   };
   outputs: ("markdown" | "json" | "knowledge_graph")[];
 }
@@ -63,10 +67,9 @@ export function getPlaybook(tier: Tier): Playbook {
       outputs: ["markdown", "json", "knowledge_graph"],
     };
   }
-  // Team and Enterprise use default completion
   return {
     tier,
-    phases: [], // flat — use priority ordering
+    phases: [],
     knowledgePriorities: [],
     completion: {
       minimumConfidence: 0.70,
@@ -78,7 +81,6 @@ export function getPlaybook(tier: Tier): Playbook {
 
 // ── Universal domains (all tiers) ──
 const universalDomains: Domain[] = [
-  // ── IDENTITY ──
   {
     id: "identity",
     label: "Identity",
@@ -89,7 +91,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "overview",
   },
-  // ── GOALS ──
   {
     id: "goals",
     label: "Goals",
@@ -100,7 +101,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "overview",
   },
-  // ── DECISION FRAMEWORKS ──
   {
     id: "decisionFrameworks",
     label: "Decision Frameworks",
@@ -111,7 +111,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "businessRules",
   },
-  // ── CONSTRAINTS ──
   {
     id: "constraints",
     label: "Constraints",
@@ -122,7 +121,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "constraints",
   },
-  // ── PROCESSES ──
   {
     id: "processes",
     label: "Processes",
@@ -133,7 +131,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "workflows",
   },
-  // ── PEOPLE & ROLES ──
   {
     id: "peopleAndRoles",
     label: "People & Roles",
@@ -144,7 +141,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "overview",
   },
-  // ── RELATIONSHIPS ──
   {
     id: "relationships",
     label: "Relationships",
@@ -155,7 +151,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "overview",
   },
-  // ── COMMUNICATION ──
   {
     id: "communication",
     label: "Communication",
@@ -166,7 +161,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "overview",
   },
-  // ── TOOLS & SYSTEMS ──
   {
     id: "toolsAndSystems",
     label: "Tools & Systems",
@@ -177,7 +171,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "workflows",
   },
-  // ── KNOWLEDGE & TERMINOLOGY ──
   {
     id: "knowledgeAndTerminology",
     label: "Knowledge & Terminology",
@@ -188,7 +181,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "requirements",
   },
-  // ── RULES ──
   {
     id: "rules",
     label: "Rules",
@@ -199,7 +191,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "businessRules",
   },
-  // ── EXCEPTIONS ──
   {
     id: "exceptions",
     label: "Exceptions",
@@ -210,7 +201,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "constraints",
   },
-  // ── UNKNOWNS ──
   {
     id: "unknowns",
     label: "Unknowns",
@@ -221,7 +211,6 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "constraints",
   },
-  // ── FAQS ──
   {
     id: "faqs",
     label: "FAQs",
@@ -288,7 +277,6 @@ const personalDomains: Domain[] = [
   },
 ];
 
-// ── Team/Enterprise domains ──
 const orgDomains: Domain[] = [
   {
     id: "productsAndServices",
@@ -312,7 +300,6 @@ const orgDomains: Domain[] = [
   },
 ];
 
-// ── Enterprise-only domains ──
 const enterpriseDomains: Domain[] = [
   {
     id: "examples",
@@ -326,19 +313,10 @@ const enterpriseDomains: Domain[] = [
   },
 ];
 
-// ── Tier-specific graph builder ──
 export function getKnowledgeGraph(tier: Tier): Domain[] {
   const base = [...universalDomains];
-
-  if (tier === "personal") {
-    return [...base, ...personalDomains];
-  }
-
+  if (tier === "personal") return [...base, ...personalDomains];
   const withOrg = [...base, ...orgDomains];
-
-  if (tier === "enterprise") {
-    return [...withOrg, ...enterpriseDomains];
-  }
-
-  return withOrg; // team
+  if (tier === "enterprise") return [...withOrg, ...enterpriseDomains];
+  return withOrg;
 }

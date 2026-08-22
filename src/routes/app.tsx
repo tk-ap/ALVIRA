@@ -28,6 +28,21 @@ import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterv
 // Max height (px) of the answer textarea before it scrolls instead of growing.
 const MAX_ANSWER_INPUT_HEIGHT = 160;
 
+// Max time (ms) allowed for any single async step inside generation before it is
+// treated as a timeout. Guards the LLM-driven MeOS portrait call so "Compiling..."
+// can never spin indefinitely with no feedback.
+const GENERATE_TIMEOUT_MS = 45000;
+
+function promiseWithTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (v) => { window.clearTimeout(timer); resolve(v); },
+      (e) => { window.clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 type ResumableDraft = {
   offering: "context" | "meos";
   topic: string;
@@ -328,6 +343,7 @@ function AppPage() {
   const [generated, setGenerated] = useState<Record<string, string> | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [compiling, setCompiling] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const [copyMsg, setCopyMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedProfileId, setSavedProfileId] = useState<string | null>(null);
@@ -951,6 +967,9 @@ function AppPage() {
   const handleGenerate = async (stateOverride?: InterviewState) => {
     const compileState = stateOverride || state;
     if (!compileState) return;
+    if (compiling) return; // avoid re-entrancy while already generating
+
+    setGenerateError(null);
 
     // Track interview count (for limits)
     if (authUser) {
@@ -975,31 +994,48 @@ function AppPage() {
     }
 
     setCompiling(true);
-    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
-    let files: Record<string, string>;
-    if (offering === "meos") {
-      files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
-      setPortraitError(false);
-      try {
-        const result = await generatePortrait(compileState);
-        if ("error" in result) {
+    try {
+      const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(compileState.tier);
+      let files: Record<string, string>;
+      if (offering === "meos") {
+        files = { ...compileMeosKnowledge(compileState, currentGraph).allFiles };
+        setPortraitError(false);
+        try {
+          // Bound the LLM portrait call so it can never spin forever with no feedback.
+          const result = await promiseWithTimeout(
+            generatePortrait(compileState),
+            GENERATE_TIMEOUT_MS,
+            "Generating your portrait is taking longer than expected. Your knowledge files are ready — you can retry, or leave the portrait for later from your MeOS dashboard.",
+          );
+          if ("error" in result) {
+            setMeosPortrait(null);
+            setPortraitError(true);
+          } else {
+            setMeosPortrait(result);
+            files["portrait.json"] = JSON.stringify(result, null, 2);
+          }
+        } catch {
           setMeosPortrait(null);
           setPortraitError(true);
-        } else {
-          setMeosPortrait(result);
-          files["portrait.json"] = JSON.stringify(result, null, 2);
         }
-      } catch {
-        setMeosPortrait(null);
-        setPortraitError(true);
+      } else {
+        files = compileKnowledge(compileState, currentGraph);
       }
-    } else {
-      files = compileKnowledge(compileState, currentGraph);
+      setGenerated(files);
+      setActiveTab(offering === "meos" ? "portrait.md" : "overview");
+      setScreen("output");
+    } catch (err: unknown) {
+      // Never strand the user on "Compiling...": surface a clear, human-readable
+      // error and keep the retry path available.
+      console.error("Knowledge generation failed:", err);
+      setGenerateError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Something went wrong while generating your knowledge files. Please try again.",
+      );
+    } finally {
+      setCompiling(false); // ALWAYS releases the button, on success, failure, or timeout
     }
-    setGenerated(files);
-    setActiveTab(offering === "meos" ? "portrait.md" : "overview");
-    setScreen("output");
-    setCompiling(false);
   };
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -1346,6 +1382,22 @@ function AppPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Generation error — visible so a failure is never a silent hang */}
+              {generateError && (
+                <div role="alert" className="mt-3 mb-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 px-4 py-3">
+                  <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">Couldn't generate your knowledge files</p>
+                  <p className="text-sm text-red-700 dark:text-red-300">{generateError}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleGenerate()}
+                    disabled={compiling}
+                    className="mt-2 text-xs font-semibold text-red-700 dark:text-red-300 underline hover:text-red-800 dark:hover:text-red-200 disabled:opacity-50 disabled:no-underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
 
               {/* Knowledge quality warning — shown when answers are too thin to produce useful files */}
               {hasQualityWarning && !waiting && (

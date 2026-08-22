@@ -6,21 +6,12 @@ export interface Gap {
   domain: Domain;
   coverage: "uncovered" | "shallow" | "lowConfidence";
   currentAnswers: number;
-  /** Higher means resolving this gap is more valuable to the interview. */
   informationValue: number;
-  /** Human-readable explanation used by the interviewer and debugging UI. */
   reason: string;
 }
 
 const DEFAULT_CONFIDENCE_THRESHOLD = 0.6;
 
-/**
- * Estimate the value of resolving a knowledge gap.
- *
- * This intentionally stays deterministic: the graph remains the guardrail,
- * while the question generator can use this signal to decide how deeply to
- * probe the highest-value missing context.
- */
 function calculateInformationValue(
   domain: Domain,
   coverage: Gap["coverage"],
@@ -28,20 +19,14 @@ function calculateInformationValue(
 ): number {
   const requiredBoost = domain.required ? 40 : 0;
   const priorityBoost = Math.max(0, 60 - (domain.priority ?? 50));
-  const coverageBoost =
-    coverage === "uncovered" ? 35 : coverage === "shallow" ? 20 : 10;
+  const coverageBoost = coverage === "uncovered" ? 35 : coverage === "shallow" ? 20 : 10;
   const uncertaintyBoost = Math.round((1 - Math.max(0, Math.min(1, confidence))) * 25);
-
   return requiredBoost + priorityBoost + coverageBoost + uncertaintyBoost;
 }
 
 /**
- * Pure function: compare the current interview state against the knowledge graph.
- * Returns gaps ranked by information value rather than simply by completion order.
- *
- * This is the first step toward value-of-information elicitation: the graph
- * still determines what knowledge matters, but the interview can now prioritize
- * the missing context that is most important to resolve next.
+ * Rank unresolved knowledge by deterministic information value.
+ * Explicitly skipped domains are deferred rather than immediately re-asked.
  */
 export function detectGaps(
   graph: Domain[],
@@ -52,13 +37,15 @@ export function detectGaps(
 
   for (const domain of graph) {
     const domainState = state.domains[domain.id];
+
+    // A skip is a user-directed deferral, not evidence that the domain is known.
+    // Required-domain completion still remains false for skipped domains.
+    if (domainState?.skipped) continue;
+
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;
 
-    // Fully covered: meets minAnswers AND confidence >= threshold.
-    if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) {
-      continue;
-    }
+    if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) continue;
 
     let coverage: Gap["coverage"];
     let reason: string;
@@ -86,11 +73,7 @@ export function detectGaps(
   }
 
   gaps.sort((a, b) => {
-    if (b.informationValue !== a.informationValue) {
-      return b.informationValue - a.informationValue;
-    }
-
-    // Stable tie-breakers keep the interview deterministic.
+    if (b.informationValue !== a.informationValue) return b.informationValue - a.informationValue;
     const aPriority = a.domain.priority ?? 50;
     const bPriority = b.domain.priority ?? 50;
     if (aPriority !== bPriority) return aPriority - bPriority;
@@ -100,7 +83,6 @@ export function detectGaps(
   return gaps;
 }
 
-/** Count how many domains are fully covered. */
 export function countCovered(
   graph: Domain[],
   state: InterviewState,
@@ -111,14 +93,12 @@ export function countCovered(
     const domainState = state.domains[domain.id];
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;
-    if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) {
-      covered++;
-    }
+    if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) covered++;
   }
   return covered;
 }
 
-/** Check if all required domains are covered. */
+/** Required domains are never considered complete merely because they were skipped. */
 export function allRequiredCovered(
   graph: Domain[],
   state: InterviewState,
@@ -129,7 +109,7 @@ export function allRequiredCovered(
     const domainState = state.domains[domain.id];
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;
-    if (answerCount < domain.minAnswers || confidence < confidenceThreshold) {
+    if (domainState?.skipped || answerCount < domain.minAnswers || confidence < confidenceThreshold) {
       return false;
     }
   }

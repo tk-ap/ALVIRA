@@ -37,7 +37,7 @@ type ResumableDraft = {
 };
 
 // ── Initialize empty interview state ──
-function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context", preview = false): InterviewState {
+function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context", preview = false, themes: string[] = []): InterviewState {
   const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
   const domains: InterviewState["domains"] = {};
   for (const d of graph) {
@@ -46,6 +46,7 @@ function createInitialState(tier: Tier, topic: string, offering: "context" | "me
   return {
     tier,
     topic,
+    themes: themes.length ? themes : undefined,
     domains,
     history: [],
     currentDomain: null,
@@ -606,7 +607,7 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(tier, topic.trim(), offering === "meos" ? "meos" : "context", isPreview);
+    const initialState = createInitialState(tier, topic.trim(), offering === "meos" ? "meos" : "context", isPreview, chapterSuggestions);
 
     try {
       const result = await askNextQuestion(initialState);
@@ -1687,7 +1688,6 @@ function AppPage() {
                             ? chapterSuggestions.filter(s => s !== suggestion)
                             : [...chapterSuggestions, suggestion];
                           setChapterSuggestions(next);
-                          setTopic(next.join(", "));
                           setStartError("");
                         }}
                         className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"

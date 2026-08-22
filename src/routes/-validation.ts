@@ -1,15 +1,15 @@
-// ── Validation: checks answer quality and returns confidence score ──
+// ── Validation: lightweight quality signals for knowledge elicitation ──
 
 export interface ValidationResult {
-  confidence: number; // 0–1
+  confidence: number; // 0–1, a routing signal rather than a truth score
   warnings: string[];
-  needsClarification: boolean; // true when confidence is too low — the answer isn't usable
-  insufficientKnowledge: boolean; // true when user admits they don't know / haven't prepared
-  isUserQuestion: boolean; // true when the user is asking a clarifying question, not answering
+  needsClarification: boolean;
+  insufficientKnowledge: boolean;
+  isUserQuestion: boolean;
+  /** True when a turn contains both a question and potentially useful answer content. */
+  isMixedQuestionAndAnswer?: boolean;
 }
 
-// Vague phrases that suggest the answer isn't specific
-// (Phrases now covered by INSUFFICIENT_KNOWLEDGE_PHRASES are removed to avoid double-penalty)
 const VAGUE_PHRASES = [
   "it depends",
   "maybe",
@@ -21,7 +21,7 @@ const VAGUE_PHRASES = [
   "that's a good question",
 ];
 
-// Phrases where the user actively admits they don't know or haven't prepared
+// These are treated as explicit uncertainty signals, not as failures.
 const INSUFFICIENT_KNOWLEDGE_PHRASES = [
   "i don't know",
   "i'm not sure",
@@ -45,62 +45,65 @@ const INSUFFICIENT_KNOWLEDGE_PHRASES = [
   "need more time",
 ];
 
-// Single-word deflection answers that don't engage with the question
 const DEFLECTION_WORDS = new Set([
   "ok", "okay", "sure", "yes", "no", "maybe", "idk", "alright",
   "fine", "whatever", "nah", "yep", "nope", "yeah",
 ]);
 
-// Negation keywords that might indicate contradiction
 const NEGATION_WORDS = ["not", "never", "don't", "doesn't", "won't", "can't", "shouldn't", "no "];
 
-// Question-starting words that indicate the user is asking a clarifying question
 const QUESTION_STARTS = [
   "what ", "how ", "why ", "when ", "where ", "who ",
   "can you ", "could you ", "would you ", "do you ", "does ",
   "is ", "are ", "explain ", "clarify ", "elaborate", "example",
 ];
 
-// Question phrases that can appear anywhere in the text
 const QUESTION_PHRASES = [
   "what does", "what is", "what are", "how do", "how does",
 ];
 
-/**
- * Detect whether the user's input is actually a clarifying question
- * rather than an answer to the domain question.
- */
+/** True when the whole turn is best treated as a clarification request. */
 export function detectUserQuestion(answer: string): boolean {
   const trimmed = answer.trim();
+  if (!trimmed) return false;
   const lower = trimmed.toLowerCase();
 
-  // Ends with question mark
   if (trimmed.endsWith("?")) return true;
-
-  // Starts with a question word
-  for (const start of QUESTION_STARTS) {
-    if (lower.startsWith(start)) return true;
-  }
-
-  // Contains a question phrase
-  for (const phrase of QUESTION_PHRASES) {
-    if (lower.includes(phrase)) return true;
-  }
-
-  return false;
+  if (QUESTION_STARTS.some((start) => lower.startsWith(start))) return true;
+  return QUESTION_PHRASES.some((phrase) => lower.includes(phrase));
 }
 
 /**
- * Pure function: validate an answer against existing answers for the same domain.
- * Returns a confidence score (0–1), any warnings, and a needsClarification flag.
- * Checks (in priority order):
- *   - Gibberish detection (repeated words, non-words, random characters)
- *   - Answer is non-trivial (more than a few words)
- *   - Answer is specific (contains concrete nouns, avoids vague phrases)
- *   - No direct contradiction with previous answers (basic keyword-based)
+ * Detect turns such as: "I'm not sure what you mean, but I usually prefer X."
+ * These should not discard the useful answer simply because a question appears.
+ */
+export function detectMixedQuestionAndAnswer(answer: string): boolean {
+  const trimmed = answer.trim();
+  if (!trimmed) return false;
+
+  const hasQuestionSignal =
+    trimmed.includes("?") ||
+    QUESTION_STARTS.some((start) => trimmed.toLowerCase().startsWith(start)) ||
+    QUESTION_PHRASES.some((phrase) => trimmed.toLowerCase().includes(phrase));
+
+  if (!hasQuestionSignal) return false;
+
+  // A question ending the turn is usually a pure clarification request.
+  if (trimmed.endsWith("?")) return false;
+
+  // Heuristic only: a longer turn containing a question signal is likely mixed.
+  return trimmed.split(/\s+/).length >= 8;
+}
+
+/**
+ * Validate an answer using conservative heuristics.
+ *
+ * Important design rule: validation provides routing signals; it does not decide
+ * whether a person's lived experience is "good enough". Uncertainty is useful
+ * knowledge and should be preserved rather than punished.
  */
 export function validateAnswer(
-  domainId: string,
+  _domainId: string,
   answer: string,
   existingAnswers: string[],
 ): ValidationResult {
@@ -108,145 +111,108 @@ export function validateAnswer(
   let score = 1.0;
 
   const trimmed = answer.trim();
-  const words = trimmed.split(/\s+/).filter((w) => w.length > 0);
+  const words = trimmed.split(/\s+/).filter(Boolean);
   const wordCount = words.length;
   const lower = trimmed.toLowerCase();
 
-  // ═══════════════════════════════════════════
-  // -1. User question detection (runs before everything — skip all validation)
-  // ═══════════════════════════════════════════
-  const isUserQuestion = detectUserQuestion(trimmed);
+  const isMixedQuestionAndAnswer = detectMixedQuestionAndAnswer(trimmed);
+  const isUserQuestion = detectUserQuestion(trimmed) && !isMixedQuestionAndAnswer;
+
   if (isUserQuestion) {
     return {
-      confidence: 1.0,
+      confidence: 1,
       warnings: [],
       needsClarification: false,
       insufficientKnowledge: false,
       isUserQuestion: true,
+      isMixedQuestionAndAnswer: false,
     };
   }
 
-  // ═══════════════════════════════════════════
-  // 0. Insufficient knowledge detection (runs first — heavier penalty for admitting lack of knowledge)
-  // ═══════════════════════════════════════════
+  // ── Uncertainty is a state, not a failed answer ──
+  const insufficientKnowledge = INSUFFICIENT_KNOWLEDGE_PHRASES.some((phrase) =>
+    lower.includes(phrase),
+  );
 
-  let insufficientKnowledge = false;
-
-  // 0a. Insufficient knowledge phrases — user admits they don't know / haven't prepared
-  if (wordCount < 20) {
-    for (const phrase of INSUFFICIENT_KNOWLEDGE_PHRASES) {
-      if (lower.includes(phrase)) {
-        warnings.push(
-          "It sounds like you may not have enough clarity on this yet. No problem — take some time to research or think it through. I'll ask again when you're ready. You can also skip this domain for now and come back to it later.",
-        );
-        score -= 0.6;
-        insufficientKnowledge = true;
-        break;
-      }
-    }
+  if (insufficientKnowledge) {
+    warnings.push(
+      "The user is uncertain about this topic. Preserve that uncertainty and use it to decide whether a targeted follow-up is useful.",
+    );
+    // Keep a usable baseline. A truthful "I don't know yet" should not force the
+    // interviewer into an endless retry loop.
+    score = Math.min(score, wordCount >= 6 ? 0.8 : 0.65);
   }
 
-  // 0b. Deflection patterns — single-word answers that don't engage with the question
   if (!insufficientKnowledge && wordCount < 3) {
     const singleWord = words[0]?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
     if (DEFLECTION_WORDS.has(singleWord)) {
-      warnings.push(
-        "It sounds like you may not have enough clarity on this yet. No problem — take some time to research or think it through. I'll ask again when you're ready. You can also skip this domain for now and come back to it later.",
-      );
-      score -= 0.6;
-      insufficientKnowledge = true;
+      warnings.push("The response is very short; consider one concrete detail or example.");
+      score -= 0.35;
     }
   }
 
-  // ═══════════════════════════════════════════
-  // 1. Gibberish detection
-  // ═══════════════════════════════════════════
-
-  // 1a. Repeated same word — if >60% of words are the same, likely nonsense (e.g. "asdf asdf asdf asdf")
+  // ── Gibberish / keyboard-mashing signals ──
   if (words.length >= 3) {
     const wordFreq: Record<string, number> = {};
-    for (const w of words) {
-      const lowerW = w.toLowerCase();
-      wordFreq[lowerW] = (wordFreq[lowerW] || 0) + 1;
+    for (const word of words) {
+      const normalized = word.toLowerCase();
+      wordFreq[normalized] = (wordFreq[normalized] || 0) + 1;
     }
     const maxFreq = Math.max(...Object.values(wordFreq));
     if (maxFreq / words.length > 0.6) {
-      warnings.push(
-        "Your answer repeats the same word multiple times — please provide a more meaningful response.",
-      );
+      warnings.push("The response repeats the same word multiple times; a clearer response would help.");
       score -= 0.5;
     }
   }
 
-  // 1b. Gibberish word ratio — count words with no vowels or 5+ consecutive consonants
   if (words.length > 0) {
-    const gibberishCount = words.filter((w) => {
-      const cleaned = w.toLowerCase().replace(/[^a-z]/g, "");
-      if (cleaned.length === 0) return true; // all non-alpha characters
-      // No vowels at all
+    const gibberishCount = words.filter((word) => {
+      const cleaned = word.toLowerCase().replace(/[^a-z]/g, "");
+      if (cleaned.length === 0) return true;
       if (!/[aeiou]/i.test(cleaned)) return true;
-      // 5+ consecutive consonants (e.g. "asdfg", "jklmn")
-      if (/[^aeiou]{5,}/i.test(cleaned)) return true;
-      return false;
+      return /[^aeiou]{5,}/i.test(cleaned);
     }).length;
 
     if (gibberishCount / words.length > 0.5) {
-      warnings.push(
-        "Your answer contains mostly unrecognizable words — please try again with clearer language.",
-      );
+      warnings.push("The response contains mostly unrecognizable words; please try again in clearer language.");
       score -= 0.5;
     }
   }
 
-  // 1c. Character randomness — high ratio of non-alphabetic characters suggests keyboard mashing
+  // Only flag extreme symbol density. Numbers, punctuation, bullets, and normal
+  // formatting are legitimate in many domains.
   const nonAlphaCount = (trimmed.match(/[^a-zA-Z\s]/g) || []).length;
   const alphaCount = (trimmed.match(/[a-zA-Z]/g) || []).length;
   const totalChars = nonAlphaCount + alphaCount;
-  if (totalChars > 0 && nonAlphaCount / totalChars > 0.4) {
-    warnings.push(
-      "Your answer contains many non-alphabetic characters — please provide a clearer response.",
-    );
-    score -= 0.5;
+  if (totalChars > 10 && nonAlphaCount / totalChars > 0.65) {
+    warnings.push("The response contains unusually high symbol density; please check that it is readable.");
+    score -= 0.35;
   }
 
-  // ═══════════════════════════════════════════
-  // 2. Non-trivial check
-  // ═══════════════════════════════════════════
+  // ── Brevity is a gentle signal, not a quality verdict ──
   if (wordCount < 3) {
-    warnings.push("Answer is very short — consider providing more detail.");
-    score -= 0.4;
+    warnings.push("Answer is very short — one concrete detail could make it more useful.");
+    score -= 0.2;
   } else if (wordCount < 6) {
-    warnings.push("Answer is brief — more detail would improve quality.");
-    score -= 0.15;
+    warnings.push("Answer is brief — additional context may improve usefulness.");
+    score -= 0.05;
   }
 
-  // 3. Specificity check — contains concrete nouns?
-  // Simple heuristic: look for capitalized words (proper nouns) or specific patterns
-  const hasProperNouns = /[A-Z][a-z]{2,}/.test(trimmed);
-  const hasNumbers = /\d/.test(trimmed);
-  const hasConcreteNouns = hasProperNouns || hasNumbers || wordCount > 10;
+  // Do NOT infer specificity from capitalization, numbers, or answer length.
+  // A concise personal statement can be highly valuable without any of those.
 
-  if (!hasConcreteNouns && wordCount < 15) {
-    warnings.push("Answer lacks specific details — names, numbers, or concrete examples would help.");
-    score -= 0.15;
-  }
-
-  // 4. Vague phrase check
   for (const phrase of VAGUE_PHRASES) {
     if (lower.includes(phrase)) {
-      warnings.push(`Answer contains vague phrasing ("${phrase}") — try to be more definitive.`);
-      score -= 0.1;
-      break; // Only penalize once for vagueness
+      warnings.push(`Answer contains potentially vague phrasing ("${phrase}"). A concrete example may help.`);
+      score -= 0.05;
+      break;
     }
   }
 
-  // 5. Contradiction check (basic keyword-based)
+  // ── Contradiction is a warning, not an automatic rejection ──
   if (existingAnswers.length > 0) {
     const answerWords = new Set(
-      lower
-        .replace(/[^a-z0-9\s]/g, "")
-        .split(/\s+/)
-        .filter((w) => w.length > 2),
+      lower.replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter((word) => word.length > 2),
     );
 
     for (const existing of existingAnswers) {
@@ -255,38 +221,40 @@ export function validateAnswer(
         existingLower
           .replace(/[^a-z0-9\s]/g, "")
           .split(/\s+/)
-          .filter((w) => w.length > 2),
+          .filter((word) => word.length > 2),
       );
 
-      // Check for negation patterns: if an existing answer says "we use X" and new says "we don't use X"
-      // Look for overlapping significant words with negation in one but not the other
-      const hasNegInNew = NEGATION_WORDS.some((nw) => lower.includes(nw));
-      const hasNegInExisting = NEGATION_WORDS.some((nw) => existingLower.includes(nw));
+      const hasNegInNew = NEGATION_WORDS.some((word) => lower.includes(word));
+      const hasNegInExisting = NEGATION_WORDS.some((word) => existingLower.includes(word));
 
       if (hasNegInNew !== hasNegInExisting) {
-        // One has negation, the other doesn't — check for shared key terms
         const sharedWords: string[] = [];
-        for (const w of answerWords) {
-          if (existingWords.has(w) && w.length > 3 && !NEGATION_WORDS.includes(w)) {
-            sharedWords.push(w);
+        for (const word of answerWords) {
+          if (existingWords.has(word) && word.length > 3 && !NEGATION_WORDS.includes(word)) {
+            sharedWords.push(word);
           }
         }
+
         if (sharedWords.length >= 2) {
           warnings.push(
-            `Possible contradiction with a previous answer. Shared terms: ${sharedWords.join(", ")}. Please clarify.`,
+            `Possible contradiction with a previous answer. Shared terms: ${sharedWords.join(", ")}. Treat this as something to clarify, not proof of inconsistency.`,
           );
-          score -= 0.2;
-          break; // Only flag one contradiction
+          score -= 0.1;
+          break;
         }
       }
     }
   }
 
-  // Clamp score
   const confidence = Math.max(0, Math.min(1, score));
-
-  // needsClarification: true when confidence is too low for the answer to be usable
   const needsClarification = confidence < 0.4;
 
-  return { confidence, warnings, needsClarification, insufficientKnowledge, isUserQuestion: false };
+  return {
+    confidence,
+    warnings,
+    needsClarification,
+    insufficientKnowledge,
+    isUserQuestion: false,
+    isMixedQuestionAndAnswer,
+  };
 }

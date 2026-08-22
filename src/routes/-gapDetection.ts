@@ -6,17 +6,42 @@ export interface Gap {
   domain: Domain;
   coverage: "uncovered" | "shallow" | "lowConfidence";
   currentAnswers: number;
+  /** Higher means resolving this gap is more valuable to the interview. */
+  informationValue: number;
+  /** Human-readable explanation used by the interviewer and debugging UI. */
+  reason: string;
 }
 
 const DEFAULT_CONFIDENCE_THRESHOLD = 0.6;
 
 /**
+ * Estimate the value of resolving a knowledge gap.
+ *
+ * This intentionally stays deterministic: the graph remains the guardrail,
+ * while the question generator can use this signal to decide how deeply to
+ * probe the highest-value missing context.
+ */
+function calculateInformationValue(
+  domain: Domain,
+  coverage: Gap["coverage"],
+  confidence: number,
+): number {
+  const requiredBoost = domain.required ? 40 : 0;
+  const priorityBoost = Math.max(0, 60 - (domain.priority ?? 50));
+  const coverageBoost =
+    coverage === "uncovered" ? 35 : coverage === "shallow" ? 20 : 10;
+  const uncertaintyBoost = Math.round((1 - Math.max(0, Math.min(1, confidence))) * 25);
+
+  return requiredBoost + priorityBoost + coverageBoost + uncertaintyBoost;
+}
+
+/**
  * Pure function: compare the current interview state against the knowledge graph.
- * Returns gaps sorted by priority:
- *   1. Required domains with zero coverage
- *   2. Partially covered domains (fewer than minAnswers)
- *   3. Domains with low confidence answers
- * Fully covered domains are excluded from results.
+ * Returns gaps ranked by information value rather than simply by completion order.
+ *
+ * This is the first step toward value-of-information elicitation: the graph
+ * still determines what knowledge matters, but the interview can now prioritize
+ * the missing context that is most important to resolve next.
  */
 export function detectGaps(
   graph: Domain[],
@@ -30,40 +55,52 @@ export function detectGaps(
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;
 
-    // Fully covered: meets minAnswers AND confidence >= threshold
+    // Fully covered: meets minAnswers AND confidence >= threshold.
     if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) {
       continue;
     }
 
     let coverage: Gap["coverage"];
+    let reason: string;
+
     if (answerCount === 0) {
       coverage = "uncovered";
+      reason = domain.required
+        ? "Required context has not been established yet."
+        : "No context has been captured for this domain yet.";
     } else if (answerCount < domain.minAnswers) {
       coverage = "shallow";
+      reason = `Only ${answerCount} answer${answerCount === 1 ? "" : "s"} captured; this domain needs more depth.`;
     } else {
       coverage = "lowConfidence";
+      reason = `The current information has only ${(confidence * 100).toFixed(0)}% confidence.`;
     }
 
-    gaps.push({ domain, coverage, currentAnswers: answerCount });
+    gaps.push({
+      domain,
+      coverage,
+      currentAnswers: answerCount,
+      informationValue: calculateInformationValue(domain, coverage, confidence),
+      reason,
+    });
   }
 
-  // Sort by priority: coverage severity first, then domain priority (lower = ask first), then required status
   gaps.sort((a, b) => {
-    const priorityScore = (gap: Gap): number => {
-      const coverageScore = gap.coverage === "uncovered" ? 0 : gap.coverage === "shallow" ? 1 : 2;
-      const reqScore = gap.domain.required ? 0 : 1;
-      const domainPriority = gap.domain.priority ?? 50;
-      return coverageScore * 1000 + reqScore * 100 + domainPriority;
-    };
-    return priorityScore(a) - priorityScore(b);
+    if (b.informationValue !== a.informationValue) {
+      return b.informationValue - a.informationValue;
+    }
+
+    // Stable tie-breakers keep the interview deterministic.
+    const aPriority = a.domain.priority ?? 50;
+    const bPriority = b.domain.priority ?? 50;
+    if (aPriority !== bPriority) return aPriority - bPriority;
+    return a.domain.id.localeCompare(b.domain.id);
   });
 
   return gaps;
 }
 
-/**
- * Count how many domains are fully covered.
- */
+/** Count how many domains are fully covered. */
 export function countCovered(
   graph: Domain[],
   state: InterviewState,
@@ -81,9 +118,7 @@ export function countCovered(
   return covered;
 }
 
-/**
- * Check if all required domains are covered.
- */
+/** Check if all required domains are covered. */
 export function allRequiredCovered(
   graph: Domain[],
   state: InterviewState,

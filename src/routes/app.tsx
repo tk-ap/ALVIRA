@@ -580,7 +580,14 @@ function AppPage() {
   };
 
   const handleStart = async () => {
-    const trimmed = topic.trim();
+    // The free-form "current chapter" answer (topic) is always preserved verbatim.
+    // Selected MeOS themes (chapterSuggestions) augment -- never overwrite -- it by being
+    // merged into the topic that seeds the interview only at start time. This keeps the
+    // typed answer safe when themes are toggled, and still lets a user who selects only
+    // themes (empty typed field) start the interview.
+    const trimmed = (offering === "meos" && chapterSuggestions.length > 0)
+      ? [topic.trim(), ...chapterSuggestions].filter(Boolean).join(", ")
+      : topic.trim();
     if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("MeOS requires an active Pro or Lifetime plan plus MeOS Build ($149 one-time). Purchase access on the MeOS page."); return; }
     if (!trimmed) return;
 
@@ -606,7 +613,7 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(tier, topic.trim(), offering === "meos" ? "meos" : "context", isPreview);
+    const initialState = createInitialState(tier, trimmed, offering === "meos" ? "meos" : "context", isPreview);
 
     try {
       const result = await askNextQuestion(initialState);
@@ -1687,7 +1694,6 @@ function AppPage() {
                             ? chapterSuggestions.filter(s => s !== suggestion)
                             : [...chapterSuggestions, suggestion];
                           setChapterSuggestions(next);
-                          setTopic(next.join(", "));
                           setStartError("");
                         }}
                         className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-600"

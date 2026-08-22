@@ -13,6 +13,10 @@ export interface Message {
 export interface InterviewState {
   tier: Tier;
   topic: string;
+  /** Selected theme/concept suggestions chosen on the start screen (MeOS). Kept
+   *  separate from `topic` (the free-form text) so selecting or deselecting a
+   *  theme never overwrites what the user typed. */
+  themes?: string[];
   domains: Record<
     string,
     {

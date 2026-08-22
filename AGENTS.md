@@ -6,6 +6,139 @@
 - Revisions after 11 are team working hypotheses unless the owner explicitly ratifies them.
 - Label post–Revision 11 assumptions when they influence recommendations or implementation.
 
+## ALVIRA Product Family: Bridge Brand Architecture
+
+This section captures the current owner-approved direction for how **ALVIRA Bridge** relates to the main ALVIRA product and should guide future product, UX, copy, and visual implementation work across both repositories.
+
+### Product Relationship
+
+- **ALVIRA** is the context engine: it helps people discover, structure, maintain, and build the context their AI is missing.
+- **ALVIRA Bridge** is the context distribution layer: it carries the user's ALVIRA context into the AI tools they use.
+- The Bridge site is a **sister product/site**, not an unrelated standalone SaaS product.
+- Bridge should feel like a natural extension of ALVIRA's product story and brand system.
+- The core product-family narrative is:
+  - **ALVIRA:** Build the context your AI is missing.
+  - **Bridge:** Take your context everywhere.
+- A useful architectural shorthand is **ALVIRA = Context Engine** and **Bridge = Context Distribution**. Use this internally to maintain conceptual clarity, but prefer human-facing language over infrastructure terminology.
+
+### Bridge Positioning
+
+Bridge should fulfill the promise established by ALVIRA rather than introduce a competing conceptual framework.
+
+Preferred framing:
+
+> **Take your ALVIRA profile everywhere.**
+>
+> Your AI profile shouldn't live in one tool. Use your ALVIRA context across ChatGPT, Claude, Gemini, Cursor, and whatever comes next.
+
+Potential supporting language:
+
+> Your ALVIRA profile was built to work everywhere. Bridge gives you a simple way to bring it into the AI tools you use.
+
+The exact copy may evolve, but Bridge should consistently communicate **portability, continuity, and context**.
+
+### Shared Vocabulary
+
+Prefer language already established by the main ALVIRA product:
+
+- context
+- AI profile
+- knowledge
+- build
+- missing context
+- take your context everywhere
+- one profile
+- every AI tool
+- portable
+- structured
+- maintain
+- understand
+
+Avoid unnecessary generic SaaS/infrastructure terminology such as:
+
+- integration layer
+- distribution problem
+- integration directory
+- integration infrastructure
+- stack
+- infrastructure-first language
+
+Technical terminology is appropriate when describing implementation, but customer-facing copy should remain human + technical rather than technical + infrastructural.
+
+### Brand Voice
+
+- Concise, confident, intelligent, and technically credible.
+- Human-centered without becoming casual or overly conversational.
+- Explain the product through the user's relationship with their AI context rather than through infrastructure.
+- Prefer short, declarative sentences.
+- Avoid marketing filler, exaggerated claims, and generic SaaS language.
+- Reuse established ALVIRA vocabulary before inventing new terminology.
+- Bridge should sound like **ALVIRA**, not like a generic integrations marketplace.
+
+### Copy Hierarchy
+
+When practical, Bridge should mirror the main ALVIRA site's communication rhythm:
+
+1. Small technical/product label.
+2. Large, concise headline communicating the core promise.
+3. Short explanatory paragraph.
+4. Clear primary and secondary actions.
+
+Use technical/code-style product labels where appropriate, for example:
+
+`<alvira-bridge />`
+
+This should be treated as a brand-language pattern, not a requirement that every page use the literal label.
+
+### Product-Family Messaging
+
+Maintain a clear narrative between the two sites:
+
+**ALVIRA**
+
+> **Build the context your AI is missing.**
+
+Discover → structure → maintain personal AI context.
+
+**ALVIRA Bridge**
+
+> **Take that context everywhere.**
+
+Connect → copy → deploy the ALVIRA profile across AI tools.
+
+The main ALVIRA site's promise, **“One profile. Every AI tool.”**, is especially important: Bridge should be understood as a fulfillment of that promise, not as a separate product proposition.
+
+### Typography and Visual System
+
+- Bridge should use the same typography system as the main ALVIRA site wherever technically possible.
+- Do not introduce a separate font identity for Bridge without explicit owner approval.
+- Align body font, heading font, weights, letter spacing, line heights, button typography, and technical/monospace treatments with the main ALVIRA system.
+- Preserve the small monospace/code-style label treatment used by ALVIRA as a recognizable part of the product-family identity.
+- Treat typography and design tokens as shared ALVIRA brand infrastructure rather than per-site styling decisions.
+- When implementing Bridge, inspect and reuse existing ALVIRA design tokens/assets before creating parallel values.
+
+### Implementation Guidance
+
+When working on either repository:
+
+- If a copy decision affects Bridge's relationship to ALVIRA, prefer the established ALVIRA language unless there is a clear product reason not to.
+- If a visual decision affects brand consistency, prefer shared ALVIRA typography, spacing, component, and token patterns.
+- Keep Bridge's information architecture useful as an integrations/distribution experience while making its positioning unmistakably part of ALVIRA.
+- Do not make Bridge feel like a generic developer marketplace merely because it connects technical products.
+- The Bridge repository is still being built; treat this section as the source of truth for the intended relationship while its implementation evolves.
+- If Bridge-specific requirements later become more detailed, document them in the Bridge repository as well, while preserving this family-level direction in the main ALVIRA repository.
+
+### Acceptance Criteria for Cross-Site Brand Alignment
+
+A Bridge implementation is directionally aligned when:
+
+1. A user can immediately understand that Bridge belongs to ALVIRA.
+2. Bridge's headline and supporting copy reinforce the ALVIRA context/AI-profile story rather than introducing a competing positioning.
+3. Typography and major type treatments feel native to the main ALVIRA product.
+4. The relationship between **ALVIRA = build context** and **Bridge = take context everywhere** is clear without requiring technical explanation.
+5. Copy avoids generic integration-marketplace language unless needed for precise technical meaning.
+6. New Bridge-specific terminology is introduced only when it improves user understanding and does not fragment the ALVIRA vocabulary.
+
 ## Update Requests
 
 When an answer recommends or specifies an update to ALVIRA, provide the deliverable in agent-compatible Markdown by default.
@@ -74,7 +207,7 @@ This repository may be accessed by multiple agents. Treat `main` as the stable i
 - Prefer squash merge for a focused task unless preserving separate commits materially improves history.
 - Delete merged task branches when they are no longer needed.
 
-### Merge Gate
+## Merge Gate
 
 Before merging:
 

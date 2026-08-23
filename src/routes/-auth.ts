@@ -1,7 +1,7 @@
 // ── Auth server functions ──
 import { compare, hash as hashPassword } from "bcryptjs";
 import { createServerFn } from "@tanstack/react-start";
-import { deleteCookie, getCookie } from "@tanstack/react-start/server";
+import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server";
 import {
   getDb,
   createSession,
@@ -26,9 +26,27 @@ import {
   executeDraftTransfer,
 } from "~/db";
 import { sendPasswordResetEmail, sendWelcomeEmail } from "~/email";
+import { compileInterviewMarkdown } from "./-meosCompiler";
+import { getMeosGraph } from "./-meosGraph";
 
 const SESSION_COOKIE = "alvira_session";
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
+
+function sessionCookieOptions() {
+  const domain = process.env.ALVIRA_SESSION_COOKIE_DOMAIN?.trim();
+  return {
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    ...(domain ? { domain } : {}),
+  };
+}
+
+function setSessionCookie(token: string): void {
+  setCookie(SESSION_COOKIE, token, sessionCookieOptions());
+}
 
 // ── Helpers ──
 
@@ -73,6 +91,7 @@ export const signup = createServerFn({ method: "POST" })
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000).toISOString();
     await createSession(userId, token, expiresAt);
+    setSessionCookie(token);
 
     // Check for a pending draft transfer (e.g. hipopmarkets' recovered draft that is currently
     // orphaned under another user id after the DB corruption recovery). Execute it if present.
@@ -83,7 +102,6 @@ export const signup = createServerFn({ method: "POST" })
 
     return {
       user: { id: user.id, email: user.email, tier: user.tier },
-      token,
       expiresAt,
     };
   });
@@ -118,10 +136,10 @@ export const login = createServerFn({ method: "POST" })
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000).toISOString();
     await createSession(user.id, token, expiresAt);
+    setSessionCookie(token);
 
     return {
       user: { id: user.id, email: user.email, tier: user.tier },
-      token,
       expiresAt,
     };
   });
@@ -172,7 +190,7 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
   }
   // Also clear the cookie server-side
   try {
-    deleteCookie(SESSION_COOKIE);
+    deleteCookie(SESSION_COOKIE, sessionCookieOptions());
   } catch {
     // ignore if cookie operations aren't available
   }
@@ -301,6 +319,42 @@ export const autosaveInterview = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const finalizeInterviewDraft = createServerFn({ method: "POST" })
+  .validator((data: unknown) => ({
+    topic: typeof (data as { topic?: string }).topic === "string" ? (data as { topic?: string }).topic!.trim() : "",
+  }))
+  .handler(async ({ data }) => {
+    const user = await requireUser();
+    const row = (await getDb().query(
+      `SELECT offering, topic, state_json FROM interview_drafts
+       WHERE user_id = $1 AND NOT EXISTS (
+         SELECT 1 FROM draft_transfers t
+         WHERE t.source_user_id = $1 AND t.source_offering = interview_drafts.offering
+       ) ORDER BY updated_at DESC LIMIT 1`,
+      [user.id],
+    ))[0] as { offering: string; topic: string; state_json: string } | undefined;
+    if (!row) throw new Error("No interview in progress to save.");
+
+    const state = JSON.parse(row.state_json) as { domains?: Record<string, { answers?: string[] }> };
+    const topic = data.topic || row.topic || "My Profile";
+    const existing = (await getDb().query("SELECT id FROM profiles WHERE user_id = $1 AND topic = $2", [user.id, topic]))[0] as { id: string } | undefined;
+    if (user.tier === "free" && !existing && await getProfileCount(user.id) >= 1) return { error: "limit_reached", limit: "profiles" };
+
+    const compiled = compileInterviewMarkdown(state as any, row.offering === "meos" ? getMeosGraph() : []);
+    const portrait = JSON.stringify({ markdownFiles: compiled.allFiles });
+    const id = existing?.id ?? crypto.randomUUID();
+    await getDb().query(
+      existing
+        ? "UPDATE profiles SET offering = $1, tier = $2, state_json = $3, portrait_json = $4, updated_at = NOW() WHERE id = $5 AND user_id = $6"
+        : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      existing
+        ? [row.offering, user.tier, JSON.stringify(state), portrait, id, user.id]
+        : [id, user.id, topic, row.offering, user.tier, JSON.stringify(state), portrait],
+    );
+    await getDb().query("DELETE FROM interview_drafts WHERE user_id = $1 AND offering = $2", [user.id, row.offering]);
+    return { id, topic };
+  });
+
 export const getInterviewDraft = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
   const row = (await getDb().query("SELECT offering, topic, state_json, updated_at FROM interview_drafts WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1", [user.id]))[0] as { offering: string; topic: string; state_json: string; updated_at: string } | undefined;
@@ -363,4 +417,3 @@ export const fetchUserLimits = createServerFn({ method: "GET" }).handler(async (
   if (!limits) throw new Error("User not found.");
   return limits;
 });
-

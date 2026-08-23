@@ -35,9 +35,7 @@ function LoginPage() {
 
     setSubmitting(true);
     try {
-      const result = await login({ data: { email, password } });
-      const maxAge = 30 * 24 * 60 * 60;
-      document.cookie = `alvira_session=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      await login({ data: { email, password } });
       navigate({ to: "/app" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");

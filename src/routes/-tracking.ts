@@ -95,7 +95,7 @@ export const logEvent = createServerFn({ method: "POST" })
       try {
         const token = getCookie(SESSION_COOKIE) ?? null;
         if (token) {
-          const session = getSessionByToken(token);
+          const session = await getSessionByToken(token);
           if (session && new Date(session.expires_at) > new Date()) userId = session.user_id;
         }
       } catch {
@@ -104,7 +104,7 @@ export const logEvent = createServerFn({ method: "POST" })
       // recordEvent applies the identifier requirement + per-identity rate limit
       // and never throws; a dropped event still returns ok so the funnel action
       // is never blocked by metrics hygiene.
-      const persisted = recordEvent(data.name, { userId, anonymousId: data.anonymousId, props: data.props });
+      const persisted = await recordEvent(data.name, { userId, anonymousId: data.anonymousId, props: data.props });
       return { ok: true, dropped: !persisted };
     } catch (err) {
       // Tracking must never block the funnel action — drop the event, log a warning.

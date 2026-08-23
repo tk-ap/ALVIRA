@@ -90,6 +90,18 @@ export interface DraftTransferResult {
   reason?: "source_gone" | "transfer_gone" | "already_owned";
 }
 
+export async function recordEvent(
+  name: string,
+  input: { userId?: string | null; anonymousId?: string | null; props?: Record<string, string | number | boolean> } = {},
+): Promise<boolean> {
+  if (!input.userId && !input.anonymousId) return false;
+  await run(
+    "INSERT INTO events (id, name, user_id, anonymous_id, props_json) VALUES ($1, $2, $3, $4, $5)",
+    [crypto.randomUUID(), name, input.userId ?? null, input.anonymousId ?? null, JSON.stringify(input.props ?? {})],
+  );
+  return true;
+}
+
 export async function getUserById(userId: string): Promise<User | null> {
   return first<User>("SELECT id, email, tier, stripe_customer_id, interview_count, created_at FROM users WHERE id = $1", [userId]);
 }
@@ -205,4 +217,3 @@ export async function executeDraftTransfer(transferId: string, targetUserId: str
   ]);
   return { transferred: true };
 }
-

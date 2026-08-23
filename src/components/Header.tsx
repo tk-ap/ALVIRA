@@ -36,7 +36,6 @@ export function Header() {
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      document.cookie = "alvira_session=; path=/; max-age=0; SameSite=Lax";
       await logout();
       setUser(null);
     } catch {

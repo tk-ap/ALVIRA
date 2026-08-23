@@ -4,7 +4,7 @@
 
 ALVIRA remains the **Context Engine and source of truth**. Bridge is the **context distribution layer**. Bridge must consume the existing ALVIRA Profile rather than recreate interview, validation, scoring, profile generation, or context storage.
 
-This follows the ecosystem direction: Context Engine → Bridge → Workflow Studio → AI Agents. The Context Engine produces a portable ALVIRA Profile; Bridge makes that profile available wherever the user works. fileciteturn61file0L38-L50 fileciteturn61file0L104-L139
+The ecosystem direction is: **Context Engine → Bridge → Workflow Studio → AI Agents**. The Context Engine produces a portable ALVIRA Profile; Bridge makes that profile available wherever the user works.
 
 ## Current API contract
 
@@ -28,7 +28,7 @@ The token only has `context:read profile:read` scope in this first release.
 
 Bridge is the MCP-facing layer. MCP clients connect to Bridge, not directly to the Context Engine database. Bridge validates the access token and reads the current ALVIRA Profile from the provider API on demand.
 
-This keeps the architecture aligned with the product thesis: ALVIRA knows the user; Bridge makes that context available everywhere. fileciteturn61file0L806-L818
+This keeps the architecture aligned with the product thesis: **ALVIRA knows the user; Bridge makes that context available everywhere.**
 
 ## Environment contract
 

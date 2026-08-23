@@ -1,7 +1,7 @@
 // ── Auth server functions ──
-import bcrypt from "bcryptjs";
+import { compare, hash as hashPassword } from "bcryptjs";
 import { createServerFn } from "@tanstack/react-start";
-import { deleteCookie, getCookie } from "@tanstack/react-start/server";
+import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server";
 import {
   getDb,
   createSession,
@@ -24,21 +24,28 @@ import {
   getOwnerMetrics as queryOwnerMetrics,
   getPendingDraftTransfer,
   executeDraftTransfer,
-  insertEvent,
 } from "~/db";
-import { deliver, enqueueEmail } from "~/emailQueue";
+import { sendPasswordResetEmail, sendWelcomeEmail } from "~/email";
 import { compileInterviewMarkdown } from "./-meosCompiler";
 import { getMeosGraph } from "./-meosGraph";
 
 const SESSION_COOKIE = "alvira_session";
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
 
-async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+function sessionCookieOptions() {
+  const domain = process.env.ALVIRA_SESSION_COOKIE_DOMAIN?.trim();
+  return {
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    ...(domain ? { domain } : {}),
+  };
 }
 
-async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-  return bcrypt.compare(password, passwordHash);
+function setSessionCookie(token: string): void {
+  setCookie(SESSION_COOKIE, token, sessionCookieOptions());
 }
 
 // ── Helpers ──
@@ -55,19 +62,14 @@ function getSessionTokenFromRequest(): string | null {
 
 export const signup = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { email?: string; password?: string; anonymousId?: string };
+    const d = data as { email?: string; password?: string };
     if (!d.email || typeof d.email !== "string" || !d.email.includes("@")) {
       throw new Error("A valid email is required.");
     }
     if (!d.password || typeof d.password !== "string" || d.password.length < 8) {
       throw new Error("Password must be at least 8 characters.");
     }
-    // Optional anonymous id links pre-signup funnel activity to the new account.
-    const anonymousId =
-      typeof d.anonymousId === "string" && /^[a-zA-Z0-9._:-]{1,128}$/.test(d.anonymousId.trim())
-        ? d.anonymousId.trim()
-        : undefined;
-    return { email: d.email.trim().toLowerCase(), password: d.password, anonymousId };
+    return { email: d.email.trim().toLowerCase(), password: d.password };
   })
   .handler(async ({ data }) => {
     // Check if user already exists
@@ -76,28 +78,20 @@ export const signup = createServerFn({ method: "POST" })
       throw new Error("An account with this email already exists.");
     }
 
-    const passwordHash = await hashPassword(data.password);
+    // Hash password with Bun
+    const passwordHash = await hashPassword(data.password, 10);
 
     // Create user
     const userId = crypto.randomUUID();
     const user = await createUser(userId, data.email, passwordHash);
 
-    // Queue welcome email (file-based bridge to email agent). enqueueEmail never
-    // throws — a filesystem failure must not break an otherwise successful signup.
-    enqueueEmail("welcome", { email: data.email, timestamp: new Date().toISOString() });
-
-    // First-party funnel event: signup_completed, server-side right after user
-    // creation (user_id known). Tracking failures never block signup.
-    try {
-      await insertEvent("signup_completed", { userId, anonymousId: data.anonymousId, props: { tier: "free" } });
-    } catch (err) {
-      console.warn("[events] signup_completed persistence failed", String(err));
-    }
+    await sendWelcomeEmail(data.email);
 
     // Create session
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000).toISOString();
     await createSession(userId, token, expiresAt);
+    setSessionCookie(token);
 
     // Check for a pending draft transfer (e.g. hipopmarkets' recovered draft that is currently
     // orphaned under another user id after the DB corruption recovery). Execute it if present.
@@ -108,7 +102,6 @@ export const signup = createServerFn({ method: "POST" })
 
     return {
       user: { id: user.id, email: user.email, tier: user.tier },
-      token,
       expiresAt,
     };
   });
@@ -132,7 +125,7 @@ export const login = createServerFn({ method: "POST" })
       throw new Error("Invalid email or password.");
     }
 
-    const valid = await verifyPassword(data.password, hash);
+    const valid = await compare(data.password, hash);
     if (!valid) {
       throw new Error("Invalid email or password.");
     }
@@ -143,10 +136,10 @@ export const login = createServerFn({ method: "POST" })
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000).toISOString();
     await createSession(user.id, token, expiresAt);
+    setSessionCookie(token);
 
     return {
       user: { id: user.id, email: user.email, tier: user.tier },
-      token,
       expiresAt,
     };
   });
@@ -154,11 +147,7 @@ export const login = createServerFn({ method: "POST" })
 // ── Password reset ──
 
 const RESET_TOKEN_MAX_AGE = 60 * 60 * 1000;
-const PUBLIC_SITE_URL = (() => {
-  const override = (process.env.PUBLIC_SITE_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL ?? "").trim();
-  if (!override) return "https://alvira.ctonew.app";
-  return override.startsWith("http://") || override.startsWith("https://") ? override : `https://${override}`;
-})();
+const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://alvira.ctonew.app";
 
 export const requestPasswordReset = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
@@ -172,24 +161,7 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
     if (user) {
       const token = crypto.randomUUID();
       await createPasswordResetToken(user.id, token, new Date(Date.now() + RESET_TOKEN_MAX_AGE).toISOString());
-      const resetUrl = `${PUBLIC_SITE_URL}/reset-password?token=${encodeURIComponent(token)}`;
-      const result = (process.env.EMAIL_API_URL ?? "").trim()
-        ? await deliver(user.email, "Reset your ALVIRA password", `We received a request to reset your ALVIRA password. Click the link below to choose a new password:\n\n${resetUrl}\n\nThis link expires in one hour. If you didn't request this, you can ignore this email.`)
-        : (() => {
-            const queued = enqueueEmail("reset", {
-              email: user.email,
-              resetUrl,
-              timestamp: new Date().toISOString(),
-            });
-            if (!queued) {
-              throw new Error("Password reset emails are not configured for this deployment. Set EMAIL_API_URL and EMAIL_API_KEY, or configure the queue processor.");
-            }
-            return { ok: true, mode: "simulated" as const };
-          })();
-
-      if (!result.ok) {
-        throw new Error(result.error ?? "Unable to send password reset email.");
-      }
+      await sendPasswordResetEmail(user.email, `${PUBLIC_SITE_URL}/reset-password?token=${encodeURIComponent(token)}`);
     }
     return { success: true };
   });
@@ -204,7 +176,7 @@ export const resetPassword = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const userId = await consumePasswordResetToken(data.token);
     if (!userId) throw new Error("This reset link is invalid or has expired. Please request a new one.");
-    const passwordHash = await hashPassword(data.newPassword);
+    const passwordHash = await hashPassword(data.newPassword, 10);
     await updatePasswordHash(userId, passwordHash);
     return { success: true };
   });
@@ -218,7 +190,7 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
   }
   // Also clear the cookie server-side
   try {
-    deleteCookie(SESSION_COOKIE);
+    deleteCookie(SESSION_COOKIE, sessionCookieOptions());
   } catch {
     // ignore if cookie operations aren't available
   }
@@ -248,7 +220,7 @@ export const claimPurchase = createServerFn({ method: "POST" })
 export const getEntitlements = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
   const entitlements = await listEntitlements(user.id);
-  if (await getMeosComp(user.email) && !entitlements.includes("meos_build")) entitlements.push("meos_build");
+  if ((await getMeosComp(user.email)) && !entitlements.includes("meos_build")) entitlements.push("meos_build");
   return entitlements;
 });
 
@@ -276,7 +248,7 @@ export const saveProfile = createServerFn({ method: "POST" })
     const d = getDb();
 
     // Check if this is an existing profile (same topic)
-    const existing = (await d.query("SELECT id FROM profiles WHERE user_id = ? AND topic = ?").get(user.id, data.topic)) as { id: string } | undefined;
+    const existing = (await d.query("SELECT id FROM profiles WHERE user_id = $1 AND topic = $2", [user.id, data.topic]))[0] as { id: string } | undefined;
 
     // Free tier: can only have 1 profile (unless updating existing)
     if (user.tier === "free" && !existing) {
@@ -286,45 +258,32 @@ export const saveProfile = createServerFn({ method: "POST" })
       }
     }
 
-    let portrait = data.portrait;
-    const state = data.state as { domains?: Record<string, { answers?: string[] }> } | undefined;
-    if (state && typeof state === "object") {
-      const compiled = compileInterviewMarkdown(state as any, data.offering === "meos" ? getMeosGraph() : []);
-      portrait = {
-        ...(typeof portrait === "object" && portrait ? (portrait as Record<string, unknown>) : {}),
-        markdownFiles: compiled.allFiles,
-      };
-    }
-
     const id = existing?.id ?? crypto.randomUUID();
-    await d.run(
+    await d.query(
       existing
-        ? "UPDATE profiles SET offering = ?, tier = ?, state_json = ?, portrait_json = COALESCE(?, portrait_json), updated_at = datetime('now') WHERE id = ? AND user_id = ?"
-        : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      existing ? [data.offering, data.tier, JSON.stringify(data.state), portrait ? JSON.stringify(portrait) : null, id, user.id] : [id, user.id, data.topic, data.offering, data.tier, JSON.stringify(data.state), portrait ? JSON.stringify(portrait) : null],
+        ? "UPDATE profiles SET offering = $1, tier = $2, state_json = $3, portrait_json = COALESCE($4, portrait_json), updated_at = NOW() WHERE id = $5 AND user_id = $6"
+        : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      existing ? [data.offering, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null, id, user.id] : [id, user.id, data.topic, data.offering, data.tier, JSON.stringify(data.state), data.portrait ? JSON.stringify(data.portrait) : null],
     );
     return { id };
   });
 
 export const listProfiles = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  return (await getDb().query("SELECT id, topic, tier, updated_at FROM profiles WHERE user_id = ? ORDER BY updated_at DESC").all(user.id));
+  return getDb().query("SELECT id, topic, tier, updated_at FROM profiles WHERE user_id = $1 ORDER BY updated_at DESC", [user.id]);
 });
 
 export const getMeosProfiles = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  const rows = (await getDb().query("SELECT id, topic, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = ? AND offering = 'meos' ORDER BY updated_at DESC").all(user.id)) as Array<{ id: string; topic: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
+  const rows = await getDb().query("SELECT id, topic, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = $1 AND offering = 'meos' ORDER BY updated_at DESC", [user.id]) as Array<{ id: string; topic: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
   return rows.map(row => ({ ...row, state: JSON.parse(row.state_json), portrait: row.portrait_json ? JSON.parse(row.portrait_json) : null }));
 });
 
 export const saveMeosPortrait = createServerFn({ method: "POST" })
-  .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait, markdownFiles: (data as { markdownFiles?: Record<string, string> }).markdownFiles }))
+  .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? ""), portrait: (data as { portrait?: unknown }).portrait }))
   .handler(async ({ data }) => {
     const user = await requireUser();
-    const payload = data.markdownFiles
-      ? { ...(typeof data.portrait === "object" && data.portrait ? (data.portrait as Record<string, unknown>) : {}), markdownFiles: data.markdownFiles }
-      : data.portrait;
-    await getDb().run("UPDATE profiles SET portrait_json = ?, offering = 'meos', updated_at = datetime('now') WHERE id = ? AND user_id = ?", [JSON.stringify(payload), data.profileId, user.id]);
+    await getDb().query("UPDATE profiles SET portrait_json = $1, offering = 'meos', updated_at = NOW() WHERE id = $2 AND user_id = $3", [JSON.stringify(data.portrait), data.profileId, user.id]);
     return { success: true };
   });
 
@@ -332,7 +291,7 @@ export const loadProfile = createServerFn({ method: "POST" })
   .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? "") }))
   .handler(async ({ data }) => {
     const user = await requireUser();
-    const row = (await getDb().query("SELECT id, topic, tier, state_json FROM profiles WHERE id = ? AND user_id = ?").get(data.profileId, user.id)) as { id: string; topic: string; tier: string; state_json: string } | undefined;
+    const row = (await getDb().query("SELECT id, topic, tier, state_json FROM profiles WHERE id = $1 AND user_id = $2", [data.profileId, user.id]))[0] as { id: string; topic: string; tier: string; state_json: string } | undefined;
     if (!row) throw new Error("Profile not found.");
     return { id: row.id, topic: row.topic, tier: row.tier, state: JSON.parse(row.state_json) };
   });
@@ -341,7 +300,7 @@ export const deleteProfile = createServerFn({ method: "POST" })
   .validator((data: unknown) => ({ profileId: String((data as { profileId?: string }).profileId ?? "") }))
   .handler(async ({ data }) => {
     const user = await requireUser();
-    await getDb().run("DELETE FROM profiles WHERE id = ? AND user_id = ?", [data.profileId, user.id]);
+    await getDb().query("DELETE FROM profiles WHERE id = $1 AND user_id = $2", [data.profileId, user.id]);
     return { success: true };
   });
 
@@ -353,29 +312,12 @@ export const autosaveInterview = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const user = await requireUser();
-    await getDb().run(
-      "INSERT INTO interview_drafts (user_id, offering, topic, state_json, updated_at) VALUES (?, ?, ?, ?, datetime('now')) ON CONFLICT(user_id, offering) DO UPDATE SET topic=excluded.topic, state_json=excluded.state_json, updated_at=datetime('now')",
+    await getDb().query(
+      "INSERT INTO interview_drafts (user_id, offering, topic, state_json, updated_at) VALUES ($1, $2, $3, $4, NOW()) ON CONFLICT(user_id, offering) DO UPDATE SET topic=excluded.topic, state_json=excluded.state_json, updated_at=NOW()",
       [user.id, data.offering, data.topic, JSON.stringify(data.state)],
     );
     return { success: true };
   });
-
-export const getInterviewDraft = createServerFn({ method: "GET" }).handler(async () => {
-  const user = await requireUser();
-  // Skip drafts that are the source of a pending transfer — they belong
-  // to the target user, not the current user.
-  const row = (await getDb().query(
-    `SELECT d.offering, d.topic, d.state_json, d.updated_at
-     FROM interview_drafts d
-     WHERE d.user_id = ?
-       AND NOT EXISTS (
-         SELECT 1 FROM draft_transfers t
-         WHERE t.source_user_id = d.user_id AND t.source_offering = d.offering
-       )
-     ORDER BY d.updated_at DESC LIMIT 1`
-  ).get(user.id)) as { offering: string; topic: string; state_json: string; updated_at: string } | undefined;
-  return row ? { ...row, state: JSON.parse(row.state_json) } : null;
-});
 
 export const finalizeInterviewDraft = createServerFn({ method: "POST" })
   .validator((data: unknown) => ({
@@ -384,58 +326,50 @@ export const finalizeInterviewDraft = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const user = await requireUser();
     const row = (await getDb().query(
-     `SELECT offering, topic, state_json
-      FROM interview_drafts
-      WHERE user_id = ?
-        AND NOT EXISTS (
-          SELECT 1 FROM draft_transfers t
-          WHERE t.source_user_id = ? AND t.source_offering = interview_drafts.offering
-        )
-      ORDER BY updated_at DESC LIMIT 1`
-    ).get(user.id, user.id)) as { offering: string; topic: string; state_json: string } | undefined;
-
+      `SELECT offering, topic, state_json FROM interview_drafts
+       WHERE user_id = $1 AND NOT EXISTS (
+         SELECT 1 FROM draft_transfers t
+         WHERE t.source_user_id = $1 AND t.source_offering = interview_drafts.offering
+       ) ORDER BY updated_at DESC LIMIT 1`,
+      [user.id],
+    ))[0] as { offering: string; topic: string; state_json: string } | undefined;
     if (!row) throw new Error("No interview in progress to save.");
 
     const state = JSON.parse(row.state_json) as { domains?: Record<string, { answers?: string[] }> };
     const topic = data.topic || row.topic || "My Profile";
-
-    if (user.tier === "free") {
-     const count = await getProfileCount(user.id);
-     const existing = (await getDb().query("SELECT id FROM profiles WHERE user_id = ? AND topic = ?").get(user.id, topic)) as { id: string } | undefined;
-     if (!existing && count >= 1) {
-       return { error: "limit_reached", limit: "profiles" };
-     }
-    }
+    const existing = (await getDb().query("SELECT id FROM profiles WHERE user_id = $1 AND topic = $2", [user.id, topic]))[0] as { id: string } | undefined;
+    if (user.tier === "free" && !existing && await getProfileCount(user.id) >= 1) return { error: "limit_reached", limit: "profiles" };
 
     const compiled = compileInterviewMarkdown(state as any, row.offering === "meos" ? getMeosGraph() : []);
-    const portrait = { markdownFiles: compiled.allFiles };
-    const existing = (await getDb().query("SELECT id FROM profiles WHERE user_id = ? AND topic = ?").get(user.id, topic)) as { id: string } | undefined;
+    const portrait = JSON.stringify({ markdownFiles: compiled.allFiles });
     const id = existing?.id ?? crypto.randomUUID();
-
-    await getDb().run(
-     existing
-       ? "UPDATE profiles SET offering = ?, tier = ?, state_json = ?, portrait_json = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?"
-       : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-     existing
-       ? [row.offering, user.tier, JSON.stringify(state), JSON.stringify(portrait), id, user.id]
-       : [id, user.id, topic, row.offering, user.tier, JSON.stringify(state), JSON.stringify(portrait)],
+    await getDb().query(
+      existing
+        ? "UPDATE profiles SET offering = $1, tier = $2, state_json = $3, portrait_json = $4, updated_at = NOW() WHERE id = $5 AND user_id = $6"
+        : "INSERT INTO profiles (id, user_id, topic, offering, tier, state_json, portrait_json) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      existing
+        ? [row.offering, user.tier, JSON.stringify(state), portrait, id, user.id]
+        : [id, user.id, topic, row.offering, user.tier, JSON.stringify(state), portrait],
     );
-
-    await getDb().run("DELETE FROM interview_drafts WHERE user_id = ? AND offering = ?", [user.id, row.offering]);
+    await getDb().query("DELETE FROM interview_drafts WHERE user_id = $1 AND offering = $2", [user.id, row.offering]);
     return { id, topic };
   });
 
+export const getInterviewDraft = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireUser();
+  const row = (await getDb().query("SELECT offering, topic, state_json, updated_at FROM interview_drafts WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1", [user.id]))[0] as { offering: string; topic: string; state_json: string; updated_at: string } | undefined;
+  return row ? { ...row, state: JSON.parse(row.state_json) } : null;
+});
+
 export const clearInterviewDraft = createServerFn({ method: "POST" }).handler(async () => {
   const user = await requireUser();
-  await getDb().run("DELETE FROM interview_drafts WHERE user_id = ?", [user.id]);
+  await getDb().query("DELETE FROM interview_drafts WHERE user_id = $1", [user.id]);
   return { success: true };
 });
 
-const OWNER_EMAIL = (process.env.ALVIRA_OWNER_EMAIL ?? "tahlia.ashwood@gmail.com").trim().toLowerCase();
-
 export const getOwnerMetrics = createServerFn({ method: "GET" }).handler(async () => {
   const user = await requireUser();
-  if (user.email.toLowerCase() !== OWNER_EMAIL) throw new Error("Not authorized.");
+  if (user.email !== "tahlia.ashwood@gmail.com") throw new Error("Not authorized.");
   return await queryOwnerMetrics();
 });
 

@@ -58,6 +58,12 @@ export interface OwnerMetrics {
   activeComps: Array<{ email: string; expires_at: string }>;
   recentWaitlist: Array<{ name: string; email: string; company: string | null; team_size: string | null; created_at: string }>;
   recentUsers: Array<{ email: string; tier: string; created_at: string }>;
+  funnel: {
+    signupCompleted: { d7: number; d30: number };
+    interviewStarted: { d7: number; d30: number };
+    interviewCompleted: { d7: number; d30: number };
+    exportPerformed: { d7: number; d30: number };
+  };
 }
 
 export interface UserLimits {
@@ -120,7 +126,7 @@ export async function getMeosComp(email: string): Promise<MeosComp | null> {
 
 export async function getOwnerMetrics(): Promise<OwnerMetrics> {
   const count = async (query: string) => Number((await first<{ count: string | number }>(query))?.count ?? 0);
-  const [total, free, pro, lifetime, profileCount, pendingInterviews, waitlistCount, activeCompCount, activeComps, recentWaitlist, recentUsers] = await Promise.all([
+  const [total, free, pro, lifetime, profileCount, pendingInterviews, waitlistCount, activeCompCount, activeComps, recentWaitlist, recentUsers, funnelRows] = await Promise.all([
     count("SELECT COUNT(*) AS count FROM users"),
     count("SELECT COUNT(*) AS count FROM users WHERE tier = 'free'"),
     count("SELECT COUNT(*) AS count FROM users WHERE tier = 'pro'"),
@@ -132,8 +138,50 @@ export async function getOwnerMetrics(): Promise<OwnerMetrics> {
     rows<OwnerMetrics["activeComps"][number]>("SELECT email, expires_at FROM meos_comps WHERE expires_at > NOW() ORDER BY expires_at ASC"),
     rows<OwnerMetrics["recentWaitlist"][number]>("SELECT name, email, company, team_size, created_at FROM team_waitlist ORDER BY created_at DESC LIMIT 5"),
     rows<OwnerMetrics["recentUsers"][number]>("SELECT email, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5"),
+    rows<{
+      signup_d7: number | string;
+      signup_d30: number | string;
+      interview_started_d7: number | string;
+      interview_started_d30: number | string;
+      interview_completed_d7: number | string;
+      interview_completed_d30: number | string;
+      export_d7: number | string;
+      export_d30: number | string;
+    }>(
+      `SELECT
+        COUNT(DISTINCT CASE WHEN name = 'signup_completed' AND created_at >= NOW() - INTERVAL '7 days' THEN COALESCE(user_id, anonymous_id) END) AS signup_d7,
+        COUNT(DISTINCT CASE WHEN name = 'signup_completed' AND created_at >= NOW() - INTERVAL '30 days' THEN COALESCE(user_id, anonymous_id) END) AS signup_d30,
+        COUNT(DISTINCT CASE WHEN name = 'interview_started' AND created_at >= NOW() - INTERVAL '7 days' THEN COALESCE(user_id, anonymous_id) END) AS interview_started_d7,
+        COUNT(DISTINCT CASE WHEN name = 'interview_started' AND created_at >= NOW() - INTERVAL '30 days' THEN COALESCE(user_id, anonymous_id) END) AS interview_started_d30,
+        COUNT(DISTINCT CASE WHEN name = 'interview_completed' AND created_at >= NOW() - INTERVAL '7 days' THEN COALESCE(user_id, anonymous_id) END) AS interview_completed_d7,
+        COUNT(DISTINCT CASE WHEN name = 'interview_completed' AND created_at >= NOW() - INTERVAL '30 days' THEN COALESCE(user_id, anonymous_id) END) AS interview_completed_d30,
+        COUNT(DISTINCT CASE WHEN name = 'export_performed' AND created_at >= NOW() - INTERVAL '7 days' THEN COALESCE(user_id, anonymous_id) END) AS export_d7,
+        COUNT(DISTINCT CASE WHEN name = 'export_performed' AND created_at >= NOW() - INTERVAL '30 days' THEN COALESCE(user_id, anonymous_id) END) AS export_d30
+      FROM events`
+    ),
   ]);
-  return { userCounts: { total, free, pro, lifetime }, profileCount, pendingInterviews, waitlistCount, activeCompCount, activeComps, recentWaitlist, recentUsers };
+  const funnel = funnelRows[0] ?? {
+    signup_d7: 0, signup_d30: 0,
+    interview_started_d7: 0, interview_started_d30: 0,
+    interview_completed_d7: 0, interview_completed_d30: 0,
+    export_d7: 0, export_d30: 0,
+  };
+  return {
+    userCounts: { total, free, pro, lifetime },
+    profileCount,
+    pendingInterviews,
+    waitlistCount,
+    activeCompCount,
+    activeComps,
+    recentWaitlist,
+    recentUsers,
+    funnel: {
+      signupCompleted: { d7: Number(funnel.signup_d7), d30: Number(funnel.signup_d30) },
+      interviewStarted: { d7: Number(funnel.interview_started_d7), d30: Number(funnel.interview_started_d30) },
+      interviewCompleted: { d7: Number(funnel.interview_completed_d7), d30: Number(funnel.interview_completed_d30) },
+      exportPerformed: { d7: Number(funnel.export_d7), d30: Number(funnel.export_d30) },
+    },
+  };
 }
 
 export async function createUser(id: string, email: string, passwordHash: string): Promise<User> {
@@ -155,7 +203,7 @@ export async function consumePasswordResetToken(token: string): Promise<string |
 }
 
 export async function updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
-  await run("UPDATE users SET password_hash = $1 WHERE id = $2", [passwordHash, userId]);
+  await run("UPDATE users SET password_hash = $1 WHERE id = $2", [userId, passwordHash]);
 }
 
 export async function createSession(userId: string, token: string, expiresAt: string): Promise<Session> {

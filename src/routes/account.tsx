@@ -64,7 +64,6 @@ function AccountPage() {
   };
 
   const handleLogout = async () => {
-    document.cookie = "alvira_session=; path=/; max-age=0; SameSite=Lax";
     await logout();
     navigate({ to: "/" });
   };

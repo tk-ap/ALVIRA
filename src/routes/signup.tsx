@@ -42,9 +42,7 @@ function SignupPage() {
     try {
       // Pass the stable anonymous id so the server-side signup_completed event
       // can link pre-signup funnel activity to the new account.
-      const result = await signup({ data: { email, password, anonymousId: getOrCreateAnonId() } });
-      const maxAge = 30 * 24 * 60 * 60;
-      document.cookie = `alvira_session=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      await signup({ data: { email, password, anonymousId: getOrCreateAnonId() } });
       navigate({ to: "/app" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");

@@ -18,6 +18,26 @@ Agent-compatible Markdown should:
 - State when direction relies on a post–Revision 11 working hypothesis rather than owner-ratified direction.
 - Avoid relying on surrounding conversational context when the Markdown is intended to serve as an implementation brief.
 
+## Product Family: ALVIRA + Bridge
+
+ALVIRA and ALVIRA Bridge are separate products in one ecosystem.
+
+- **ALVIRA** is the Context Engine: build, structure, and maintain the user's AI profile/context.
+- **ALVIRA Bridge** is the Context Distribution product: direct integrations and MCP access that carry ALVIRA context into external AI tools.
+- Main product: `https://alviratech.vercel.app/`
+- Bridge product: `https://alviratech-bridge.vercel.app/`
+
+### Cross-Linking Requirement
+
+Keep the products clearly linked but operationally separate.
+
+- The main ALVIRA navigation must provide a visible **Bridge** link to the Bridge product page.
+- Bridge navigation/branding must provide a visible link back to the main ALVIRA product.
+- Any customer-facing mention of **direct integrations**, **MCP access**, connecting external AI tools, or distributing an ALVIRA profile across tools should link to the Bridge product page rather than implying those capabilities live inside the core ALVIRA product.
+- Any Bridge CTA that requires creating/building an ALVIRA profile should link to the main ALVIRA product.
+- Do not merge the two products into one navigation experience or describe Bridge as merely a page/feature of ALVIRA.
+- Preserve distinct product positioning: **ALVIRA builds context; Bridge carries it everywhere.**
+
 ## Owner-Approved Testing Policy
 
 This section is an owner-ratified requirement, not a post–Revision 11 working hypothesis.

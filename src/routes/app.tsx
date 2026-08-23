@@ -33,6 +33,14 @@ const MAX_ANSWER_INPUT_HEIGHT = 160;
 // can never spin indefinitely with no feedback.
 const GENERATE_TIMEOUT_MS = 45000;
 
+function getInterviewDraftKey(
+  userId: string | null | undefined,
+  offering: string | null | undefined,
+) {
+  const scope = userId ? `user:${userId}` : "anonymous";
+  return `alvira:interview-draft:${scope}:${offering ?? "context"}`;
+}
+
 function promiseWithTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = window.setTimeout(() => reject(new Error(message)), ms);
@@ -427,7 +435,7 @@ function AppPage() {
   // Persist every in-progress state locally; authenticated users also get a server draft.
   useEffect(() => {
     if (!state || typeof window === "undefined") return;
-    const key = `alvira-draft-${offering ?? "context"}`;
+    const key = getInterviewDraftKey(authUser?.id, offering);
     try { window.localStorage.setItem(key, JSON.stringify({ offering: offering ?? "context", topic: state.topic, state, savedAt: Date.now() })); } catch { /* storage may be unavailable */ }
     if (authUser) {
       const timer = window.setTimeout(() => { autosaveInterview({ data: { offering: offering ?? "context", topic: state.topic, state } }).catch(() => {}); }, 500);
@@ -459,7 +467,12 @@ function AppPage() {
         // anonymous draft, which may otherwise mask a saved interview after login.
         if (!draftRestoredRef.current) {
           try {
-            const localRaw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
+            const localRaw = window.localStorage.getItem(
+              getInterviewDraftKey(
+                authUser?.id,
+                offeringSearch === "meos" ? "meos" : "context",
+              ),
+            );
             const serverDraft = await getInterviewDraft().catch(() => null);
             const localDraft = localRaw ? JSON.parse(localRaw) : null;
             const draft = serverDraft ?? localDraft;
@@ -490,7 +503,12 @@ function AppPage() {
       } else {
         setAuthUser(null);
         try {
-          const raw = window.localStorage.getItem(`alvira-draft-${offeringSearch === "meos" ? "meos" : "context"}`);
+          const raw = window.localStorage.getItem(
+              getInterviewDraftKey(
+                authUser?.id,
+                offeringSearch === "meos" ? "meos" : "context",
+              ),
+            );
           if (raw) {
             const draft = JSON.parse(raw);
             if (draft?.state && !cancelled) {
@@ -523,7 +541,9 @@ function AppPage() {
 
   const handleStartOver = async () => {
     const draftOffering = resumeDraft?.offering ?? offering ?? "context";
-    try { window.localStorage.removeItem(`alvira-draft-${draftOffering}`); } catch { /* storage may be unavailable */ }
+    try { window.localStorage.removeItem(
+        getInterviewDraftKey(authUser?.id, draftOffering),
+      ); } catch { /* storage may be unavailable */ }
     if (authUser) await clearInterviewDraft().catch(() => {});
     setResumeDraft(null);
     setState(null);

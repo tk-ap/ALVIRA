@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "vercel-build": "bash ./build-vercel.sh",
     "db:migrate": "bun run scripts/migrate-db.ts",
     "db:verify": "bun run scripts/verify-neon.ts",
     "start": "bun run serve.ts",
@@ -33,7 +34,7 @@
     "@vitejs/plugin-react": "^5.1.3",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3",
+    "typescript": "^5.9.0",
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^6.0.5"
   }

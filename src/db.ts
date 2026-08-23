@@ -1,8 +1,18 @@
-// ── Database: Bun + Node-compatible SQLite wrapper ──
+// ── Database: Postgres (Neon) when DATABASE_URL is set, else SQLite ──
+// The app historically used SQLite only, which on Vercel landed in /tmp (an
+// ephemeral per-serverless-instance path) — so a fresh deployment started with
+// an empty database and logins failed. Now, when DATABASE_URL is present
+// (Neon on Vercel), getDb() returns a Postgres backend that persists across
+// restarts and instances. Locally (no DATABASE_URL) it keeps the SQLite path.
+//
+// All helpers below are async so they work against either backend. The SQLite
+// backend executes synchronously inside the async helpers (awaiting a plain
+// value is a no-op); the Postgres backend (src/pgDb.ts) returns promises.
 import { createRequire } from "node:module";
 import { existsSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createPostgresDb, type PostgresDbLike } from "./pgDb";
 
 const require = createRequire(import.meta.url);
 
@@ -24,14 +34,14 @@ function loadDatabaseConstructor() {
 }
 
 type QueryHandle = {
-  get: (...args: unknown[]) => unknown;
-  all: (...args: unknown[]) => unknown[];
-  run: (...args: unknown[]) => unknown;
+  get: (...args: unknown[]) => unknown | Promise<unknown>;
+  all: (...args: unknown[]) => unknown[] | Promise<unknown[]>;
+  run: (...args: unknown[]) => unknown | Promise<unknown>;
 };
 
 type SqliteDatabaseLike = {
-  exec: (sql: string) => void;
-  run: (sql: string, params?: unknown[] | Record<string, unknown>) => unknown;
+  exec: (sql: string) => void | Promise<void>;
+  run: (sql: string, params?: unknown[] | Record<string, unknown>) => unknown | Promise<unknown>;
   query: (sql: string) => QueryHandle;
 };
 
@@ -90,38 +100,8 @@ export const EVENT_RATE_LIMIT_MAX = 240;
 let lastEventPruneAt = 0;
 const EVENT_PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-let db: SqliteDatabaseLike | null = null;
-
-export function getDb(): SqliteDatabaseLike {
-  if (db) return db;
-
-  const dirToUse = activeDbDir;
-  try {
-    if (!existsSync(dirToUse)) {
-      mkdirSync(dirToUse, { recursive: true });
-    }
-  } catch {
-    const fallbackDir = join(tmpdir(), "alvira-data");
-    if (fallbackDir !== dirToUse) {
-      mkdirSync(fallbackDir, { recursive: true });
-      activeDbDir = fallbackDir;
-      activeDbPath = join(fallbackDir, "alvira.db");
-    }
-  }
-
-  const DatabaseCtor = loadDatabaseConstructor();
-  db = adaptSqliteConnection(new DatabaseCtor(activeDbPath));
-
-  // Enable WAL mode for better concurrent reads
-  db.exec("PRAGMA journal_mode=WAL");
-
-  // Enforce foreign keys so ON DELETE SET NULL (events.user_id) and ON DELETE
-  // CASCADE (sessions, profiles, purchases, interview_drafts) actually work.
-  // Note: SQLite disables FK enforcement by default per connection.
-  db.exec("PRAGMA foreign_keys = ON");
-
-  // ── Migrations: run CREATE TABLE IF NOT EXISTS on startup ──
-  db.exec(`
+// ── Schema (kept in SQLite-flavored SQL; Postgres backend translates it) ──
+const SCHEMA_DDL = `
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -226,62 +206,108 @@ export function getDb(): SqliteDatabaseLike {
     CREATE INDEX IF NOT EXISTS idx_events_name_created_at ON events(name, created_at);
     CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
     CREATE INDEX IF NOT EXISTS idx_events_anonymous_id ON events(anonymous_id);
-  `);
+  `;
 
-  // Seed recovery compensation offers; INSERT OR IGNORE keeps existing expiry dates stable.
-  db.run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, datetime('now', '+30 days'))", ["meos-comp-courtnee", "courtneeowens22@gmail.com"]);
-  db.run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, datetime('now', '+30 days'))", ["meos-comp-hipopmarkets", "hipopmarkets@gmail.com"]);
+/**
+ * The full set of schema + idempotent seed statements, SQLite-flavored, that
+ * must run before any query. Used by the Postgres backend (lazily, on first
+ * op) and by the SQLite backend at startup. ALTER statements are intentionally
+ * LAST and non-fatal if they fail ("already migrated").
+ */
+function buildSchemaStatements(): string[] {
+  return [
+    // DDL (split into single statements because Postgres allows one statement
+    // per query in extended protocol).
+    ...SCHEMA_DDL.split(";").map((s) => s.trim()).filter(Boolean),
 
-  // Seed the draft transfer for hipopmarkets' recovered interview draft (currently orphaned under
-  // Tahlia's user id after the DB corruption recovery). Only seed while the source draft actually
-  // exists — once the transfer has been executed (row deleted), a server restart must not re-seed it.
-  db.run(
-    `INSERT OR IGNORE INTO draft_transfers (id, target_email, source_user_id, source_offering)
-     SELECT 'transfer-hipopmarkets', 'hipopmarkets@gmail.com', '1d76633b-2602-47bf-8f5c-adb76603e41e', 'context'
-     WHERE EXISTS (SELECT 1 FROM interview_drafts WHERE user_id = '1d76633b-2602-47bf-8f5c-adb76603e41e' AND offering = 'context')`
-  );
+    // Seed recovery compensation offers (INSERT OR IGNORE keeps expiry stable).
+    "INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES ('meos-comp-courtnee', 'courtneeowens22@gmail.com', datetime('now', '+30 days'))",
+    "INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES ('meos-comp-hipopmarkets', 'hipopmarkets@gmail.com', datetime('now', '+30 days'))",
 
-  // ── Migration: add interview_count to existing users table ──
-  try {
-    db.exec("ALTER TABLE profiles ADD COLUMN portrait_json TEXT");
-  } catch {
-    // Column already exists — safe to ignore
+    // Seed the draft transfer for hipopmarkets' recovered draft (only while the
+    // source draft exists — once executed/deleted, a restart must not re-seed).
+    "INSERT OR IGNORE INTO draft_transfers (id, target_email, source_user_id, source_offering) SELECT 'transfer-hipopmarkets', 'hipopmarkets@gmail.com', '1d76633b-2602-47bf-8f5c-adb76603e41e', 'context' WHERE EXISTS (SELECT 1 FROM interview_drafts WHERE user_id = '1d76633b-2602-47bf-8f5c-adb76603e41e' AND offering = 'context')",
+
+    // Migration: add columns to existing tables (non-fatal if already present).
+    "ALTER TABLE profiles ADD COLUMN portrait_json TEXT",
+    "ALTER TABLE users ADD COLUMN interview_count INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE profiles ADD COLUMN offering TEXT NOT NULL DEFAULT 'context'",
+
+    // Bounded event retention prune on startup.
+    "DELETE FROM events WHERE created_at < datetime('now', '-180 days')",
+  ];
+}
+
+let db: SqliteDatabaseLike | PostgresDbLike | null = null;
+
+export function getDb(): SqliteDatabaseLike | PostgresDbLike {
+  if (db) return db;
+
+  // Postgres (Neon) backend: durable across Vercel restarts/instances.
+  const pgUrl = process.env.DATABASE_URL?.trim();
+  if (pgUrl) {
+    db = createPostgresDb(pgUrl, buildSchemaStatements());
+    return db;
   }
+
+  const dirToUse = activeDbDir;
   try {
-    db.exec("ALTER TABLE users ADD COLUMN interview_count INTEGER NOT NULL DEFAULT 0");
+    if (!existsSync(dirToUse)) {
+      mkdirSync(dirToUse, { recursive: true });
+    }
   } catch {
-    // Column already exists — safe to ignore
-  }
-  try {
-    db.exec("ALTER TABLE profiles ADD COLUMN offering TEXT NOT NULL DEFAULT 'context'");
-  } catch {
-    // Column already exists — safe to ignore
+    const fallbackDir = join(tmpdir(), "alvira-data");
+    if (fallbackDir !== dirToUse) {
+      mkdirSync(fallbackDir, { recursive: true });
+      activeDbDir = fallbackDir;
+      activeDbPath = join(fallbackDir, "alvira.db");
+    }
   }
 
-  // Bounded event retention: prune rows older than EVENT_RETENTION_DAYS on every
-  // startup so the events table cannot grow forever. Cheap (indexed on name/created_at)
-  // and safe — the owner funnel only ever looks at 7/30-day windows.
-  pruneOldEvents();
+  const DatabaseCtor = loadDatabaseConstructor();
+  const conn = adaptSqliteConnection(new DatabaseCtor(activeDbPath));
 
+  // Enable WAL mode for better concurrent reads
+  conn.exec("PRAGMA journal_mode=WAL");
+
+  // Enforce foreign keys so ON DELETE SET NULL (events.user_id) and ON DELETE
+  // CASCADE (sessions, profiles, purchases, interview_drafts) actually work.
+  conn.exec("PRAGMA foreign_keys = ON");
+
+  // Run every schema + seed statement. The DDL is split already in
+  // buildSchemaStatements(); each is idempotent.
+  for (const stmt of buildSchemaStatements()) {
+    if (!stmt.trim()) continue;
+    try {
+      conn.run(stmt);
+    } catch (err) {
+      // ALTER ... ADD COLUMN fails when the column already exists — that is the
+      // "already migrated" case and is expected on an existing database.
+      if (/duplicate column|already exists|duplicate column name/i.test(String((err as Error).message))) continue;
+      throw err;
+    }
+  }
+
+  db = conn;
   return db;
 }
 
 /** Delete funnel events older than the retention window. Idempotent and safe to call anytime. */
-export function pruneOldEvents(): void {
-  getDb().run("DELETE FROM events WHERE created_at < datetime('now', ?)", [`-${EVENT_RETENTION_DAYS} days`]);
+export async function pruneOldEvents(): Promise<void> {
+  await getDb().run("DELETE FROM events WHERE created_at < datetime('now', ?)", [`-${EVENT_RETENTION_DAYS} days`]);
 }
 /**
  * Opportunistic retention prune, at most once per day per server process.
- * Startup pruning (getDb) handles restarts; this keeps long-lived servers bounded
- * without running a prune on every request. Never throws — retention is
- * opportunistic and must not break a metrics write.
+ * Startup pruning covers restarts; this keeps long-lived servers bounded without
+ * running a prune on every request. Never throws — retention is opportunistic
+ * and must not break a metrics write.
  */
-function maybePruneEvents(): void {
+async function maybePruneEvents(): Promise<void> {
   const now = Date.now();
   if (now - lastEventPruneAt < EVENT_PRUNE_INTERVAL_MS) return;
   lastEventPruneAt = now;
   try {
-    pruneOldEvents();
+    await pruneOldEvents();
   } catch (err) {
     console.warn("[events] opportunistic prune failed", String(err));
   }
@@ -311,20 +337,18 @@ export interface Session {
   created_at: string;
 }
 
-export function getUserById(userId: string): User | null {
+export async function getUserById(userId: string): Promise<User | null> {
   const d = getDb();
-  const row = d
-    .query("SELECT id, email, tier, stripe_customer_id, interview_count, created_at FROM users WHERE id = ?")
-    .get(userId) as User | undefined;
-  return row ?? null;
+  const row = (await d.query("SELECT id, email, tier, stripe_customer_id, interview_count, created_at FROM users WHERE id = ?").get(userId)) as User | undefined;
+  if (!row) return null;
+  return { ...row, interview_count: Number(row.interview_count) };
 }
 
-export function getUserByEmail(email: string): User | null {
+export async function getUserByEmail(email: string): Promise<User | null> {
   const d = getDb();
-  const row = d
-    .query("SELECT id, email, tier, stripe_customer_id, interview_count, created_at FROM users WHERE email = ?")
-    .get(email) as User | undefined;
-  return row ?? null;
+  const row = (await d.query("SELECT id, email, tier, stripe_customer_id, interview_count, created_at FROM users WHERE email = ?").get(email)) as User | undefined;
+  if (!row) return null;
+  return { ...row, interview_count: Number(row.interview_count) };
 }
 
 export interface MeosComp {
@@ -334,12 +358,12 @@ export interface MeosComp {
   created_at: string;
 }
 
-export function insertMeosComp(email: string, expiresAt: string): void {
-  getDb().run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, ?)", [crypto.randomUUID(), email.trim().toLowerCase(), expiresAt]);
+export async function insertMeosComp(email: string, expiresAt: string): Promise<void> {
+  await getDb().run("INSERT OR IGNORE INTO meos_comps (id, email, expires_at) VALUES (?, ?, ?)", [crypto.randomUUID(), email.trim().toLowerCase(), expiresAt]);
 }
 
-export function getMeosComp(email: string): MeosComp | null {
-  const row = getDb().query("SELECT id, email, expires_at, created_at FROM meos_comps WHERE email = ? AND expires_at > datetime('now')").get(email.trim().toLowerCase()) as MeosComp | undefined;
+export async function getMeosComp(email: string): Promise<MeosComp | null> {
+  const row = (await getDb().query("SELECT id, email, expires_at, created_at FROM meos_comps WHERE email = ? AND expires_at > datetime('now')").get(email.trim().toLowerCase())) as MeosComp | undefined;
   return row ?? null;
 }
 
@@ -365,153 +389,148 @@ export interface FunnelMetrics {
   exportPerformed: { d7: number; d30: number };
 }
 
-export function getOwnerMetrics(): OwnerMetrics {
+export async function getOwnerMetrics(): Promise<OwnerMetrics> {
   const d = getDb();
-  const count = (sql: string) => Number((d.query(sql).get() as { count: number }).count);
-  const countWhere = (sql: string, ...params: unknown[]) => Number((d.query(sql).get(...params) as { count: number }).count);
-  const eventCounts = (name: string) => ({
-    d7: countWhere(
-      "SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)",
-      name,
-    ),
-    d30: countWhere(
-      "SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)",
-      name,
-    ),
-  });
+  const count = async (sql: string) => Number(((await d.query(sql).get()) as { count: number }).count);
+  const countWhere = async (sql: string, ...params: unknown[]) => Number(((await d.query(sql).get(...params)) as { count: number }).count);
+  const eventCounts = (name: string) =>
+    Promise.all([
+      countWhere(
+        `SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-7 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)`,
+        name,
+      ),
+      countWhere(
+        `SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id)) AS count FROM events WHERE name = ? AND created_at >= datetime('now', '-30 days') AND (user_id IS NOT NULL OR anonymous_id IS NOT NULL)`,
+        name,
+      ),
+    ]).then(([d7, d30]) => ({ d7, d30 }));
+
+  const [userCounts, profileCount, pendingInterviews, waitlistCount, activeCompCount, activeComps, recentWaitlist, recentUsers, funnel] = await Promise.all([
+    (async () => ({
+      total: await count("SELECT COUNT(*) AS count FROM users"),
+      free: await count("SELECT COUNT(*) AS count FROM users WHERE tier = 'free'"),
+      pro: await count("SELECT COUNT(*) AS count FROM users WHERE tier = 'pro'"),
+      lifetime: await count("SELECT COUNT(*) AS count FROM users WHERE tier = 'lifetime'"),
+    }))(),
+    count("SELECT COUNT(*) AS count FROM profiles"),
+    count("SELECT COUNT(*) AS count FROM interview_drafts"),
+    count("SELECT COUNT(*) AS count FROM team_waitlist"),
+    count("SELECT COUNT(*) AS count FROM meos_comps WHERE expires_at > datetime('now')"),
+    (await d.query("SELECT email, expires_at FROM meos_comps WHERE expires_at > datetime('now') ORDER BY expires_at ASC").all()) as OwnerMetrics["activeComps"],
+    (await d.query("SELECT name, email, company, team_size, created_at FROM team_waitlist ORDER BY created_at DESC LIMIT 5").all()) as OwnerMetrics["recentWaitlist"],
+    (await d.query("SELECT email, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5").all()) as OwnerMetrics["recentUsers"],
+    (async () => ({
+      signupCompleted: await eventCounts("signup_completed"),
+      interviewStarted: await eventCounts("interview_started"),
+      interviewCompleted: await eventCounts("interview_completed"),
+      exportPerformed: await eventCounts("export_performed"),
+    }))(),
+  ]);
+
   return {
-    userCounts: {
-      total: count("SELECT COUNT(*) AS count FROM users"),
-      free: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'free'"),
-      pro: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'pro'"),
-      lifetime: count("SELECT COUNT(*) AS count FROM users WHERE tier = 'lifetime'"),
-    },
-    profileCount: count("SELECT COUNT(*) AS count FROM profiles"),
-    // Pending interviews = saved in-progress interview drafts, not every profile.
-    pendingInterviews: count("SELECT COUNT(*) AS count FROM interview_drafts"),
-    waitlistCount: count("SELECT COUNT(*) AS count FROM team_waitlist"),
-    activeCompCount: count("SELECT COUNT(*) AS count FROM meos_comps WHERE expires_at > datetime('now')"),
-    activeComps: d.query("SELECT email, expires_at FROM meos_comps WHERE expires_at > datetime('now') ORDER BY expires_at ASC").all() as OwnerMetrics["activeComps"],
-    recentWaitlist: d.query("SELECT name, email, company, team_size, created_at FROM team_waitlist ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentWaitlist"],
-    recentUsers: d.query("SELECT email, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5").all() as OwnerMetrics["recentUsers"],
-    funnel: {
-      signupCompleted: eventCounts("signup_completed"),
-      interviewStarted: eventCounts("interview_started"),
-      interviewCompleted: eventCounts("interview_completed"),
-      exportPerformed: eventCounts("export_performed"),
-    },
+    userCounts,
+    profileCount,
+    pendingInterviews,
+    waitlistCount,
+    activeCompCount,
+    activeComps,
+    recentWaitlist,
+    recentUsers,
+    funnel,
   };
 }
 
-export function createUser(
-  id: string,
-  email: string,
-  passwordHash: string,
-): User {
+export async function createUser(id: string, email: string, passwordHash: string): Promise<User> {
   const d = getDb();
-  d.run(
-    "INSERT INTO users (id, email, password_hash, tier) VALUES (?, ?, ?, 'free')",
-    [id, email, passwordHash],
-  );
+  await d.run("INSERT INTO users (id, email, password_hash, tier) VALUES (?, ?, ?, 'free')", [id, email, passwordHash]);
   return { id, email, tier: "free", stripe_customer_id: null, interview_count: 0, created_at: new Date().toISOString() };
 }
 
-export function getPasswordHash(email: string): string | null {
-  const d = getDb();
-  const row = d
-    .query("SELECT password_hash FROM users WHERE email = ?")
-    .get(email) as { password_hash: string } | undefined;
+export async function getPasswordHash(email: string): Promise<string | null> {
+  const row = (await getDb().query("SELECT password_hash FROM users WHERE email = ?").get(email)) as { password_hash: string } | undefined;
   return row?.password_hash ?? null;
 }
 
-export function createPasswordResetToken(userId: string, token: string, expiresAt: string): void {
+export async function createPasswordResetToken(userId: string, token: string, expiresAt: string): Promise<void> {
   const d = getDb();
-  d.run("DELETE FROM password_reset_tokens WHERE user_id = ? OR expires_at < datetime('now')", [userId]);
-  d.run("INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)", [token, userId, expiresAt]);
+  await d.run("DELETE FROM password_reset_tokens WHERE user_id = ? OR expires_at < datetime('now')", [userId]);
+  await d.run("INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)", [token, userId, expiresAt]);
 }
 
-export function consumePasswordResetToken(token: string): string | null {
+export async function consumePasswordResetToken(token: string): Promise<string | null> {
   const d = getDb();
-  const row = d.query("SELECT user_id FROM password_reset_tokens WHERE token = ? AND expires_at > datetime('now')").get(token) as { user_id: string } | undefined;
+  const row = (await d.query("SELECT user_id FROM password_reset_tokens WHERE token = ? AND expires_at > datetime('now')").get(token)) as { user_id: string } | undefined;
   if (!row) return null;
-  d.run("DELETE FROM password_reset_tokens WHERE token = ?", [token]);
+  await d.run("DELETE FROM password_reset_tokens WHERE token = ?", [token]);
   return row.user_id;
 }
 
-export function updatePasswordHash(userId: string, passwordHash: string): void {
-  getDb().run("UPDATE users SET password_hash = ? WHERE id = ?", [passwordHash, userId]);
+export async function updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+  await getDb().run("UPDATE users SET password_hash = ? WHERE id = ?", [passwordHash, userId]);
 }
 
-export function createSession(userId: string, token: string, expiresAt: string): Session {
+export async function createSession(userId: string, token: string, expiresAt: string): Promise<Session> {
   const d = getDb();
   const id = crypto.randomUUID();
-  d.run("INSERT INTO sessions (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)", [
-    id,
-    userId,
-    token,
-    expiresAt,
-  ]);
+  await d.run("INSERT INTO sessions (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)", [id, userId, token, expiresAt]);
   return { id, user_id: userId, token, expires_at: expiresAt, created_at: new Date().toISOString() };
 }
 
-export function getSessionByToken(token: string): Session | null {
+export async function getSessionByToken(token: string): Promise<Session | null> {
   const d = getDb();
-  const row = d
-    .query("SELECT id, user_id, token, expires_at, created_at FROM sessions WHERE token = ?")
-    .get(token) as Session | undefined;
+  const row = (await d.query("SELECT id, user_id, token, expires_at, created_at FROM sessions WHERE token = ?").get(token)) as Session | undefined;
   return row ?? null;
 }
 
-export function deleteSession(token: string): void {
-  const d = getDb();
-  d.run("DELETE FROM sessions WHERE token = ?", [token]);
+export async function deleteSession(token: string): Promise<void> {
+  await getDb().run("DELETE FROM sessions WHERE token = ?", [token]);
 }
 
-export function deleteExpiredSessions(): void {
-  const d = getDb();
-  d.run("DELETE FROM sessions WHERE expires_at < datetime('now')");
+export async function deleteExpiredSessions(): Promise<void> {
+  await getDb().run("DELETE FROM sessions WHERE expires_at < datetime('now')");
 }
 
 // ── Profile helpers ──
 
-export function getProfileCount(userId: string): number {
+export async function getProfileCount(userId: string): Promise<number> {
   const d = getDb();
-  const row = d.query("SELECT COUNT(*) as count FROM profiles WHERE user_id = ?").get(userId) as { count: number };
-  return row.count;
+  const row = (await d.query("SELECT COUNT(*) as count FROM profiles WHERE user_id = ?").get(userId)) as { count: number };
+  return Number(row.count);
 }
 
-export function hasEntitlement(userId: string, product: string): boolean {
-  return !!getDb().query("SELECT 1 FROM purchases WHERE user_id = ? AND product = ? LIMIT 1").get(userId, product);
+export async function hasEntitlement(userId: string, product: string): Promise<boolean> {
+  return !!(await getDb().query("SELECT 1 FROM purchases WHERE user_id = ? AND product = ? LIMIT 1").get(userId, product));
 }
 
-export function recordPurchase(userId: string, product: string): void {
-  getDb().run("INSERT INTO purchases (id, user_id, product) VALUES (?, ?, ?)", [crypto.randomUUID(), userId, product]);
+export async function recordPurchase(userId: string, product: string): Promise<void> {
+  await getDb().run("INSERT INTO purchases (id, user_id, product) VALUES (?, ?, ?)", [crypto.randomUUID(), userId, product]);
 }
 
-export function listEntitlements(userId: string): string[] {
-  return (getDb().query("SELECT DISTINCT product FROM purchases WHERE user_id = ? ORDER BY created_at DESC").all(userId) as Array<{ product: string }>).map(row => row.product);
+export async function listEntitlements(userId: string): Promise<string[]> {
+  const d = getDb();
+  return ((await d.query("SELECT product FROM purchases WHERE user_id = ? GROUP BY product ORDER BY MAX(created_at) DESC").all(userId)) as Array<{ product: string }>).map((row) => row.product);
 }
 
 // ── Interview count ──
 
-export function incrementInterviewCount(userId: string): number {
+export async function incrementInterviewCount(userId: string): Promise<number> {
   const d = getDb();
-  d.run("UPDATE users SET interview_count = interview_count + 1 WHERE id = ?", [userId]);
-  const row = d.query("SELECT interview_count FROM users WHERE id = ?").get(userId) as { interview_count: number };
-  return row.interview_count;
+  await d.run("UPDATE users SET interview_count = interview_count + 1 WHERE id = ?", [userId]);
+  const row = (await d.query("SELECT interview_count FROM users WHERE id = ?").get(userId)) as { interview_count: number };
+  return Number(row.interview_count);
 }
 
-export function getInterviewCount(userId: string): number {
+export async function getInterviewCount(userId: string): Promise<number> {
   const d = getDb();
-  const row = d.query("SELECT interview_count FROM users WHERE id = ?").get(userId) as { interview_count: number } | undefined;
-  return row?.interview_count ?? 0;
+  const row = (await d.query("SELECT interview_count FROM users WHERE id = ?").get(userId)) as { interview_count: number } | undefined;
+  return Number(row?.interview_count ?? 0);
 }
 
 // ── Tier management ──
 
-export function upgradeUserTier(userId: string, tier: string): User | null {
+export async function upgradeUserTier(userId: string, tier: string): Promise<User | null> {
   const d = getDb();
-  d.run("UPDATE users SET tier = ? WHERE id = ?", [tier, userId]);
+  await d.run("UPDATE users SET tier = ? WHERE id = ?", [tier, userId]);
   return getUserById(userId);
 }
 
@@ -527,10 +546,10 @@ export interface UserLimits {
   maxInterviews: number;
 }
 
-export function getUserLimits(userId: string): UserLimits | null {
-  const user = getUserById(userId);
+export async function getUserLimits(userId: string): Promise<UserLimits | null> {
+  const user = await getUserById(userId);
   if (!user) return null;
-  const profileCount = getProfileCount(userId);
+  const profileCount = await getProfileCount(userId);
   return {
     id: user.id,
     email: user.email,
@@ -552,12 +571,16 @@ export interface TeamWaitlistEntry {
   use_case: string | null;
 }
 
-export function insertTeamWaitlistEntry(entry: TeamWaitlistEntry): void {
+export async function insertTeamWaitlistEntry(entry: TeamWaitlistEntry): Promise<void> {
   const d = getDb();
-  d.run(
-    "INSERT INTO team_waitlist (id, name, email, company, team_size, use_case) VALUES (?, ?, ?, ?, ?, ?)",
-    [crypto.randomUUID(), entry.name, entry.email, entry.company, entry.team_size, entry.use_case],
-  );
+  await d.run("INSERT INTO team_waitlist (id, name, email, company, team_size, use_case) VALUES (?, ?, ?, ?, ?, ?)", [
+    crypto.randomUUID(),
+    entry.name,
+    entry.email,
+    entry.company,
+    entry.team_size,
+    entry.use_case,
+  ]);
 }
 
 // ── Draft transfers ──
@@ -576,35 +599,31 @@ export interface DraftTransferResult {
   reason?: "source_gone" | "transfer_gone" | "already_owned";
 }
 
-export function getPendingDraftTransfer(email: string): PendingDraftTransfer | undefined {
+export async function getPendingDraftTransfer(email: string): Promise<PendingDraftTransfer | undefined> {
   const d = getDb();
-  return d
-    .query("SELECT id, target_email, source_user_id, source_offering FROM draft_transfers WHERE target_email = ?")
-    .get(email.trim().toLowerCase()) as PendingDraftTransfer | undefined;
+  return (await d.query("SELECT id, target_email, source_user_id, source_offering FROM draft_transfers WHERE target_email = ?").get(email.trim().toLowerCase())) as PendingDraftTransfer | undefined;
 }
 
-export function executeDraftTransfer(transferId: string, targetUserId: string): DraftTransferResult {
+export async function executeDraftTransfer(transferId: string, targetUserId: string): Promise<DraftTransferResult> {
   const d = getDb();
 
-  const transfer = d
-    .query("SELECT id, target_email, source_user_id, source_offering FROM draft_transfers WHERE id = ?")
-    .get(transferId) as PendingDraftTransfer | undefined;
+  const transfer = (await d.query("SELECT id, target_email, source_user_id, source_offering FROM draft_transfers WHERE id = ?").get(transferId)) as PendingDraftTransfer | undefined;
   if (!transfer) return { transferred: false, reason: "transfer_gone" };
 
   // The transfer is a no-op if the source and target are the same account.
   if (transfer.source_user_id === targetUserId) {
-    d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
+    await d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
     return { transferred: false, reason: "already_owned" };
   }
 
   // Read the source draft.
-  const sourceDraft = d
+  const sourceDraft = (await d
     .query("SELECT topic, state_json, updated_at FROM interview_drafts WHERE user_id = ? AND offering = ?")
-    .get(transfer.source_user_id, transfer.source_offering) as { topic: string; state_json: string; updated_at: string } | undefined;
+    .get(transfer.source_user_id, transfer.source_offering)) as { topic: string; state_json: string; updated_at: string } | undefined;
 
   // No source draft to move — clean up the pending transfer and report.
   if (!sourceDraft) {
-    d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
+    await d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
     return { transferred: false, reason: "source_gone" };
   }
 
@@ -612,21 +631,22 @@ export function executeDraftTransfer(transferId: string, targetUserId: string): 
   // but be safe). Rename the transferred draft's offering so it doesn't clash with the
   // (user_id, offering) primary key and both drafts survive.
   let offering = transfer.source_offering;
-  const conflict = d
-    .query("SELECT 1 FROM interview_drafts WHERE user_id = ? AND offering = ? LIMIT 1")
-    .get(targetUserId, transfer.source_offering);
+  const conflict = await d.query("SELECT 1 FROM interview_drafts WHERE user_id = ? AND offering = ? LIMIT 1").get(targetUserId, transfer.source_offering);
   if (conflict) {
     offering = `${transfer.source_offering}_transferred_${Date.now()}`;
   }
 
   // Move the draft to the new owner, then remove the source row (the PK is (user_id, offering),
   // so inserting under a different user_id leaves the orphaned source row behind unless deleted).
-  d.run(
-    "INSERT OR REPLACE INTO interview_drafts (user_id, offering, topic, state_json, updated_at) VALUES (?, ?, ?, ?, ?)",
-    [targetUserId, offering, sourceDraft.topic, sourceDraft.state_json, sourceDraft.updated_at],
-  );
-  d.run("DELETE FROM interview_drafts WHERE user_id = ? AND offering = ?", [transfer.source_user_id, transfer.source_offering]);
-  d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
+  await d.run("INSERT OR REPLACE INTO interview_drafts (user_id, offering, topic, state_json, updated_at) VALUES (?, ?, ?, ?, ?)", [
+    targetUserId,
+    offering,
+    sourceDraft.topic,
+    sourceDraft.state_json,
+    sourceDraft.updated_at,
+  ]);
+  await d.run("DELETE FROM interview_drafts WHERE user_id = ? AND offering = ?", [transfer.source_user_id, transfer.source_offering]);
+  await d.run("DELETE FROM draft_transfers WHERE id = ?", [transferId]);
 
   return { transferred: true };
 }
@@ -650,12 +670,15 @@ export interface TrackEventInput {
 }
 
 /** Insert a funnel event. Never store interview answers or other sensitive content. */
-export function insertEvent(name: string, input: TrackEventInput = {}): void {
-  maybePruneEvents(); // opportunistic once-per-day retention, not on every request
-  getDb().run(
-    "INSERT INTO events (id, name, user_id, anonymous_id, props_json) VALUES (?, ?, ?, ?, ?)",
-    [crypto.randomUUID(), name, input.userId ?? null, input.anonymousId ?? null, JSON.stringify(input.props ?? {})],
-  );
+export async function insertEvent(name: string, input: TrackEventInput = {}): Promise<void> {
+  await maybePruneEvents(); // opportunistic once-per-day retention, not on every request
+  await getDb().run("INSERT INTO events (id, name, user_id, anonymous_id, props_json) VALUES (?, ?, ?, ?, ?)", [
+    crypto.randomUUID(),
+    name,
+    input.userId ?? null,
+    input.anonymousId ?? null,
+    JSON.stringify(input.props ?? {}),
+  ]);
 }
 
 /**
@@ -665,15 +688,15 @@ export function insertEvent(name: string, input: TrackEventInput = {}): void {
  * blunt per-identity cap for buggy/repeating clients, not full hostile-bot
  * protection.
  */
-export function isEventRateLimited(userId: string | null, anonymousId: string | null): boolean {
+export async function isEventRateLimited(userId: string | null, anonymousId: string | null): Promise<boolean> {
   if (!userId && !anonymousId) return true; // no identifier → treat as un-writable
-  const row = getDb()
+  const row = (await getDb()
     .query(
       `SELECT COUNT(*) AS count FROM events
        WHERE created_at >= datetime('now', ?)
          AND ((? IS NOT NULL AND user_id = ?) OR (? IS NOT NULL AND anonymous_id = ?))`,
     )
-    .get(`-${EVENT_RATE_LIMIT_WINDOW_MINUTES} minutes`, userId, userId, anonymousId, anonymousId) as { count: number };
+    .get(`-${EVENT_RATE_LIMIT_WINDOW_MINUTES} minutes`, userId, userId, anonymousId, anonymousId)) as { count: number };
   return row.count >= EVENT_RATE_LIMIT_MAX;
 }
 
@@ -686,7 +709,7 @@ export function isEventRateLimited(userId: string | null, anonymousId: string | 
  * Fails open: returns false instead of throwing, and the caller must never
  * block the user's funnel action on tracking.
  */
-export function recordEvent(name: string, input: TrackEventInput = {}): boolean {
+export async function recordEvent(name: string, input: TrackEventInput = {}): Promise<boolean> {
   try {
     const userId = input.userId ?? null;
     const anonymousId = input.anonymousId ?? null;
@@ -694,11 +717,11 @@ export function recordEvent(name: string, input: TrackEventInput = {}): boolean 
       console.warn(`[events] dropped "${name}": no user_id or anonymous_id`);
       return false;
     }
-    if (isEventRateLimited(userId, anonymousId)) {
+    if (await isEventRateLimited(userId, anonymousId)) {
       console.warn(`[events] dropped "${name}": rate limit exceeded for identity`);
       return false;
     }
-    insertEvent(name, input);
+    await insertEvent(name, input);
     return true;
   } catch (err) {
     console.warn(`[events] record "${name}" failed`, String(err));
@@ -707,16 +730,16 @@ export function recordEvent(name: string, input: TrackEventInput = {}): boolean 
 }
 
 /** Count events of a given name within the last `days` days. */
-export function countEvent(name: string, days: number): number {
-  const row = getDb()
+export async function countEvent(name: string, days: number): Promise<number> {
+  const row = (await getDb()
     .query("SELECT COUNT(*) AS count FROM events WHERE name = ? AND created_at >= datetime('now', ?)")
-    .get(name, `-${days} days`) as { count: number };
+    .get(name, `-${days} days`)) as { count: number };
   return row.count;
 }
 
 /** Most recent events (owner dashboard / debugging); limited for memory-safety. */
-export function recentEvents(limit = 50): EventRecord[] {
-  return getDb()
+export async function recentEvents(limit = 50): Promise<EventRecord[]> {
+  return (await getDb()
     .query("SELECT id, name, user_id, anonymous_id, props_json, created_at FROM events ORDER BY created_at DESC LIMIT ?")
-    .all(limit) as EventRecord[];
+    .all(limit)) as EventRecord[];
 }

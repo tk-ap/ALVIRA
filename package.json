@@ -20,12 +20,14 @@
     "jszip": "^3.10.1",
     "marked": "^18.0.7",
     "openai": "^6.49.0",
+    "pg": "^8.23.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^25.3.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.3",

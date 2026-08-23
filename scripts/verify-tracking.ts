@@ -67,20 +67,20 @@ try {
   check("PRAGMA foreign_keys is ON (FK enforcement enabled)", fk.foreign_keys === 1);
 
   // ── Fixture: users MUST exist before user-attributed events (FK enforced) ──
-  createUser("u1", "u1@example.com", "hash");
-  insertEvent("signup_completed", { userId: "u1", anonymousId: "anon-abc", props: { tier: "free" } });
-  insertEvent("interview_started", { userId: "u1", props: { offering: "context", seeded: false } });
-  insertEvent("interview_started", { anonymousId: "anon-abc", props: { offering: "meos", seeded: true } });
-  insertEvent("interview_completed", { userId: "u1", props: { covered: 5, total: 19 } });
-  insertEvent("export_performed", { userId: "u1", props: { kind: "zip", output: "context" } });
-  check("countEvent signup_completed d30 = 1", countEvent("signup_completed", 30) === 1);
-  check("countEvent interview_started d30 = 2", countEvent("interview_started", 30) === 2);
-  check("countEvent export_performed d30 = 1", countEvent("export_performed", 30) === 1);
-  check("countEvent unknown event d30 = 0", countEvent("nope", 30) === 0);
-  check("countEvent interview_completed d7 = d30 = 1", countEvent("interview_completed", 7) === 1 && countEvent("interview_completed", 30) === 1);
+  await createUser("u1", "u1@example.com", "hash");
+  await insertEvent("signup_completed", { userId: "u1", anonymousId: "anon-abc", props: { tier: "free" } });
+  await insertEvent("interview_started", { userId: "u1", props: { offering: "context", seeded: false } });
+  await insertEvent("interview_started", { anonymousId: "anon-abc", props: { offering: "meos", seeded: true } });
+  await insertEvent("interview_completed", { userId: "u1", props: { covered: 5, total: 19 } });
+  await insertEvent("export_performed", { userId: "u1", props: { kind: "zip", output: "context" } });
+  check("countEvent signup_completed d30 = 1", await countEvent("signup_completed", 30) === 1);
+  check("countEvent interview_started d30 = 2", await countEvent("interview_started", 30) === 2);
+  check("countEvent export_performed d30 = 1", await countEvent("export_performed", 30) === 1);
+  check("countEvent unknown event d30 = 0", await countEvent("nope", 30) === 0);
+  check("countEvent interview_completed d7 = d30 = 1", await countEvent("interview_completed", 7) === 1 && await countEvent("interview_completed", 30) === 1);
 
   // ── Owner metrics: funnel = DISTINCT people + pendingInterviews fix ──
-  let m = getOwnerMetrics();
+  let m = await getOwnerMetrics();
   check("funnel.signupCompleted.d30 = 1", m.funnel.signupCompleted.d30 === 1);
   check("funnel.interviewStarted.d30 = 2", m.funnel.interviewStarted.d30 === 2);
   check("funnel.interviewCompleted.d7 = 1", m.funnel.interviewCompleted.d7 === 1);
@@ -88,44 +88,44 @@ try {
   check("pendingInterviews = 0 with no drafts or profiles yet", m.pendingInterviews === 0);
 
   // Repeated actions by the same person must count once (five exports ≠ five people).
-  insertEvent("interview_started", { userId: "u1", props: {} });
-  insertEvent("interview_started", { userId: "u1", props: {} });
-  insertEvent("interview_started", { userId: "u1", props: {} });
-  m = getOwnerMetrics();
+  await insertEvent("interview_started", { userId: "u1", props: {} });
+  await insertEvent("interview_started", { userId: "u1", props: {} });
+  await insertEvent("interview_started", { userId: "u1", props: {} });
+  m = await getOwnerMetrics();
   check("funnel.interviewStarted.d30 = 2 despite 4 raw events from u1 (unique people)", m.funnel.interviewStarted.d30 === 2);
-  check("raw rows still stored individually (countEvent = 5)", countEvent("interview_started", 30) === 5);
+  check("raw rows still stored individually (countEvent = 5)", await countEvent("interview_started", 30) === 5);
 
   // Rows with neither identifier are excluded from funnel counts.
-  insertEvent("interview_started", { props: {} });
-  m = getOwnerMetrics();
+  await insertEvent("interview_started", { props: {} });
+  m = await getOwnerMetrics();
   check("funnel.interviewStarted.d30 = 2 excludes identifier-less row", m.funnel.interviewStarted.d30 === 2);
 
   // ── recordEvent: identifier requirement + rate limit ──
-  const beforeRecord = countEvent("interview_started", 30);
-  const noId = recordEvent("interview_started", { props: {} });
+  const beforeRecord = await countEvent("interview_started", 30);
+  const noId = await recordEvent("interview_started", { props: {} });
   check("recordEvent drops event with no identifier (returns false)", noId === false);
-  check("dropped identifier-less event not persisted", countEvent("interview_started", 30) === beforeRecord);
-  const withAnon = recordEvent("interview_started", { anonymousId: "anon-rate", props: {} });
-  check("recordEvent persists with anonymous identifier", withAnon === true && countEvent("interview_started", 30) === beforeRecord + 1);
+  check("dropped identifier-less event not persisted", await countEvent("interview_started", 30) === beforeRecord);
+  const withAnon = await recordEvent("interview_started", { anonymousId: "anon-rate", props: {} });
+  check("recordEvent persists with anonymous identifier", withAnon === true && await countEvent("interview_started", 30) === beforeRecord + 1);
 
   // Rate limit: fresh identity starts unlimited; floods over the cap are dropped.
-  check("isEventRateLimited false for fresh identity", isEventRateLimited(null, "anon-rl") === false);
+  check("isEventRateLimited false for fresh identity", await isEventRateLimited(null, "anon-rl") === false);
   for (let i = 0; i < EVENT_RATE_LIMIT_MAX - 1; i++) {
-    insertEvent("meos_cta_impression", { anonymousId: "anon-rl" });
+    await insertEvent("meos_cta_impression", { anonymousId: "anon-rl" });
   }
-  check("not rate-limited at cap-1 events in window", isEventRateLimited(null, "anon-rl") === false);
-  insertEvent("meos_cta_impression", { anonymousId: "anon-rl" });
-  check("rate-limited at cap events in window", isEventRateLimited(null, "anon-rl") === true);
-  const rlDropped = recordEvent("interview_started", { anonymousId: "anon-rl", props: {} });
+  check("not rate-limited at cap-1 events in window", await isEventRateLimited(null, "anon-rl") === false);
+  await insertEvent("meos_cta_impression", { anonymousId: "anon-rl" });
+  check("rate-limited at cap events in window", await isEventRateLimited(null, "anon-rl") === true);
+  const rlDropped = await recordEvent("interview_started", { anonymousId: "anon-rl", props: {} });
   check("recordEvent drops rate-limited write (returns false)", rlDropped === false);
-  check("rate-limited write not persisted", countEvent("interview_started", 30) === beforeRecord + 1);
+  check("rate-limited write not persisted", await countEvent("interview_started", 30) === beforeRecord + 1);
 
   // ── Retention: pruneOldEvents + prune on DB initialization ──
   db.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-old', '{}', datetime('now', '-200 days'))", [crypto.randomUUID()]);
   const oldExists = (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-old'").get() as { count: number }).count === 1;
   check("old (>180d) event present before prune", oldExists);
   db.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-recent', '{}', datetime('now'))", [crypto.randomUUID()]);
-  pruneOldEvents();
+  await pruneOldEvents();
   check("pruneOldEvents removes events older than 180 days", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-old'").get() as { count: number }).count === 0);
   check("pruneOldEvents keeps recent events", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-recent'").get() as { count: number }).count === 1);
 
@@ -148,7 +148,7 @@ try {
   db.run("INSERT INTO events (id, name, anonymous_id, props_json, created_at) VALUES (?, 'interview_started', 'anon-daily', '{}', datetime('now', '-200 days'))", [crypto.randomUUID()]);
   check("old (>180d) event present before daily-prune check", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-daily'").get() as { count: number }).count === 1);
   forceNextEventPruneForTest(); // reset the module-level last-prune timestamp
-  insertEvent("interview_started", { anonymousId: "anon-daily-trigger", props: {} }); // any write triggers the prune
+  await insertEvent("interview_started", { anonymousId: "anon-daily-trigger", props: {} }); // any write triggers the prune
   check("event write prunes >180d rows after last-prune advanced (daily prune)", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-daily'").get() as { count: number }).count === 0);
   check("daily prune keeps the triggering write itself", (db.query("SELECT COUNT(*) AS count FROM events WHERE anonymous_id = 'anon-daily-trigger'").get() as { count: number }).count === 1);
 
@@ -157,29 +157,29 @@ try {
   // removed (user_id → NULL) while the de-identified row survives with only its
   // pseudonymous anonymous_id — matching the privacy copy (account/profile content
   // permanently deleted; de-identified analytics may remain up to 180 days).
-  createUser("u-fk", "fk@example.com", "hash");
-  insertEvent("signup_completed", { userId: "u-fk", anonymousId: "anon-fk", props: { tier: "free", marker: "fk" } });
+  await createUser("u-fk", "fk@example.com", "hash");
+  await insertEvent("signup_completed", { userId: "u-fk", anonymousId: "anon-fk", props: { tier: "free", marker: "fk" } });
   check("event row attributed to u-fk exists", (db.query("SELECT COUNT(*) AS count FROM events WHERE user_id = 'u-fk'").get() as { count: number }).count === 1);
   db.run("DELETE FROM users WHERE id = 'u-fk'");
   check("deleting user NULLs events.user_id (no identified link remains)", (db.query("SELECT COUNT(*) AS count FROM events WHERE user_id = 'u-fk'").get() as { count: number }).count === 0);
   check("de-identified event survives with user_id = NULL, retaining only anonymous_id", (db.query("SELECT COUNT(*) AS count FROM events WHERE name = 'signup_completed' AND user_id IS NULL AND anonymous_id = 'anon-fk' AND props_json LIKE '%\"marker\":\"fk\"%'").get() as { count: number }).count === 1);
 
   // ── pendingInterviews counts interview_drafts, not profiles ──
-  createUser("u-prof", "profile-only@example.com", "hash");
+  await createUser("u-prof", "profile-only@example.com", "hash");
   db.run("INSERT INTO profiles (id, user_id, topic, tier, state_json) VALUES ('u-prof-p', 'u-prof', 'context', 'free', '{}')");
-  m = getOwnerMetrics();
+  m = await getOwnerMetrics();
   check("pendingInterviews = 0 with a profile but no draft (profiles don't count)", m.pendingInterviews === 0);
-  createUser("u-draft", "draft-test@example.com", "hash");
+  await createUser("u-draft", "draft-test@example.com", "hash");
   db.run("INSERT INTO interview_drafts (user_id, offering, topic, state_json) VALUES ('u-draft', 'context', 't', '{}')");
-  m = getOwnerMetrics();
+  m = await getOwnerMetrics();
   check("pendingInterviews counts interview_drafts (1)", m.pendingInterviews === 1);
 
   // ── Draft transfer / recovery still works with FK enforcement ON ──
-  createUser("u-src", "src@example.com", "hash");
-  createUser("u-dst", "dst@example.com", "hash");
+  await createUser("u-src", "src@example.com", "hash");
+  await createUser("u-dst", "dst@example.com", "hash");
   db.run("INSERT INTO interview_drafts (user_id, offering, topic, state_json) VALUES ('u-src', 'context', 't', '{}')");
   db.run("INSERT INTO draft_transfers (id, target_email, source_user_id, source_offering) VALUES ('transfer-test', 'dst@example.com', 'u-src', 'context')");
-  const transfer = executeDraftTransfer("transfer-test", "u-dst");
+  const transfer = await executeDraftTransfer("transfer-test", "u-dst");
   check("executeDraftTransfer succeeds with FK enforcement ON", transfer.transferred === true);
   check("draft moved to target user", (db.query("SELECT COUNT(*) AS count FROM interview_drafts WHERE user_id = 'u-dst' AND offering = 'context'").get() as { count: number }).count === 1);
   check("source draft removed after transfer", (db.query("SELECT COUNT(*) AS count FROM interview_drafts WHERE user_id = 'u-src'").get() as { count: number }).count === 0);

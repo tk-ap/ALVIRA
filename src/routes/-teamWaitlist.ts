@@ -39,7 +39,7 @@ export const joinTeamWaitlist = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
-    insertTeamWaitlistEntry({
+    await insertTeamWaitlistEntry({
       name: data.name,
       email: data.email,
       company: data.company || null,

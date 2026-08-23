@@ -7,8 +7,8 @@ import { getMeosComp, hasEntitlement } from "~/db";
 
 // User is resolved by the caller (in `-auth.ts`), so this module needs no
 // cookie/session plumbing of its own.
-export function requireEntitlement(user: { id: string }, product: string): void {
-  if (!hasEntitlement(user.id, product)) {
+export async function requireEntitlement(user: { id: string }, product: string): Promise<void> {
+  if (!(await hasEntitlement(user.id, product))) {
     throw new Error(`An active ${product.replace(/_/g, " ")} entitlement is required.`);
   }
 }
@@ -17,12 +17,12 @@ export function requireMeosPreview(user: { id: string }): void {
   if (!user?.id) throw new Error("Authentication required.");
 }
 
-export function requireMeos(user: { id: string; email: string; tier: string }): void {
-  const hasComp = !!getMeosComp(user.email);
+export async function requireMeos(user: { id: string; email: string; tier: string }): Promise<void> {
+  const hasComp = !!(await getMeosComp(user.email));
   if (!hasComp && user.tier !== "pro" && user.tier !== "lifetime") {
     throw new Error("MeOS requires an active Pro or Lifetime plan.");
   }
-  if (!hasComp && !hasEntitlement(user.id, "meos_build")) {
+  if (!hasComp && !(await hasEntitlement(user.id, "meos_build"))) {
     throw new Error("MeOS Build must be purchased before continuing.");
   }
 }

@@ -10,6 +10,7 @@ interface UserInfo {
   interviewCount: number;
 }
 
+const BRIDGE_URL = "https://alviratech-bridge.vercel.app/";
 const linkClass =
   "text-sm font-medium text-human-dark hover:text-mineral-dark dark:text-human dark:hover:text-mineral transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system";
 const mobileLinkClass = `${linkClass} flex min-h-11 items-center border-b border-human/20`;
@@ -72,7 +73,6 @@ export function Header() {
             />
           </a>
 
-          {/* Desktop navigation retains the existing horizontal layout. */}
           <div className="hidden items-center gap-5 md:flex">
             <a href="/interview" className={linkClass}>
               Interview
@@ -82,6 +82,12 @@ export function Header() {
             </a>
             <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
               MeOS
+            </a>
+            <a
+              href={BRIDGE_URL}
+              className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
+            >
+              Bridge
             </a>
             {user === undefined ? (
               <div className="h-8 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
@@ -113,7 +119,6 @@ export function Header() {
             <ThemeToggle />
           </div>
 
-          {/* On small screens, keep one primary action visible and move the rest into the menu. */}
           <div className="flex items-center gap-2 md:hidden">
             <a
               href={mobileCtaHref}
@@ -126,15 +131,11 @@ export function Header() {
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
-              aria-label={
-                menuOpen ? "Close navigation menu" : "Open navigation menu"
-              }
+              aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
               aria-controls="mobile-navigation"
               className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
             >
-              <span className="sr-only">
-                {menuOpen ? "Close menu" : "Open menu"}
-              </span>
+              <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
               <span className="flex w-5 flex-col gap-1" aria-hidden="true">
                 <span className="h-0.5 w-full bg-current" />
                 <span className="h-0.5 w-full bg-current" />
@@ -150,19 +151,12 @@ export function Header() {
           role="navigation"
           className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-warm-gray/20 md:hidden`}
         >
-          <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>
-            Interview
-          </a>
-          <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>
-            Pricing
-          </a>
-          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>
-            MeOS
-          </a>
+          <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>Interview</a>
+          <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
+          <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>MeOS</a>
+          <a href={BRIDGE_URL} onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>Bridge</a>
           {user ? (
-            <a href="/account" onClick={closeMenu} className={mobileLinkClass}>
-              Account
-            </a>
+            <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a>
           ) : null}
           {user ? (
             <button
@@ -177,9 +171,7 @@ export function Header() {
               {loggingOut ? "Logging out..." : "Logout"}
             </button>
           ) : user === null ? (
-            <a href="/login" onClick={closeMenu} className={mobileLinkClass}>
-              Sign In
-            </a>
+            <a href="/login" onClick={closeMenu} className={mobileLinkClass}>Sign In</a>
           ) : null}
         </nav>
       </div>

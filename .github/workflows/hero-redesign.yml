@@ -1,0 +1,36 @@
+name: Apply hero redesign
+
+on:
+  push:
+    branches: [hero-redesign]
+
+permissions:
+  contents: write
+
+jobs:
+  update-hero:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hero-redesign
+          fetch-depth: 0
+      - name: Update ALVIRA hero copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/index.tsx')
+          s = p.read_text()
+          s = s.replace("ALVIRA — Build the context your AI is missing", "ALVIRA — What could you do if AI really knew you?")
+          s = s.replace("Build the context your AI is missing.", "AI knows a lot. What could you do if it really knew you?")
+          s = s.replace("A 10–15 minute guided interview uncovers how you think, work, and decide — then compiles it into a portable AI profile for ChatGPT, Claude, Gemini, and Cursor.", "ALVIRA learns how you think, work, and decide — then turns what it learns into context your AI can actually use.")
+          p.write_text(s)
+          PY
+      - name: Commit hero redesign
+        run: |
+          git config user.name "ALVIRA Bot"
+          git config user.email "actions@github.com"
+          git add src/routes/index.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Update ALVIRA hero positioning"
+          git push origin hero-redesign

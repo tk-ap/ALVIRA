@@ -75,6 +75,23 @@ function createInitialState(tier: Tier, topic: string, offering: "context" | "me
   };
 }
 
+// ── Continue-interview seed: build a FRESH adaptive conversation that carries
+// over the user's already-compiled profile knowledge so gap detection skips
+// covered domains (personal threshold 0.90) and targets new/open gaps.
+// This mirrors the Upload-to-Seed pipeline: existing answers are user-owned
+// content, so they seed the state with confidence 1 / covered true.
+function seedStateFromExisting(existing: InterviewState, offering: "context" | "meos", preview: boolean): InterviewState {
+  const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(existing.tier);
+  const initialState = createInitialState(existing.tier, existing.topic, offering, preview);
+  const domains = { ...initialState.domains };
+  for (const d of graph) {
+    const existingAnswers = existing.domains?.[d.id]?.answers ?? [];
+    if (existingAnswers.length > 0) {
+      domains[d.id] = { answers: [...existingAnswers], confidence: 1, covered: true };
+    }
+  }
+  return { ...initialState, domains };
+}
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
 const SUPPORTED_UPLOAD_EXTENSIONS = ["txt", "md", "docx"] as const;
@@ -500,6 +517,10 @@ function AppPage() {
             }
           } catch { /* dashboard remains the fallback */ }
         }
+        const continueId = new URLSearchParams(window.location.search).get("continue");
+        if (continueId) {
+          void handleContinueFromProfile(continueId);
+        }
       } else {
         setAuthUser(null);
         try {
@@ -554,10 +575,52 @@ function AppPage() {
     setScreen("start");
   };
 
+  // ── Continue / Update profile: seed a NEW adaptive conversation from the
+  // user's saved profile knowledge so gap detection skips covered domains and
+  // targets new/open gaps. Reuses the Upload-to-Seed seeding pattern.
+  const handleContinueFromProfile = async (profileId: string) => {
+    setStartError(""); setInterviewError("");
+    let profile: { topic: string; tier: string; offering: string; state: InterviewState };
+    try {
+      profile = (await loadProfile({ data: { profileId } })) as { topic: string; tier: string; offering: string; state: InterviewState };
+    } catch (err) {
+      setStartError(err instanceof Error ? err.message : "Could not load your profile to continue.");
+      setScreen("start");
+      return;
+    }
+    const activeOffering: "context" | "meos" = profile.offering === "meos" ? "meos" : "context";
+    setOffering(activeOffering);
+    setTopic(profile.topic);
+    setTier(profile.tier as Tier);
+    const seeded = seedStateFromExisting(profile.state, activeOffering, isPreview);
+    const carried = Object.values(seeded.domains).filter((d) => d.covered).length;
+    setState(seeded);
+    setSeededInfo(
+      carried > 0
+        ? `Continuing from your saved profile — ${carried} ${carried === 1 ? "area was" : "areas were"} carried over. Answer the remaining questions to update and expand your knowledge.`
+        : "Continuing from your saved profile. Tell me anything new you want to add.",
+    );
+    setScreen("interview");
+    setWaiting(true);
+    try {
+      const result = await askNextQuestion(seeded, false, activeOffering);
+      if (result) setState(result);
+      else setState({ ...seeded, currentDomain: null });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      if (msg !== "API key not configured") {
+        setInterviewError(msg);
+        setState(seeded);
+      }
+    } finally {
+      setWaiting(false);
+    }
+  };
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
-  const askNextQuestion = async (currentState: InterviewState, isClarification = false) => {
-    const currentGraph = offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(currentState.tier);
-    const currentPlaybook = offering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
+  const askNextQuestion = async (currentState: InterviewState, isClarification = false, forcedOffering?: "context" | "meos") => {
+    const activeOffering = forcedOffering ?? offering;
+    const currentGraph = activeOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(currentState.tier);
+    const currentPlaybook = activeOffering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
     const currentGaps = detectGaps(currentGraph, currentState, currentPlaybook.completion.minimumConfidence);
     if (currentGaps.length === 0) return null;
 
@@ -1398,9 +1461,9 @@ function AppPage() {
                   <button
                     type="button"
                     onClick={handleGenerate}
-                    disabled={compiling || !state || state.history.length < 2}
+                    disabled={compiling || !state || (state.history.length < 2 && hasGaps)}
                     className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 ${
-                      state && state.history.length >= 2
+                      state && (state.history.length >= 2 || !hasGaps)
                         ? "text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300"
                         : "text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     }`}

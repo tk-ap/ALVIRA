@@ -10,7 +10,7 @@ import { COMPARISON_COMPETITORS, COMPARISON_DIMENSIONS } from "~/lib/comparison"
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [{ title: 'ALVIRA — Build the context your AI is missing' }, { name: "description", content: 'Discover, organize, and compile your knowledge so ChatGPT, Claude, Gemini, and Cursor actually understand you.' }],
+    meta: [{ title: 'ALVIRA — What could you do if AI really knew you?' }, { name: "description", content: 'Discover, organize, and compile your knowledge so ChatGPT, Claude, Gemini, and Cursor actually understand you.' }],
   }),
   component: Home,
 });
@@ -86,7 +86,7 @@ function Home() {
           </h1>
 
           <p className="mt-6 sm:mt-8 text-base leading-relaxed text-warm-gray-dark dark:text-warm-gray sm:text-lg max-w-2xl mx-auto">
-            A 10–15 minute guided interview uncovers how you think, work, and decide — then compiles it into a portable AI profile for ChatGPT, Claude, Gemini, and Cursor.
+            ALVIRA learns how you think, work, and decide — then turns what it learns into context your AI can actually use.
           </p>
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">

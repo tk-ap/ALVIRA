@@ -67,7 +67,7 @@ export type QueueName = keyof typeof QUEUES;
 
 const PUBLIC_SITE_URL = (() => {
   const override = (process.env.PUBLIC_SITE_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL ?? "").trim();
-  if (!override) return "https://alvira.ctonew.app";
+  if (!override) return "https://alviratech.vercel.app";
   return override.startsWith("http://") || override.startsWith("https://") ? override : `https://${override}`;
 })();
 const LOG_FILE = () => join(emailQueueDir(), "recent-emails.log");

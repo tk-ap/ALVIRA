@@ -28,9 +28,9 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       {
         property: "og:image",
-        content: "https://alvira.ctonew.app/alvira-logo-editorial-v2.png",
+        content: "https://alviratech.vercel.app/alvira-logo-editorial-v2.png",
       },
-      { property: "og:url", content: "https://alvira.ctonew.app/" },
+      { property: "og:url", content: "https://alviratech.vercel.app/" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
@@ -378,6 +378,24 @@ function AppPage() {
   // Auth state
   const [authUser, setAuthUser] = useState<{ id: string; email: string; tier: string; isOwner?: boolean } | null | undefined>(undefined);
   const [meosAuthorized, setMeosAuthorized] = useState(false);
+  const navigate = useNavigate();
+  // First-class "what do you want to build?" choice. Free users are routed to the
+  // experience-first MeOS preview; entitled users go to the full MeOS path. The
+  // entitlement path (handleStart paywall) is unchanged.
+  const handleChooseOffering = (choice: "context" | "meos") => {
+    setStartError("");
+    if (choice === "meos") {
+      setOffering("meos");
+      if (meosAuthorized) {
+        navigate({ to: "/app", search: { offering: "meos", preview: false } });
+      } else {
+        navigate({ to: "/app", search: { offering: "meos", preview: true } });
+      }
+    } else {
+      setOffering("context");
+      navigate({ to: "/app", search: { offering: undefined, preview: false } });
+    }
+  };
 
   // Limit state
   const [limitBanner, setLimitBanner] = useState<"profiles" | "interviews" | null>(null);
@@ -466,7 +484,10 @@ function AppPage() {
       if (cancelled) return;
       if (u) {
         setAuthUser({ id: u.id, email: u.email, tier: u.tier, isOwner: u.isOwner });
-        if (offeringSearch === "meos" && !previewSearch) getEntitlements().then((items) => setMeosAuthorized(u.isOwner || ((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build")))).catch(() => setMeosAuthorized(false));
+        // MeOS Build entitlement is always computed (not only for the meos URL) so the
+        // free onboarding "what do you want to build?" choice can route free users to the
+        // experience-first preview and entitled users to the full MeOS path.
+        getEntitlements().then((items) => setMeosAuthorized(u.isOwner || ((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build")))).catch(() => setMeosAuthorized(false));
         setInterviewCount(u.interviewCount ?? 0);
 
         // Fetch detailed limits for the banner
@@ -1775,6 +1796,14 @@ function AppPage() {
               </div>
             </section>
           )}
+          <div className="mb-8 flex flex-col items-center gap-2">
+            <div role="group" aria-label="What do you want to build?" className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/60">
+              <button type="button" onClick={() => handleChooseOffering("context")} aria-pressed={offering === "context"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "context" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>AI Context Profile</button>
+              <button type="button" onClick={() => handleChooseOffering("meos")} aria-pressed={offering === "meos"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "meos" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>MeOS</button>
+            </div>
+            <p className="font-mono text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">What would you like to build?</p>
+          </div>
+
           <div className="text-center mb-8">
             {!resumeDraft && <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
               {offering === "meos" ? "Build your personal operating system" : "Build your AI profile"}
@@ -1793,6 +1822,7 @@ function AppPage() {
             <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal alignment and decision support? <a href="/meos" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore MeOS separately →</a></span>
           </div>}
           {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
+          {offering === "meos" && isPreview && <div className="mb-5 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm leading-relaxed text-gray-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-gray-300"><strong>You&#39;re in the free MeOS preview — 3 of 12 domains.</strong> It gives you a taste of the experience. Upgrade to MeOS Build ($149 one-time, requires ALVIRA Pro) for your full integrated portrait, purpose statements, decision compass, daily alignment, and optional frameworks. <a href="/meos#pricing-heading" className="font-mono text-xs font-semibold text-amber-700 underline dark:text-amber-400">Upgrade to MeOS Build →</a></div>}
 
           {/* Topic input */}
           {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>

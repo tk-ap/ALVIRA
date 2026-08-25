@@ -119,4 +119,28 @@ Before merging:
 - Before adding a large binary, verify its purpose, size, filename, and whether an equivalent asset already exists.
 - Never delete or move a referenced asset until repository search confirms that no code, documentation, or open pull request depends on its current path.
 
-See `design/brand-references/README.md` for the asset workflow and current reference inventory.
+See `design/brand-references/README.md` for the asset workflow and current reference inventory.\n\n## Shared Agent OS and ecosystem awareness
+
+This product is independently valuable and participates in the ALVIRA ecosystem. `tk-ap/agent-os` is the canonical source for workforce policy, product boundaries, shared contracts, and cross-product routing.
+
+Before material planning or implementation:
+
+1. Read Agent OS `BOOTSTRAP.md`, `ecosystem/ECOSYSTEM.md`, and `ecosystem/products.yaml`.
+2. Read this repository's `.agent-os/product.yaml` and `.agent-os/integration-surface.yaml`.
+3. Identify which product owns the requested behavior.
+4. Keep implementation inside this product's declared boundary.
+5. Use Agent OS contracts for cross-product communication.
+6. Propose adjacent work to the owning product; do not silently duplicate it here.
+7. Keep execution portable across agentic harnesses unless this repository is itself a harness adapter.
+
+For every material feature, evaluate whether it requires ALVIRA context, Bridge distribution, Ailhat prioritization or outcome measurement, Agent OS workforce routing, Ledgato authority evaluation, or a harness adapter.
+
+At completion report:
+
+- **Product result** - what changed here.
+- **Ecosystem implications** - contracts, integrations, or assumptions affected.
+- **Cross-product opportunities** - useful follow-on work for another owning product.
+- **Boundary check** - confirmation that adjacent product responsibilities were not duplicated.
+
+Cross-product promotion must follow the value-moment rules in Agent OS `ecosystem/cross-market-policy.md`.
+

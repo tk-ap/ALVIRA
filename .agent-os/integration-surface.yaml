@@ -1,0 +1,15 @@
+version: 0.1.0
+product: alvira
+inbound:
+  - from: user-or-approved-source
+    contract: reflection-input
+    purpose: maintain-context
+outbound:
+  - to: alvira-bridge
+    contract: context-reference
+    trigger: approved-context-request
+cross_market:
+  - trigger: profile-ready-and-user-wants-context-in-another-tool
+    destination: alvira-bridge
+    message: Use this context in the AI tools you already use.
+

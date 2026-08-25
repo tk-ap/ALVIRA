@@ -1,0 +1,11 @@
+version: 0.1.0
+product: alvira
+category: context-intelligence
+ecosystem_source: tk-ap/agent-os
+ecosystem_contract: ecosystem/ECOSYSTEM.md
+product_directive: products/alvira.md
+owns: [context-elicitation, context-structure, context-validation, context-versioning, context-source-of-truth]
+produces: [context-reference, context-version]
+consumes: [reflection-input, source-material]
+must_not_own: [destination-distribution, portfolio-prioritization, workforce-routing, runtime-authorization, harness-execution]
+

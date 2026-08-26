@@ -79,7 +79,6 @@ export function Header() {
               <a href="/interview" className={linkClass}>Interview</a>
               <a href="/pricing" className={linkClass}>Pricing</a>
               <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">Reflect</a>
-              <a href="/bridge" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">Bridge</a>
               {user === undefined ? (
                 <div className="h-8 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
               ) : user ? (
@@ -112,7 +111,6 @@ export function Header() {
             <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>Interview</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>ALVIRA Reflect</a>
-            <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>Bridge</a>
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}
             {user ? (
               <button type="button" onClick={() => { closeMenu(); void handleLogout(); }} disabled={loggingOut} className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}>

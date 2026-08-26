@@ -1369,7 +1369,7 @@ function AppPage() {
                     <span className="font-mono text-xs">⬇ Download .zip</span>
                   </button>
                   {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>}
-                  {authUser && offering !== "meos" && <a href="/bridge" className={btnSecondary}>Connect AI tools with Bridge →</a>}
+                  {savedProfileId && <a href="/bridge" className={btnSecondary}>Your context is ready — connect an AI tool →</a>}
                   {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Confirm & save profile"}</button>)}
                   {savedProfileId && <a href={`/app?handoff=${savedProfileId}`} className={btnSecondary}>{offering === "meos" ? "Carry into AI Context" : "Continue into Reflect"} →</a>}
                   {offering === "meos" && <a href="/meos" className={btnSecondary}>View ALVIRA Reflect →</a>}

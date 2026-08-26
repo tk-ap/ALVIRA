@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { getCurrentUser, listProfiles } from "../-auth";
 
 const BRIDGE_URL = "https://alviratech-bridge.vercel.app";
 
@@ -10,10 +12,43 @@ export const Route = createFileRoute("/bridge/connect")({
 });
 
 function BridgeConnectPage() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentUser()
+      .then(async (user) => {
+        if (!user) {
+          window.location.replace("/app");
+          return;
+        }
+        const profiles = await listProfiles();
+        if (cancelled) return;
+        if (profiles.length === 0) {
+          window.location.replace("/app");
+          return;
+        }
+        setReady(true);
+      })
+      .catch(() => window.location.replace("/app"));
+    return () => { cancelled = true; };
+  }, []);
+
   const returnTo = typeof window !== "undefined"
     ? new URLSearchParams(window.location.search).get("return_to") || `${BRIDGE_URL}/api/auth/callback`
     : `${BRIDGE_URL}/api/auth/callback`;
   const authorizeUrl = `/api/bridge/authorize?return_to=${encodeURIComponent(returnTo)}`;
+
+  if (!ready) {
+    return (
+      <div className="min-h-dvh flex flex-col">
+        <Header />
+        <main id="main-content" className="flex flex-1 items-center justify-center px-6">
+          <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Checking your ALVIRA context…</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh flex flex-col">

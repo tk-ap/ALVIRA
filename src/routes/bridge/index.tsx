@@ -22,7 +22,7 @@ type ProfileSummary = {
 };
 
 function BridgePage() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [ready, setReady] = useState(false);
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
 
   useEffect(() => {
@@ -30,12 +30,33 @@ function BridgePage() {
     getCurrentUser()
       .then(async (user) => {
         if (cancelled) return;
-        setAuthenticated(Boolean(user));
-        if (user) setProfiles(await listProfiles() as ProfileSummary[]);
+        if (!user) {
+          window.location.replace("/app");
+          return;
+        }
+        const savedProfiles = await listProfiles() as ProfileSummary[];
+        if (cancelled) return;
+        if (savedProfiles.length === 0) {
+          window.location.replace("/app");
+          return;
+        }
+        setProfiles(savedProfiles);
+        setReady(true);
       })
-      .catch(() => setAuthenticated(false));
+      .catch(() => window.location.replace("/app"));
     return () => { cancelled = true; };
   }, []);
+
+  if (!ready) {
+    return (
+      <div className="min-h-dvh flex flex-col">
+        <Header />
+        <main id="main-content" className="flex flex-1 items-center justify-center px-6">
+          <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Checking your ALVIRA context…</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -58,13 +79,8 @@ function BridgePage() {
 
             <aside className="rounded-xl border border-system/30 bg-system-soft/40 p-6 dark:bg-ink/30">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Your Bridge readiness</h2>
-              {authenticated === null ? <p className="mt-3 text-sm text-gray-500">Checking your ALVIRA account…</p> : authenticated ? <>
-                <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">{profiles.length > 0 ? `${profiles.length} saved ${profiles.length === 1 ? "profile is" : "profiles are"} available to connect.` : "Build and save a profile before connecting an AI tool."}</p>
-                {profiles.length > 0 ? <a href="/bridge/connect" className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-system-dark px-4 py-3 font-mono text-sm font-semibold text-white dark:bg-system">Authorize a connection →</a> : <a href="/app" className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-system-dark px-4 py-3 font-mono text-sm font-semibold text-white dark:bg-system">Build my first profile →</a>}
-              </> : <>
-                <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">Sign in to select a profile and authorize a connection.</p>
-                <a href="/login?next=/bridge" className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-system-dark px-4 py-3 font-mono text-sm font-semibold text-white dark:bg-system">Sign in to ALVIRA →</a>
-              </>}
+              <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "profile is" : "profiles are"} available to connect.</p>
+              <a href="/bridge/connect" className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-system-dark px-4 py-3 font-mono text-sm font-semibold text-white dark:bg-system">Authorize a connection →</a>
               <p className="mt-4 text-xs leading-5 text-gray-500 dark:text-gray-400">Bridge does not create a second profile or change your source context. First-release access is limited to profile and context reading.</p>
             </aside>
           </div>

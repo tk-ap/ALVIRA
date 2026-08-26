@@ -3,6 +3,7 @@ import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
+import { buildCarryOverClaims, handoffTopic, oppositeOffering, type ProfileOffering } from "~/lib/profile-handoff";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
@@ -339,8 +340,9 @@ function AppPage() {
   const selectedGroups = TOPIC_GROUPS.filter((group) => group.topics.some((topicOption) => selectedTopics.includes(topicOption)));
   const activeGroup = selectedGroups.length === 1 ? selectedGroups[0] : null;
   const { offering: offeringSearch, preview: previewSearch } = Route.useSearch();
-  const isPreview = offeringSearch === "meos" && previewSearch === true;
   const [offering, setOffering] = useState<"context" | "meos" | null>(offeringSearch === "meos" ? "meos" : "context");
+  const [previewMode, setPreviewMode] = useState(offeringSearch === "meos" && previewSearch === true);
+  const isPreview = offering === "meos" && previewMode;
   type MeosPhase = "core" | "frameworks" | "birthData" | "review" | "validation" | "compile";
   const [meosPhase, setMeosPhase] = useState<MeosPhase>("core");
 
@@ -357,6 +359,7 @@ function AppPage() {
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
   const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
+  const [seedSource, setSeedSource] = useState<"document" | "profile">("document");
   const seedOfferingRef = useRef<"context" | "meos">("context");
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
@@ -386,6 +389,7 @@ function AppPage() {
     setStartError("");
     if (choice === "meos") {
       setOffering("meos");
+      setPreviewMode(!meosAuthorized);
       if (meosAuthorized) {
         navigate({ to: "/app", search: { offering: "meos", preview: false } });
       } else {
@@ -393,6 +397,7 @@ function AppPage() {
       }
     } else {
       setOffering("context");
+      setPreviewMode(false);
       navigate({ to: "/app", search: { offering: undefined, preview: false } });
     }
   };
@@ -487,7 +492,9 @@ function AppPage() {
         // MeOS Build entitlement is always computed (not only for the meos URL) so the
         // free onboarding "what do you want to build?" choice can route free users to the
         // experience-first preview and entitled users to the full MeOS path.
-        getEntitlements().then((items) => setMeosAuthorized(u.isOwner || ((u.tier === "pro" || u.tier === "lifetime") && items.includes("meos_build")))).catch(() => setMeosAuthorized(false));
+        const entitlements = await getEntitlements().catch(() => [] as string[]);
+        const reflectAuthorized = Boolean(u.isOwner || ((u.tier === "pro" || u.tier === "lifetime") && entitlements.includes("meos_build")));
+        setMeosAuthorized(reflectAuthorized);
         setInterviewCount(u.interviewCount ?? 0);
 
         // Fetch detailed limits for the banner
@@ -507,7 +514,7 @@ function AppPage() {
           try {
             const localRaw = window.localStorage.getItem(
               getInterviewDraftKey(
-                authUser?.id,
+                u.id,
                 offeringSearch === "meos" ? "meos" : "context",
               ),
             );
@@ -531,6 +538,9 @@ function AppPage() {
           try {
             const profile = await loadProfile({ data: { profileId } });
             if (!cancelled) {
+              const profileOffering: ProfileOffering = profile.offering === "meos" ? "meos" : "context";
+              setOffering(profileOffering);
+              setPreviewMode(profileOffering === "meos" && !reflectAuthorized);
               setTopic(profile.topic);
               setTier(profile.tier as Tier);
               setState(profile.state as InterviewState);
@@ -540,7 +550,11 @@ function AppPage() {
         }
         const continueId = new URLSearchParams(window.location.search).get("continue");
         if (continueId) {
-          void handleContinueFromProfile(continueId);
+          void handleContinueFromProfile(continueId, reflectAuthorized);
+        }
+        const handoffId = new URLSearchParams(window.location.search).get("handoff");
+        if (handoffId) {
+          void handleCrossSeedFromProfile(handoffId, reflectAuthorized);
         }
       } else {
         setAuthUser(null);
@@ -593,13 +607,14 @@ function AppPage() {
     setSelectedTopics([]);
     setCustomTopic("");
     setOffering(offeringSearch === "meos" ? "meos" : "context");
+    setPreviewMode(offeringSearch === "meos" && previewSearch === true);
     setScreen("start");
   };
 
   // ── Continue / Update profile: seed a NEW adaptive conversation from the
   // user's saved profile knowledge so gap detection skips covered domains and
   // targets new/open gaps. Reuses the Upload-to-Seed seeding pattern.
-  const handleContinueFromProfile = async (profileId: string) => {
+  const handleContinueFromProfile = async (profileId: string, reflectAuthorized = meosAuthorized) => {
     setStartError(""); setInterviewError("");
     let profile: { topic: string; tier: string; offering: string; state: InterviewState };
     try {
@@ -610,10 +625,12 @@ function AppPage() {
       return;
     }
     const activeOffering: "context" | "meos" = profile.offering === "meos" ? "meos" : "context";
+    const profilePreview = activeOffering === "meos" && !reflectAuthorized;
     setOffering(activeOffering);
+    setPreviewMode(profilePreview);
     setTopic(profile.topic);
     setTier(profile.tier as Tier);
-    const seeded = seedStateFromExisting(profile.state, activeOffering, isPreview);
+    const seeded = seedStateFromExisting(profile.state, activeOffering, profilePreview);
     const carried = Object.values(seeded.domains).filter((d) => d.covered).length;
     setState(seeded);
     setSeededInfo(
@@ -635,6 +652,50 @@ function AppPage() {
       }
     } finally {
       setWaiting(false);
+    }
+  };
+
+  // Reviewed cross-seed: Context and Reflect remain separate profiles, but the
+  // user can review relevant same-person knowledge before it enters the other
+  // graph. No shared-foundation persistence or schema migration is required.
+  const handleCrossSeedFromProfile = async (profileId: string, reflectAuthorized = meosAuthorized) => {
+    setStartError("");
+    setInterviewError("");
+    try {
+      const profile = (await loadProfile({ data: { profileId } })) as {
+        topic: string;
+        tier: string;
+        offering: string;
+        state: InterviewState;
+      };
+      const source: ProfileOffering = profile.offering === "meos" ? "meos" : "context";
+      const target = oppositeOffering(source);
+      const targetPreview = target === "meos" && !reflectAuthorized;
+      const targetGraph = target === "meos"
+        ? (targetPreview ? getMeosPreviewGraph() : getMeosGraph())
+        : getKnowledgeGraph(profile.state.tier);
+      const targetDomainIds = new Set(targetGraph.map((domain) => domain.id));
+      const claims = buildCarryOverClaims(profile.state, source, target).filter((claim) =>
+        targetDomainIds.has(claim.domainId),
+      );
+      const coveredIds = new Set(claims.map((claim) => claim.domainId));
+
+      setOffering(target);
+      setPreviewMode(targetPreview);
+      setTopic(handoffTopic(profile.topic, target));
+      setTier(profile.state.tier);
+      seedOfferingRef.current = target;
+      setSeedSource("profile");
+      setExtraction({
+        claims,
+        uncoveredDomains: targetGraph.map((domain) => domain.id).filter((id) => !coveredIds.has(id)),
+        summary: `Review what your ${source === "meos" ? "ALVIRA Reflect" : "AI Context Profile"} already knows before carrying it into ${target === "meos" ? "ALVIRA Reflect" : "your AI Context Profile"}.`,
+      });
+      setSeedDecisions({});
+      setScreen("seed-review");
+    } catch (err) {
+      setStartError(err instanceof Error ? err.message : "Could not prepare the profile handoff.");
+      setScreen("start");
     }
   };
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
@@ -708,7 +769,7 @@ function AppPage() {
     const trimmed = (offering === "meos" && chapterSuggestions.length > 0)
       ? [topic.trim(), ...chapterSuggestions].filter(Boolean).join(", ")
       : topic.trim();
-    if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("MeOS requires an active Pro or Lifetime plan plus MeOS Build ($149 one-time). Purchase access on the MeOS page."); return; }
+    if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("ALVIRA Reflect requires an active Pro or Lifetime plan plus Reflect Build ($149 one-time). Purchase access on the Reflect page."); return; }
     if (!trimmed) return;
 
     // MeOS topics are introspective/philosophical — skip the context-oriented validation
@@ -784,6 +845,7 @@ function AppPage() {
       const seedOffering = offering === "meos" ? "meos" : "context";
       const result = await extractClaims({ data: { text, tier, topic: topic.trim(), offering: seedOffering } });
       seedOfferingRef.current = seedOffering;
+      setSeedSource("document");
       setExtraction(result);
       setSeedDecisions({});
       setScreen("seed-review");
@@ -831,7 +893,7 @@ function AppPage() {
     setSeedDecisions({});
     setSeededInfo(
       seededDomainCount > 0
-        ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} pre-filled from your document. Answer the remaining questions to finish your profile.`
+        ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} carried over from your ${seedSource === "profile" ? "other ALVIRA profile" : "document"}. Answer the remaining questions to finish your profile.`
         : "No claims were selected — starting a fresh interview.",
     );
     setScreen("interview");
@@ -1116,7 +1178,7 @@ function AppPage() {
           const result = await promiseWithTimeout(
             generatePortrait(compileState),
             GENERATE_TIMEOUT_MS,
-            "Generating your portrait is taking longer than expected. Your knowledge files are ready — you can retry, or leave the portrait for later from your MeOS dashboard.",
+            "Generating your portrait is taking longer than expected. Your knowledge files are ready — you can retry, or leave the portrait for later from your ALVIRA Reflect dashboard.",
           );
           if ("error" in result) {
             setMeosPortrait(null);
@@ -1195,7 +1257,7 @@ function AppPage() {
     if (!generated || offering !== "meos") return;
     const zip = new JSZip();
     const kit = createMeosBuilderKit({
-      topic: state?.topic || topic || "My MeOS",
+      topic: state?.topic || topic || "My ALVIRA Reflect",
       portrait: meosPortrait,
       interviewState: state,
       content: Object.fromEntries(Object.entries(generated).filter(([name]) => name !== "portrait.json")),
@@ -1205,7 +1267,7 @@ function AppPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(state?.topic || topic || "meos").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "meos"}-builder-kit.zip`;
+    a.download = `${(state?.topic || topic || "reflect").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "reflect"}-builder-kit.zip`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1216,6 +1278,7 @@ function AppPage() {
     setCustomTopic("");
     setTier("personal");
     setOffering(null);
+    setPreviewMode(false);
     setMeosPhase("core");
     setState(null);
     setAnswer("");
@@ -1306,16 +1369,17 @@ function AppPage() {
                     <span className="font-mono text-xs">⬇ Download .zip</span>
                   </button>
                   {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>}
-                  {authUser && offering !== "meos" && <a href="/integrations" className={btnSecondary}>Connect AI tools →</a>}
+                  {savedProfileId && <a href="/bridge" className={btnSecondary}>Your context is ready — connect an AI tool →</a>}
                   {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Confirm & save profile"}</button>)}
-                  {offering === "meos" && <a href="/meos" className={btnSecondary}>View your MeOS →</a>}
+                  {savedProfileId && <a href={`/app?handoff=${savedProfileId}`} className={btnSecondary}>{offering === "meos" ? "Carry into AI Context" : "Continue into Reflect"} →</a>}
+                  {offering === "meos" && <a href="/meos" className={btnSecondary}>View ALVIRA Reflect →</a>}
                   <button type="button" onClick={startNew} className={btnPrimary}>
                     + Start new
                   </button>
                 </div>
               </div>
 
-              {offering === "meos" && portraitError && <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">Portrait generation encountered an issue. Your knowledge files are ready, and you can regenerate your portrait from your MeOS dashboard.</p>}
+              {offering === "meos" && portraitError && <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">Portrait generation encountered an issue. Your knowledge files are ready, and you can regenerate your portrait from your ALVIRA Reflect dashboard.</p>}
 
               {/* Tabs */}
               {offering !== "meos" && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100"><strong>Review before saving.</strong> The AI Working Profile organizes direct interview evidence into operating guidance. Provider files are portable setup instructions—not a silent sync or connection.</div>}
@@ -1382,7 +1446,7 @@ function AppPage() {
         <main id="main-content" className="flex-1 flex flex-col px-6">
           {/* a11y: interview page needs a single H1 — screen-reader-only, contextual to the active interview */}
           <h1 className="sr-only">
-            {offering === "meos" ? "MeOS interview" : "AI profile interview"}
+            {offering === "meos" ? "ALVIRA Reflect interview" : "AI profile interview"}
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
@@ -1601,7 +1665,10 @@ function AppPage() {
 
   // ── Render: Seed Review Screen (upload → claim review → seed) ──
   if (screen === "seed-review" && extraction) {
-    const reviewGraph = getKnowledgeGraph(tier);
+    const reviewOffering = seedOfferingRef.current;
+    const reviewGraph = reviewOffering === "meos"
+      ? (isPreview ? getMeosPreviewGraph() : getMeosGraph())
+      : getKnowledgeGraph(tier);
     const claims = extraction.claims;
     const grouped = new Map<string, { claim: (typeof claims)[number]; index: number }[]>();
     claims.forEach((claim, index) => {
@@ -1646,14 +1713,14 @@ function AppPage() {
 
             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Review what was extracted</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              {extraction.summary || "Here's what your document contained."} Approve, revise, or skip each claim — only approved claims are pre-filled into your interview.
+              {extraction.summary || (seedSource === "profile" ? "Here's what your other ALVIRA profile already knows." : "Here's what your document contained.")} Approve, revise, or skip each claim — only approved claims are carried into your interview.
             </p>
 
             {/* Summary strip */}
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
                 <div className="font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-400">{claims.length}</div>
-                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">claims extracted</div>
+                <div className="mt-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">{seedSource === "profile" ? "carry-over proposals" : "claims extracted"}</div>
               </div>
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
                 <div className="font-mono text-2xl font-bold text-gray-900 dark:text-gray-100">{orderedGroups.length}</div>
@@ -1667,7 +1734,7 @@ function AppPage() {
 
             {uncoveredLabels.length > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                Your document doesn't cover:{" "}
+                {seedSource === "profile" ? "Your other profile doesn't cover" : "Your document doesn't cover"}:{" "}
                 <span className="text-gray-700 dark:text-gray-300">{uncoveredLabels.join(", ")}</span>. These will be asked in the interview.
               </p>
             )}
@@ -1676,7 +1743,7 @@ function AppPage() {
             <div className="mt-6 space-y-4">
               {orderedGroups.length === 0 && (
                 <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                  Nothing usable was extracted from this document. Continue to start a fresh interview.
+                  Nothing maps cleanly into this experience yet. Continue to start a fresh interview.
                 </p>
               )}
               {orderedGroups.map(({ domain, items }) => (
@@ -1799,14 +1866,14 @@ function AppPage() {
           <div className="mb-8 flex flex-col items-center gap-2">
             <div role="group" aria-label="What do you want to build?" className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/60">
               <button type="button" onClick={() => handleChooseOffering("context")} aria-pressed={offering === "context"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "context" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>AI Context Profile</button>
-              <button type="button" onClick={() => handleChooseOffering("meos")} aria-pressed={offering === "meos"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "meos" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>MeOS</button>
+              <button type="button" onClick={() => handleChooseOffering("meos")} aria-pressed={offering === "meos"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "meos" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>ALVIRA Reflect</button>
             </div>
             <p className="font-mono text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">What would you like to build?</p>
           </div>
 
           <div className="text-center mb-8">
             {!resumeDraft && <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-              {offering === "meos" ? "Build your personal operating system" : "Build your AI profile"}
+              {offering === "meos" ? "Build your living reflection" : "Build your AI profile"}
             </h1>}
             <p className="text-gray-600 dark:text-gray-400">
               {offering === "meos"
@@ -1819,10 +1886,10 @@ function AppPage() {
           {/* Offering selection */}
           {offering !== "meos" && <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-sm leading-relaxed text-gray-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-gray-300">
             <strong className="text-gray-900 dark:text-gray-100">What you&apos;ll get:</strong> five editable Markdown files covering who you are, how you decide, what you need, your boundaries, and how you work.
-            <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal alignment and decision support? <a href="/meos" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore MeOS separately →</a></span>
+            <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal reflection, alignment, and decision support? <a href="/meos" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore ALVIRA Reflect →</a></span>
           </div>}
-          {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build your personal operating system. Turn your values, patterns, goals, professional history, and optional self-knowledge frameworks into a private daily companion for clearer personal and professional decisions.</p>}
-          {offering === "meos" && isPreview && <div className="mb-5 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm leading-relaxed text-gray-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-gray-300"><strong>You&#39;re in the free MeOS preview — 3 of 12 domains.</strong> It gives you a taste of the experience. Upgrade to MeOS Build ($149 one-time, requires ALVIRA Pro) for your full integrated portrait, purpose statements, decision compass, daily alignment, and optional frameworks. <a href="/meos#pricing-heading" className="font-mono text-xs font-semibold text-amber-700 underline dark:text-amber-400">Upgrade to MeOS Build →</a></div>}
+          {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build a living reflection of what you know, value, and are becoming. ALVIRA Reflect turns your values, patterns, goals, professional history, and optional self-knowledge frameworks into an evolving source of clarity for personal and professional decisions.</p>}
+          {offering === "meos" && isPreview && <div className="mb-5 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm leading-relaxed text-gray-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-gray-300"><strong>You&#39;re in the free ALVIRA Reflect preview — 3 of 12 domains.</strong> It gives you a taste of the experience. Upgrade to Reflect Build ($149 one-time, requires ALVIRA Pro) for your full integrated portrait, purpose statements, decision compass, daily alignment, and optional frameworks. <a href="/meos#pricing-heading" className="font-mono text-xs font-semibold text-amber-700 underline dark:text-amber-400">Upgrade to Reflect Build →</a></div>}
 
           {/* Topic input */}
           {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>
@@ -1942,7 +2009,7 @@ function AppPage() {
               disabled={!topic.trim()}
               className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
             >
-              {offering === "meos" ? "Start my MeOS interview" : "Start interview"}
+              {offering === "meos" ? "Start my Reflect interview" : "Start interview"}
             </button>
 
             {/* Upload-to-seed option */}
@@ -2016,7 +2083,7 @@ function AppPage() {
               <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
                 <div className="mb-5">
                   <span className="font-mono text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">&lt;output-files /&gt;</span>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your interview produces these files — a complete personal operating system.</p>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your interview produces these files — a living, reviewable reflection grounded in what you shared.</p>
                 </div>
                 <div className="space-y-5">
                   <div>

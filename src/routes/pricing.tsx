@@ -121,9 +121,9 @@ function Pricing() {
                 Start free. Upgrade when ALVIRA becomes part of how you work.
               </p>
               <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">
-                For MeOS pricing, see the{" "}
+                For ALVIRA Reflect pricing, see the{" "}
                 <a href="/meos" className="text-system-dark hover:text-system dark:text-system dark:hover:text-system underline underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
-                  MeOS page
+                  Reflect page
                 </a>
                 .
               </p>
@@ -205,10 +205,10 @@ function Pricing() {
                   {plan.name === "Lifetime" && (
                     <>
                       <p className="mt-6 border-t border-amber-200 pt-5 text-xs leading-relaxed text-gray-600 dark:border-amber-900/60 dark:text-gray-400">
-                        MeOS, team workspaces, API access, additional profiles, third-party subscriptions, and future premium products are sold separately.
+                        ALVIRA Reflect, team workspaces, API access, additional profiles, third-party subscriptions, and future premium products are sold separately.
                       </p>
                       <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                        One-time payment. No automatic renewal. Lifetime access applies while ALVIRA operates the AI Context Profile service. Your exported files remain yours permanently. MeOS, additional profiles, future premium modules, API access, and third-party subscriptions are sold separately.
+                        One-time payment. No automatic renewal. Lifetime access applies while ALVIRA operates the AI Context Profile service. Your exported files remain yours permanently. ALVIRA Reflect, additional profiles, future premium modules, API access, and third-party subscriptions are sold separately.
                       </p>
                     </>
                   )}

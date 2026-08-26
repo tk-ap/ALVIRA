@@ -20,10 +20,10 @@ function Refunds() {
     <h2>Lifetime</h2>
     <p>Request a full refund within 14 days of purchase by emailing <a href="mailto:contextforge-18281ce4@ctomail.io">contextforge-18281ce4@ctomail.io</a>. After 14 days, Lifetime purchases are final.</p>
 
-    <h2>MeOS Build</h2>
-    <p>Request a refund within 7 days of purchase. After 7 days, MeOS Build purchases are final.</p>
+    <h2>Reflect Build</h2>
+    <p>Request a refund within 7 days of purchase. After 7 days, Reflect Build purchases are final.</p>
 
-    <h2>MeOS Care</h2>
+    <h2>Reflect Care</h2>
     <p>Cancel anytime before the next renewal. The current month is not refunded.</p>
 
     <h2>How to cancel or request a refund</h2>

@@ -41,7 +41,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
         onClick={handlePrimaryClick}
         className="inline-flex items-center gap-1.5 font-mono text-sm text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
       >
-        Go deeper with MeOS <span aria-hidden="true">→</span>
+        Go deeper with ALVIRA Reflect <span aria-hidden="true">→</span>
       </a>
     );
   }
@@ -52,10 +52,10 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
       <div className="relative flex items-start gap-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-5 py-4">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Turn your AI profile into a personal operating system.
+            Keep your understanding of yourself alive.
           </h3>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            ALVIRA helps AI understand you. MeOS helps you apply what ALVIRA discovers.
+            ALVIRA Context builds portable understanding for AI. ALVIRA Reflect turns that same evidence into an evolving, private reflection for you.
           </p>
         </div>
         <a
@@ -63,7 +63,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
           onClick={handlePrimaryClick}
           className="shrink-0 inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
         >
-          Explore MeOS <span aria-hidden="true">→</span>
+          Explore Reflect <span aria-hidden="true">→</span>
         </a>
         {dismissible && (
         <button
@@ -84,17 +84,17 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
     <div className="relative rounded-xl border border-system/50 dark:border-system-dark/40 bg-gradient-to-br from-system-soft/80 to-white dark:from-ink/20 dark:to-gray-950 px-6 py-6 sm:px-8 sm:py-7">
       {/* Eyebrow */}
       <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-system-dark dark:text-system">
-        GO DEEPER WITH MEOS
+        KEEP YOUR CONTEXT LIVING
       </p>
 
       {/* Headline */}
       <h3 className="mt-3 text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:text-2xl">
-        Turn your AI profile into a personal operating system.
+        Understand what is changing—not just what is true today.
       </h3>
 
       {/* Body */}
       <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
-        ALVIRA helps AI understand you. MeOS helps you understand and apply what ALVIRA discovers — across your decisions, direction, work, and daily life.
+        ALVIRA Context makes what AI should know portable. ALVIRA Reflect helps you revisit, validate, and evolve that understanding across decisions, direction, work, and daily life.
       </p>
 
       {/* CTA */}
@@ -103,7 +103,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
         onClick={handlePrimaryClick}
         className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
       >
-        Explore MeOS
+        Explore ALVIRA Reflect
         <span aria-hidden="true">→</span>
       </a>
 

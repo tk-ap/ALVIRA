@@ -10,7 +10,7 @@ export type MeosPlaybook = {
 
 const definitions: Array<[string, string, string, boolean, number]> = [
   ["currentChapter", "Current Chapter", "What season of life are you in, what is ending, and what is beginning?", true, 1],
-  ["desiredOutcomes", "Desired Outcomes", "What should MeOS help with: clarity, direction, alignment, decisions, or transitions?", true, 2],
+  ["desiredOutcomes", "Desired Outcomes", "What should ALVIRA Reflect help with: clarity, direction, alignment, decisions, or transitions?", true, 2],
   ["values", "Values", "Core values, what you stand for, and what you will not compromise.", true, 3],
   ["boundaries", "Boundaries", "Explicit statements about what is aligned with you and what is not aligned.", true, 4],
   ["goals", "Goals", "Short- and long-term goals and how you define and measure progress.", true, 5],

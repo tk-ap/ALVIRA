@@ -80,9 +80,9 @@ function Home() {
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight text-mineral-dark dark:text-mineral sm:text-5xl md:text-6xl lg:text-7xl leading-[1.02]">
-            Build the context
+            AI knows a lot.
             <br />
-            your AI is missing.
+            What could you do if it really knew you?
           </h1>
 
           <p className="mt-6 sm:mt-8 text-base leading-relaxed text-warm-gray-dark dark:text-warm-gray sm:text-lg max-w-2xl mx-auto">
@@ -107,7 +107,7 @@ function Home() {
             </a>
           </div>
           <p className="mt-5 font-mono text-xs text-warm-gray-dark dark:text-warm-gray">
-            Already have notes, a résumé, or a journal? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Upload it and skip ahead.</a>
+            Already have context? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Bring it with you.</a>
           </p>
           <p className="mt-2 font-mono text-xs text-warm-gray-dark/70 dark:text-warm-gray/70">
             Free to start · No credit card
@@ -144,7 +144,41 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 2. Problem / benefit summary */}
+      {/* 2. Context sources */}
+      {/* ================================================================ */}
+      <section className="border-t border-gray-200 bg-white px-6 py-16 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Start with what already exists</span>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">Your context is already out there.</h2>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Bring the parts of yourself you want ALVIRA to understand. It can use existing sources as evidence, then interview you to fill the gaps.</p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Websites", "Personal sites, portfolios, blogs, company sites, Shopify stores"],
+              ["Professional", "LinkedIn, résumé, GitHub, presentations, work samples"],
+              ["Social", "Profiles and public posts that reflect your voice, interests, and taste"],
+              ["Your files", "Notes, journals, documents, exports, and existing AI context"],
+            ].map(([title, body]) => (
+              <div key={title} className="border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 border border-system/30 bg-system/5 p-6 dark:bg-system/10">
+            <div className="grid gap-6 md:grid-cols-3">
+              <div><p className="font-mono text-xs text-system-dark dark:text-system">01 / OBSERVE</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">ALVIRA identifies patterns and evidence across your sources.</p></div>
+              <div><p className="font-mono text-xs text-system-dark dark:text-system">02 / ASK</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">It asks about gaps, contradictions, and things that need your confirmation.</p></div>
+              <div><p className="font-mono text-xs text-system-dark dark:text-system">03 / BUILD</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">Confirmed understanding becomes reusable AI context you can take anywhere.</p></div>
+            </div>
+          </div>
+          <p className="mt-6 font-mono text-xs text-gray-500 dark:text-gray-400">You choose the sources. ALVIRA distinguishes observed information from inference and user-confirmed knowledge.</p>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* 3. Problem / benefit summary */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">

@@ -1485,7 +1485,7 @@ function AppPage() {
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
-            {offering === "context" && contextSourcePanel}\n            {offering === "context" && contextSourcePanel}
+            \n            {offering === "context" && contextSourcePanel}
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (

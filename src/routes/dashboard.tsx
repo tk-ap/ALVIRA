@@ -6,13 +6,16 @@ import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft, getOwnerMetrics, loadProfile, finalizeInterviewDraft } from "./-auth";
 import { compileInterviewMarkdown } from "./-meosCompiler";
+import { getMeosGraph } from "./-meosGraph";
+import { compileKnowledge } from "./-knowledgeCompiler";
+import { getKnowledgeGraph } from "./-knowledgeGraph";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — ALVIRA" }, { name: "description", content: "Your AI profiles and interview history." }] }),
   component: DashboardPage,
 });
 
-type Profile = { id: string; topic: string; tier: string; updated_at: string };
+type Profile = { id: string; topic: string; offering: "context" | "meos"; tier: string; updated_at: string };
 type OwnerMetrics = Awaited<ReturnType<typeof getOwnerMetrics>>;
 
 function DashboardPage() {
@@ -68,11 +71,19 @@ function DashboardPage() {
         throw new Error("This profile has no interview data to export yet.");
       }
       const timeoutMs = 30_000;
-      const compiled = await Promise.race([
-        Promise.resolve(compileInterviewMarkdown(state, [])),
+      const filesPromise = profile.offering === "meos"
+        ? Promise.resolve(compileInterviewMarkdown(state, getMeosGraph()).allFiles)
+        : Promise.resolve(compileKnowledge(state, getKnowledgeGraph(state.tier))).then((compiled) => ({
+            "overview.md": compiled.overview,
+            "requirements.md": compiled.requirements,
+            "constraints.md": compiled.constraints,
+            "business-rules.md": compiled.businessRules,
+            "workflows.md": compiled.workflows,
+          }));
+      const files = await Promise.race([
+        filesPromise,
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Knowledge files generation timed out after ${timeoutMs / 1000} seconds.`)), timeoutMs)),
       ]);
-      const files = compiled.allFiles;
       if (!files || Object.keys(files).length === 0) {
         throw new Error("No markdown files were generated for this profile.");
       }
@@ -105,7 +116,7 @@ function DashboardPage() {
 function OwnerDashboard({ metrics }: { metrics: OwnerMetrics }) {
   const stats = [
     ["Total users", metrics.userCounts.total], ["Free users", metrics.userCounts.free], ["Pro users", metrics.userCounts.pro],
-    ["Lifetime users", metrics.userCounts.lifetime], ["Total profiles", metrics.profileCount], ["Pending interviews", metrics.pendingInterviews], ["Active MeOS comps", metrics.activeCompCount],
+    ["Lifetime users", metrics.userCounts.lifetime], ["Total profiles", metrics.profileCount], ["Pending interviews", metrics.pendingInterviews], ["Active Reflect comps", metrics.activeCompCount],
   ];
   const date = (value: string) => new Date(value).toLocaleDateString();
   return <div className="mb-10 space-y-8">
@@ -118,7 +129,7 @@ function OwnerDashboard({ metrics }: { metrics: OwnerMetrics }) {
 ] as const).map(([label, counts]) => <tr key={label} className="border-t border-gray-200 dark:border-gray-700"><td className="px-4 py-3 text-gray-900 dark:text-gray-100">{label}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{counts.d7}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{counts.d30}</td></tr>)}
 </tbody></table></div></section>
     <section><div className="mb-3 flex items-baseline justify-between"><h2 className="font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Team waitlist</h2><span className="font-mono text-sm text-gray-600 dark:text-gray-400">{metrics.waitlistCount} total</span></div><div className="overflow-x-auto border border-gray-200 dark:border-gray-700"><table className="w-full text-left text-sm"><thead className="bg-[#f7f1e8] font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400"><tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">Company</th><th className="px-4 py-3">Team size</th><th className="px-4 py-3">Date</th></tr></thead><tbody>{metrics.recentWaitlist.map((entry) => <tr key={`${entry.email}-${entry.created_at}`} className="border-t border-gray-200 dark:border-gray-700"><td className="px-4 py-3 text-gray-900 dark:text-gray-100">{entry.name}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{entry.email}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{entry.company || "—"}</td><td className="px-4 py-3 text-gray-600 dark:text-gray-400">{entry.team_size || "—"}</td><td className="whitespace-nowrap px-4 py-3 text-gray-500 dark:text-gray-400">{date(entry.created_at)}</td></tr>)}</tbody></table>{metrics.recentWaitlist.length === 0 && <p className="px-4 py-5 text-sm text-gray-500">No waitlist signups yet.</p>}</div></section>
-    <section><div className="mb-3 flex items-baseline justify-between"><h2 className="font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">MeOS compensation</h2><span className="font-mono text-sm text-gray-600 dark:text-gray-400">{metrics.activeCompCount} active</span></div><div className="border border-gray-200 dark:border-gray-700">{metrics.activeComps.map((comp) => <div key={comp.email} className="flex items-center justify-between gap-4 border-b border-gray-200 px-4 py-3 last:border-0 dark:border-gray-700"><span className="text-sm text-gray-800 dark:text-gray-200">{comp.email}</span><span className="text-xs text-gray-500 dark:text-gray-400">Expires {date(comp.expires_at)}</span></div>)}{metrics.activeComps.length === 0 && <p className="px-4 py-5 text-sm text-gray-500">No active compensation offers.</p>}</div></section>
+    <section><div className="mb-3 flex items-baseline justify-between"><h2 className="font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">ALVIRA Reflect compensation</h2><span className="font-mono text-sm text-gray-600 dark:text-gray-400">{metrics.activeCompCount} active</span></div><div className="border border-gray-200 dark:border-gray-700">{metrics.activeComps.map((comp) => <div key={comp.email} className="flex items-center justify-between gap-4 border-b border-gray-200 px-4 py-3 last:border-0 dark:border-gray-700"><span className="text-sm text-gray-800 dark:text-gray-200">{comp.email}</span><span className="text-xs text-gray-500 dark:text-gray-400">Expires {date(comp.expires_at)}</span></div>)}{metrics.activeComps.length === 0 && <p className="px-4 py-5 text-sm text-gray-500">No active compensation offers.</p>}</div></section>
     <section><h2 className="mb-3 font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Recent signups</h2><div className="border border-gray-200 dark:border-gray-700">{metrics.recentUsers.map((user) => <div key={`${user.email}-${user.created_at}`} className="flex items-center justify-between gap-4 border-b border-gray-200 px-4 py-3 last:border-0 dark:border-gray-700"><span className="text-sm text-gray-800 dark:text-gray-200">{user.email}</span><span className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400"><span className="border border-system px-2 py-0.5 text-system-dark dark:text-system">{user.tier}</span><span>{date(user.created_at)}</span></span></div>)}</div></section>
   </div>;
 }
@@ -127,7 +138,8 @@ function ProfileSection({ profiles, draft, remove, owner, onFinalizeDraft, onGen
   return <section className={owner ? "border-t border-gray-200 pt-8 dark:border-gray-700" : ""}>{owner && <h2 className="mb-4 font-mono text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Your profiles</h2>}
     {exportStatus && <div className={`mb-5 rounded-md border px-4 py-3 text-sm ${exportStatus.type === "error" ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300" : "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"}`}>{exportStatus.text}</div>}
     {draft && <div className="mb-5 flex flex-col gap-3 border border-system bg-system-soft px-5 py-4 dark:border-system-dark dark:bg-ink/30 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-mono text-sm font-semibold text-system-dark dark:text-system">Interview in progress</p><p className="mt-1 text-sm text-system-dark dark:text-system">{draft.topic} · Updated {new Date(draft.updated_at).toLocaleDateString()}</p></div><div className="flex gap-3"><a href={`/app?offering=${draft.offering}`} className="font-mono text-sm text-system-dark underline dark:text-system">Resume →</a><button type="button" onClick={() => void onFinalizeDraft()} className="font-mono text-sm text-system-dark underline dark:text-system">Save to profile</button></div></div>}
-    {profiles.length === 0 ? <div className="border border-gray-200 px-6 py-12 text-center dark:border-gray-700"><p className="text-gray-600 dark:text-gray-400">No saved profiles yet. Start your first interview.</p><a href="/app" className="mt-4 inline-block font-mono text-sm text-system-dark underline dark:text-system">Start an interview →</a></div> : <div className="space-y-3">{profiles.map((p) => <div key={p.id} className="flex flex-col justify-between gap-4 border border-gray-200 px-5 py-4 dark:border-gray-700 sm:flex-row sm:items-center"><div><h2 className="font-mono text-gray-900 dark:text-gray-100">{p.topic}</h2><div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400"><span className="border border-system px-2 py-0.5 text-system-dark dark:border-system dark:text-system">{p.tier}</span><span>Updated {new Date(p.updated_at).toLocaleDateString()}</span></div></div><div className="flex flex-wrap items-center gap-4"><a href={`/app?continue=${p.id}`} className="rounded-md border border-system px-2.5 py-1.5 font-mono text-sm font-semibold text-system-dark hover:bg-system-soft dark:border-system dark:text-system dark:hover:bg-ink/30">Update / Continue →</a><a href={`/app?profile=${p.id}`} className="font-mono text-sm text-system-dark hover:text-system dark:text-system dark:hover:text-system">Resume →</a><button type="button" onClick={() => void onGenerateKnowledgeFiles(p)} className="font-mono text-sm text-system-dark hover:text-system dark:text-system dark:hover:text-system">Generate knowledge files</button><button type="button" onClick={() => void remove(p.id)} className="font-mono text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">Delete</button></div></div>)}</div>}
-    <div className="mt-8"><MeOSCTA placement="dashboard" variant="compact" /></div>
+    {profiles.length === 0 ? <div className="border border-gray-200 px-6 py-12 text-center dark:border-gray-700"><p className="text-gray-600 dark:text-gray-400">No saved profiles yet. Start your first interview.</p><a href="/app" className="mt-4 inline-block font-mono text-sm text-system-dark underline dark:text-system">Start an interview →</a></div> : <div className="space-y-3">{profiles.map((p) => <div key={p.id} className="flex flex-col justify-between gap-4 border border-gray-200 px-5 py-4 dark:border-gray-700 sm:flex-row sm:items-center"><div><h2 className="font-mono text-gray-900 dark:text-gray-100">{p.topic}</h2><div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400"><span className="border border-system px-2 py-0.5 text-system-dark dark:border-system dark:text-system">{p.offering === "meos" ? "ALVIRA Reflect" : "AI Context Profile"}</span><span className="border border-system px-2 py-0.5 text-system-dark dark:border-system dark:text-system">{p.tier}</span><span>Updated {new Date(p.updated_at).toLocaleDateString()}</span></div></div><div className="flex flex-wrap items-center gap-4"><a href={`/app?continue=${p.id}`} className="rounded-md border border-system px-2.5 py-1.5 font-mono text-sm font-semibold text-system-dark hover:bg-system-soft dark:border-system dark:text-system dark:hover:bg-ink/30">Update / Continue →</a><a href={`/app?handoff=${p.id}`} className="font-mono text-sm font-semibold text-system-dark hover:text-system dark:text-system dark:hover:text-system">{p.offering === "meos" ? "Carry into Context" : "Carry into Reflect"} →</a><a href={`/app?profile=${p.id}`} className="font-mono text-sm text-system-dark hover:text-system dark:text-system dark:hover:text-system">Resume →</a><button type="button" onClick={() => void onGenerateKnowledgeFiles(p)} className="font-mono text-sm text-system-dark hover:text-system dark:text-system dark:hover:text-system">Generate knowledge files</button><button type="button" onClick={() => void remove(p.id)} className="font-mono text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">Delete</button></div></div>)}</div>}
+    <div className="mt-8 flex flex-col gap-4 rounded-lg border border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-950 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Use your ALVIRA context in other AI tools</h3><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Bridge is ALVIRA's built-in distribution layer for controlled, read-only profile access.</p></div><a href="/bridge" className="shrink-0 font-mono text-sm font-semibold text-system-dark dark:text-system">Open Bridge →</a></div>
+    <div className="mt-4"><MeOSCTA placement="dashboard" variant="compact" /></div>
   </section>;
 }

@@ -15,12 +15,12 @@ export function createMeosBuilderKit(input: MeosBuilderKitInput): Record<string,
     portrait: input.portrait ?? null,
     interviewState: input.interviewState ?? null,
     contentFiles: contentFiles.map((name) => `content/${name}`),
-    provenance: "Compiled from owner-provided and owner-reviewed ALVIRA MeOS interview material.",
+    provenance: "Compiled from owner-provided and owner-reviewed ALVIRA Reflect interview material.",
   };
 
-  const startHere = `# Start Here — Your MeOS Builder Kit
+  const startHere = `# Start Here — Your ALVIRA Reflect Builder Kit
 
-This package contains the personal source material and build specification needed for a capable coding agent to create a private MeOS-style companion.
+This package contains the personal source material and build specification needed for a capable coding agent to create a private ALVIRA Reflect companion.
 
 ## Recommended workflow
 
@@ -37,15 +37,15 @@ This beta download is a standard ZIP archive and is **not encrypted**. Store it 
 Generated: ${generatedAt}
 `;
 
-  const buildBrief = `# MeOS Agent Build Brief
+  const buildBrief = `# ALVIRA Reflect Agent Build Brief
 
 ## Objective
 
-Build a private, responsive personal operating-system application from the supplied MeOS profile. The result should help the owner return to their stated purpose, decision criteria, boundaries, daily practices, and longer-term direction.
+Build a private, responsive reflection application from the supplied ALVIRA Reflect profile. The result should help the owner revisit their stated purpose, decision criteria, boundaries, daily practices, longer-term direction, and evidence of change over time.
 
 ## Canonical sources
 
-- Use \`meos-profile.json\` for structured metadata.
+- Use \`reflect-profile.json\` for structured metadata.
 - Use files in \`content/\` for owner-approved language.
 - Do not invent biographical facts, diagnoses, predictions, or personal claims.
 - Preserve source qualifiers and uncertainty where present.
@@ -127,7 +127,7 @@ The application must satisfy every item in \`acceptance-criteria.md\` and displa
 - All required routes are present and usable on mobile and desktop.
 - Daily entries persist after refresh on the same device.
 - The owner can export and permanently delete locally stored entries.
-- Personal copy comes only from the supplied MeOS sources.
+- Personal copy comes only from the supplied ALVIRA Reflect sources.
 - Optional symbolic content carries a visible reflective-practice disclaimer.
 - No analytics or external data transfer is enabled by default.
 - Empty and incomplete profile sections fail gracefully without invented copy.
@@ -138,7 +138,7 @@ The application must satisfy every item in \`acceptance-criteria.md\` and displa
   return {
     "START-HERE.md": startHere,
     "AGENT-BUILD-BRIEF.md": buildBrief,
-    "meos-profile.json": JSON.stringify(profile, null, 2),
+    "reflect-profile.json": JSON.stringify(profile, null, 2),
     "product-spec/routes.md": buildBrief.split("## Required routes")[1]?.split("## Functional requirements")[0]?.trim() || "See AGENT-BUILD-BRIEF.md.",
     "product-spec/data-model.md": dataModel,
     "product-spec/privacy-requirements.md": privacy,

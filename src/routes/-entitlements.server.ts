@@ -20,9 +20,9 @@ export function requireMeosPreview(user: { id: string }): void {
 export async function requireMeos(user: { id: string; email: string; tier: string }): Promise<void> {
   const hasComp = !!(await getMeosComp(user.email));
   if (!hasComp && user.tier !== "pro" && user.tier !== "lifetime") {
-    throw new Error("MeOS requires an active Pro or Lifetime plan.");
+    throw new Error("ALVIRA Reflect requires an active Pro or Lifetime plan.");
   }
   if (!hasComp && !(await hasEntitlement(user.id, "meos_build"))) {
-    throw new Error("MeOS Build must be purchased before continuing.");
+    throw new Error("Reflect Build must be purchased before continuing.");
   }
 }

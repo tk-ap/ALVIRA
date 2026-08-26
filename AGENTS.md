@@ -18,25 +18,26 @@ Agent-compatible Markdown should:
 - State when direction relies on a post–Revision 11 working hypothesis rather than owner-ratified direction.
 - Avoid relying on surrounding conversational context when the Markdown is intended to serve as an implementation brief.
 
-## Product Family: ALVIRA + Bridge
+## ALVIRA Product Architecture: Context + Reflect + Bridge
 
-ALVIRA and ALVIRA Bridge are separate products in one ecosystem.
+This section is owner-ratified direction and supersedes the earlier separate-product framing for ALVIRA Bridge.
 
-- **ALVIRA** is the Context Engine: build, structure, and maintain the user's AI profile/context.
-- **ALVIRA Bridge** is the Context Distribution product: direct integrations and MCP access that carry ALVIRA context into external AI tools.
-- Main product: `https://alviratech.vercel.app/`
-- Bridge product: `https://alviratech-bridge.vercel.app/`
+- **ALVIRA Context** is the portable context engine: build, structure, and maintain what AI should know about the user.
+- **ALVIRA Reflect** is the private reflection experience: revisit, validate, and evolve the user's living understanding of themselves.
+- **ALVIRA Bridge** is a secondary capability inside ALVIRA: controlled distribution that carries selected ALVIRA context into external AI tools.
+- Canonical product: `https://alviratech.vercel.app/`
+- Canonical Bridge UI: `/bridge` inside the main ALVIRA application.
 
-### Cross-Linking Requirement
+### Bridge Integration Requirement
 
-Keep the products clearly linked but operationally separate.
+Keep Bridge visible but subordinate to the core ALVIRA context experience.
 
-- The main ALVIRA navigation must provide a visible **Bridge** link to the Bridge product page.
-- Bridge navigation/branding must provide a visible link back to the main ALVIRA product.
-- Any customer-facing mention of **direct integrations**, **MCP access**, connecting external AI tools, or distributing an ALVIRA profile across tools should link to the Bridge product page rather than implying those capabilities live inside the core ALVIRA product.
-- Any Bridge CTA that requires creating/building an ALVIRA profile should link to the main ALVIRA product.
-- Do not merge the two products into one navigation experience or describe Bridge as merely a page/feature of ALVIRA.
-- Preserve distinct product positioning: **ALVIRA builds context; Bridge carries it everywhere.**
+- Main ALVIRA navigation and authenticated dashboard surfaces may link to the internal **Bridge** route.
+- Customer-facing mentions of direct integrations, MCP access, connecting external AI tools, or distributing an ALVIRA profile should route through the nested ALVIRA Bridge UI.
+- Bridge must reuse ALVIRA identity, navigation, profile source-of-truth, and permission language.
+- Bridge must not create or imply a second independent profile store.
+- A separate Bridge deployment may remain as an implementation backend or migration dependency, but it must not be positioned as a standalone customer product.
+- Preserve the product relationship: **ALVIRA builds and reflects living context; Bridge carries approved context into other tools.**
 
 ## Owner-Approved Testing Policy
 

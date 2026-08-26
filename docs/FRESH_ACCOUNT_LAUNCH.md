@@ -15,7 +15,7 @@ ALVIRA is launching a new Neon-backed account system. Existing local-SQLite acco
 
 ## Shared login future state
 
-When ALVIRA and Bridge use sibling custom domains under the same owned parent domain, set the same `ALVIRA_SESSION_COOKIE_DOMAIN` value on both projects, for example `.alvira.ai`. Both projects must use the same Neon `DATABASE_URL` and validate the same `sessions` rows.
+While the legacy Bridge backend remains on a sibling deployment, set the same `ALVIRA_SESSION_COOKIE_DOMAIN` value on both deployments, for example `.alvira.ai`. Both deployments must use the same Neon `DATABASE_URL` and validate the same `sessions` rows. Customer-facing Bridge entry and management live inside ALVIRA at `/bridge`; the sibling deployment is an implementation detail during migration.
 
 ## E2E acceptance
 
@@ -27,17 +27,17 @@ When ALVIRA and Bridge use sibling custom domains under the same owned parent do
 
 ## Customer email — draft only, do not send before E2E approval
 
-**Subject:** A fresh start for ALVIRA — and meet ALVIRA Bridge
+**Subject:** A fresh start for ALVIRA
 
 Hi,
 
-We’re expanding ALVIRA into a product family. ALVIRA remains the place to build and maintain your AI profile, and ALVIRA Bridge helps you use that profile across ChatGPT, Claude, Gemini, Cursor, and the rest of your stack.
+ALVIRA now brings three connected experiences into one product: Context builds what AI should know, Reflect helps you revisit and evolve that understanding, and Bridge lets you carry approved context into ChatGPT, Claude, Gemini, Cursor, and the rest of your stack.
 
 As part of this launch, we’ve moved to a new, more durable account foundation. Existing sign-in credentials were not carried forward, so please create a new ALVIRA account to continue.
 
 Create your new account: {{ALVIRA_SIGNUP_URL}}
 
-Then explore ALVIRA Bridge: https://alviratech-bridge.vercel.app/
+Then open Bridge inside ALVIRA: https://alviratech.vercel.app/bridge
 
 Thank you for being early. Your feedback is helping shape what comes next.
 

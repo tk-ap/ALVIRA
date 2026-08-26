@@ -10,7 +10,6 @@ interface UserInfo {
   interviewCount: number;
 }
 
-const BRIDGE_URL = "https://alviratech-bridge.vercel.app/";
 const OWNER_EMAIL = "tahlia.ashwood@gmail.com";
 const linkClass =
   "text-sm font-medium text-human-dark hover:text-mineral-dark dark:text-human dark:hover:text-mineral transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system";
@@ -79,8 +78,8 @@ export function Header() {
             <div className="hidden items-center gap-5 md:flex">
               <a href="/interview" className={linkClass}>Interview</a>
               <a href="/pricing" className={linkClass}>Pricing</a>
-              <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">MeOS</a>
-              <a href={BRIDGE_URL} className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">Bridge</a>
+              <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">Reflect</a>
+              <a href="/bridge" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">Bridge</a>
               {user === undefined ? (
                 <div className="h-8 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
               ) : user ? (
@@ -112,8 +111,8 @@ export function Header() {
           <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-warm-gray/20 md:hidden`}>
             <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>Interview</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
-            <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>MeOS</a>
-            <a href={BRIDGE_URL} onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>Bridge</a>
+            <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>ALVIRA Reflect</a>
+            <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>Bridge</a>
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}
             {user ? (
               <button type="button" onClick={() => { closeMenu(); void handleLogout(); }} disabled={loggingOut} className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}>

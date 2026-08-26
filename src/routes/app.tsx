@@ -1389,7 +1389,7 @@ function AppPage() {
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
-            {offering === "context" && contextSourcePanel}
+            
             {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

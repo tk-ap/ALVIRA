@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 import { buildCarryOverClaims, handoffTopic, oppositeOffering, type ProfileOffering } from "~/lib/profile-handoff";
 import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";
+import { ingestUrlSource } from "./-sourceIngestor";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
@@ -366,7 +367,7 @@ function AppPage() {
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
   const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
-  const [seedSource, setSeedSource] = useState<"document" | "profile">("document");
+  const [seedSource, setSeedSource] = useState<"document" | "profile" | "source">("document");
   const seedOfferingRef = useRef<"context" | "meos">("context");
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
@@ -425,8 +426,29 @@ function AppPage() {
     setContextSessionNotice(`${source.label} added to this context session.`);
   };
 
-  const addContextUrl = () => {
-    if (contextSourceLocator.trim()) addContextSource({ ...makeSource(contextSourceLocator), type: contextSourceType });
+  const addContextUrl = async () => {
+    const locator = contextSourceLocator.trim();
+    if (!locator || uploading) return;
+    setUploading(true);
+    setUploadError("");
+    try {
+      const ingested = await ingestUrlSource({ data: { locator } });
+      const source = { ...makeSource(locator), type: contextSourceType, status: "ready" as const };
+      addContextSource(source);
+      const seedOffering = offering === "meos" ? "meos" : "context";
+      const uploadTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
+      if (!topic.trim()) setTopic(uploadTopic);
+      const result = await extractClaims({ data: { text: ingested.text, tier, topic: uploadTopic, offering: seedOffering } });
+      seedOfferingRef.current = seedOffering;
+      setSeedSource("source");
+      setExtraction(result);
+      setSeedDecisions({});
+      setScreen("seed-review");
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Could not read that source.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   useEffect(() => {
@@ -915,7 +937,7 @@ function AppPage() {
     setSeedDecisions({});
     setSeededInfo(
       seededDomainCount > 0
-        ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} carried over from your ${seedSource === "profile" ? "other ALVIRA profile" : "document"}. Answer the remaining questions to finish your profile.`
+        ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} carried over from your ${seedSource === "profile" ? "other ALVIRA profile" : seedSource === "source" ? "source" : "document"}. Answer the remaining questions to finish your profile.`
         : "No claims were selected — starting a fresh interview.",
     );
     setScreen("interview");
@@ -1330,7 +1352,7 @@ function AppPage() {
     <section className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex items-start justify-between gap-4"><div><span className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">&lt;add-context /&gt;</span><h2 className="mt-1 text-sm font-semibold">Add context without leaving ALVIRA</h2><p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Sources stay attached to this session and are considered alongside what you tell ALVIRA. Add as many as you need before, during, or after the interaction.</p></div><button type="button" onClick={() => setShowContextSources((shown) => !shown)} className="shrink-0 rounded-md border border-gray-300 px-3 py-1.5 font-mono text-xs hover:border-emerald-500 dark:border-gray-700">{showContextSources ? "Hide" : "Add source"}</button></div>
       {contextSources.length > 0 && <p className="mt-3 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">{contextSources.length} source{contextSources.length === 1 ? "" : "s"} attached</p>}
-      {showContextSources && <div className="mt-4 space-y-3"><div className="grid gap-2 sm:grid-cols-3">{CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-3 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 dark:border-gray-700"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}</div>{(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); addContextUrl(); }} className="flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white dark:bg-gray-100 dark:text-gray-900">Attach</button></form>}{(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="text-xs text-gray-600 dark:text-gray-400">Choose a file from the upload control below; it will be reviewed before becoming part of your context.</p>}</div>}
+      {showContextSources && <div className="mt-4 space-y-3"><div className="grid gap-2 sm:grid-cols-3">{CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-3 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 dark:border-gray-700"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}</div>{(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); void addContextUrl(); }} className="flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" disabled={uploading} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & attach"}</button></form>}{(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="text-xs text-gray-600 dark:text-gray-400">Choose a file from the upload control below; it will be reviewed before becoming part of your context.</p>}</div>}
       {contextSessionNotice && <p role="status" className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">{contextSessionNotice}</p>}
     </section>
   );
@@ -1750,7 +1772,7 @@ function AppPage() {
 
             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Review what was extracted</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              {extraction.summary || (seedSource === "profile" ? "Here's what your other ALVIRA profile already knows." : "Here's what your document contained.")} Approve, revise, or skip each claim — only approved claims are carried into your interview.
+              {extraction.summary || (seedSource === "profile" ? "Here's what your other ALVIRA profile already knows." : seedSource === "source" ? "Here's what your source contained." : "Here's what your document contained.")} Approve, revise, or skip each claim — only approved claims are carried into your interview.
             </p>
 
             {/* Summary strip */}
@@ -1771,7 +1793,7 @@ function AppPage() {
 
             {uncoveredLabels.length > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                {seedSource === "profile" ? "Your other profile doesn't cover" : "Your document doesn't cover"}:{" "}
+                {seedSource === "profile" ? "Your other profile doesn't cover" : seedSource === "source" ? "Your source doesn't cover" : "Your document doesn't cover"}:{" "}
                 <span className="text-gray-700 dark:text-gray-300">{uncoveredLabels.join(", ")}</span>. These will be asked in the interview.
               </p>
             )}

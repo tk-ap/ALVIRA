@@ -24,7 +24,7 @@ function Terms() {
     <p>You own your interview answers, profiles, and compiled knowledge files. By using ALVIRA, you grant us a limited license to store and process your content solely to provide the service. This license ends when you delete your account.</p>
 
     <h2>Plans and payments</h2>
-    <p>The Free tier includes one profile and three interviews. Pro costs $20 per month or $192 per year and auto-renews until cancelled. Lifetime costs $399 as a one-time purchase. Reflect Build costs $149 as a one-time purchase and requires an active Pro subscription. Reflect Care costs $29 per month and auto-renews until cancelled. Prices may change with notice; we’ll notify you before your renewal.</p>
+    <p>The Free tier includes one profile and three interviews. Pro costs $20 per month or $192 per year and auto-renews until cancelled. Lifetime costs $399 as a one-time purchase. Reflect Build costs $149 as a standalone one-time purchase and does not require Pro. Reflect Care costs $29 per month and auto-renews until cancelled. Prices may change with notice; we’ll notify you before your renewal.</p>
 
     <h2>Cancellation</h2>
     <p>Cancel anytime. Cancellation stops future renewals, but the current period is not refunded except as described in our <a href="/refunds">Refund Policy</a>.</p>

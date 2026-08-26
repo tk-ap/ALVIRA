@@ -493,7 +493,7 @@ function AppPage() {
         // free onboarding "what do you want to build?" choice can route free users to the
         // experience-first preview and entitled users to the full MeOS path.
         const entitlements = await getEntitlements().catch(() => [] as string[]);
-        const reflectAuthorized = Boolean(u.isOwner || ((u.tier === "pro" || u.tier === "lifetime") && entitlements.includes("meos_build")));
+        const reflectAuthorized = Boolean(u.isOwner || entitlements.includes("meos_build"));
         setMeosAuthorized(reflectAuthorized);
         setInterviewCount(u.interviewCount ?? 0);
 
@@ -769,7 +769,7 @@ function AppPage() {
     const trimmed = (offering === "meos" && chapterSuggestions.length > 0)
       ? [topic.trim(), ...chapterSuggestions].filter(Boolean).join(", ")
       : topic.trim();
-    if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("ALVIRA Reflect requires an active Pro or Lifetime plan plus Reflect Build ($149 one-time). Purchase access on the Reflect page."); return; }
+    if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("Reflect Build ($149 one-time) must be purchased before continuing. ALVIRA Pro is optional."); return; }
     if (!trimmed) return;
 
     // MeOS topics are introspective/philosophical — skip the context-oriented validation
@@ -1889,7 +1889,7 @@ function AppPage() {
             <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal reflection, alignment, and decision support? <a href="/meos" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore ALVIRA Reflect →</a></span>
           </div>}
           {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build a living reflection of what you know, value, and are becoming. ALVIRA Reflect turns your values, patterns, goals, professional history, and optional self-knowledge frameworks into an evolving source of clarity for personal and professional decisions.</p>}
-          {offering === "meos" && isPreview && <div className="mb-5 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm leading-relaxed text-gray-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-gray-300"><strong>You&#39;re in the free ALVIRA Reflect preview — 3 of 12 domains.</strong> It gives you a taste of the experience. Upgrade to Reflect Build ($149 one-time, requires ALVIRA Pro) for your full integrated portrait, purpose statements, decision compass, daily alignment, and optional frameworks. <a href="/meos#pricing-heading" className="font-mono text-xs font-semibold text-amber-700 underline dark:text-amber-400">Upgrade to Reflect Build →</a></div>}
+          {offering === "meos" && isPreview && <div className="mb-5 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm leading-relaxed text-gray-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-gray-300"><strong>You&#39;re in the free ALVIRA Reflect preview — 3 of 12 domains.</strong> It gives you a taste of the experience. Upgrade to standalone Reflect Build ($149 one-time) for your full integrated portrait, purpose statements, decision compass, daily alignment, and optional frameworks. <a href="/meos#pricing-heading" className="font-mono text-xs font-semibold text-amber-700 underline dark:text-amber-400">Upgrade to Reflect Build →</a></div>}
 
           {/* Topic input */}
           {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>

@@ -83,7 +83,7 @@ function createInitialState(tier: Tier, topic: string, offering: "context" | "me
 // content, so they seed the state with confidence 1 / covered true.
 function seedStateFromExisting(existing: InterviewState, offering: "context" | "meos", preview: boolean): InterviewState {
   const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(existing.tier);
-  const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );
+  const initialState = createInitialState(existing.tier, existing.topic, offering, preview);
   const domains = { ...initialState.domains };
   for (const d of graph) {
     const existingAnswers = existing.domains?.[d.id]?.answers ?? [];
@@ -2006,7 +2006,7 @@ function AppPage() {
             <button
               type="button"
               onClick={handleStart}
-              disabled={!topic.trim()}
+              disabled={offering !== "meos" && !topic.trim()}
               className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
             >
               {offering === "meos" ? "Start my Reflect interview" : "Start interview"}

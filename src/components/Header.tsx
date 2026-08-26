@@ -81,7 +81,7 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-2 md:hidden">
-              <a href={mobileCtaHref} className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">{mobileCtaLabel}</a>
+              <a href={mobileCtaHref} className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system">{mobileCtaLabel}</a>
               <ThemeToggle />
               <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-controls="mobile-navigation" className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
                 <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>

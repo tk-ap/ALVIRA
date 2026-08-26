@@ -770,7 +770,7 @@ function AppPage() {
       ? [topic.trim(), ...chapterSuggestions].filter(Boolean).join(", ")
       : topic.trim();
     if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("Reflect Build ($149 one-time) must be purchased before continuing. ALVIRA Pro is optional."); return; }
-    if (!trimmed) return;
+    if (offering !== "meos" && !trimmed) return;
 
     // MeOS topics are introspective/philosophical — skip the context-oriented validation
     if (offering !== "meos") {
@@ -794,7 +794,7 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(tier, trimmed, offering === "meos" ? "meos" : "context", isPreview);
+    const initialState = createInitialState(existing.tier, existing.topic, offering, preview);
 
     try {
       const result = await askNextQuestion(initialState);
@@ -2006,7 +2006,7 @@ function AppPage() {
             <button
               type="button"
               onClick={handleStart}
-              disabled={!topic.trim()}
+              disabled={offering !== "meos" && !topic.trim()}
               className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
             >
               {offering === "meos" ? "Start my Reflect interview" : "Start interview"}

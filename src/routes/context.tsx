@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";
@@ -22,7 +22,7 @@ function ContextEnginePage() {
   const selected = CONTEXT_SOURCE_OPTIONS.find((option) => option.type === selectedType)!;
   const queuedCount = useMemo(() => sources.filter((source) => source.status === "queued").length, [sources]);
 
-  function addSource(event: React.FormEvent<HTMLFormElement>) {
+  function addSource(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!locator.trim()) return;
     const source = makeSource(locator);

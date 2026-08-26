@@ -64,7 +64,6 @@ export function Header() {
             <div className="hidden items-center gap-5 md:flex">
               <a href="/interview" className={linkClass}>Interview</a>
               <a href="/context" className={linkClass}>Context</a>
-              <a href="/context" className="inline-flex min-h-9 items-center rounded-md border border-system px-3 font-mono text-xs font-semibold text-system-dark hover:bg-system/10 dark:text-system dark:hover:bg-system/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system">+ Add Context</a>
               <a href="/pricing" className={linkClass}>Pricing</a>
               <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">Reflect</a>
               {user === undefined ? (
@@ -82,7 +81,6 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-2 md:hidden">
-              <a href="/context" className="min-h-11 inline-flex items-center px-1 text-sm font-mono font-semibold text-system-dark underline decoration-system/30 underline-offset-4 transition-colors hover:text-system dark:text-system dark:hover:text-system-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system">+ Add Context</a>
               <a href={mobileCtaHref} className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system">{mobileCtaLabel}</a>
               <ThemeToggle />
               <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-controls="mobile-navigation" className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
@@ -95,7 +93,6 @@ export function Header() {
           <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-warm-gray/20 md:hidden`}>
             <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>Interview</a>
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
-            <a href="/context" onClick={closeMenu} className={`${mobileLinkClass} font-semibold text-system-dark dark:text-system`}>+ Add Context</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>ALVIRA Reflect</a>
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}

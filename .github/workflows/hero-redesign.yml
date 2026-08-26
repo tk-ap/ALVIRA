@@ -16,32 +16,28 @@ jobs:
         with:
           ref: hero-redesign
           fetch-depth: 0
-      - name: Update ALVIRA hero positioning
+      - name: Update ALVIRA positioning and context sources
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('src/routes/index.tsx')
           s = p.read_text()
-
-          s = s.replace('<personal-ai-knowledge-system />', '<AI-context-built-around-you />')
           s = s.replace('ALVIRA uncovers how you think, work, and decide—then turns it into living, portable context that makes every AI conversation more useful to you.', 'ALVIRA learns how you think, work, and decide — so your AI can work with you, not just for you.')
-          s = s.replace('Build my AI profile', 'Start the interview', 1)
-          s = s.replace('href="/app"', 'href="/interview"', 1)
-
+          s = s.replace('Build the context\n            <br />\n            your AI is missing.', 'AI knows a lot.\n            <br />\n            What could you do if it really knew you?')
+          s = s.replace('Already have notes, a résumé, or a journal? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Upload it and skip ahead.</a>', 'Already have context? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Bring it with you.</a>')
           marker = '''      {/* ================================================================ */}\n      {/* 2. Problem / benefit summary */}\n      {/* ================================================================ */}'''
-          if 'What “knowing you” looks like' not in s:
-              demo = '''      {/* ================================================================ */}\n      {/* 2. Show the mechanism */}\n      {/* ================================================================ */}\n      <section className="border-y border-gray-200 bg-gray-950 px-6 py-16 dark:border-gray-800 sm:px-8 sm:py-20">\n        <div className="mx-auto max-w-5xl">\n          <div className="text-center">\n            <span className="font-mono text-xs uppercase tracking-wide text-system">What “knowing you” looks like</span>\n            <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">You tell ALVIRA. It learns. Your AI gets the context.</h2>\n          </div>\n          <div className="mt-12 grid gap-4 md:grid-cols-3">\n            <div className="border border-gray-800 bg-gray-900 p-6">\n              <div className="font-mono text-xs text-system">01 / YOU SAY</div>\n              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“I usually need to understand the bigger picture before I make a decision.”</p>\n            </div>\n            <div className="border border-system/40 bg-gray-900 p-6">\n              <div className="font-mono text-xs text-system">02 / ALVIRA LEARNS</div>\n              <p className="mt-5 text-sm font-semibold text-white">Decision-making preference</p>\n              <p className="mt-2 font-mono text-sm text-gray-300">Context-first</p>\n              <div className="mt-5 flex items-center gap-3"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-800"><div className="h-full w-[91%] rounded-full bg-system" /></div><span className="font-mono text-xs text-system">91%</span></div>\n            </div>\n            <div className="border border-gray-800 bg-gray-900 p-6">\n              <div className="font-mono text-xs text-system">03 / YOUR AI NOW KNOWS</div>\n              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“Give me the bigger picture before recommending a course of action.”</p>\n            </div>\n          </div>\n        </div>\n      </section>\n\n'''
+          sources = '''      {/* ================================================================ */}\n      {/* 2. Context sources */}\n      {/* ================================================================ */}\n      <section className="border-t border-gray-200 bg-white px-6 py-16 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-20">\n        <div className="mx-auto max-w-5xl">\n          <div className="max-w-3xl">\n            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Start with what already exists</span>\n            <h2 className="mt-3 text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">Your context is already out there.</h2>\n            <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Bring the parts of yourself you want ALVIRA to understand. It can use existing sources as evidence, then interview you to fill the gaps.</p>\n          </div>\n          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">\n            {[\n              ["Websites", "Personal sites, portfolios, blogs, company sites, Shopify stores"],\n              ["Professional", "LinkedIn, résumé, GitHub, presentations, work samples"],\n              ["Social", "Profiles and public posts that reflect your voice, interests, and taste"],\n              ["Your files", "Notes, journals, documents, exports, and existing AI context"],\n            ].map(([title, body]) => (\n              <div key={title} className="border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900">\n                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{title}</h3>\n                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{body}</p>\n              </div>\n            ))}\n          </div>\n          <div className="mt-10 border border-system/30 bg-system/5 p-6 dark:bg-system/10">\n            <div className="grid gap-6 md:grid-cols-3">\n              <div><p className="font-mono text-xs text-system-dark dark:text-system">01 / OBSERVE</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">ALVIRA identifies patterns and evidence across your sources.</p></div>\n              <div><p className="font-mono text-xs text-system-dark dark:text-system">02 / ASK</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">It asks about gaps, contradictions, and things that need your confirmation.</p></div>\n              <div><p className="font-mono text-xs text-system-dark dark:text-system">03 / BUILD</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">Confirmed understanding becomes reusable AI context you can take anywhere.</p></div>\n            </div>\n          </div>\n          <p className="mt-6 font-mono text-xs text-gray-500 dark:text-gray-400">You choose the sources. ALVIRA distinguishes observed information from inference and user-confirmed knowledge.</p>\n        </div>\n      </section>\n\n      {/* ================================================================ */}\n      {/* 3. Problem / benefit summary */}\n      {/* ================================================================ */}'''
+          if 'Start with what already exists' not in s:
               if marker not in s:
                   raise SystemExit('Expected homepage section marker not found')
-              s = s.replace(marker, demo + marker, 1)
-
+              s = s.replace(marker, sources, 1)
           p.write_text(s)
           PY
-      - name: Commit hero redesign
+      - name: Commit changes
         run: |
           git config user.name "ALVIRA Bot"
           git config user.email "actions@github.com"
-          git add src/routes/index.tsx
+          git add src/routes/index.tsx .github/workflows/hero-redesign.yml
           git diff --cached --quiet && exit 0
-          git commit -m "Refine hero around interview-first positioning"
+          git commit -m "Expand ALVIRA context entry points"
           git push origin hero-redesign

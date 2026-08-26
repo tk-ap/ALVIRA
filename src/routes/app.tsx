@@ -83,7 +83,7 @@ function createInitialState(tier: Tier, topic: string, offering: "context" | "me
 // content, so they seed the state with confidence 1 / covered true.
 function seedStateFromExisting(existing: InterviewState, offering: "context" | "meos", preview: boolean): InterviewState {
   const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(existing.tier);
-  const initialState = createInitialState(existing.tier, existing.topic, offering, preview);
+  const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );
   const domains = { ...initialState.domains };
   for (const d of graph) {
     const existingAnswers = existing.domains?.[d.id]?.answers ?? [];

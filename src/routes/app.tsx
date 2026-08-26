@@ -2149,13 +2149,6 @@ function AppPage() {
                 </div>
               </section>
             )}
-            {offering === "context" && (
-              <section>
-                ...
-              </section>
-            )}
-
-          </div>}
           </div>}
         </div>
       </main>

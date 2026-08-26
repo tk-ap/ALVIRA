@@ -844,10 +844,8 @@ function AppPage() {
     e.target.value = ""; // allow re-selecting the same file
     if (!file) return;
 
-    if (!topic.trim()) {
-      setUploadError("Describe what your AI should know first, then upload your document.");
-      return;
-    }
+    const uploadTopic = topic.trim() || (offering === "meos" ? "My current chapter" : "My AI context");
+    if (!topic.trim()) setTopic(uploadTopic);
     if (file.size > MAX_UPLOAD_BYTES) {
       setUploadError("That file is larger than 5MB. Please upload a smaller document.");
       return;
@@ -867,7 +865,7 @@ function AppPage() {
         throw new Error("That file appears to be empty — nothing to extract.");
       }
       const seedOffering = offering === "meos" ? "meos" : "context";
-      const result = await extractClaims({ data: { text, tier, topic: topic.trim(), offering: seedOffering } });
+      const result = await extractClaims({ data: { text, tier, topic: uploadTopic, offering: seedOffering } });
       seedOfferingRef.current = seedOffering;
       setSeedSource("document");
       setExtraction(result);
@@ -891,7 +889,7 @@ function AppPage() {
 
     const seedOffering = seedOfferingRef.current;
     const currentGraph = seedOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
-    const initialState = createInitialState(tier, topic.trim(), seedOffering, isPreview);
+    const initialState = createInitialState(tier, uploadTopic, seedOffering, isPreview);
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {
@@ -2060,7 +2058,7 @@ function AppPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading || !topic.trim()}
+                      disabled={uploading}
                       className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
                     >
                       {uploading ? "Extracting knowledge…" : "Choose file…"}

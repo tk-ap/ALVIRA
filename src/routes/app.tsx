@@ -1932,7 +1932,7 @@ function AppPage() {
       {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
       {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
+        <div className="mx-auto w-full max-w-5xl">
           
           {resumeDraft && (
             <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">

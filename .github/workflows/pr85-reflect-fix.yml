@@ -1,0 +1,46 @@
+name: PR85 Reflect fix
+on:
+  push:
+    branches:
+      - codex/unify-context-multi-source
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/unify-context-multi-source
+          fetch-depth: 0
+      - name: Repair Reflect start logic
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/app.tsx')
+          s = p.read_text()
+          s = s.replace(
+              'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );',
+              'const initialState = createInitialState(existing.tier, existing.topic, offering, preview);',
+              1,
+          )
+          s = s.replace(
+              'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );',
+              'const initialState = createInitialState(tier, trimmed || "My current chapter", offering === "meos" ? "meos" : "context", isPreview);',
+              1,
+          )
+          s = s.replace('disabled={!topic.trim()}', 'disabled={offering !== "meos" && !topic.trim()}', 1)
+          p.write_text(s)
+          PY
+      - name: Commit repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/routes/app.tsx
+          if git diff --cached --quiet; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git commit -m 'fix: allow Reflect to start without a user prompt'
+          git push origin codex/unify-context-multi-source

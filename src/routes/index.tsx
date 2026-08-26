@@ -91,10 +91,10 @@ function Home() {
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <a
-              href="/app"
+              href="/interview"
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-mineral-dark dark:bg-mineral text-ink-light dark:text-ink px-7 py-3.5 text-base font-semibold hover:bg-mineral-dark/90 dark:hover:bg-mineral/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system motion-reduce:transition-none transition-colors duration-200"
             >
-              Build my AI profile
+              Start the interview
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
@@ -112,6 +112,34 @@ function Home() {
           <p className="mt-2 font-mono text-xs text-warm-gray-dark/70 dark:text-warm-gray/70">
             Free to start · No credit card
           </p>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* 2. Show the mechanism */}
+      {/* ================================================================ */}
+      <section className="border-y border-gray-200 bg-gray-950 px-6 py-16 dark:border-gray-800 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center">
+            <span className="font-mono text-xs uppercase tracking-wide text-system">What “knowing you” looks like</span>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">You tell ALVIRA. It learns. Your AI gets the context.</h2>
+          </div>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <div className="border border-gray-800 bg-gray-900 p-6">
+              <div className="font-mono text-xs text-system">01 / YOU SAY</div>
+              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“I usually need to understand the bigger picture before I make a decision.”</p>
+            </div>
+            <div className="border border-system/40 bg-gray-900 p-6">
+              <div className="font-mono text-xs text-system">02 / ALVIRA LEARNS</div>
+              <p className="mt-5 text-sm font-semibold text-white">Decision-making preference</p>
+              <p className="mt-2 font-mono text-sm text-gray-300">Context-first</p>
+              <div className="mt-5 flex items-center gap-3"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-800"><div className="h-full w-[91%] rounded-full bg-system" /></div><span className="font-mono text-xs text-system">91%</span></div>
+            </div>
+            <div className="border border-gray-800 bg-gray-900 p-6">
+              <div className="font-mono text-xs text-system">03 / YOUR AI NOW KNOWS</div>
+              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“Give me the bigger picture before recommending a course of action.”</p>
+            </div>
+          </div>
         </div>
       </section>
 

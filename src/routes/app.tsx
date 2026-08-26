@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 import { buildCarryOverClaims, handoffTopic, oppositeOffering, type ProfileOffering } from "~/lib/profile-handoff";
-import { CONTEXT_SOURCE_OPTIONS } from "~/lib/context-engine";
+import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";
+import { ingestUrlSource } from "./-sourceIngestor";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
@@ -74,6 +75,7 @@ function createInitialState(tier: Tier, topic: string, offering: "context" | "me
     domains,
     history: [],
     currentDomain: null,
+    contextSources: [],
   };
 }
 
@@ -96,7 +98,7 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
-const SUPPORTED_UPLOAD_EXTENSIONS = ["txt", "md", "docx"] as const;
+const SUPPORTED_UPLOAD_EXTENSIONS = ["txt", "md", "docx", "zip"] as const;
 
 function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -128,6 +130,33 @@ async function parseDocx(file: File): Promise<string> {
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n");
   return text.trim();
+}
+
+/** Extract readable text files and .docx files from a ZIP bundle in memory. */
+async function parseZip(file: File): Promise<string> {
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const parts: string[] = [];
+  const entries = Object.values(zip.files).filter((entry) => !entry.dir).slice(0, 40);
+  for (const entry of entries) {
+    const name = entry.name.toLowerCase();
+    try {
+      if (name.endsWith(".txt") || name.endsWith(".md")) {
+        const text = (await entry.async("string")).trim();
+        if (text) parts.push(`## ${entry.name}\n${text}`);
+      } else if (name.endsWith(".docx")) {
+        const bytes = await entry.async("uint8array");
+        const nested = await JSZip.loadAsync(bytes);
+        const docXml = await nested.file("word/document.xml")?.async("string");
+        if (docXml) {
+          const text = docXml.replace(/<w:p[^>]*>/g, "\n").replace(/<w:tab[^>]*>/g, "\t").replace(/<w:br[^>]*\/?\s*>/g, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+          if (text) parts.push(`## ${entry.name}\n${text}`);
+        }
+      }
+    } catch {
+      // Ignore an unreadable entry; other readable bundle files can still seed the review.
+    }
+  }
+  return parts.join("\n\n").slice(0, 120_000);
 }
 
 // ── Markdown preview component ──
@@ -354,13 +383,18 @@ function AppPage() {
   const [waiting, setWaiting] = useState(false);
   const [interviewError, setInterviewError] = useState("");
   const [startError, setStartError] = useState("");
+  const [contextSources, setContextSources] = useState<ContextSource[]>([]);
+  const [contextSourceType, setContextSourceType] = useState<ContextSourceType>("website");
+  const [contextSourceLocator, setContextSourceLocator] = useState("");
+  const [showContextSources, setShowContextSources] = useState(false);
+  const [contextSessionNotice, setContextSessionNotice] = useState<string | null>(null);
   // Upload-to-seed state
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
   const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
-  const [seedSource, setSeedSource] = useState<"document" | "profile">("document");
+  const [seedSource, setSeedSource] = useState<"document" | "profile" | "source">("document");
   const seedOfferingRef = useRef<"context" | "meos">("context");
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
@@ -411,6 +445,44 @@ function AppPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addContextSource = (source: ContextSource) => {
+    setContextSources((current) => current.some((item) => item.locator === source.locator && item.type === source.type) ? current : [...current, source]);
+    setState((current) => current ? { ...current, contextSources: [...(current.contextSources ?? []), source], history: [...current.history, { role: "assistant", content: `Source added: ${source.label}. I’ll consider it as evidence while we build your context.` }] } : current);
+    setContextSourceLocator("");
+    setContextSessionNotice(`${source.label} added to this context session.`);
+  };
+
+  const addContextUrl = async () => {
+    const locator = contextSourceLocator.trim();
+    if (!locator || uploading) return;
+    setUploading(true);
+    setUploadError("");
+    try {
+      const ingested = await ingestUrlSource({ data: { locator } });
+      const source = { ...makeSource(locator), type: contextSourceType, status: "ready" as const };
+      addContextSource(source);
+      const seedOffering = offering === "meos" ? "meos" : "context";
+      const uploadTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
+      if (!topic.trim()) setTopic(uploadTopic);
+      const result = await extractClaims({ data: { text: ingested.text, tier, topic: uploadTopic, offering: seedOffering } });
+      seedOfferingRef.current = seedOffering;
+      setSeedSource("source");
+      setExtraction(result);
+      setSeedDecisions({});
+      setScreen("seed-review");
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Could not read that source.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!state || contextSources.length === 0) return;
+    const existing = state.contextSources ?? [];
+    if (existing.length !== contextSources.length) setState({ ...state, contextSources });
+  }, [state, contextSources]);
 
   // Computed values
   const graph = state ? (offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(state.tier)) : [];
@@ -821,17 +893,15 @@ function AppPage() {
     e.target.value = ""; // allow re-selecting the same file
     if (!file) return;
 
-    if (!topic.trim()) {
-      setUploadError("Describe what your AI should know first, then upload your document.");
-      return;
-    }
+    const uploadTopic = topic.trim() || (offering === "meos" ? "My current chapter" : "My AI context");
+    if (!topic.trim()) setTopic(uploadTopic);
     if (file.size > MAX_UPLOAD_BYTES) {
       setUploadError("That file is larger than 5MB. Please upload a smaller document.");
       return;
     }
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
     if (!(SUPPORTED_UPLOAD_EXTENSIONS as readonly string[]).includes(ext)) {
-      setUploadError("Only .txt, .md, and .docx files are supported right now.");
+      setUploadError("Only .txt, .md, .docx, and .zip files are supported right now.");
       return;
     }
 
@@ -839,12 +909,12 @@ function AppPage() {
     setUploadError("");
     setInterviewError("");
     try {
-      const text = ext === "docx" ? await parseDocx(file) : await readFileAsText(file);
+      const text = ext === "docx" ? await parseDocx(file) : ext === "zip" ? await parseZip(file) : await readFileAsText(file);
       if (!text.trim()) {
         throw new Error("That file appears to be empty — nothing to extract.");
       }
       const seedOffering = offering === "meos" ? "meos" : "context";
-      const result = await extractClaims({ data: { text, tier, topic: topic.trim(), offering: seedOffering } });
+      const result = await extractClaims({ data: { text, tier, topic: uploadTopic, offering: seedOffering } });
       seedOfferingRef.current = seedOffering;
       setSeedSource("document");
       setExtraction(result);
@@ -868,7 +938,8 @@ function AppPage() {
 
     const seedOffering = seedOfferingRef.current;
     const currentGraph = seedOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
-    const initialState = createInitialState(tier, topic.trim(), seedOffering, isPreview);
+    const seedTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
+    const initialState = createInitialState(tier, seedTopic, seedOffering, isPreview);
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {
@@ -894,7 +965,7 @@ function AppPage() {
     setSeedDecisions({});
     setSeededInfo(
       seededDomainCount > 0
-        ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} carried over from your ${seedSource === "profile" ? "other ALVIRA profile" : "document"}. Answer the remaining questions to finish your profile.`
+        ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} carried over from your ${seedSource === "profile" ? "other ALVIRA profile" : seedSource === "source" ? "source" : "document"}. Answer the remaining questions to finish your profile.`
         : "No claims were selected — starting a fresh interview.",
     );
     setScreen("interview");
@@ -1305,6 +1376,15 @@ function AppPage() {
     }
   };
 
+  const contextSourcePanel = (
+    <section className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+      <div className="flex items-start justify-between gap-4"><div><span className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">&lt;add-context /&gt;</span><h2 className="mt-1 text-sm font-semibold">Add context without leaving ALVIRA</h2><p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Sources stay attached to this session and are considered alongside what you tell ALVIRA. Add as many as you need before, during, or after the interaction.</p></div><button type="button" onClick={() => setShowContextSources((shown) => !shown)} className="shrink-0 rounded-md border border-gray-300 px-3 py-1.5 font-mono text-xs hover:border-emerald-500 dark:border-gray-700">{showContextSources ? "Hide" : "Add source"}</button></div>
+      {contextSources.length > 0 && <p className="mt-3 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">{contextSources.length} source{contextSources.length === 1 ? "" : "s"} attached</p>}
+      {showContextSources && <div className="mt-4 space-y-3"><div className="grid gap-2 sm:grid-cols-3">{CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-3 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 dark:border-gray-700"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}</div>{(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); void addContextUrl(); }} className="flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" disabled={uploading} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & attach"}</button></form>}{(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="text-xs text-gray-600 dark:text-gray-400">Choose a file from the upload control below; it will be reviewed before becoming part of your context.</p>}</div>}
+      {contextSessionNotice && <p role="status" className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">{contextSessionNotice}</p>}
+    </section>
+  );
+
   // ── Render helpers ──
   const chatBubbleClass = (role: "user" | "assistant") =>
     role === "assistant"
@@ -1357,6 +1437,9 @@ function AppPage() {
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
+            {offering && contextSourcePanel}
+            
+            {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -1451,6 +1534,8 @@ function AppPage() {
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
+            {offering && contextSourcePanel}
+            \n
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
@@ -1529,6 +1614,7 @@ function AppPage() {
 
             {/* Input area */}
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+              {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
               {/* Generate button — always available */}
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
@@ -1714,7 +1800,7 @@ function AppPage() {
 
             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Review what was extracted</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              {extraction.summary || (seedSource === "profile" ? "Here's what your other ALVIRA profile already knows." : "Here's what your document contained.")} Approve, revise, or skip each claim — only approved claims are carried into your interview.
+              {extraction.summary || (seedSource === "profile" ? "Here's what your other ALVIRA profile already knows." : seedSource === "source" ? "Here's what your source contained." : "Here's what your document contained.")} Approve, revise, or skip each claim — only approved claims are carried into your interview.
             </p>
 
             {/* Summary strip */}
@@ -1735,7 +1821,7 @@ function AppPage() {
 
             {uncoveredLabels.length > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                {seedSource === "profile" ? "Your other profile doesn't cover" : "Your document doesn't cover"}:{" "}
+                {seedSource === "profile" ? "Your other profile doesn't cover" : seedSource === "source" ? "Your source doesn't cover" : "Your document doesn't cover"}:{" "}
                 <span className="text-gray-700 dark:text-gray-300">{uncoveredLabels.join(", ")}</span>. These will be asked in the interview.
               </p>
             )}
@@ -1847,6 +1933,7 @@ function AppPage() {
       {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
         <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
+          
           {resumeDraft && (
             <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">
               <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Saved progress found</p>
@@ -1893,7 +1980,7 @@ function AppPage() {
           {offering === "meos" && isPreview && <div className="mb-5 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm leading-relaxed text-gray-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-gray-300"><strong>You&#39;re in the free ALVIRA Reflect preview — 3 of 12 domains.</strong> It gives you a taste of the experience. Upgrade to standalone Reflect Build ($149 one-time) for your full integrated portrait, purpose statements, decision compass, daily alignment, and optional frameworks. <a href="/meos#pricing-heading" className="font-mono text-xs font-semibold text-amber-700 underline dark:text-amber-400">Upgrade to Reflect Build →</a></div>}
 
           {/* Topic input */}
-          {offering && <div className={offering === "context" ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>
+          {offering && <div className={offering ? "grid grid-cols-1 gap-8 md:grid-cols-[3fr_2fr] md:items-start" : "space-y-8"}>
             <div className="space-y-5">
             <div>
               <label className="block font-mono text-xs text-emerald-500 dark:text-emerald-400 tracking-wide uppercase mb-1.5">
@@ -2001,17 +2088,9 @@ function AppPage() {
               )}
             </div>
 
-            {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline">Or resume a saved profile →</a></div>}
 
-            {/* Start button */}
-            <button
-              type="button"
-              onClick={handleStart}
-              disabled={offering !== "meos" && !topic.trim()}
-              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
-            >
-              {offering === "meos" ? "Start my Reflect interview" : "Start interview"}
-            </button>
+
+            {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline">Or resume a saved profile →</a></div>}
 
             {/* Upload-to-seed option */}
             {(offering === "context" || offering === "meos") && (
@@ -2024,25 +2103,37 @@ function AppPage() {
                 <div className="mt-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-4">
                   <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{offering === "meos" ? "Upload a journal, self-assessment, or coaching notes" : "Upload a resume, bio, or notes"}</p>
                   <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                    ALVIRA extracts what it can from a .txt, .md, or .docx file — you review the claims, then the interview only asks about what's missing. Your file is never stored.
+                    ALVIRA extracts readable content from a .txt, .md, .docx, or .zip bundle — you review the claims, then the interview only asks about what's missing. Your file is never stored.
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />
+                    <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading || !topic.trim()}
+                      disabled={uploading}
                       className="rounded-lg border border-emerald-600 dark:border-emerald-500 px-4 py-2 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
                     >
                       {uploading ? "Extracting knowledge…" : "Choose file…"}
                     </button>
-                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">.txt · .md · .docx · max 5MB</span>
+                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">.txt · .md · .docx · .zip · max 5MB</span>
                   </div>
                   {uploadError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{uploadError}</p>}
                 </div>
               </div>
             )}
-            </div>
+
+
+            {offering && contextSourcePanel}
+
+            {/* Start button */}
+            <button
+              type="button"
+              onClick={handleStart}
+              disabled={offering !== "meos" && !topic.trim()}
+              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+            >
+              {offering === "meos" ? "Start my Reflect interview" : "Start interview"}
+            </button>            </div>
 
             {offering === "context" && (
               <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">
@@ -2114,42 +2205,7 @@ function AppPage() {
                 </div>
               </aside>
             )}
-                        {offering === "context" && (
-              <section className="mt-8 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
-                <div className="mb-5">
-                  <span className="font-mono text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                    &lt;add-context /&gt;
-                  </span>
-                  <h2 className="mt-2 text-base font-semibold text-gray-900 dark:text-gray-100">
-                    Add context from other sources
-                  </h2>
-                  <p className="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                    ALVIRA can build your profile from more than an interview. Add one or more sources to give ALVIRA a stronger starting point.
-                  </p>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {CONTEXT_SOURCE_OPTIONS.map((source) => (
-                    <a
-                      key={source.type}
-                      href={source.type === "interview" ? "#interview" : `/context?source=${source.type}`}
-                      className="group rounded-lg border border-gray-200 p-4 transition-colors hover:border-emerald-400 hover:bg-emerald-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/20"
-                    >
-                      <div className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {source.label} →
-                      </div>
-                      <p className="mt-1.5 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-                        {source.description}
-                      </p>
-                      <p className="mt-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">
-                        {source.examples}
-                      </p>
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>}
+        </div>}
         </div>
       </main>
       <SignupPromptBanner show={authUser === null} />

@@ -10,7 +10,7 @@ import { COMPARISON_COMPETITORS, COMPARISON_DIMENSIONS } from "~/lib/comparison"
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [{ title: 'ALVIRA — What could you do if AI really knew you?' }, { name: "description", content: 'Turn how you think, work, and decide into living context that makes AI genuinely useful to you.' }],
+    meta: [{ title: 'ALVIRA — What could you do if AI really knew you?' }, { name: "description", content: 'Discover, organize, and compile your knowledge so ChatGPT, Claude, Gemini, and Cursor actually understand you.' }],
   }),
   component: Home,
 });
@@ -86,15 +86,15 @@ function Home() {
           </h1>
 
           <p className="mt-6 sm:mt-8 text-base leading-relaxed text-warm-gray-dark dark:text-warm-gray sm:text-lg max-w-2xl mx-auto">
-            ALVIRA uncovers how you think, work, and decide—then turns it into living, portable context that makes every AI conversation more useful to you.
+            ALVIRA learns how you think, work, and decide — then turns what it learns into context your AI can actually use.
           </p>
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <a
-              href="/app"
+              href="/interview"
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-mineral-dark dark:bg-mineral text-ink-light dark:text-ink px-7 py-3.5 text-base font-semibold hover:bg-mineral-dark/90 dark:hover:bg-mineral/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system motion-reduce:transition-none transition-colors duration-200"
             >
-              Build my AI profile
+              Start the interview
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
@@ -107,7 +107,7 @@ function Home() {
             </a>
           </div>
           <p className="mt-5 font-mono text-xs text-warm-gray-dark dark:text-warm-gray">
-            Already have notes, a résumé, or a journal? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Upload it and skip ahead.</a>
+            Already have context? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Bring it with you.</a>
           </p>
           <p className="mt-2 font-mono text-xs text-warm-gray-dark/70 dark:text-warm-gray/70">
             Free to start · No credit card
@@ -116,7 +116,69 @@ function Home() {
       </section>
 
       {/* ================================================================ */}
-      {/* 2. Problem / benefit summary */}
+      {/* 2. Show the mechanism */}
+      {/* ================================================================ */}
+      <section className="border-y border-gray-200 bg-gray-950 px-6 py-16 dark:border-gray-800 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center">
+            <span className="font-mono text-xs uppercase tracking-wide text-system">What “knowing you” looks like</span>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">You tell ALVIRA. It learns. Your AI gets the context.</h2>
+          </div>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <div className="border border-gray-800 bg-gray-900 p-6">
+              <div className="font-mono text-xs text-system">01 / YOU SAY</div>
+              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“I usually need to understand the bigger picture before I make a decision.”</p>
+            </div>
+            <div className="border border-system/40 bg-gray-900 p-6">
+              <div className="font-mono text-xs text-system">02 / ALVIRA LEARNS</div>
+              <p className="mt-5 text-sm font-semibold text-white">Decision-making preference</p>
+              <p className="mt-2 font-mono text-sm text-gray-300">Context-first</p>
+              <div className="mt-5 flex items-center gap-3"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-800"><div className="h-full w-[91%] rounded-full bg-system" /></div><span className="font-mono text-xs text-system">91%</span></div>
+            </div>
+            <div className="border border-gray-800 bg-gray-900 p-6">
+              <div className="font-mono text-xs text-system">03 / YOUR AI NOW KNOWS</div>
+              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“Give me the bigger picture before recommending a course of action.”</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* 2. Context sources */}
+      {/* ================================================================ */}
+      <section className="border-t border-gray-200 bg-white px-6 py-16 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Start with what already exists</span>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">Your context is already out there.</h2>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Bring the parts of yourself you want ALVIRA to understand. It can use existing sources as evidence, then interview you to fill the gaps.</p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Websites", "Personal sites, portfolios, blogs, company sites, Shopify stores"],
+              ["Professional", "LinkedIn, résumé, GitHub, presentations, work samples"],
+              ["Social", "Profiles and public posts that reflect your voice, interests, and taste"],
+              ["Your files", "Notes, journals, documents, exports, and existing AI context"],
+            ].map(([title, body]) => (
+              <div key={title} className="border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 border border-system/30 bg-system/5 p-6 dark:bg-system/10">
+            <div className="grid gap-6 md:grid-cols-3">
+              <div><p className="font-mono text-xs text-system-dark dark:text-system">01 / OBSERVE</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">ALVIRA identifies patterns and evidence across your sources.</p></div>
+              <div><p className="font-mono text-xs text-system-dark dark:text-system">02 / ASK</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">It asks about gaps, contradictions, and things that need your confirmation.</p></div>
+              <div><p className="font-mono text-xs text-system-dark dark:text-system">03 / BUILD</p><p className="mt-2 text-sm text-gray-700 dark:text-gray-300">Confirmed understanding becomes reusable AI context you can take anywhere.</p></div>
+            </div>
+          </div>
+          <p className="mt-6 font-mono text-xs text-gray-500 dark:text-gray-400">You choose the sources. ALVIRA distinguishes observed information from inference and user-confirmed knowledge.</p>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* 3. Problem / benefit summary */}
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-4xl text-center">

@@ -225,16 +225,10 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
               <strong className="text-gray-900 dark:text-gray-100">
                 How it works:
               </strong>{" "}
-              Get{" "}
-              <a
-                href="/pricing"
-                className="underline underline-offset-2 text-system-dark dark:text-system hover:text-system transition-colors"
-              >
-                ALVIRA Pro
-              </a>{" "}
-              first ($20/mo or $192/yr), then purchase Reflect Build below.
-              Reflect Care is optional — add it anytime to keep your portrait
-              evolving.
+              Reflect Build is a standalone one-time purchase. ALVIRA Pro is
+              optional for unlimited interviews, multiple profiles, and
+              continuous context updates. Reflect Care is optional — add it
+              anytime for managed portrait refreshes and hosting.
             </p>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
               <div className="flex flex-col rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8">
@@ -251,18 +245,8 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
                   <span className="mt-3 inline-block font-mono text-xs text-system-dark dark:text-system">
                     One-time payment
                   </span>
-                  <span className="mt-2 inline-block font-mono text-[11px] text-amber-700 dark:text-amber-400">
-                    Requires active{" "}
-                    <a
-                      href="/pricing"
-                      className="underline underline-offset-2 hover:text-amber-500 transition-colors"
-                    >
-                      ALVIRA Pro
-                    </a>{" "}
-                    subscription ($20/mo)
-                  </span>
                   <span className="mt-3 inline-block font-mono text-[11px] text-gray-500 dark:text-gray-400">
-                    First year total: $341 with annual Pro ($149 + $192)
+                    No ALVIRA Pro subscription required
                   </span>
                   <ul className="mt-8 space-y-3 text-sm text-gray-600 dark:text-gray-400">
                     {[
@@ -386,17 +370,15 @@ function MeosPage() {
         }
         setAuthenticated(true);
         const entitlements: string[] = await getEntitlements().catch(() => [] as string[]);
-        if (
-          (user.tier === "pro" || user.tier === "lifetime") &&
-          entitlements.includes("meos_build")
-        ) {
+        const reflectAuthorized = Boolean(user.isOwner || entitlements.includes("meos_build"));
+        if (reflectAuthorized) {
           setCanAccess(true);
         }
         if (authenticated || user.id) {
           const result = await getMeosProfiles();
           setProfiles(result as Profile[]);
           setSelected((result[0] as Profile | undefined)?.id ?? "");
-          setIsPreviewUser(!entitlements.includes("meos_build"));
+          setIsPreviewUser(!reflectAuthorized);
         }
       } catch {
         setAuthenticated(false);

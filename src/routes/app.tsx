@@ -1390,7 +1390,7 @@ function AppPage() {
         <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
             
-            {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
+            {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -1564,7 +1564,7 @@ function AppPage() {
 
             {/* Input area */}
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-              {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}\n              {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
+              {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}\n              {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
               {/* Generate button — always available */}
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">

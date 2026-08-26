@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 import { buildCarryOverClaims, handoffTopic, oppositeOffering, type ProfileOffering } from "~/lib/profile-handoff";
-import { CONTEXT_SOURCE_OPTIONS } from "~/lib/context-engine";
+import {
+  CONTEXT_SOURCE_OPTIONS,
+  type ContextSource,
+} from "~/lib/context-engine";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
@@ -328,7 +331,14 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
 
 function AppPage() {
   // Screen state: "start" | "seed-review" | "interview" | "output" | "api-error"
-  const [screen, setScreen] = useState<"start" | "seed-review" | "interview" | "output" | "api-error">("start");
+  const [screen, setScreen] = useState<
+  "start" | "seed-review" | "interview" | "output" | "api-error"
+>("start");
+
+// Sources supplied before, during, or after the interview.
+// The interview should treat these as additional evidence rather than
+// forcing the user through a separate intake workflow.
+const [contextSources, setContextSources] = useState<ContextSource[]>([]);
 
   // Start screen state
   const [topic, setTopic] = useState("");

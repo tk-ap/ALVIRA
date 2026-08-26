@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 import { buildCarryOverClaims, handoffTopic, oppositeOffering, type ProfileOffering } from "~/lib/profile-handoff";
-import { CONTEXT_SOURCE_OPTIONS } from "~/lib/context-engine";
+import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
@@ -74,6 +74,7 @@ function createInitialState(tier: Tier, topic: string, offering: "context" | "me
     domains,
     history: [],
     currentDomain: null,
+    contextSources: [],
   };
 }
 
@@ -354,6 +355,11 @@ function AppPage() {
   const [waiting, setWaiting] = useState(false);
   const [interviewError, setInterviewError] = useState("");
   const [startError, setStartError] = useState("");
+  const [contextSources, setContextSources] = useState<ContextSource[]>([]);
+  const [contextSourceType, setContextSourceType] = useState<ContextSourceType>("website");
+  const [contextSourceLocator, setContextSourceLocator] = useState("");
+  const [showContextSources, setShowContextSources] = useState(false);
+  const [contextSessionNotice, setContextSessionNotice] = useState<string | null>(null);
   // Upload-to-seed state
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -411,6 +417,23 @@ function AppPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addContextSource = (source: ContextSource) => {
+    setContextSources((current) => current.some((item) => item.locator === source.locator && item.type === source.type) ? current : [...current, source]);
+    setState((current) => current ? { ...current, contextSources: [...(current.contextSources ?? []), source], history: [...current.history, { role: "assistant", content: `Source added: ${source.label}. I’ll consider it as evidence while we build your context.` }] } : current);
+    setContextSourceLocator("");
+    setContextSessionNotice(`${source.label} added to this context session.`);
+  };
+
+  const addContextUrl = () => {
+    if (contextSourceLocator.trim()) addContextSource({ ...makeSource(contextSourceLocator), type: contextSourceType });
+  };
+
+  useEffect(() => {
+    if (!state || contextSources.length === 0) return;
+    const existing = state.contextSources ?? [];
+    if (existing.length !== contextSources.length) setState({ ...state, contextSources });
+  }, [state, contextSources]);
 
   // Computed values
   const graph = state ? (offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(state.tier)) : [];
@@ -1305,7 +1328,7 @@ function AppPage() {
     }
   };
 
-  // ── Render helpers ──
+  const contextSourcePanel = (\n    <section className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">\n      <div className="flex items-start justify-between gap-4"><div><span className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">&lt;add-context /&gt;</span><h2 className="mt-1 text-sm font-semibold">Add context without leaving your interview</h2><p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Sources stay attached to this session and are considered alongside what you tell ALVIRA.</p></div><button type="button" onClick={() => setShowContextSources((shown) => !shown)} className="shrink-0 rounded-md border border-gray-300 px-3 py-1.5 font-mono text-xs hover:border-emerald-500 dark:border-gray-700">{showContextSources ? "Hide" : "Add source"}</button></div>\n      {contextSources.length > 0 && <p className="mt-3 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">{contextSources.length} source{contextSources.length === 1 ? "" : "s"} attached</p>}\n      {showContextSources && <div className="mt-4 space-y-3"><div className="grid gap-2 sm:grid-cols-3">{CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-3 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 dark:border-gray-700"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}</div>{(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); addContextUrl(); }} className="flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white dark:bg-gray-100 dark:text-gray-900">Attach</button></form>}{(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="text-xs text-gray-600 dark:text-gray-400">Choose a file from the upload control below; it will be reviewed before becoming part of your context.</p>}</div>}\n      {contextSessionNotice && <p role="status" className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">{contextSessionNotice}</p>}\n    </section>\n  );\n\n  // ── Render helpers ──
   const chatBubbleClass = (role: "user" | "assistant") =>
     role === "assistant"
       ? "rounded-lg rounded-tl-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700"
@@ -1450,7 +1473,7 @@ function AppPage() {
             {offering === "meos" ? "ALVIRA Reflect interview" : "AI profile interview"}
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
-          <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
+          <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">\n            {offering === "context" && contextSourcePanel}
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
@@ -1528,7 +1551,7 @@ function AppPage() {
             {offering === "meos" && meosPhase === "validation" && <ValidationCard claims={meosClaims} onBack={() => setMeosPhase("review")} onComplete={handleValidation} />}
 
             {/* Input area */}
-            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">\n              {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
               {/* Generate button — always available */}
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">

@@ -794,7 +794,7 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );
+    const initialState = createInitialState(existing.tier, existing.topic, offering, preview);
 
     try {
       const result = await askNextQuestion(initialState);

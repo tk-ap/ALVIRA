@@ -1,0 +1,48 @@
+name: Apply hero refinement
+
+on:
+  push:
+    branches: [hero-redesign]
+
+permissions:
+  contents: write
+
+jobs:
+  refine:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Refine homepage hero
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/index.tsx')
+          s = p.read_text()
+          replacements = {
+            '<personal-ai-knowledge-system />': '<AI-context-built-around-you />',
+            'ALVIRA uncovers how you think, work, and decide—then turns it into living, portable context that makes every AI conversation more useful to you.': 'ALVIRA learns how you think, work, and decide — so your AI can work with you, not just for you.',
+            'Build my AI profile': 'Start the interview',
+            'href="/app"': 'href="/interview"',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Missing expected text: {old}')
+              s = s.replace(old, new, 1)
+
+          marker = '''      {/* ================================================================ */}\n      {/* 2. Problem / benefit summary */}\n      {/* ================================================================ */}'''
+          demo = '''      {/* ================================================================ */}\n      {/* 2. Show the mechanism */}\n      {/* ================================================================ */}\n      <section className="border-y border-gray-200 bg-gray-950 px-6 py-16 dark:border-gray-800 sm:px-8 sm:py-20">\n        <div className="mx-auto max-w-5xl">\n          <div className="text-center">\n            <span className="font-mono text-xs uppercase tracking-wide text-system">What “knowing you” looks like</span>\n            <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">You tell ALVIRA. It learns. Your AI gets the context.</h2>\n          </div>\n          <div className="mt-12 grid gap-4 md:grid-cols-3">\n            <div className="border border-gray-800 bg-gray-900 p-6">\n              <div className="font-mono text-xs text-system">01 / YOU SAY</div>\n              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“I usually need to understand the bigger picture before I make a decision.”</p>\n            </div>\n            <div className="border border-system/40 bg-gray-900 p-6">\n              <div className="font-mono text-xs text-system">02 / ALVIRA LEARNS</div>\n              <p className="mt-5 text-sm font-semibold text-white">Decision-making preference</p>\n              <p className="mt-2 font-mono text-sm text-gray-300">Context-first</p>\n              <div className="mt-5 flex items-center gap-3"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-800"><div className="h-full w-[91%] rounded-full bg-system" /></div><span className="font-mono text-xs text-system">91%</span></div>\n            </div>\n            <div className="border border-gray-800 bg-gray-900 p-6">\n              <div className="font-mono text-xs text-system">03 / YOUR AI NOW KNOWS</div>\n              <p className="mt-5 font-mono text-sm leading-7 text-gray-300">“Give me the bigger picture before recommending a course of action.”</p>\n            </div>\n          </div>\n        </div>\n      </section>\n\n'''
+          if marker not in s:
+              raise SystemExit('Hero insertion marker not found')
+          s = s.replace(marker, demo + marker, 1)
+          p.write_text(s)
+          PY
+      - name: Commit refinement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/index.tsx
+          git commit -m "Refine hero around interview-first positioning"
+          git push

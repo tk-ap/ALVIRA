@@ -98,7 +98,7 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
-const SUPPORTED_UPLOAD_EXTENSIONS = ["txt", "md", "docx"] as const;
+const SUPPORTED_UPLOAD_EXTENSIONS = ["txt", "md", "docx", "zip"] as const;
 
 function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -130,6 +130,33 @@ async function parseDocx(file: File): Promise<string> {
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n");
   return text.trim();
+}
+
+/** Extract readable text files and .docx files from a ZIP bundle in memory. */
+async function parseZip(file: File): Promise<string> {
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const parts: string[] = [];
+  const entries = Object.values(zip.files).filter((entry) => !entry.dir).slice(0, 40);
+  for (const entry of entries) {
+    const name = entry.name.toLowerCase();
+    try {
+      if (name.endsWith(".txt") || name.endsWith(".md")) {
+        const text = (await entry.async("string")).trim();
+        if (text) parts.push(`## ${entry.name}\n${text}`);
+      } else if (name.endsWith(".docx")) {
+        const bytes = await entry.async("uint8array");
+        const nested = await JSZip.loadAsync(bytes);
+        const docXml = await nested.file("word/document.xml")?.async("string");
+        if (docXml) {
+          const text = docXml.replace(/<w:p[^>]*>/g, "\n").replace(/<w:tab[^>]*>/g, "\t").replace(/<w:br[^>]*\/?\s*>/g, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+          if (text) parts.push(`## ${entry.name}\n${text}`);
+        }
+      }
+    } catch {
+      // Ignore an unreadable entry; other readable bundle files can still seed the review.
+    }
+  }
+  return parts.join("\n\n").slice(0, 120_000);
 }
 
 // ── Markdown preview component ──
@@ -874,7 +901,7 @@ function AppPage() {
     }
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
     if (!(SUPPORTED_UPLOAD_EXTENSIONS as readonly string[]).includes(ext)) {
-      setUploadError("Only .txt, .md, and .docx files are supported right now.");
+      setUploadError("Only .txt, .md, .docx, and .zip files are supported right now.");
       return;
     }
 
@@ -882,7 +909,7 @@ function AppPage() {
     setUploadError("");
     setInterviewError("");
     try {
-      const text = ext === "docx" ? await parseDocx(file) : await readFileAsText(file);
+      const text = ext === "docx" ? await parseDocx(file) : ext === "zip" ? await parseZip(file) : await readFileAsText(file);
       if (!text.trim()) {
         throw new Error("That file appears to be empty — nothing to extract.");
       }
@@ -1411,7 +1438,7 @@ function AppPage() {
           <div className="mx-auto max-w-3xl">
             {offering && contextSourcePanel}
             
-            {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
+            {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -1586,7 +1613,7 @@ function AppPage() {
 
             {/* Input area */}
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-              {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}\n              {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
+              {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
               {/* Generate button — always available */}
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
@@ -2075,10 +2102,10 @@ function AppPage() {
                 <div className="mt-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-4">
                   <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{offering === "meos" ? "Upload a journal, self-assessment, or coaching notes" : "Upload a resume, bio, or notes"}</p>
                   <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                    ALVIRA extracts what it can from a .txt, .md, or .docx file — you review the claims, then the interview only asks about what's missing. Your file is never stored.
+                    ALVIRA extracts readable content from a .txt, .md, .docx, or .zip bundle — you review the claims, then the interview only asks about what's missing. Your file is never stored.
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />
+                    <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -2087,7 +2114,7 @@ function AppPage() {
                     >
                       {uploading ? "Extracting knowledge…" : "Choose file…"}
                     </button>
-                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">.txt · .md · .docx · max 5MB</span>
+                    <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">.txt · .md · .docx · .zip · max 5MB</span>
                   </div>
                   {uploadError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{uploadError}</p>}
                 </div>

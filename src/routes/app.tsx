@@ -938,7 +938,8 @@ function AppPage() {
 
     const seedOffering = seedOfferingRef.current;
     const currentGraph = seedOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
-    const initialState = createInitialState(tier, uploadTopic, seedOffering, isPreview);
+    const seedTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
+    const initialState = createInitialState(tier, seedTopic, seedOffering, isPreview);
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {

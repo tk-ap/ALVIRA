@@ -2042,16 +2042,6 @@ function AppPage() {
 
             {authUser && <div className="text-center"><a href="/dashboard" className="font-mono text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline">Or resume a saved profile →</a></div>}
 
-            {/* Start button */}
-            <button
-              type="button"
-              onClick={handleStart}
-              disabled={offering !== "meos" && !topic.trim()}
-              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
-            >
-              {offering === "meos" ? "Start my Reflect interview" : "Start interview"}
-            </button>
-
             {/* Upload-to-seed option */}
             {(offering === "context" || offering === "meos") && (
               <div className="pt-2">
@@ -2081,7 +2071,17 @@ function AppPage() {
                 </div>
               </div>
             )}
-            </div>
+
+
+            {/* Start button */}
+            <button
+              type="button"
+              onClick={handleStart}
+              disabled={offering !== "meos" && !topic.trim()}
+              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+            >
+              {offering === "meos" ? "Start my Reflect interview" : "Start interview"}
+            </button>            </div>
 
             {offering === "context" && (
               <aside className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800/50">

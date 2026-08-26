@@ -107,7 +107,7 @@ function Home() {
             </a>
           </div>
           <p className="mt-5 font-mono text-xs text-warm-gray-dark dark:text-warm-gray">
-            Already have context? <a href="/interview" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Bring it with you.</a>
+            Already have context? <a href="/context" className="underline underline-offset-2 hover:text-system-dark dark:hover:text-system">Bring it with you.</a>
           </p>
           <p className="mt-2 font-mono text-xs text-warm-gray-dark/70 dark:text-warm-gray/70">
             Free to start · No credit card

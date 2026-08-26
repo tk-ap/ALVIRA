@@ -23,6 +23,7 @@ export interface InterviewState {
   >;
   history: Message[];
   currentDomain: string | null;
+  contextSources?: import("~/lib/context-engine").ContextSource[];
 }
 
 export interface Domain {

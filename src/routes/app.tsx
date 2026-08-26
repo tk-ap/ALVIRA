@@ -770,7 +770,7 @@ function AppPage() {
       ? [topic.trim(), ...chapterSuggestions].filter(Boolean).join(", ")
       : topic.trim();
     if (offering === "meos" && !isPreview && !meosAuthorized) { setStartError("Reflect Build ($149 one-time) must be purchased before continuing. ALVIRA Pro is optional."); return; }
-    if (!trimmed) return;
+    if (offering !== "meos" && !trimmed) return;
 
     // MeOS topics are introspective/philosophical — skip the context-oriented validation
     if (offering !== "meos") {
@@ -794,7 +794,7 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(tier, trimmed, offering === "meos" ? "meos" : "context", isPreview);
+    const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );(tier, trimmed, offering === "meos" ? "meos" : "context", isPreview);
 
     try {
       const result = await askNextQuestion(initialState);

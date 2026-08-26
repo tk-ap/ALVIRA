@@ -1563,7 +1563,8 @@ function AppPage() {
             {offering === "meos" && meosPhase === "validation" && <ValidationCard claims={meosClaims} onBack={() => setMeosPhase("review")} onComplete={handleValidation} />}
 
             {/* Input area */}
-            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">\n              {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+              {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}\n              {offering === "context" && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx" className="hidden" onChange={handleFileChange} />}
               {/* Generate button — always available */}
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">

@@ -1,0 +1,38 @@
+name: PR85 repair
+on:
+  push:
+    branches:
+      - codex/unify-context-multi-source
+    paths:
+      - '.github/workflows/pr85-repair.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/unify-context-multi-source
+          fetch-depth: 0
+      - name: Repair Reflect start logic
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/app.tsx')
+          s = p.read_text()
+          bad = 'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );'
+          good = 'const initialState = createInitialState(existing.tier, existing.topic, offering, preview);'
+          if bad not in s:
+              raise SystemExit('Expected malformed seed initializer was not found')
+          s = s.replace(bad, good, 1)
+          s = s.replace('disabled={!topic.trim()}', 'disabled={offering !== "meos" && !topic.trim()}')
+          p.write_text(s)
+          PY
+          git diff --check
+          git add src/routes/pr85-repair.yml src/routes/app.tsx .github/workflows/pr85-repair.yml 2>/dev/null || git add src/routes/app.tsx .github/workflows/pr85-repair.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix: allow Reflect to start without a prompt'
+          git push origin codex/unify-context-multi-source

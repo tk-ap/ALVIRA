@@ -56,27 +56,14 @@ export function Header() {
       <header className="sticky top-0 z-50 w-full border-b border-warm-gray/20 bg-ink-light/90 backdrop-blur-sm dark:bg-ink/90">
         <div className="mx-auto max-w-4xl px-6 py-3">
           <div className="flex items-center justify-between">
-            <a
-              href="/"
-              aria-label="ALVIRA home"
-              className="-ml-2 flex min-h-11 min-w-11 items-center px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system"
-            >
-              <img
-                src="/brand/alvira-wordmark-primary-dark.svg"
-                alt=""
-                aria-hidden="true"
-                className="hidden h-7 w-auto md:h-8 dark:block"
-              />
-              <img
-                src="/brand/alvira-wordmark-primary-light.svg"
-                alt=""
-                aria-hidden="true"
-                className="h-7 w-auto md:h-8 dark:hidden"
-              />
+            <a href="/" aria-label="ALVIRA home" className="-ml-2 flex min-h-11 min-w-11 items-center px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
+              <img src="/brand/alvira-wordmark-primary-dark.svg" alt="" aria-hidden="true" className="hidden h-7 w-auto md:h-8 dark:block" />
+              <img src="/brand/alvira-wordmark-primary-light.svg" alt="" aria-hidden="true" className="h-7 w-auto md:h-8 dark:hidden" />
             </a>
 
             <div className="hidden items-center gap-5 md:flex">
               <a href="/interview" className={linkClass}>Interview</a>
+              <a href="/context" className={linkClass}>Context</a>
               <a href="/pricing" className={linkClass}>Pricing</a>
               <a href="/meos" className="font-mono text-sm font-medium text-system hover:text-system-dark dark:text-system dark:hover:text-system-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">Reflect</a>
               {user === undefined ? (
@@ -85,9 +72,7 @@ export function Header() {
                 <div className="flex items-center gap-5">
                   <a href="/dashboard" className={linkClass}>Dashboard</a>
                   <a href="/account" className={linkClass}>Account</a>
-                  <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${linkClass} min-h-11 disabled:opacity-50`}>
-                    {loggingOut ? "..." : "Logout"}
-                  </button>
+                  <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${linkClass} min-h-11 disabled:opacity-50`}>{loggingOut ? "..." : "Logout"}</button>
                 </div>
               ) : (
                 <a href="/login" className={`${linkClass} min-h-11 flex items-center`}>Sign In</a>
@@ -96,9 +81,7 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-2 md:hidden">
-              <a href={mobileCtaHref} className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
-                {mobileCtaLabel}
-              </a>
+              <a href={mobileCtaHref} className="min-h-11 inline-flex items-center px-1 text-sm font-medium text-warm-gray-dark underline decoration-warm-gray/30 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-warm-gray dark:decoration-warm-gray/30 dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">{mobileCtaLabel}</a>
               <ThemeToggle />
               <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-controls="mobile-navigation" className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
                 <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
@@ -109,13 +92,12 @@ export function Header() {
 
           <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} mt-3 border-t border-warm-gray/20 md:hidden`}>
             <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>Interview</a>
+            <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system dark:text-system`}>ALVIRA Reflect</a>
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}
             {user ? (
-              <button type="button" onClick={() => { closeMenu(); void handleLogout(); }} disabled={loggingOut} className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}>
-                {loggingOut ? "Logging out..." : "Logout"}
-              </button>
+              <button type="button" onClick={() => { closeMenu(); void handleLogout(); }} disabled={loggingOut} className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}>{loggingOut ? "Logging out..." : "Logout"}</button>
             ) : user === null ? (
               <a href="/login" onClick={closeMenu} className={mobileLinkClass}>Sign In</a>
             ) : null}

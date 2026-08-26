@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 import { buildCarryOverClaims, handoffTopic, oppositeOffering, type ProfileOffering } from "~/lib/profile-handoff";
+import { CONTEXT_SOURCE_OPTIONS } from "~/lib/context-engine";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
@@ -2112,6 +2113,41 @@ function AppPage() {
                   </div>
                 </div>
               </aside>
+            )}
+                        {offering === "context" && (
+              <section className="mt-8 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
+                <div className="mb-5">
+                  <span className="font-mono text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                    &lt;add-context /&gt;
+                  </span>
+                  <h2 className="mt-2 text-base font-semibold text-gray-900 dark:text-gray-100">
+                    Add context from other sources
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                    ALVIRA can build your profile from more than an interview. Add one or more sources to give ALVIRA a stronger starting point.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {CONTEXT_SOURCE_OPTIONS.map((source) => (
+                    <a
+                      key={source.type}
+                      href={source.type === "interview" ? "#interview" : `/context?source=${source.type}`}
+                      className="group rounded-lg border border-gray-200 p-4 transition-colors hover:border-emerald-400 hover:bg-emerald-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/20"
+                    >
+                      <div className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {source.label} →
+                      </div>
+                      <p className="mt-1.5 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        {source.description}
+                      </p>
+                      <p className="mt-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">
+                        {source.examples}
+                      </p>
+                    </a>
+                  ))}
+                </div>
+              </section>
             )}
           </div>}
         </div>

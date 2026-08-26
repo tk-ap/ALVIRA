@@ -232,7 +232,7 @@ const TOPIC_GROUPS = [
 // ── Page ──
 export const Route = createFileRoute("/app")({
   head: () => ({
-    meta: [{ title: 'ALVIRA Interview' }, { name: "description", content: 'Build your AI profile.' }],
+    meta: [{ title: 'ALVIRA Context' }, { name: "description", content: 'Build your portable AI context.' }],
   }),
   validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined, preview: search.preview === "true" }),
   component: AppPage,
@@ -264,6 +264,45 @@ function SignupPromptBanner({ show }: { show: boolean }) {
           Create one →
         </a>
       </p>
+    </div>
+  );
+}
+
+function SeedReviewOverlay({
+  extraction,
+  decisions,
+  onDecision,
+  onRevise,
+  onClose,
+  onContinue,
+  waiting,
+}: {
+  extraction: ExtractionResult;
+  decisions: Record<number, { status: "agree" | "revise" | "skip"; text?: string }>;
+  onDecision: (index: number, status: "agree" | "revise" | "skip") => void;
+  onRevise: (index: number, text: string) => void;
+  onClose: () => void;
+  onContinue: () => void;
+  waiting: boolean;
+}) {
+  const decisionFor = (index: number) => decisions[index] ?? { status: extraction.claims[index].confidence >= 0.8 ? "agree" : "skip" };
+  const approved = extraction.claims.filter((_, index) => decisionFor(index).status !== "skip").length;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="source-review-heading">
+      <div className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+          <div><p className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Source review</p><h2 id="source-review-heading" className="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">Review before adding to this interview</h2><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Your current interview stays in place. Approve, revise, or skip these claims.</p></div>
+          <button type="button" onClick={onClose} className="rounded-md px-2 py-1 text-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Close source review">×</button>
+        </div>
+        <div className="flex-1 space-y-3 overflow-y-auto p-5">
+          {extraction.claims.length === 0 && <p className="rounded-lg border border-gray-200 p-4 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">No claims were extracted. Your interview can continue unchanged.</p>}
+          {extraction.claims.map((claim, index) => {
+            const decision = decisionFor(index);
+            return <div key={index} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"><div className="flex items-start justify-between gap-3"><p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">{claim.text}</p><span className="shrink-0 font-mono text-[10px] text-gray-500">{Math.round(claim.confidence * 100)}%</span></div><div className="mt-2 flex flex-wrap gap-1.5">{([['agree','✓ Agree'],['revise','✎ Revise'],['skip','⏭ Skip']] as const).map(([status,label]) => <button key={status} type="button" onClick={() => onDecision(index,status)} className={`rounded border px-2 py-1 font-mono text-xs ${decision.status === status ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'border-gray-300 text-gray-500 dark:border-gray-600 dark:text-gray-400'}`}>{label}</button>)}</div>{decision.status === 'revise' && <textarea value={decision.text ?? claim.text} onChange={(event) => onRevise(index,event.target.value)} rows={2} className="mt-2 w-full rounded-lg border border-gray-300 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-950" />}</div>;
+          })}
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-gray-200 px-5 py-4 dark:border-gray-700"><span className="font-mono text-xs text-gray-500">{approved} approved · {extraction.claims.length - approved} skipped</span><div className="flex gap-2"><button type="button" onClick={onClose} className={btnSecondary}>Keep interviewing</button><button type="button" onClick={onContinue} disabled={waiting} className={btnPrimary}>{waiting ? "Applying…" : "Apply & continue"}</button></div></div>
+      </div>
     </div>
   );
 }
@@ -395,6 +434,7 @@ function AppPage() {
   const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
   const [seedSource, setSeedSource] = useState<"document" | "profile" | "source">("document");
+  const [seedReviewOverlay, setSeedReviewOverlay] = useState(false);
   const seedOfferingRef = useRef<"context" | "meos">("context");
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
@@ -470,7 +510,8 @@ function AppPage() {
       setSeedSource("source");
       setExtraction(result);
       setSeedDecisions({});
-      setScreen("seed-review");
+      if (screen === "interview") setSeedReviewOverlay(true);
+      else setScreen("seed-review");
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Could not read that source.");
     } finally {
@@ -762,10 +803,11 @@ function AppPage() {
       setExtraction({
         claims,
         uncoveredDomains: targetGraph.map((domain) => domain.id).filter((id) => !coveredIds.has(id)),
-        summary: `Review what your ${source === "meos" ? "ALVIRA Reflect" : "AI Context Profile"} already knows before carrying it into ${target === "meos" ? "ALVIRA Reflect" : "your AI Context Profile"}.`,
+        summary: `Review what your ${source === "meos" ? "ALVIRA Reflect" : "ALVIRA Context"} already knows before carrying it into ${target === "meos" ? "ALVIRA Reflect" : "ALVIRA Context"}.`,
       });
       setSeedDecisions({});
-      setScreen("seed-review");
+      if (screen === "interview") setSeedReviewOverlay(true);
+      else setScreen("seed-review");
     } catch (err) {
       setStartError(err instanceof Error ? err.message : "Could not prepare the profile handoff.");
       setScreen("start");
@@ -939,7 +981,9 @@ function AppPage() {
     const seedOffering = seedOfferingRef.current;
     const currentGraph = seedOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
     const seedTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
-    const initialState = createInitialState(tier, seedTopic, seedOffering, isPreview);
+    const initialState = seedReviewOverlay && state
+      ? { ...state, topic: seedTopic }
+      : createInitialState(tier, seedTopic, seedOffering, isPreview);
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {
@@ -968,7 +1012,8 @@ function AppPage() {
         ? `${seededDomainCount} ${seededDomainCount === 1 ? "domain was" : "domains were"} carried over from your ${seedSource === "profile" ? "other ALVIRA profile" : seedSource === "source" ? "source" : "document"}. Answer the remaining questions to finish your profile.`
         : "No claims were selected — starting a fresh interview.",
     );
-    setScreen("interview");
+    if (seedReviewOverlay) setSeedReviewOverlay(false);
+    else setScreen("interview");
     setWaiting(true);
     setInterviewError("");
 
@@ -1443,7 +1488,7 @@ function AppPage() {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Compiled AI profile</h1>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Compiled ALVIRA Context</h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-mono">
                     Source-backed instructions and portable setup files · {state?.topic || topic}
                   </p>
@@ -1511,6 +1556,15 @@ function AppPage() {
         </main>
         <SignupPromptBanner show={authUser === null} />
         <TrustFooter />
+        {seedReviewOverlay && extraction && <SeedReviewOverlay
+          extraction={extraction}
+          decisions={seedDecisions}
+          onDecision={(index, status) => setSeedDecisions((current) => ({ ...current, [index]: { status, text: current[index]?.text } }))}
+          onRevise={(index, text) => setSeedDecisions((current) => ({ ...current, [index]: { status: "revise", text } }))}
+          onClose={() => { setSeedReviewOverlay(false); setExtraction(null); setSeedDecisions({}); }}
+          onContinue={() => void handleSeedContinue()}
+          waiting={waiting}
+        />}
       </div>
     );
   }
@@ -1530,7 +1584,7 @@ function AppPage() {
         <main id="main-content" className="flex-1 flex flex-col px-6">
           {/* a11y: interview page needs a single H1 — screen-reader-only, contextual to the active interview */}
           <h1 className="sr-only">
-            {offering === "meos" ? "ALVIRA Reflect interview" : "AI profile interview"}
+            {offering === "meos" ? "ALVIRA Reflect interview" : "ALVIRA Context interview"}
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
@@ -1932,7 +1986,7 @@ function AppPage() {
       {limitBanner && <UpgradeBanner reason={limitBanner} email={authUser?.email} />}
       {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className={`mx-auto w-full ${offering === "context" ? "max-w-5xl" : "max-w-lg"}`}>
+        <div className="mx-auto w-full max-w-5xl">
           
           {resumeDraft && (
             <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">
@@ -1953,7 +2007,7 @@ function AppPage() {
           )}
           <div className="mb-8 flex flex-col items-center gap-2">
             <div role="group" aria-label="What do you want to build?" className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/60">
-              <button type="button" onClick={() => handleChooseOffering("context")} aria-pressed={offering === "context"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "context" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>AI Context Profile</button>
+              <button type="button" onClick={() => handleChooseOffering("context")} aria-pressed={offering === "context"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "context" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>ALVIRA Context</button>
               <button type="button" onClick={() => handleChooseOffering("meos")} aria-pressed={offering === "meos"} className={"rounded-md px-4 py-2 font-mono text-xs font-semibold transition " + (offering === "meos" ? "bg-emerald-700 text-white" : "text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:text-emerald-400")}>ALVIRA Reflect</button>
             </div>
             <p className="font-mono text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">What would you like to build?</p>
@@ -1961,7 +2015,7 @@ function AppPage() {
 
           <div className="text-center mb-8">
             {!resumeDraft && <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-              {offering === "meos" ? "Build your living reflection" : "Build your AI profile"}
+              {offering === "meos" ? "Build your living reflection" : "Build your ALVIRA Context"}
             </h1>}
             <p className="text-gray-600 dark:text-gray-400">
               {offering === "meos"

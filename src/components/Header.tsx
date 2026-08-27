@@ -56,9 +56,9 @@ export function Header() {
       <header className="sticky top-0 z-50 w-full border-b border-warm-gray/20 bg-ink-light/90 backdrop-blur-sm dark:bg-ink/90">
         <div className="mx-auto max-w-4xl px-6 py-3">
           <div className="flex items-center justify-between">
-            <a href="/" aria-label="ALVIRA home" className="-ml-2 flex min-h-11 min-w-11 items-center px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
-              <img src="/brand/alvira-wordmark-primary-dark.svg" alt="" aria-hidden="true" className="hidden h-7 w-auto md:h-8 dark:block" />
-              <img src="/brand/alvira-wordmark-primary-light.svg" alt="" aria-hidden="true" className="h-7 w-auto md:h-8 dark:hidden" />
+            <a href="/" className="-ml-2 flex min-h-11 min-w-11 items-center px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
+              <img src="/brand/alvira-wordmark-primary-dark.svg" alt="ALVIRA wordmark" className="hidden h-7 w-auto md:h-8 dark:block" />
+              <img src="/brand/alvira-wordmark-primary-light.svg" alt="ALVIRA wordmark" className="h-7 w-auto md:h-8 dark:hidden" />
             </a>
 
             <div className="hidden items-center gap-5 md:flex">

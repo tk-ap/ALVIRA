@@ -91,10 +91,10 @@ function Home() {
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <a
-              href="/interview"
+              href="/app"
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-mineral-dark dark:bg-mineral text-ink-light dark:text-ink px-7 py-3.5 text-base font-semibold hover:bg-mineral-dark/90 dark:hover:bg-mineral/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system motion-reduce:transition-none transition-colors duration-200"
             >
-              Start the interview
+              Build your ALVIRA Context — free
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
@@ -236,6 +236,7 @@ function Home() {
                     type="button"
                     role="tab"
                     id={`profile-tab-${preview.filename}`}
+                    aria-label={`Show ${preview.label}`}
                     aria-selected={isActive}
                     aria-controls="profile-preview-panel"
                     onClick={() => setActivePreview(preview.filename)}
@@ -397,7 +398,7 @@ function Home() {
       {/* ================================================================ */}
       <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Ready to build your AI profile?</h3>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Ready to build your AI profile?</h2>
           <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">The first interview takes about 10–15 minutes. You can pause anytime and pick up where you left off.</p>
           <a
             href="/app"

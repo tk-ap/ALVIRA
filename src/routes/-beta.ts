@@ -24,6 +24,26 @@ async function requireBetaUser() {
   return { user, beta };
 }
 
+async function ensureBetaApplicationSchema() {
+  await getDb().query(`
+    CREATE TABLE IF NOT EXISTS founding_beta_applications (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      name TEXT,
+      use_case TEXT NOT NULL,
+      ai_tools TEXT,
+      ai_frequency TEXT NOT NULL,
+      feedback_commitment TEXT NOT NULL,
+      motivation TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'alvira',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await getDb().query("CREATE INDEX IF NOT EXISTS idx_founding_beta_applications_created ON founding_beta_applications(created_at DESC)");
+  await getDb().query("CREATE INDEX IF NOT EXISTS idx_founding_beta_applications_email ON founding_beta_applications(LOWER(email))");
+}
+
 export const getFoundingBetaStatus = createServerFn({ method: "GET" }).handler(async () => {
   const user = await getOptionalUser();
   if (!user) return null;
@@ -36,6 +56,80 @@ export const getFoundingBetaStatus = createServerFn({ method: "GET" }).handler(a
     expiresAt: beta.expiresAt,
   };
 });
+
+export const submitFoundingBetaApplication = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    const d = input as Record<string, unknown>;
+    const clean = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
+    const email = clean(d.email, 320).toLowerCase();
+    if (!email || !email.includes("@")) throw new Error("A valid email is required.");
+    const useCase = clean(d.useCase, 1800);
+    const frequency = clean(d.frequency, 80);
+    const commitment = clean(d.commitment, 1200);
+    const motivation = clean(d.motivation, 1800);
+    if (!useCase || !frequency || !commitment || !motivation) throw new Error("Please answer the required application questions.");
+    return {
+      name: clean(d.name, 160),
+      email,
+      useCase,
+      aiTools: clean(d.aiTools, 800),
+      frequency,
+      commitment,
+      motivation,
+      source: clean(d.source, 80) || "alvira",
+    };
+  })
+  .handler(async ({ data }) => {
+    await ensureBetaApplicationSchema();
+    const existing = (await getDb().query(
+      "SELECT id FROM founding_beta_applications WHERE LOWER(email) = LOWER($1) AND status = 'pending' ORDER BY created_at DESC LIMIT 1",
+      [data.email],
+    ))[0] as { id: string } | undefined;
+    if (existing) return { success: true, id: existing.id, alreadyApplied: true };
+
+    const id = crypto.randomUUID();
+    await getDb().query(
+      `INSERT INTO founding_beta_applications
+       (id, email, name, use_case, ai_tools, ai_frequency, feedback_commitment, motivation, source)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [id, data.email, data.name || null, data.useCase, data.aiTools || null, data.frequency, data.commitment, data.motivation, data.source],
+    );
+
+    const subject = `[FOUNDING BETA APPLICATION] ${data.email}`;
+    const body = [
+      `Application ${id}`,
+      `Source: ${data.source}`,
+      `Name: ${data.name || "not supplied"}`,
+      `Email: ${data.email}`,
+      "",
+      "What they want ALVIRA to understand:",
+      data.useCase,
+      "",
+      `AI use frequency: ${data.frequency}`,
+      `Current tools: ${data.aiTools || "not supplied"}`,
+      "",
+      "Feedback commitment:",
+      data.commitment,
+      "",
+      "Why they want to test ALVIRA:",
+      data.motivation,
+      "",
+      "No Founding Beta entitlement has been granted automatically. Review this application before approving a limited slot.",
+    ].join("\n");
+
+    try {
+      await sendEmail({
+        to: (process.env.BETA_FEEDBACK_EMAIL || FEEDBACK_INBOX).trim(),
+        replyTo: data.email,
+        subject,
+        text: body,
+      });
+    } catch (error) {
+      console.warn(`[founding-beta] application ${id} persisted but email delivery failed`, error instanceof Error ? error.message : "unknown error");
+    }
+
+    return { success: true, id, alreadyApplied: false };
+  });
 
 type FeedbackKind = "problem" | "observation" | "pulse";
 type FeedbackSeverity = "blocker" | "major" | "minor" | "note";

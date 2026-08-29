@@ -81,6 +81,20 @@ jobs:
           (() => {
             const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+            // Portability is a structural visual treatment, not motion-only. Mark it
+            // even when reduced motion is enabled so the network remains legible.
+            const portabilitySection = [...document.querySelectorAll('main > section')]
+              .find((section) => section.textContent.includes('Portable by design'));
+            if (portabilitySection) {
+              portabilitySection.dataset.scrollScene = 'portability';
+              const destinations = ['ChatGPT','Claude','Gemini','Cursor','Your agents']
+                .map((label) => [...portabilitySection.querySelectorAll('span')]
+                  .find((el) => el.textContent.trim() === label))
+                .filter(Boolean);
+              const network = destinations[0] && destinations[0].parentElement;
+              if (network) network.dataset.portabilityNetwork = 'true';
+            }
+
             // --- scroll narrative ---
             if (!reducedMotion && 'IntersectionObserver' in window) {
               const root = document.documentElement;
@@ -137,7 +151,15 @@ jobs:
                     const h = exact(section, 'h3', label); mark(h && h.parentElement);
                   });
                 } else if (scene === 'portability') {
-                  ['ChatGPT','Claude','Gemini','Cursor','Your agents'].forEach((label) => mark(exact(section, 'span', label)));
+                  const destinationNodes = ['ChatGPT','Claude','Gemini','Cursor','Your agents']
+                    .map((label) => exact(section, 'span', label))
+                    .filter(Boolean);
+                  destinationNodes.forEach(mark);
+                  const network = destinationNodes[0] && destinationNodes[0].parentElement;
+                  if (network) {
+                    network.dataset.portabilityNetwork = 'true';
+                    mark(network);
+                  }
                 } else if (scene === 'final-cta') {
                   mark(section.querySelector('h2'));
                   mark(section.querySelector('h2') && section.querySelector('h2').nextElementSibling);

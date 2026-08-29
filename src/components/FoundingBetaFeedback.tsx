@@ -128,8 +128,6 @@ export function FoundingBetaFeedback() {
     }
   };
 
-  const expiry = status.expiresAt ? new Date(status.expiresAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : null;
-
   return (
     <div className="fixed bottom-4 right-4 z-[95] w-[min(390px,calc(100vw-2rem))] font-sans">
       {open ? (
@@ -137,7 +135,7 @@ export function FoundingBetaFeedback() {
           <div className="flex items-start justify-between gap-4 border-b border-white/10 px-4 py-3">
             <div>
               <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-iridescent-dark">Founding Beta</div>
-              <p className="mt-1 text-xs text-gray-300">All ALVIRA customer features are open during early access{expiry ? ` through ${expiry}` : ""}.</p>
+              <p className="mt-1 text-xs text-gray-300">Your complimentary Founding Beta access stays with this account. During the beta, candid feedback helps shape what ALVIRA becomes.</p>
             </div>
             <button type="button" onClick={() => setOpen(false)} className="rounded-md px-2 py-1 font-mono text-xs text-gray-400 hover:bg-white/10 hover:text-white" aria-label="Close beta feedback">Close</button>
           </div>

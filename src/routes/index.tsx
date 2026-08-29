@@ -50,17 +50,38 @@ const evidence = [
 function Home() {
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [loopAutoPlay, setLoopAutoPlay] = useState(true);
+  const [loopInView, setLoopInView] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!loopAutoPlay || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReducedMotion = () => setReducedMotion(mediaQuery.matches);
+    syncReducedMotion();
+    mediaQuery.addEventListener("change", syncReducedMotion);
+
+    return () => mediaQuery.removeEventListener("change", syncReducedMotion);
+  }, []);
+
+  useEffect(() => {
+    const handleLoopVisibility = (event: Event) => {
+      const visibilityEvent = event as CustomEvent<{ visible?: boolean }>;
+      setLoopInView(Boolean(visibilityEvent.detail?.visible));
+    };
+
+    document.addEventListener("alvira:living-loop-visibility", handleLoopVisibility);
+    return () => document.removeEventListener("alvira:living-loop-visibility", handleLoopVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (!loopAutoPlay || !loopInView || reducedMotion) return;
 
     const intervalId = window.setInterval(() => {
       setActiveLoopIndex((current) => (current + 1) % loop.length);
     }, 2800);
 
     return () => window.clearInterval(intervalId);
-  }, [loopAutoPlay]);
+  }, [loopAutoPlay, loopInView, reducedMotion]);
 
   useEffect(() => {
     return () => {
@@ -75,6 +96,14 @@ function Home() {
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     resumeTimerRef.current = setTimeout(() => setLoopAutoPlay(true), 8000);
   };
+
+  const loopStatus = reducedMotion
+    ? "Motion reduced"
+    : !loopInView
+      ? "Waiting for view"
+      : loopAutoPlay
+        ? "Live cycle"
+        : "Paused";
 
   return (
     <div className="min-h-dvh flex flex-col bg-[#f4f0e9] text-[#191715] dark:bg-[#0b0e0e] dark:text-[#f4f0e9]">
@@ -342,7 +371,7 @@ function Home() {
                             <span className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${isActive ? "scale-100 bg-current" : "scale-75 bg-current opacity-25"}`} aria-hidden="true" />
                           </span>
                           <p className="mt-5 text-sm font-semibold text-white">{title}</p>
-                          <span className={`absolute inset-x-3 bottom-2 h-px origin-left bg-current transition-transform duration-[2400ms] ease-linear motion-reduce:transition-none ${isActive && loopAutoPlay ? "scale-x-100" : "scale-x-0"}`} aria-hidden="true" />
+                          <span className={`absolute inset-x-3 bottom-2 h-px origin-left bg-current transition-transform duration-[2400ms] ease-linear motion-reduce:transition-none ${isActive && loopAutoPlay && loopInView && !reducedMotion ? "scale-x-100" : "scale-x-0"}`} aria-hidden="true" />
                         </button>
                         {index < loop.length - 1 && (
                           <div className={`flex items-center justify-center font-mono text-sm transition-colors duration-300 sm:hidden ${activeLoopIndex === index ? "text-system" : "text-white/28"}`} aria-hidden="true">↓</div>
@@ -379,7 +408,7 @@ function Home() {
                     <p className="mt-2 max-w-xl text-sm leading-6 text-white/62">{loopOutputs[activeLoopIndex]}</p>
                   </div>
                   <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.12em] text-system">
-                    <span>{loopAutoPlay ? "Live cycle" : "Paused"}</span>
+                    <span>{loopStatus}</span>
                     <span aria-hidden="true">·</span>
                     <span>Reuse</span><span aria-hidden="true">↻</span><span>Capture</span>
                   </div>

@@ -50,10 +50,8 @@ function Home() {
               ALVIRA / Context Intelligence
             </p>
 
-            <h1 className="mt-7 max-w-5xl font-sans text-[clamp(3.8rem,8vw,7.4rem)] font-medium leading-[0.9] tracking-[-0.06em] text-[#191715] dark:text-[#f4f0e9]">
-              AI infers,
-              <br />
-              <strong className="font-extrabold">a lot.</strong>
+            <h1 className="mt-7 max-w-none whitespace-nowrap font-sans text-[clamp(3rem,6.7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.06em] text-[#191715] dark:text-[#f4f0e9]">
+              AI infers, <strong className="font-extrabold">a lot.</strong>
             </h1>
 
             <div className="mt-10 max-w-2xl border-l border-system/60 pl-5 sm:mt-12 sm:pl-7">

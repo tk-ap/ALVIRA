@@ -16,6 +16,29 @@ Design principle: history is evidence of maintained understanding, not a generic
 
 Design principle: maintain once, carry forward where appropriate, with preview and consent at the boundary.
 
+### Live Context / Context Mirror
+
+The interview now exposes a live Context Mirror and gives short context-aware reflections before the next targeted question. The Mirror reads the active interview state so users can see what ALVIRA is carrying forward, what is developing, and what is still being clarified.
+
+Design principle: the interview should visibly demonstrate continuity and understanding, not behave like a sequence of disconnected intake questions.
+
+## Near-term follow-up
+
+### Saved-Context-aware interview reflection
+
+The current conversational reflection layer sees the active conversation history, while the Context Mirror can also show broader seeded/carried interview state. Complete the continuity model by allowing the reflection layer to reference relevant **previously saved or seeded Context** when it materially changes the interpretation of the user's newest answer.
+
+Expected behavior:
+
+- Explicitly recognize when new information reinforces something ALVIRA already knew.
+- Surface when a new answer appears to revise or contradict older saved Context.
+- Distinguish direct user statements from ALVIRA interpretation.
+- Reference only relevant prior Context rather than dumping the full profile into every model call.
+- Preserve user review/consent before inferred changes become durable Context.
+- Make the experience feel like “ALVIRA remembered and updated its understanding,” not “the interviewer received a hidden prompt.”
+
+Beta question: **Do users notice and trust cross-session continuity when ALVIRA appropriately references what it already knew?**
+
 ## Intentionally deferred
 
 ### Private ongoing Reflect companion
@@ -43,5 +66,6 @@ Password-protected dossier export remains a useful premium/privacy enhancement, 
 - Do users prefer manual reviewed reuse or ask for governed live connections?
 - Does Bridge become more valuable after users understand manual reuse?
 - Do Reflect users return often enough to justify a persistent private companion?
+- Do users notice and trust cross-session continuity when ALVIRA appropriately references previously saved Context?
 
 Avoid expanding the product surface until these signals show where recurring value actually forms.

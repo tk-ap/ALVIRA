@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
-import { getCurrentUser, fetchUserLimits, logout, getEntitlements, claimPurchase } from "./-auth";
+import { getCurrentUser, fetchUserLimits, logout, getEntitlements, claimPurchase, setTestAccessTier } from "./-auth";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { TrustFooter } from "~/components/TrustFooter";
 
@@ -19,6 +19,8 @@ interface Limits {
   maxProfiles: number;
   maxInterviews: number;
   isOwner?: boolean;
+  canTestAccess?: boolean;
+  accessMode?: "actual" | "founder" | "free" | "pro" | "lifetime" | null;
 }
 
 const tierBadgeClass: Record<string, string> = {
@@ -121,27 +123,47 @@ function AccountPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Tier</span>
-                    <span className={`font-mono text-xs uppercase tracking-wider border px-1.5 py-0.5 rounded ${tierBadgeClass[limits.isOwner ? "founder" : limits.tier] || tierBadgeClass.free}`}>
-                      {limits.isOwner ? "FOUNDER" : limits.tier}
+                    <span className={`font-mono text-xs uppercase tracking-wider border px-1.5 py-0.5 rounded ${tierBadgeClass[limits.accessMode === "founder" ? "founder" : limits.tier] || tierBadgeClass.free}`}>
+                      {limits.accessMode === "founder" ? "FOUNDER" : limits.tier}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Interviews used</span>
                     <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                      {limits.isOwner ? `${limits.interviewCount} / Unlimited` : `${limits.interviewCount}${limits.maxInterviews < Infinity ? ` / ${limits.maxInterviews}` : ""}`}
+                      {limits.maxInterviews >= Number.MAX_SAFE_INTEGER ? `${limits.interviewCount} / Unlimited` : `${limits.interviewCount} / ${limits.maxInterviews}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Saved Contexts</span>
                     <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                      {limits.isOwner ? `${limits.profileCount} / Unlimited` : `${limits.profileCount}${limits.maxProfiles < Infinity ? ` / ${limits.maxProfiles}` : ""}`}
+                      {limits.maxProfiles >= Number.MAX_SAFE_INTEGER ? `${limits.profileCount} / Unlimited` : `${limits.profileCount} / ${limits.maxProfiles}`}
                     </span>
                   </div>
                 </div>
               </div>
 
+              {limits.canTestAccess && (
+                <div className="rounded-lg border border-iridescent/60 dark:border-iridescent-dark/60 bg-iridescent-soft/30 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-iridescent/30 dark:border-iridescent-dark/30">
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">Test access tier</h2>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Session-only simulation. This does not change the account's stored billing tier.</p>
+                  </div>
+                  <div className="px-5 py-4 flex flex-wrap gap-2">
+                    {(["founder", "free", "pro", "lifetime", "actual"] as const).map((mode) => (
+                      <button key={mode} type="button" onClick={async () => { await setTestAccessTier({ data: { mode } }); await loadLimits(); }} className={`rounded-md border px-3 py-2 font-mono text-xs uppercase tracking-wide transition-colors ${limits.accessMode === mode ? "border-iridescent bg-iridescent-soft text-iridescent-dark dark:border-iridescent-dark dark:text-iridescent-dark" : "border-gray-300 text-gray-600 hover:border-gray-500 dark:border-gray-700 dark:text-gray-400"}`}>
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Upgrade section */}
-              {limits.tier === "free" ? (
+              {limits.accessMode === "founder" ? (
+                <div className="rounded-lg border border-iridescent dark:border-iridescent-dark bg-iridescent-soft/30 overflow-hidden">
+                  <div className="px-5 py-4"><h2 className="font-semibold text-gray-900 dark:text-gray-100">Founder access</h2><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Full product access for owner and controlled acceptance testing.</p></div>
+                </div>
+              ) : limits.tier === "free" ? (
                 <div className="rounded-lg border border-system dark:border-system-dark bg-system-soft/50 dark:bg-ink/30 overflow-hidden">
                   <div className="px-5 py-4 border-b border-system dark:border-system-dark">
                     <h2 className="font-semibold text-gray-900 dark:text-gray-100">Upgrade your plan</h2>

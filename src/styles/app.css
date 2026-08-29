@@ -9,7 +9,7 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Brand canvas */
+  /* Brand canvas — restrained so Doctor Bird signals stay intentional */
   --color-ink: #0b0e0e;
   --color-ink-light: #f4f0e9;
 
@@ -34,41 +34,46 @@
   --color-gray-900: #1d1a18;
   --color-gray-950: #11100f;
 
-  /* Human / Reflect range */
-  --color-warm-50: #faf5f1;
-  --color-warm-100: #efe3d7;
-  --color-warm-200: #ddc8b2;
-  --color-warm-300: #bb9475;
-  --color-warm-400: #a47a55;
-  --color-warm-500: #956842;
-  --color-warm-600: #8b6548;
-  --color-warm-700: #6d4a2d;
-  --color-warm-800: #523621;
-  --color-warm-900: #362316;
-  --color-warm-950: #1d110a;
+  /* Doctor Bird / human range — red-bill warmth, kept muted for product use */
+  --color-warm-50: #fcf4f1;
+  --color-warm-100: #f6e4de;
+  --color-warm-200: #ebc7ba;
+  --color-warm-300: #d99a84;
+  --color-warm-400: #cb765d;
+  --color-warm-500: #bd5f49;
+  --color-warm-600: #a84d3c;
+  --color-warm-700: #873d31;
+  --color-warm-800: #693027;
+  --color-warm-900: #47231e;
+  --color-warm-950: #27120f;
 
   /* Compatibility aliases retained for existing product surfaces */
-  --color-green-50: #faf5f1;
-  --color-green-100: #efe3d7;
-  --color-green-200: #ddc8b2;
-  --color-green-300: #bb9475;
-  --color-green-400: #a47a55;
-  --color-green-500: #956842;
-  --color-green-600: #8b6548;
-  --color-green-700: #6d4a2d;
-  --color-green-800: #523621;
-  --color-green-900: #362316;
-  --color-green-950: #1d110a;
+  --color-green-50: #fcf4f1;
+  --color-green-100: #f6e4de;
+  --color-green-200: #ebc7ba;
+  --color-green-300: #d99a84;
+  --color-green-400: #cb765d;
+  --color-green-500: #bd5f49;
+  --color-green-600: #a84d3c;
+  --color-green-700: #873d31;
+  --color-green-800: #693027;
+  --color-green-900: #47231e;
+  --color-green-950: #27120f;
 
-  /* Context Intelligence signal */
-  --color-system: #2d9b8c;
-  --color-system-soft: #edf7f5;
-  --color-system-dark: #217a6e;
+  /* Doctor Bird iridescent green — primary Context Intelligence signal */
+  --color-system: #168b78;
+  --color-system-soft: #edf7f4;
+  --color-system-dark: #0f6b5d;
 
-  /* Human context signal */
-  --color-human: #b0886c;
-  --color-human-soft: #faf6f1;
-  --color-human-dark: #8b6548;
+  /* Doctor Bird red-bill accent — human context / Reflect signal */
+  --color-human: #c56550;
+  --color-human-soft: #fbf1ee;
+  --color-human-dark: #944535;
+
+  /* Iridescent secondary — reserved for sparse states, depth, and identity detail */
+  --color-iridescent: #655a83;
+  --color-iridescent-soft: #f1eff7;
+  --color-iridescent-dark: #49415f;
 }
 
 @layer base {
@@ -109,7 +114,7 @@
     border-radius: 10px !important;
     background: var(--color-warm-900) !important;
     border: 1px solid var(--color-system) !important;
-    box-shadow: 0 0 22px rgba(45, 155, 140, 0.14) !important;
+    box-shadow: 0 0 22px rgba(22, 139, 120, 0.14) !important;
   }
 
   div:has(> img[src="/brand/alvira-compact-mark.svg"]) img {

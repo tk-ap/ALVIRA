@@ -1,4 +1,4 @@
-// ── Question Generator: minimal LLM call for phrasing only ──
+// ── Question Generator: contextual reflection + targeted next question ──
 
 import { createServerFn } from "@tanstack/react-start";
 import OpenAI from "openai";
@@ -11,9 +11,7 @@ interface GenerateInput {
   isClarification?: boolean;
 }
 
-interface GenerateResult {
-  question: string;
-}
+interface GenerateResult { question: string; }
 
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY || "";
@@ -24,20 +22,11 @@ function hasApiKey(): boolean {
   return (process.env.OPENAI_API_KEY || "").length > 0;
 }
 
-/**
- * Server function: calls OpenAI with a narrow prompt focused ONLY on phrasing.
- * The LLM receives: the domain to probe + conversation history.
- * It does NOT receive the knowledge graph, completion criteria, or validation state.
- */
 export const generateQuestion = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
     const d = data as GenerateInput;
-    if (!d.domain || !d.domain.label) {
-      throw new Error("Domain is required.");
-    }
-    if (!Array.isArray(d.history)) {
-      throw new Error("History is required.");
-    }
+    if (!d.domain || !d.domain.label) throw new Error("Domain is required.");
+    if (!Array.isArray(d.history)) throw new Error("History is required.");
     return {
       domain: d.domain as Domain,
       history: d.history as Message[],
@@ -46,41 +35,38 @@ export const generateQuestion = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
-    if (!hasApiKey()) {
-      throw new Error("API key not configured");
-    }
+    if (!hasApiKey()) throw new Error("API key not configured");
 
     const openai = getOpenAIClient();
-
-    const tierLabel =
-      data.tier === "personal"
-        ? "an individual capturing their personal knowledge and preferences"
-        : data.tier === "team"
-          ? "a team capturing their shared workflows and domain knowledge"
-          : "a large enterprise capturing organization-wide operational knowledge";
+    const tierLabel = data.tier === "personal"
+      ? "an individual capturing their personal knowledge and preferences"
+      : data.tier === "team"
+        ? "a team capturing their shared workflows and domain knowledge"
+        : "a large enterprise capturing organization-wide operational knowledge";
 
     const conversationText = data.history
       .map((m) => `${m.role === "assistant" ? "ALVIRA" : "User"}: ${m.content}`)
       .join("\n\n");
+    const hasUserContext = data.history.some((message) => message.role === "user" && message.content.trim().length > 0);
 
     const clarificationInstruction = data.isClarification
-      ? `\nIMPORTANT: This is a clarification question. The user's previous answer was unclear or too vague. Ask a more specific question to get better detail about "${data.domain.label}". Be encouraging but direct — guide them toward a concrete, detailed response.`
+      ? `\nIMPORTANT: The user's previous answer was unclear or incomplete. Reflect only on what is actually supported, then ask a more concrete clarification question about "${data.domain.label}".`
       : "";
 
-    const systemPrompt = `You are Alvira, an AI Knowledge Elicitation Agent. Your purpose is to discover, validate, organize, and compile the knowledge required for AI systems to accurately represent, assist, and make decisions on behalf of a person or organization. You are not a chatbot — you are an adaptive interviewer whose primary goal is to uncover complete, accurate, and reusable knowledge.
+    const systemPrompt = `You are ALVIRA, a Context Intelligence interviewer. Your job is not to fire questions at the user. Your job is to visibly maintain understanding over time, help the user see what you are carrying forward, and ask only questions that reduce a real gap.
 
-## Core Principles
-- Every question must have a purpose. Every answer should reduce uncertainty.
-- Prefer depth over breadth until a topic is sufficiently complete.
-- Assume users do not know what an AI needs to know, what information is missing, or how to organize it.
-- Continuously evaluate: what do I know? what remains unknown? what assumptions exist? what could cause errors if omitted?
-- Never assume missing information. Instead, investigate.
-- When information appears ambiguous, incomplete, inconsistent, or unusually broad — ask follow-up questions before accepting it.
-- Optimize for accuracy, completeness, consistency, specificity, and long-term usefulness — never for speed.
-- Be conversational, curious. Ask one question at a time. Use previous answers to shape future questions.
+## Interaction model
+- Ask one question at a time, but when prior user context exists, first respond briefly to what you learned.
+- Use relevant earlier answers when they materially change the interpretation of the latest answer.
+- Explicitly notice continuity when useful: reinforcement, a changed position, a new constraint, a tension, or a missing distinction.
+- Never invent facts. Distinguish direct user statements from interpretation. Use language such as "I'm reading this as..." or "That seems to add..." when making an inference.
+- If two answers appear inconsistent, surface the tension neutrally instead of silently choosing one.
+- Avoid generic praise, therapy language, summaries that merely repeat the user's words, and long lectures.
+- The reflection should normally be 1-3 concise sentences. Then ask ONE specific question.
+- The next question must still focus on the current unresolved domain.
 
-## Current Task
-The domain you are probing: "${data.domain.label}" — ${data.domain.promptHint}
+## Current task
+The unresolved area you are probing: "${data.domain.label}" — ${data.domain.promptHint}
 The user is ${tierLabel}.
 
 Conversation so far:
@@ -89,22 +75,22 @@ ${conversationText || "(this is the first question)"}
 ---
 ${clarificationInstruction}
 
-Ask ONE specific question to deepen understanding of the "${data.domain.label}" domain. Be conversational. Do NOT mention the domain name explicitly. Do NOT ask about other domains.
+${hasUserContext ? "Return a short context-aware reflection followed by one targeted question." : "This is the first question, so do not fabricate a reflection. Ask one targeted, conversational question."}
+Do not mention internal domain IDs, confidence scores, the knowledge graph, or system mechanics.
 
-Respond ONLY with a JSON object: {"question": "your question here"}`;
+Respond ONLY with a JSON object: {"question": "the complete ALVIRA response, including the brief reflection when appropriate and then the single next question"}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: "Ask your next question." },
+        { role: "user", content: "Continue the interview." },
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7,
+      temperature: 0.65,
     });
 
     const raw = response.choices[0]?.message?.content || "";
-
     let question: string;
     try {
       const parsed = JSON.parse(raw);
@@ -112,23 +98,14 @@ Respond ONLY with a JSON object: {"question": "your question here"}`;
     } catch {
       question = raw;
     }
-
     return { question } as GenerateResult;
   });
 
-/**
- * Server function: generates a brief clarification when the user asks
- * a clarifying question instead of answering the domain question.
- */
 export const generateClarification = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
     const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier };
-    if (!d.userQuestion || !d.domainLabel) {
-      throw new Error("User question and domain label are required.");
-    }
-    if (!Array.isArray(d.history)) {
-      throw new Error("History is required.");
-    }
+    if (!d.userQuestion || !d.domainLabel) throw new Error("User question and domain label are required.");
+    if (!Array.isArray(d.history)) throw new Error("History is required.");
     return {
       userQuestion: d.userQuestion as string,
       domainLabel: d.domainLabel as string,
@@ -137,18 +114,14 @@ export const generateClarification = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
-    if (!hasApiKey()) {
-      throw new Error("API key not configured");
-    }
-
+    if (!hasApiKey()) throw new Error("API key not configured");
     const openai = getOpenAIClient();
+    const systemPrompt = `You are ALVIRA, a Context Intelligence interviewer. The user just asked a clarifying question in response to your question about a specific area.
 
-    const systemPrompt = `You are Alvira, an AI Knowledge Elicitation Agent. The user just asked a clarifying question in response to your question about a specific domain.
-
-The domain you were asking about: "${data.domainLabel}"
+The area you were asking about: "${data.domainLabel}"
 The user asked: "${data.userQuestion}"
 
-Briefly explain what you meant by your question about this domain. Be helpful, conversational, and give a concrete example if appropriate. Keep it to 2-3 sentences. Do NOT ask a new question — just explain and clarify.
+Briefly explain what you meant. Be helpful and concrete. Use relevant conversation context if it genuinely helps, but do not invent facts. Keep it to 2-3 sentences. Do NOT ask a new question here — just clarify.
 
 Respond ONLY with a JSON object: {"clarification": "your clarification here"}`;
 
@@ -159,11 +132,10 @@ Respond ONLY with a JSON object: {"clarification": "your clarification here"}`;
         { role: "user", content: "Please clarify." },
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7,
+      temperature: 0.65,
     });
 
     const raw = response.choices[0]?.message?.content || "";
-
     let clarification: string;
     try {
       const parsed = JSON.parse(raw);
@@ -171,6 +143,5 @@ Respond ONLY with a JSON object: {"clarification": "your clarification here"}`;
     } catch {
       clarification = raw;
     }
-
     return { clarification };
   });

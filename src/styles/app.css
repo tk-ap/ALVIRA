@@ -153,7 +153,6 @@
       filter 520ms ease var(--scroll-delay, 0ms),
       border-color 360ms ease var(--scroll-delay, 0ms),
       background-color 360ms ease var(--scroll-delay, 0ms);
-    will-change: opacity, transform, filter;
   }
 
   html[data-scroll-enhanced="true"] [data-scroll-reveal="true"]:not([data-scroll-visible="true"]) [data-scroll-step="true"] {

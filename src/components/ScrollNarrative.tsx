@@ -31,8 +31,8 @@ function markSceneSteps(section: HTMLElement, scene: string) {
   }
 
   if (scene === "autonomy") {
-    markStep(exactText(section, "p", "The system can move quickly while optimizing for the wrong objective. More autonomy can simply make a bad assumption travel farther.")?.parentElement);
-    markStep(exactText(section, "p", "Context gives capability something to judge against.")?.parentElement);
+    const panels = Array.from(section.querySelectorAll<HTMLElement>(".space-y-8 > div"));
+    panels.slice(0, 2).forEach(markStep);
     return;
   }
 

@@ -73,11 +73,92 @@ jobs:
           html = re.sub(r'<script\b[^>]*>.*?</script>', '', html, flags=re.I | re.S)
           html = re.sub(r'<link\b[^>]*rel=["\']modulepreload["\'][^>]*>', '', html, flags=re.I)
 
-          # Re-introduce only a tiny, preview-local interaction for the living-context
-          # diagram. It touches no application state, APIs, auth, persistence, or routes.
-          loop_preview = r'''
+          # Re-introduce only preview-local visual behavior. This script manipulates
+          # presentation state only; it has no access to app APIs, auth, persistence,
+          # routing, uploads, interviews, Reflect, or other protected product behavior.
+          preview_interaction = r'''
           <script>
           (() => {
+            const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // --- scroll narrative ---
+            if (!reducedMotion && 'IntersectionObserver' in window) {
+              const root = document.documentElement;
+              root.dataset.scrollEnhanced = 'true';
+
+              const sceneLabels = [
+                ['Why Context Intelligence', 'why-context'],
+                ['Autonomy without context', 'autonomy'],
+                ['Capability is not understanding', 'capability'],
+                ['How ALVIRA builds context', 'sources'],
+                ['A living system', 'living-loop'],
+                ['Evidence of understanding', 'evidence'],
+                ['Portable by design', 'portability'],
+                ['Begin with context', 'final-cta']
+              ];
+
+              const exact = (section, selector, text) =>
+                [...section.querySelectorAll(selector)].find((el) => el.textContent.trim() === text);
+              const mark = (el) => { if (el) el.dataset.scrollStep = 'true'; };
+
+              const sections = [...document.querySelectorAll('main > section')];
+              const observed = [];
+
+              sections.forEach((section) => {
+                const match = sceneLabels.find(([label]) => section.textContent.includes(label));
+                if (!match) return;
+                const scene = match[1];
+                section.dataset.scrollScene = scene;
+                section.dataset.scrollReveal = 'true';
+
+                if (scene === 'why-context') {
+                  ['Goals','Constraints','History','Preferences','Decisions','Projects'].forEach((label) => mark(exact(section, 'div', label)));
+                  const contextLabel = exact(section, 'p', 'ALVIRA Context');
+                  mark(contextLabel && contextLabel.closest('div.border'));
+                } else if (scene === 'autonomy') {
+                  const first = [...section.querySelectorAll('p')].find((el) => el.textContent.startsWith('The system can move quickly'));
+                  const second = exact(section, 'p', 'Context gives capability something to judge against.');
+                  mark(first && first.parentElement);
+                  mark(second && second.parentElement);
+                } else if (scene === 'capability') {
+                  ['Capability becomes generic.','Autonomy amplifies the gap.','Context turns raw capability into situated judgment.'].forEach((label) => {
+                    const h = exact(section, 'h3', label); mark(h && h.parentElement);
+                  });
+                } else if (scene === 'sources') {
+                  ['Conversation','Documents','Links','Files'].forEach((label) => {
+                    const h = exact(section, 'h3', label); mark(h && h.parentElement);
+                  });
+                } else if (scene === 'evidence') {
+                  ['Carried forward','Still uncertain','Changed','Ready to reuse'].forEach((label) => {
+                    const h = exact(section, 'h3', label); mark(h && h.parentElement);
+                  });
+                } else if (scene === 'portability') {
+                  ['ChatGPT','Claude','Gemini','Cursor','Your agents'].forEach((label) => mark(exact(section, 'span', label)));
+                } else if (scene === 'final-cta') {
+                  mark(section.querySelector('h2'));
+                  mark(section.querySelector('h2') && section.querySelector('h2').nextElementSibling);
+                  mark(section.querySelector('a'));
+                }
+
+                [...section.querySelectorAll('[data-scroll-step="true"]')].forEach((step, index) => {
+                  step.style.setProperty('--scroll-delay', Math.min(index * 95, 475) + 'ms');
+                });
+                observed.push(section);
+              });
+
+              const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                  const section = entry.target;
+                  const visible = entry.isIntersecting && entry.intersectionRatio >= .16;
+                  section.dataset.scrollInView = visible ? 'true' : 'false';
+                  if (visible) section.dataset.scrollVisible = 'true';
+                });
+              }, { threshold: [0,.16,.35,.6], rootMargin: '-8% 0px -12% 0px' });
+
+              observed.forEach((section) => observer.observe(section));
+            }
+
+            // --- living context cycle ---
             const system = document.getElementById('system');
             if (!system) return;
 
@@ -87,97 +168,87 @@ jobs:
 
             const stageGrid = fiveColumnGrids[0];
             const detailGrid = fiveColumnGrids[fiveColumnGrids.length - 1];
-            const stages = [...stageGrid.children]
-              .map((wrapper) => wrapper.firstElementChild)
-              .filter(Boolean)
-              .slice(0, 5);
-            const details = [...detailGrid.children].slice(0, 5);
+            const stages = [...stageGrid.querySelectorAll('button')].slice(0, 5);
+            const details = [...detailGrid.querySelectorAll('button')].slice(0, 5);
             if (stages.length !== 5 || details.length !== 5) return;
 
             const labels = ['Capture', 'Understand', 'Reflect', 'Update', 'Reuse'];
             const outputs = [
-              'New evidence enters the system without erasing what is already known.',
-              'Fragments resolve into a more coherent model of goals, constraints, history, and intent.',
-              'Patterns, gaps, contradictions, and meaningful changes become visible.',
-              'Confirmed changes revise the maintained context instead of silently overwriting it.',
-              'Appropriate context is prepared to travel into the next AI interaction — then the cycle begins again.'
+              'New evidence enters the context layer without erasing what is already known.',
+              'Signals become structured understanding: what is established, uncertain, changing, or missing.',
+              'Patterns, contradictions, and meaningful changes are surfaced for review instead of disappearing between interactions.',
+              'Confirmed changes become part of the maintained context model, preserving history while keeping the present accurate.',
+              'Appropriate context becomes portable into the next AI interaction — then new evidence starts the cycle again.'
             ];
 
-            const outputLabel = [...system.querySelectorAll('p')]
-              .find((el) => el.textContent.trim() === 'Cycle output');
-            const outputCopy = outputLabel && outputLabel.nextElementSibling;
-            const panel = stageGrid.closest('.relative.overflow-hidden');
-
-            const status = document.createElement('div');
-            status.setAttribute('aria-live', 'polite');
-            status.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:18px;font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-system);';
-            status.innerHTML = '<span style="width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 16px currentColor"></span><span>Live context cycle</span>';
-            panel && panel.insertBefore(status, stageGrid);
-
-            const signal = document.createElement('span');
-            signal.setAttribute('aria-hidden', 'true');
-            signal.style.cssText = 'position:absolute;right:12px;top:12px;width:8px;height:8px;border-radius:999px;background:currentColor;box-shadow:0 0 18px currentColor;transition:opacity .25s ease,transform .25s ease;';
+            const activeLabel = [...system.querySelectorAll('p')].find((el) => el.textContent.trim() === 'Active stage');
+            const activeRow = activeLabel && activeLabel.parentElement;
+            const activeStage = activeRow && activeRow.querySelector('span');
+            const outputCopy = activeRow && activeRow.parentElement && activeRow.parentElement.querySelector('p.mt-2');
+            const liveStatus = [...system.querySelectorAll('span')].find((el) => ['Live cycle','Paused'].includes(el.textContent.trim()));
 
             let active = 0;
             let interval = null;
             let resumeTimer = null;
-            const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let inView = false;
 
             function render(index) {
               active = index;
               stages.forEach((stage, i) => {
-                stage.style.cursor = 'pointer';
-                stage.style.transition = 'opacity .28s ease, transform .28s ease, background-color .28s ease, box-shadow .28s ease';
-                stage.style.opacity = i === active ? '1' : '.42';
-                stage.style.transform = i === active ? 'translateY(-3px)' : 'translateY(0)';
-                stage.style.boxShadow = i === active ? '0 0 0 1px currentColor inset' : 'none';
                 stage.setAttribute('aria-pressed', i === active ? 'true' : 'false');
-                if (i === active) stage.appendChild(signal);
+                stage.style.opacity = i === active ? '1' : '.48';
+                stage.style.transform = i === active ? 'translateY(-3px)' : 'translateY(0)';
               });
-
               details.forEach((detail, i) => {
-                detail.style.transition = 'opacity .28s ease, border-color .28s ease';
-                detail.style.opacity = i === active ? '1' : '.24';
-                detail.style.borderColor = i === active ? 'var(--color-system)' : 'rgba(255,255,255,.10)';
+                detail.style.opacity = i === active ? '1' : '.35';
               });
-
+              if (activeStage) activeStage.textContent = `0${active + 1} / ${labels[active]}`;
               if (outputCopy) outputCopy.textContent = outputs[active];
-              status.lastElementChild.textContent = `Live context cycle · ${labels[active]}`;
+            }
+
+            function stop() {
+              clearInterval(interval);
+              interval = null;
+              if (liveStatus) liveStatus.textContent = 'Paused';
             }
 
             function start() {
-              if (reducedMotion) return;
+              if (reducedMotion || !inView) return;
               clearInterval(interval);
-              interval = setInterval(() => render((active + 1) % stages.length), 1900);
+              interval = setInterval(() => render((active + 1) % stages.length), 2800);
+              if (liveStatus) liveStatus.textContent = 'Live cycle';
             }
 
             function pauseThenResume() {
-              clearInterval(interval);
+              stop();
               clearTimeout(resumeTimer);
-              if (!reducedMotion) resumeTimer = setTimeout(start, 6000);
+              if (!reducedMotion) resumeTimer = setTimeout(start, 8000);
             }
 
-            stages.forEach((stage, i) => {
-              stage.setAttribute('role', 'button');
-              stage.setAttribute('tabindex', '0');
-              stage.setAttribute('aria-label', `Inspect ${labels[i]} stage`);
-              stage.addEventListener('click', () => { render(i); pauseThenResume(); });
-              stage.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  render(i);
-                  pauseThenResume();
-                }
-              });
+            [...stages, ...details].forEach((control, index) => {
+              const stageIndex = index % 5;
+              control.addEventListener('click', () => { render(stageIndex); pauseThenResume(); });
             });
 
+            if ('IntersectionObserver' in window) {
+              const loopObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                  inView = entry.isIntersecting && entry.intersectionRatio >= .16;
+                  if (inView) start(); else stop();
+                });
+              }, { threshold: [0,.16,.35], rootMargin: '-8% 0px -12% 0px' });
+              loopObserver.observe(system);
+            } else {
+              inView = true;
+              start();
+            }
+
             render(0);
-            start();
           })();
           </script>
           '''
 
-          html = html.replace('</body>', loop_preview + '\n</body>', 1)
+          html = html.replace('</body>', preview_interaction + '\n</body>', 1)
           path.write_text(html)
           PY
 

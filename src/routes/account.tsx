@@ -18,12 +18,14 @@ interface Limits {
   profileCount: number;
   maxProfiles: number;
   maxInterviews: number;
+  isOwner?: boolean;
 }
 
 const tierBadgeClass: Record<string, string> = {
   free: "border-gray-400 dark:border-gray-500 text-gray-500 dark:text-gray-400",
   pro: "border-system dark:border-system text-system dark:text-system",
   lifetime: "border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-400",
+  founder: "border-iridescent dark:border-iridescent-dark text-iridescent dark:text-iridescent-dark",
 };
 
 function AccountPage() {
@@ -119,20 +121,20 @@ function AccountPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Tier</span>
-                    <span className={`font-mono text-xs uppercase tracking-wider border px-1.5 py-0.5 rounded ${tierBadgeClass[limits.tier] || tierBadgeClass.free}`}>
-                      {limits.tier}
+                    <span className={`font-mono text-xs uppercase tracking-wider border px-1.5 py-0.5 rounded ${tierBadgeClass[limits.isOwner ? "founder" : limits.tier] || tierBadgeClass.free}`}>
+                      {limits.isOwner ? "FOUNDER" : limits.tier}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Interviews used</span>
                     <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                      {limits.interviewCount}{limits.maxInterviews < Infinity ? ` / ${limits.maxInterviews}` : ""}
+                      {limits.isOwner ? `${limits.interviewCount} / Unlimited` : `${limits.interviewCount}${limits.maxInterviews < Infinity ? ` / ${limits.maxInterviews}` : ""}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Saved Contexts</span>
                     <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                      {limits.profileCount}{limits.maxProfiles < Infinity ? ` / ${limits.maxProfiles}` : ""}
+                      {limits.isOwner ? `${limits.profileCount} / Unlimited` : `${limits.profileCount}${limits.maxProfiles < Infinity ? ` / ${limits.maxProfiles}` : ""}`}
                     </span>
                   </div>
                 </div>

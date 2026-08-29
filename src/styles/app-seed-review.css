@@ -1,0 +1,157 @@
+/* Stage 3 — seed/extracted-context review surface only.
+   Scoped to the unique extraction summary strip in the seed-review render branch.
+   Presentation only: no extraction, approval, revision, seeding, or navigation logic changes. */
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) {
+  align-items: flex-start;
+  padding-top: clamp(2.75rem, 6vw, 5rem);
+  padding-bottom: clamp(4rem, 8vw, 6.5rem);
+}
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) > .mx-auto {
+  max-width: 56rem;
+}
+
+/* Review heading should read like an inspection surface, not a modal workflow. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) h1 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) h1 + p {
+  max-width: 46rem;
+  margin-top: 0.8rem;
+  line-height: 1.75;
+}
+
+/* Back control becomes quiet navigation metadata. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) > .mx-auto > button:first-child {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+
+/* Extraction summary = current context state, not three generic cards. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .sm\:grid-cols-3 {
+  gap: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-system) 26%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-system) 18%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .sm\:grid-cols-3 > div {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 1rem 1.1rem;
+}
+
+@media (min-width: 640px) {
+  html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .sm\:grid-cols-3 > div + div {
+    border-left: 1px solid color-mix(in srgb, var(--color-gray-500) 18%, transparent);
+  }
+}
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .sm\:grid-cols-3 .text-2xl {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.45rem);
+  letter-spacing: -0.04em;
+}
+
+/* Domain groups become inspectable context records. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-6.space-y-4 > div {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-gray-500) 18%, transparent);
+  background: color-mix(in srgb, var(--color-gray-50) 40%, transparent);
+  box-shadow: none;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-6.space-y-4 > div {
+  background: color-mix(in srgb, white 1.8%, transparent);
+}
+
+/* Domain header behaves like state metadata. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-6.space-y-4 > div > div:first-child {
+  background: color-mix(in srgb, var(--color-system) 3%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--color-system) 18%, transparent);
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+
+/* Claims get a small state rail so individual pieces of understanding are legible. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .divide-y > div {
+  position: relative;
+  padding-left: 1.15rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .divide-y > div::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.8rem;
+  bottom: 0.8rem;
+  width: 2px;
+  background: color-mix(in srgb, var(--color-system) 36%, transparent);
+}
+
+/* Confidence/verify pill is evidence metadata, not a badge. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .rounded-full {
+  border-radius: 0;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  background: transparent !important;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+/* Evidence trace is visually subordinate but clearly inspectable. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .font-mono.text-\[10px\].leading-relaxed {
+  padding-left: 0.65rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-iridescent) 34%, transparent);
+}
+
+/* Agree / revise / skip behave like state choices rather than tiny generic buttons. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-2\.5.flex.flex-wrap button {
+  border-radius: 0;
+  min-height: 2rem;
+  padding-inline: 0.65rem;
+  letter-spacing: 0.025em;
+}
+
+/* Revision textarea becomes a focused evidence-edit surface. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) textarea {
+  border-radius: 0;
+  border-left: 2px solid color-mix(in srgb, var(--color-iridescent) 68%, transparent);
+  background: color-mix(in srgb, var(--color-iridescent) 3%, transparent);
+}
+
+/* Footer reads as a commit boundary: what will be carried forward. */
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-8.flex.flex-col.sm\:flex-row {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-system) 30%, transparent);
+  border-left-width: 3px;
+  background: color-mix(in srgb, var(--color-system) 3.5%, transparent);
+  padding: 1rem 1.1rem;
+}
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-8.flex.flex-col.sm\:flex-row button {
+  border-radius: 0;
+  min-height: 2.65rem;
+}
+
+html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-8.flex.flex-col.sm\:flex-row button:last-child {
+  background: var(--color-system-dark) !important;
+  color: white;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .mt-8.flex.flex-col.sm\:flex-row button:last-child {
+  background: color-mix(in srgb, var(--color-system) 72%, var(--color-ink)) !important;
+}
+
+@media (max-width: 639px) {
+  html[data-alvira-app-shell="true"] main:has(> .mx-auto.w-full.max-w-3xl > .mt-5.grid.grid-cols-1.sm\:grid-cols-3.gap-3) .sm\:grid-cols-3 > div + div {
+    border-top: 1px solid color-mix(in srgb, var(--color-gray-500) 16%, transparent);
+  }
+}

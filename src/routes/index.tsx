@@ -123,11 +123,16 @@ function Home() {
                       <span className="h-2.5 w-2.5 rounded-full bg-system shadow-[0_0_18px_color-mix(in_srgb,var(--color-system)_60%,transparent)]" aria-hidden="true" />
                     </div>
                     <div className="mt-5 space-y-3">
-                      {["Known", "Changing", "Uncertain", "Reusable"].map((state, index) => (
+                      {[
+                        ["Known", "text-system-dark dark:text-system", "bg-system/45", "h-px"],
+                        ["Changing", "text-human-dark dark:text-human", "bg-human/55", "h-px"],
+                        ["Uncertain", "text-iridescent-dark dark:text-iridescent", "bg-iridescent/55", "h-px"],
+                        ["Reusable", "text-system-dark dark:text-system", "bg-system/80", "h-[2px]"],
+                      ].map(([state, tone, line, weight], index) => (
                         <div key={state} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                          <span className="font-mono text-[10px] text-system">0{index + 1}</span>
-                          <span className="h-px bg-system/25" aria-hidden="true" />
-                          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#5f574f] dark:text-white/55">{state}</span>
+                          <span className={`font-mono text-[10px] ${tone}`}>0{index + 1}</span>
+                          <span className={`${weight} ${line}`} aria-hidden="true" />
+                          <span className={`font-mono text-[10px] uppercase tracking-[0.1em] ${tone}`}>{state}</span>
                         </div>
                       ))}
                     </div>

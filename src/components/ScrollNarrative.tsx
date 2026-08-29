@@ -31,7 +31,8 @@ function markSceneSteps(section: HTMLElement, scene: string) {
   }
 
   if (scene === "autonomy") {
-    const panels = Array.from(section.querySelectorAll<HTMLElement>(".space-y-8 > div"));
+    const panels = Array.from(section.querySelectorAll<HTMLElement>("div.border"))
+      .filter((panel) => panel.textContent?.includes("PROMPT"));
     panels.slice(0, 2).forEach(markStep);
     return;
   }
@@ -84,16 +85,9 @@ function markSceneSteps(section: HTMLElement, scene: string) {
   }
 
   if (scene === "portability") {
-    const destinations = ["ChatGPT", "Claude", "Gemini", "Cursor", "Your agents"]
-      .map((label) => exactText(section, "span", label))
-      .filter((element): element is HTMLElement => Boolean(element));
-
-    destinations.forEach(markStep);
-    const rail = destinations[0]?.parentElement;
-    if (rail) {
-      rail.dataset.portabilityRail = "true";
-      markStep(rail);
-    }
+    ["ChatGPT", "Claude", "Gemini", "Cursor", "Your agents"].forEach((label) =>
+      markStep(exactText(section, "span", label)),
+    );
     return;
   }
 

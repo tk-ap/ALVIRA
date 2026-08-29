@@ -46,13 +46,8 @@ export const Route = createRootRoute({
       { rel: "stylesheet", href: appSeedReviewCss },
       { rel: "stylesheet", href: appOutputCss },
       { rel: "stylesheet", href: appSecondaryCss },
-      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "32x32",
-        href: "/favicon-32x32.png",
-      },
+      { rel: "icon", type: "image/svg+xml", href: "/brand/alvira-context-frame.svg?v=2" },
+      { rel: "shortcut icon", href: "/brand/alvira-context-frame.svg?v=2" },
       {
         rel: "apple-touch-icon",
         sizes: "180x180",

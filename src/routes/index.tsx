@@ -95,7 +95,7 @@ function Home() {
             <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">Why Context Intelligence</p>
-                <h2 className="mt-5 font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">AI can be capable and still misunderstand you.</h2>
+                <h2 className="mt-5 font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">AI is ultra capable but still misunderstands you.</h2>
               </div>
               <div className="grid gap-10 lg:grid-cols-2">
                 <div className="border-t border-[#191715]/20 pt-5 dark:border-white/20">

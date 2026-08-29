@@ -51,12 +51,12 @@ function Home() {
             </p>
 
             <h1 className="mt-7 max-w-none whitespace-nowrap font-sans text-[clamp(3rem,6.7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.06em] text-[#191715] dark:text-[#f4f0e9]">
-              AI infers, <strong className="font-extrabold">a lot.</strong>
+              AI infers.
             </h1>
 
             <div className="mt-10 max-w-2xl border-l border-system/60 pl-5 sm:mt-12 sm:pl-7">
               <p className="font-display text-3xl leading-[1.02] tracking-[-0.025em] text-[#5c5148] dark:text-[#c9bdb0] sm:text-4xl">
-                What changes when it has the context that truly matters?
+                Context makes it matter.
               </p>
               <p className="mt-6 max-w-xl text-base leading-7 text-[#6d6258] dark:text-[#a99f94] sm:text-lg">
                 ALVIRA builds a living understanding of your goals, preferences, history, constraints, patterns, projects, and decisions — then keeps that context useful as you change.

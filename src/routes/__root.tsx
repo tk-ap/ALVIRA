@@ -7,6 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
+import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
 
 export const Route = createRootRoute({
@@ -60,6 +61,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
+      <ScrollNarrative />
       <Outlet />
     </RootDocument>
   );

@@ -8,7 +8,7 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — ALVIRA" },
-      { name: "description", content: "Free, Pro, Lifetime, and limited Founding Beta access for ALVIRA Context." },
+      { name: "description", content: "Free, Pro, Lifetime, and limited Founding Beta access for ALVIRA Context and Reflect." },
     ],
   }),
   component: Pricing,
@@ -18,6 +18,7 @@ const sharedPaidFeatures = [
   "Unlimited guided interviews",
   "Multiple saved Contexts",
   "Continuous Context updates",
+  "Full ongoing ALVIRA Reflect",
   "Markdown, JSON, and TOON exports",
   "Reuse workspace for ChatGPT, Claude, Gemini, and Cursor",
   "Context History — currently in beta",
@@ -31,10 +32,11 @@ function Pricing() {
       name: "Free",
       price: "$0",
       cadence: "forever",
-      description: "Build your first maintained ALVIRA Context and see whether continuity changes how useful AI feels to you.",
+      description: "Build your first maintained ALVIRA Context and experience the full Context loop before deciding whether you need more.",
       features: [
         "1 saved Context",
         "3 guided interviews",
+        "Basic ALVIRA Reflect on your saved Context",
         "All current Context domains",
         "Markdown, JSON, and TOON export",
         "No credit card required",
@@ -47,7 +49,7 @@ function Pricing() {
       name: "Pro",
       price: billing === "annual" ? "$192" : "$20",
       cadence: billing === "annual" ? "/year" : "/month",
-      description: "For people who want ALVIRA to keep learning, updating, and carrying Context forward as part of how they work.",
+      description: "For people who want ALVIRA to keep learning, reflecting, updating, and carrying Context forward as part of how they work.",
       features: [...sharedPaidFeatures],
       cta: "Get Pro",
       href: billing === "annual" ? STRIPE_LINKS.annual : STRIPE_LINKS.pro,
@@ -58,11 +60,11 @@ function Pricing() {
       name: "Lifetime",
       price: LIFETIME_PRICE,
       cadence: "one-time",
-      description: "The current ALVIRA Context feature set without a recurring subscription, for as long as ALVIRA continues to operate the service.",
+      description: "The current core ALVIRA Context + Reflect feature set without a recurring subscription, for as long as ALVIRA continues to operate the service.",
       features: [
         ...sharedPaidFeatures,
         "One-time payment — no automatic renewal",
-        "Future premium products, team plans, API access, and third-party subscriptions remain separate",
+        "Future premium services, team plans, API access, and third-party subscriptions remain separate",
       ],
       cta: "Go Lifetime",
       href: STRIPE_LINKS.lifetime,
@@ -79,8 +81,8 @@ function Pricing() {
             <div className="max-w-3xl">
               <span className="inline-block rounded-md border border-system px-3 py-1.5 font-mono text-xs tracking-wide text-system-dark dark:border-system-dark dark:text-system">&lt;pricing /&gt;</span>
               <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">Start by seeing whether better Context actually helps.</h1>
-              <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Free is enough to build and try your first maintained Context. Upgrade when you want ALVIRA to become an ongoing part of how you work with AI.</p>
-              <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">ALVIRA Reflect is a separate product capability and may have separate commercial terms as it develops.</p>
+              <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Free is enough to build, reflect on, and try your first maintained Context. Upgrade when you want ALVIRA to become an ongoing part of how you work with AI.</p>
+              <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">Context and Reflect are parts of the same ALVIRA loop: capture → understand → reflect → update → reuse.</p>
             </div>
 
             <div className="mt-10 flex">
@@ -104,7 +106,7 @@ function Pricing() {
               ))}
             </div>
 
-            <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm leading-relaxed text-gray-600 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400"><strong className="text-gray-900 dark:text-gray-100">What is live vs. developing?</strong> Interviews, saved Contexts, ongoing updates, current exports, Reuse, and the first Context History experience are in the product now. Context History is still being validated in beta. New premium modules, broader integrations, team features, and API access should not be assumed to be included until they are explicitly listed here.</div>
+            <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm leading-relaxed text-gray-600 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400"><strong className="text-gray-900 dark:text-gray-100">What is live vs. developing?</strong> Interviews, saved Contexts, Reflect, ongoing updates, current exports, Reuse, and the first Context History experience are in the product now. Context History is still being validated in beta. New premium services, broader integrations, team features, and API access should not be assumed to be included until they are explicitly listed here.</div>
           </div>
         </section>
 
@@ -113,7 +115,7 @@ function Pricing() {
             <div>
               <span className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">Limited Founding Beta</span>
               <h2 className="mt-3 text-3xl font-bold tracking-tight">Want to help shape ALVIRA instead of just buying it?</h2>
-              <p className="mt-4 max-w-3xl leading-relaxed text-gray-600 dark:text-gray-400">A small number of testers receive complimentary unlimited ALVIRA access for the life of their approved account. In return, we’re looking for people who will genuinely use the product during the beta and give candid feedback on the workflow, UI, relevance, effectiveness, confusion, and failures they encounter.</p>
+              <p className="mt-4 max-w-3xl leading-relaxed text-gray-600 dark:text-gray-400">A small number of testers receive complimentary unlimited ALVIRA access, including full Reflect, for the life of their approved account. In return, we’re looking for people who will genuinely use the product during the beta and give candid feedback on the workflow, UI, relevance, effectiveness, confusion, and failures they encounter.</p>
               <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Applications are reviewed individually. This is a separate founding entitlement, not “free Pro forever,” and access is never granted automatically from the form.</p>
             </div>
             <a href="/founding-beta" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-system px-6 py-3 font-semibold text-white dark:text-gray-950">Apply for a slot →</a>
@@ -125,9 +127,9 @@ function Pricing() {
             <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">The simple distinction</span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Which path fits?</h2>
             <div className="mt-10 grid gap-6 md:grid-cols-3">
-              <article className="border-t border-gray-300 pt-5 dark:border-gray-700"><h3 className="font-semibold">Free</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I want to find out whether maintained Context is useful to me.</p></article>
-              <article className="border-t border-system pt-5"><h3 className="font-semibold">Pro / Lifetime</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I already know I want ALVIRA as an ongoing tool; I’m choosing recurring vs. one-time payment.</p></article>
-              <article className="border-t border-iridescent pt-5 dark:border-iridescent-dark"><h3 className="font-semibold">Founding Beta</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I genuinely want to test the product closely and help determine what makes it viable for more users.</p></article>
+              <article className="border-t border-gray-300 pt-5 dark:border-gray-700"><h3 className="font-semibold">Free</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I want to experience Context + Reflect and find out whether maintained Context is useful to me.</p></article>
+              <article className="border-t border-system pt-5"><h3 className="font-semibold">Pro / Lifetime</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I already know I want the full ALVIRA loop as an ongoing tool; I’m choosing recurring vs. one-time payment.</p></article>
+              <article className="border-t border-iridescent pt-5 dark:border-iridescent-dark"><h3 className="font-semibold">Founding Beta</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I genuinely want to test the full product closely and help determine what makes it viable for more users.</p></article>
             </div>
           </div>
         </section>

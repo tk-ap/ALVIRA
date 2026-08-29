@@ -26,7 +26,7 @@ function markSceneSteps(section: HTMLElement, scene: string) {
       markStep(exactText(section, "div", label)),
     );
     markStep(exactText(section, "p", "ALVIRA Context")?.closest("div.border"));
-    markStep(exactText(section, "span", "Reusable")?.closest("div.border"));
+    markStep(exactText(section, "span", "Reusable")?.closest("div.flex-1"));
     return;
   }
 
@@ -103,7 +103,7 @@ export function ScrollNarrative() {
 
       const steps = Array.from(section.querySelectorAll<HTMLElement>('[data-scroll-step="true"]'));
       steps.forEach((step, index) => {
-        step.style.setProperty("--scroll-delay", `${Math.min(index * 95, 475)}ms`);
+        step.style.setProperty("--scroll-delay", `${Math.min(index * 85, 425)}ms`);
       });
       observed.push(section);
     });
@@ -112,7 +112,7 @@ export function ScrollNarrative() {
       (entries) => {
         entries.forEach((entry) => {
           const section = entry.target as HTMLElement;
-          const visible = entry.isIntersecting && entry.intersectionRatio >= 0.16;
+          const visible = entry.isIntersecting && entry.intersectionRatio >= 0.08;
           section.dataset.scrollInView = visible ? "true" : "false";
           if (visible) section.dataset.scrollVisible = "true";
 
@@ -124,8 +124,8 @@ export function ScrollNarrative() {
         });
       },
       {
-        threshold: [0, 0.16, 0.35, 0.6],
-        rootMargin: "-8% 0px -12% 0px",
+        threshold: [0, 0.08, 0.2, 0.4, 0.65],
+        rootMargin: "-6% 0px -10% 0px",
       },
     );
 

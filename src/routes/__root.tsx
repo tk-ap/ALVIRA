@@ -7,8 +7,10 @@ import {
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
+import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
+import appShellCss from "~/styles/app-shell.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -35,6 +37,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: appShellCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       {
         rel: "icon",
@@ -61,6 +64,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
+      <AppShellInheritance />
       <ScrollNarrative />
       <Outlet />
     </RootDocument>

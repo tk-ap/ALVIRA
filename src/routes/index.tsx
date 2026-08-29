@@ -111,6 +111,40 @@ function Home() {
           </div>
         </section>
 
+        <section className="border-b border-[#191715]/10 bg-[#0d1110] text-[#f4f0e9] dark:border-white/10 dark:bg-[#080b0a]">
+          <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 sm:py-24 lg:px-10">
+            <div className="grid gap-14 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-human">Autonomy without context</p>
+                <h2 className="mt-5 max-w-xl font-display text-5xl leading-[0.92] tracking-[-0.04em] sm:text-6xl">Without context, autonomy is just inference with permission.</h2>
+                <p className="mt-7 max-w-lg text-base leading-7 text-white/55">AI can search, write, plan, execute, spend, message, and decide. None of those capabilities tell it what matters to you.</p>
+              </div>
+
+              <div className="space-y-8">
+                <div className="border border-white/12 bg-white/[0.025] p-6 sm:p-8">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs uppercase tracking-[0.13em] text-white/46">
+                    <span>PROMPT</span><span className="text-human">→</span><span>INFERENCE</span><span className="text-human">→</span><span>ACTION</span>
+                  </div>
+                  <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                    {["NO DURABLE CONTEXT", "NO SHARED INTENT", "NO CONTINUITY"].map((item) => (
+                      <div key={item} className="border-t border-human/55 pt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-human">{item}</div>
+                    ))}
+                  </div>
+                  <p className="mt-8 max-w-2xl text-lg leading-8 text-white/68">The system can move quickly while optimizing for the wrong objective. More autonomy can simply make a bad assumption travel farther.</p>
+                </div>
+
+                <div className="border border-system/35 bg-system/[0.035] p-6 sm:p-8">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-system">With Context Intelligence</p>
+                  <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs uppercase tracking-[0.13em] text-white/72">
+                    <span>PROMPT</span><span className="text-system">+</span><span className="text-system">CONTEXT</span><span className="text-system">→</span><span>JUDGMENT</span><span className="text-system">→</span><span>ACTION</span>
+                  </div>
+                  <p className="mt-7 max-w-2xl font-display text-3xl leading-[1.02] tracking-[-0.025em] text-white sm:text-4xl">Capability becomes useful when the system knows what should guide the decision.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="border-b border-[#191715]/10 bg-[#191715] text-[#f4f0e9] dark:border-white/10 dark:bg-[#111513]">
           <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 sm:py-24 lg:px-10">
             <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">

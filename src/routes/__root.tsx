@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { AppShellInheritance } from "~/components/AppShellInheritance";
+import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
 import appShellCss from "~/styles/app-shell.css?url";
@@ -70,6 +71,7 @@ function RootComponent() {
       <AppShellInheritance />
       <ScrollNarrative />
       <Outlet />
+      <FoundingBetaFeedback />
     </RootDocument>
   );
 }

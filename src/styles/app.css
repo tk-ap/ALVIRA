@@ -77,6 +77,24 @@
 }
 
 @layer base {
+  html {
+    color-scheme: light dark;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    /* Doctor Bird night mapping: brighter iridescent signals against ink. */
+    --color-system: #2bb79f;
+    --color-system-dark: #79d5c4;
+    --color-system-soft: #102a26;
+    --color-human: #dd7b65;
+    --color-human-dark: #f0a08e;
+    --color-human-soft: #321d19;
+    --color-iridescent: #8c80b2;
+    --color-iridescent-dark: #b3a8d2;
+    --color-iridescent-soft: #211d2d;
+  }
+
   html,
   body {
     @apply bg-ink-light font-sans text-mineral-dark antialiased dark:bg-ink dark:text-mineral;
@@ -114,7 +132,7 @@
     border-radius: 10px !important;
     background: var(--color-warm-900) !important;
     border: 1px solid var(--color-system) !important;
-    box-shadow: 0 0 22px rgba(22, 139, 120, 0.14) !important;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--color-system) 14%, transparent) !important;
   }
 
   div:has(> img[src="/brand/alvira-compact-mark.svg"]) img {

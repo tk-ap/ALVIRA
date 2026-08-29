@@ -33,7 +33,7 @@ jobs:
       - name: Build ALVIRA
         run: bun run build
 
-      - name: Render isolated brand preview snapshot for Pages
+      - name: Render branch homepage snapshot for Pages
         shell: bash
         run: |
           set -euo pipefail
@@ -42,14 +42,14 @@ jobs:
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 
           for i in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/brand-preview >/dev/null; then
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then
               break
             fi
             sleep 1
           done
 
           mkdir -p _site
-          curl --fail --silent --show-error http://127.0.0.1:4173/brand-preview > _site/index.html
+          curl --fail --silent --show-error http://127.0.0.1:4173/ > _site/index.html
           cp -R dist/client/. _site/
           touch _site/.nojekyll
 
@@ -63,9 +63,8 @@ jobs:
           # GitHub project Pages serves this repository under /ALVIRA/.
           html = re.sub(r'(href|src)="/(?!/)', r'\1="/ALVIRA/', html)
 
-          # This branch preview is intentionally a static visual snapshot of the
-          # isolated brand-preview route. Remove hydration/runtime scripts so the
-          # Pages copy cannot call production APIs or alter app behavior.
+          # The Pages copy is a static branch-review snapshot. Remove hydration
+          # and runtime scripts so it cannot call production APIs or alter app behavior.
           html = re.sub(r'<script\b[^>]*>.*?</script>', '', html, flags=re.I | re.S)
           html = re.sub(r'<link\b[^>]*rel=["\']modulepreload["\'][^>]*>', '', html, flags=re.I)
 
@@ -92,6 +91,6 @@ jobs:
       - name: Let branch-source Pages finish first
         run: sleep 20
 
-      - name: Deploy brand preview last
+      - name: Deploy branch homepage last
         id: deployment
         uses: actions/deploy-pages@v4

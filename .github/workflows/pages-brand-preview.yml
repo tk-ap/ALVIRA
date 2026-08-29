@@ -80,24 +80,11 @@ jobs:
           <script>
           (() => {
             const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
             const exact = (section, selector, text) =>
               [...section.querySelectorAll(selector)].find((el) => el.textContent.trim() === text);
             const mark = (el) => { if (el) el.dataset.scrollStep = 'true'; };
 
-            // Structural treatments remain visible even when motion is reduced.
-            const portabilitySection = [...document.querySelectorAll('main > section')]
-              .find((section) => section.textContent.includes('Portable by design'));
-            if (portabilitySection) {
-              portabilitySection.dataset.scrollScene = 'portability';
-              const destinations = ['ChatGPT','Claude','Gemini','Cursor','Your agents']
-                .map((label) => [...portabilitySection.querySelectorAll('span')]
-                  .find((el) => el.textContent.trim() === label))
-                .filter(Boolean);
-              const rail = destinations[0] && destinations[0].parentElement;
-              if (rail) rail.dataset.portabilityRail = 'true';
-            }
-
+            // Evidence is structural, so keep the inspector treatment in reduced motion.
             const evidenceSection = [...document.querySelectorAll('main > section')]
               .find((section) => section.textContent.includes('Evidence of understanding'));
             if (evidenceSection) {
@@ -151,10 +138,10 @@ jobs:
                   const reusableLabel = exact(section, 'span', 'Reusable');
                   mark(reusableLabel && reusableLabel.closest('div.flex-1'));
                 } else if (scene === 'autonomy') {
-                  const first = [...section.querySelectorAll('p')].find((el) => el.textContent.startsWith('The system can move quickly'));
-                  const second = exact(section, 'p', 'Context gives capability something to judge against.');
-                  mark(first && first.parentElement);
-                  mark(second && second.parentElement);
+                  [...section.querySelectorAll('div.border')]
+                    .filter((panel) => panel.textContent.includes('PROMPT'))
+                    .slice(0, 2)
+                    .forEach(mark);
                 } else if (scene === 'capability') {
                   ['Capability becomes generic.','Autonomy amplifies the gap.','Context turns raw capability into situated judgment.'].forEach((label) => {
                     const h = exact(section, 'h3', label); mark(h && h.parentElement);
@@ -187,15 +174,10 @@ jobs:
                     mark(inspector);
                   }
                 } else if (scene === 'portability') {
-                  const destinationNodes = ['ChatGPT','Claude','Gemini','Cursor','Your agents']
+                  ['ChatGPT','Claude','Gemini','Cursor','Your agents']
                     .map((label) => exact(section, 'span', label))
-                    .filter(Boolean);
-                  destinationNodes.forEach(mark);
-                  const rail = destinationNodes[0] && destinationNodes[0].parentElement;
-                  if (rail) {
-                    rail.dataset.portabilityRail = 'true';
-                    mark(rail);
-                  }
+                    .filter(Boolean)
+                    .forEach(mark);
                 } else if (scene === 'final-cta') {
                   mark(section.querySelector('h2'));
                   mark(section.querySelector('h2') && section.querySelector('h2').nextElementSibling);
@@ -236,18 +218,19 @@ jobs:
 
             const labels = ['Capture', 'Understand', 'Reflect', 'Update', 'Reuse'];
             const outputs = [
-              'New evidence enters the context layer without erasing what is already known.',
-              'Signals become structured understanding: what is established, uncertain, changing, or missing.',
-              'Patterns, contradictions, and meaningful changes are surfaced for review instead of disappearing between interactions.',
-              'Confirmed changes become part of the maintained context model, preserving history while keeping the present accurate.',
-              'Appropriate context becomes portable into the next AI interaction — then new evidence starts the cycle again.'
+              'New evidence enters without erasing what is already known.',
+              'Signals become what is established, uncertain, changing, or missing.',
+              'Patterns, contradictions, and meaningful changes surface for review.',
+              'Confirmed change becomes part of the maintained context model.',
+              'Appropriate context becomes portable — then the cycle continues.'
             ];
 
             const activeLabel = [...system.querySelectorAll('p')].find((el) => el.textContent.trim() === 'Active stage');
             const activeRow = activeLabel && activeLabel.parentElement;
             const activeStage = activeRow && activeRow.querySelector('span');
             const outputCopy = activeRow && activeRow.parentElement && activeRow.parentElement.querySelector('p.mt-2');
-            const liveStatus = [...system.querySelectorAll('span')].find((el) => ['Live cycle','Paused'].includes(el.textContent.trim()));
+            const liveStatus = [...system.querySelectorAll('span')]
+              .find((el) => ['Live cycle','Paused','Waiting for view','Motion reduced'].includes(el.textContent.trim()));
 
             let active = 0;
             let interval = null;

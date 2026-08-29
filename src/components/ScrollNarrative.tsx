@@ -64,9 +64,16 @@ function markSceneSteps(section: HTMLElement, scene: string) {
   }
 
   if (scene === "portability") {
-    ["ChatGPT", "Claude", "Gemini", "Cursor", "Your agents"].forEach((label) =>
-      markStep(exactText(section, "span", label)),
-    );
+    const destinations = ["ChatGPT", "Claude", "Gemini", "Cursor", "Your agents"]
+      .map((label) => exactText(section, "span", label))
+      .filter((element): element is HTMLElement => Boolean(element));
+
+    destinations.forEach(markStep);
+    const network = destinations[0]?.parentElement;
+    if (network) {
+      network.dataset.portabilityNetwork = "true";
+      markStep(network);
+    }
     return;
   }
 
@@ -84,12 +91,8 @@ export function ScrollNarrative() {
 
     const root = document.documentElement;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (reducedMotion.matches) return;
-
     const sections = Array.from(document.querySelectorAll<HTMLElement>("main > section"));
     const observed: HTMLElement[] = [];
-
-    root.dataset.scrollEnhanced = "true";
 
     sections.forEach((section) => {
       const text = section.textContent ?? "";
@@ -98,15 +101,31 @@ export function ScrollNarrative() {
 
       const [, scene] = match;
       section.dataset.scrollScene = scene;
-      section.dataset.scrollReveal = "true";
       markSceneSteps(section, scene);
 
+      if (reducedMotion.matches) {
+        section.dataset.scrollVisible = "true";
+        return;
+      }
+
+      section.dataset.scrollReveal = "true";
       const steps = Array.from(section.querySelectorAll<HTMLElement>('[data-scroll-step="true"]'));
       steps.forEach((step, index) => {
         step.style.setProperty("--scroll-delay", `${Math.min(index * 85, 425)}ms`);
       });
       observed.push(section);
     });
+
+    if (reducedMotion.matches) {
+      return () => {
+        sections.forEach((section) => {
+          delete section.dataset.scrollVisible;
+          delete section.dataset.scrollScene;
+        });
+      };
+    }
+
+    root.dataset.scrollEnhanced = "true";
 
     const observer = new IntersectionObserver(
       (entries) => {

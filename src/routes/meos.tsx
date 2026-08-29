@@ -15,7 +15,7 @@ export const Route = createFileRoute("/meos")({
       {
         name: "description",
         content:
-          "Build a private, evolving reflection of what you know, value, and are becoming.",
+          "Revisit, validate, and evolve the Context ALVIRA maintains with you.",
       },
     ],
   }),
@@ -62,7 +62,7 @@ const steps = [
   "Capture your values, boundaries, goals, and decision patterns",
   "Optionally add symbolic frameworks (astrology, Human Design, Enneagram, etc.)",
   "Review and validate your integrated portrait",
-  "Receive ALVIRA Reflect — a living reference that evolves with you",
+  "Return to Reflect as your Context changes",
 ];
 
 function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
@@ -81,10 +81,9 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
             Living context intelligence—for you.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">
-            ALVIRA Reflect builds a private, evolving portrait of who you
-            are—your values, patterns, goals, professional history, and sense of
-            purpose—then helps you notice what is changing and apply that
-            understanding to real decisions.
+            ALVIRA Reflect is where you revisit what ALVIRA understands, notice
+            what has changed, challenge an assumption, and deepen the Context
+            you carry forward into future AI interactions.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <a
@@ -213,131 +212,41 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
               id="pricing-heading"
               className="mt-3 text-2xl font-semibold text-gray-900 dark:text-gray-100"
             >
-              Your living reflection
+              Reflect is part of ALVIRA.
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
-              ALVIRA Context captures what AI should know. ALVIRA Reflect helps
-              you revisit, validate, and evolve that same understanding for
-              personal and professional alignment.
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
+              ALVIRA Context captures and maintains what matters. Reflect is
+              where you revisit that same understanding, notice what changed,
+              challenge an assumption, and update the Context before putting it
+              back to work.
             </p>
-            <p className="mt-8 max-w-2xl rounded-lg border border-system/30 bg-system-soft/30 px-5 py-4 text-sm leading-relaxed text-gray-700 dark:bg-ink/30 dark:text-gray-300">
-              ↗{" "}
-              <strong className="text-gray-900 dark:text-gray-100">
-                How it works:
-              </strong>{" "}
-              Reflect Build is a standalone one-time purchase. ALVIRA Pro is
-              optional for unlimited interviews, multiple saved Contexts, and
-              continuous Context updates. Reflect Care is optional — add it
-              anytime for managed portrait refreshes and hosting.
-            </p>
-            <div className="mt-10 grid gap-6 md:grid-cols-2">
-              <div className="flex flex-col rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8">
-                <div className="flex-1">
-                  <p className="font-mono text-sm text-system-dark dark:text-system">
-                    Reflect Build
-                  </p>
-                  <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                    $149
-                  </p>
-                  <span className="mt-2 inline-block font-mono text-[11px] text-amber-700 dark:text-amber-400">
-                    Founding price
-                  </span>
-                  <span className="mt-3 inline-block font-mono text-xs text-system-dark dark:text-system">
-                    One-time payment
-                  </span>
-                  <span className="mt-3 inline-block font-mono text-[11px] text-gray-500 dark:text-gray-400">
-                    No ALVIRA Pro subscription required
-                  </span>
-                  <ul className="mt-8 space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                    {[
-                      "Adaptive ALVIRA interviews for personal discovery",
-                      "Optional symbolic frameworks (astrology, Human Design, Enneagram, etc.)",
-                      "LLM-powered integrated portrait with source traceability",
-                      "Personal and professional purpose statements",
-                      "Decision compass and daily alignment",
-                      "Private authenticated Reflect space",
-                      "Downloadable reference documents",
-                      "Owner review and validation of every important claim",
-                    ].map((f) => (
-                      <li key={f} className="flex items-start gap-3">
-                        <span
-                          className="font-mono text-system-dark dark:text-system flex-shrink-0"
-                          aria-hidden="true"
-                        >
-                          +
-                        </span>
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <a
-                  href="https://buy.stripe.com/aFa8wP5pM6C7bHz57uf7i04?client_reference_id=meos_build"
-                  className="mt-10 inline-flex items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 dark:text-gray-900 px-6 py-3.5 text-sm font-semibold text-white hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-200"
-                >
-                  Get Reflect Build
-                </a>
+            <div className="mt-10 grid gap-4 text-left sm:grid-cols-2">
+              <div className="border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
+                <p className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">Free</p>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">Reflect is included within the Free plan's single saved Context and guided-interview limits, so you can experience the complete Context loop before upgrading.</p>
               </div>
-              <div className="flex flex-col rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8">
-                <div className="flex-1">
-                  <p className="font-mono text-sm text-system-dark dark:text-system">
-                    Reflect Care
-                  </p>
-                  <p className="mt-4 text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                    $29
-                    <span className="text-lg font-medium text-gray-600 dark:text-gray-400">
-                      /mo
-                    </span>
-                  </p>
-                  <ul className="mt-8 space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                    {[
-                      "Updated portraits as your life evolves",
-                      "Refreshed symbolic cycles and countdowns",
-                      "Managed private site hosting",
-                      "Periodic regeneration sessions",
-                      "Continuous alignment support",
-                    ].map((f) => (
-                      <li key={f} className="flex items-start gap-3">
-                        <span
-                          className="font-mono text-system-dark dark:text-system flex-shrink-0"
-                          aria-hidden="true"
-                        >
-                          +
-                        </span>
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <a
-                  href="https://buy.stripe.com/eVq28raK6e4z5jb43qf7i08"
-                  className="mt-10 inline-flex items-center justify-center rounded-lg bg-gray-900 dark:bg-gray-100 dark:text-gray-900 px-6 py-3.5 text-sm font-semibold text-white hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-200"
-                >
-                  Get Reflect Care
-                </a>
+              <div className="border border-system/40 bg-white p-5 dark:bg-gray-950">
+                <p className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">Pro</p>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">Full ongoing Reflect across multiple saved Contexts, with unlimited interviewing and continuous Context updates.</p>
+              </div>
+              <div className="border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
+                <p className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">Lifetime</p>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">Core Reflect is included with the ALVIRA Context capabilities covered by your Lifetime plan.</p>
+              </div>
+              <div className="border border-iridescent/40 bg-white p-5 dark:bg-gray-950">
+                <p className="font-mono text-xs uppercase tracking-wider text-iridescent-dark">Founding Beta</p>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">Full customer-facing Reflect access is included as part of the Founding Beta entitlement.</p>
               </div>
             </div>
-            <p className="mt-8 max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-              <strong className="text-gray-900 dark:text-gray-100">
-                Managed hosting is included with Reflect Care.
-              </strong>{" "}
-              Your private ALVIRA Reflect space is hosted for you — no setup
-              required.
-              Prefer to run it yourself?{" "}
-              <a
-                href="mailto:contextforge-18281ce4@ctomail.io"
-                className="text-system-dark hover:text-system dark:text-system dark:hover:text-system underline underline-offset-2 transition-colors"
-              >
-                Contact us
-              </a>{" "}
-              for self-hosting instructions.
+            <p className="mx-auto mt-8 max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+              Optional symbolic frameworks remain optional lenses for self-reflection. They are not required to use Reflect and do not define your plan or access.
             </p>
-            <p className="mt-6 font-mono text-xs text-gray-500 dark:text-gray-400 leading-relaxed max-w-3xl">
-              Symbolic frameworks are optional lenses for self-reflection.
-              ALVIRA never presents them as scientific, diagnostic, predictive,
-              or deterministic. Your lived experience remains the highest
-              validation layer.
-            </p>
+            <a
+              href="/pricing"
+              className="mt-8 inline-flex items-center rounded-md bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white transition hover:bg-system"
+            >
+              See ALVIRA plans <span className="ml-3" aria-hidden="true">→</span>
+            </a>
           </div>
         </section>
       </main>
@@ -370,7 +279,11 @@ function MeosPage() {
         }
         setAuthenticated(true);
         const entitlements: string[] = await getEntitlements().catch(() => [] as string[]);
-        const reflectAuthorized = Boolean(user.isOwner || entitlements.includes("meos_build"));
+        const reflectAuthorized = Boolean(
+          user.isOwner ||
+          ["free", "pro", "lifetime", "founding_beta"].includes(user.tier) ||
+          entitlements.includes("meos_build"),
+        );
         if (reflectAuthorized) {
           setCanAccess(true);
         }
@@ -459,7 +372,7 @@ function MeosPage() {
               ALVIRA Reflect
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              A private reflection of what you know, value, and are becoming.
+              Revisit, validate, and evolve the Context ALVIRA maintains with you.
             </p>
           </div>
           {profiles.length > 1 && (
@@ -478,18 +391,14 @@ function MeosPage() {
         </div>
         {isPreviewUser && (
           <div className="mb-8 rounded-lg border border-system/40 bg-system-soft p-5 text-sm leading-6 text-gray-800 dark:bg-ink/30 dark:text-gray-200">
-            <strong>
-              This is your ALVIRA Reflect Preview — based on 3 of 12 domains.
-            </strong>{" "}
-            Upgrade to Reflect Build for your full portrait with purpose
-            statements, decision compass, daily alignment, and optional symbolic
-            frameworks.
+            <strong>This is your ALVIRA Reflect Preview.</strong>{" "}
+            Sign in to use Reflect as part of your ALVIRA plan and keep the understanding connected to your saved Context.
             <br />
             <a
-              href="/meos#pricing-heading"
+              href="/pricing"
               className="mt-3 inline-block font-mono text-sm font-semibold text-system-dark underline dark:text-system"
             >
-              Upgrade to Reflect Build →
+              See ALVIRA plans →
             </a>
           </div>
         )}

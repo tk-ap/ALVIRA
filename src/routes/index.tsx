@@ -50,12 +50,12 @@ function Home() {
               ALVIRA / Context Intelligence
             </p>
 
-            <h1 className="mt-7 max-w-none whitespace-nowrap font-sans text-[clamp(3rem,6.7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.06em] text-[#191715] dark:text-[#f4f0e9]">
+            <h1 className="mt-7 max-w-none whitespace-nowrap font-display text-[clamp(3rem,6.7vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.045em] text-[#191715] dark:text-[#f4f0e9]">
               AI infers.
             </h1>
 
             <div className="mt-10 max-w-2xl border-l border-system/60 pl-5 sm:mt-12 sm:pl-7">
-              <p className="font-display text-3xl leading-[1.02] tracking-[-0.025em] text-[#5c5148] dark:text-[#c9bdb0] sm:text-4xl">
+              <p className="font-display text-3xl font-medium leading-[1.02] tracking-[-0.03em] text-[#5c5148] dark:text-[#c9bdb0] sm:text-4xl">
                 Context makes it matter.
               </p>
               <p className="mt-6 max-w-xl text-base leading-7 text-[#6d6258] dark:text-[#a99f94] sm:text-lg">

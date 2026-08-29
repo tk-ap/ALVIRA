@@ -6,6 +6,43 @@ const SESSION_COOKIE = "alvira_session";
 const DEFAULT_BRIDGE_CLIENT_ID = "alvira-bridge";
 const DEFAULT_BRIDGE_URL = "https://alviratech-bridge.vercel.app";
 
+let bridgeSchemaReady: Promise<void> | null = null;
+
+function ensureBridgeSchema() {
+  if (bridgeSchemaReady) return bridgeSchemaReady;
+  bridgeSchemaReady = (async () => {
+    const db = getDb();
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS bridge_authorization_codes (
+        code_hash TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        client_id TEXT NOT NULL,
+        redirect_uri TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS bridge_access_tokens (
+        token_hash TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        client_id TEXT NOT NULL,
+        scope TEXT NOT NULL DEFAULT 'context:read profile:read',
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        revoked_at TIMESTAMPTZ
+      )
+    `);
+    await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_codes_expiry ON bridge_authorization_codes(expires_at)");
+    await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_tokens_user_id ON bridge_access_tokens(user_id)");
+    await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_tokens_expiry ON bridge_access_tokens(expires_at)");
+  })().catch((error) => {
+    bridgeSchemaReady = null;
+    throw error;
+  });
+  return bridgeSchemaReady;
+}
+
 export function bridgeClientId() {
   return process.env.BRIDGE_CLIENT_ID?.trim() || DEFAULT_BRIDGE_CLIENT_ID;
 }
@@ -38,6 +75,7 @@ export async function getBridgeUserFromSession() {
 }
 
 export async function issueBridgeAuthorizationCode(userId: string, redirectUri: string) {
+  await ensureBridgeSchema();
   const code = createBridgeSecret();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
   await getDb().query(
@@ -52,6 +90,7 @@ export async function exchangeBridgeAuthorizationCode(code: string, clientId: st
   const expectedSecret = process.env.BRIDGE_CLIENT_SECRET?.trim();
   if (!expectedSecret || clientSecret !== expectedSecret) throw new Error("Invalid Bridge client credentials.");
 
+  await ensureBridgeSchema();
   const db = getDb();
   const row = (await db.query(
     "DELETE FROM bridge_authorization_codes WHERE code_hash = $1 AND client_id = $2 AND redirect_uri = $3 AND expires_at > NOW() RETURNING user_id",
@@ -69,6 +108,7 @@ export async function exchangeBridgeAuthorizationCode(code: string, clientId: st
 }
 
 export async function getBridgePrincipal(accessToken: string) {
+  await ensureBridgeSchema();
   const row = (await getDb().query(
     "SELECT user_id, client_id, scope, expires_at FROM bridge_access_tokens WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()",
     [hashBridgeSecret(accessToken)],

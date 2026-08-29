@@ -122,20 +122,43 @@ function Home() {
                       <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-system-dark dark:text-system">ALVIRA Context</p>
                       <span className="h-2.5 w-2.5 rounded-full bg-system shadow-[0_0_18px_color-mix(in_srgb,var(--color-system)_60%,transparent)]" aria-hidden="true" />
                     </div>
-                    <div className="mt-5 space-y-3">
-                      {[
-                        ["Known", "text-system-dark dark:text-system", "bg-system/45", "h-px"],
-                        ["Changing", "text-human-dark dark:text-human", "bg-human/55", "h-px"],
-                        ["Uncertain", "text-iridescent-dark dark:text-iridescent", "bg-iridescent/55", "h-px"],
-                        ["Reusable", "text-system-dark dark:text-system", "bg-system/80", "h-[2px]"],
-                      ].map(([state, tone, line, weight], index) => (
-                        <div key={state} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                          <span className={`font-mono text-[10px] ${tone}`}>0{index + 1}</span>
-                          <span className={`${weight} ${line}`} aria-hidden="true" />
-                          <span className={`font-mono text-[10px] uppercase tracking-[0.1em] ${tone}`}>{state}</span>
-                        </div>
-                      ))}
+
+                    <div className="mt-5">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#74685e] dark:text-white/38">Understanding state</p>
+                      <div className="mt-3 space-y-3">
+                        {[
+                          ["Known", "established enough to rely on", "text-system-dark dark:text-system", "bg-system/45"],
+                          ["Changing", "new evidence is shifting it", "text-human-dark dark:text-human", "bg-human/55"],
+                          ["Uncertain", "still needs clarification", "text-iridescent-dark dark:text-iridescent", "bg-iridescent/55"],
+                        ].map(([state, meaning, tone, line], index) => (
+                          <div key={state} className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                            <span className={`font-mono text-[10px] ${tone}`}>0{index + 1}</span>
+                            <div>
+                              <div className="flex items-center gap-3">
+                                <span className={`font-mono text-[10px] uppercase tracking-[0.1em] ${tone}`}>{state}</span>
+                                <span className={`h-px flex-1 ${line}`} aria-hidden="true" />
+                              </div>
+                              <p className="mt-1 text-[11px] leading-4 text-[#74685e] dark:text-white/42">{meaning}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+
+                    <div className="mt-5 border-t border-system/25 pt-4">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#74685e] dark:text-white/38">Portability</p>
+                      <div className="mt-3 flex items-start gap-3">
+                        <span className="font-mono text-[10px] text-system-dark dark:text-system">↗</span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-system-dark dark:text-system">Reusable</span>
+                            <span className="h-[2px] flex-1 bg-system/80" aria-hidden="true" />
+                          </div>
+                          <p className="mt-1 text-[11px] leading-4 text-[#74685e] dark:text-white/42">known context that is also appropriate to carry into future AI interactions</p>
+                        </div>
+                      </div>
+                    </div>
+
                     <p className="mt-6 text-sm leading-6 text-[#5f574f] dark:text-white/58">Fragments become one maintained frame for what AI should understand before it responds or acts.</p>
                   </div>
                 </div>

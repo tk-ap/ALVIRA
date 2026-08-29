@@ -73,6 +73,111 @@ jobs:
           html = re.sub(r'<script\b[^>]*>.*?</script>', '', html, flags=re.I | re.S)
           html = re.sub(r'<link\b[^>]*rel=["\']modulepreload["\'][^>]*>', '', html, flags=re.I)
 
+          # Re-introduce only a tiny, preview-local interaction for the living-context
+          # diagram. It touches no application state, APIs, auth, persistence, or routes.
+          loop_preview = r'''
+          <script>
+          (() => {
+            const system = document.getElementById('system');
+            if (!system) return;
+
+            const fiveColumnGrids = [...system.querySelectorAll('div')]
+              .filter((el) => el.classList.contains('sm:grid-cols-5'));
+            if (fiveColumnGrids.length < 2) return;
+
+            const stageGrid = fiveColumnGrids[0];
+            const detailGrid = fiveColumnGrids[fiveColumnGrids.length - 1];
+            const stages = [...stageGrid.children]
+              .map((wrapper) => wrapper.firstElementChild)
+              .filter(Boolean)
+              .slice(0, 5);
+            const details = [...detailGrid.children].slice(0, 5);
+            if (stages.length !== 5 || details.length !== 5) return;
+
+            const labels = ['Capture', 'Understand', 'Reflect', 'Update', 'Reuse'];
+            const outputs = [
+              'New evidence enters the system without erasing what is already known.',
+              'Fragments resolve into a more coherent model of goals, constraints, history, and intent.',
+              'Patterns, gaps, contradictions, and meaningful changes become visible.',
+              'Confirmed changes revise the maintained context instead of silently overwriting it.',
+              'Appropriate context is prepared to travel into the next AI interaction — then the cycle begins again.'
+            ];
+
+            const outputLabel = [...system.querySelectorAll('p')]
+              .find((el) => el.textContent.trim() === 'Cycle output');
+            const outputCopy = outputLabel && outputLabel.nextElementSibling;
+            const panel = stageGrid.closest('.relative.overflow-hidden');
+
+            const status = document.createElement('div');
+            status.setAttribute('aria-live', 'polite');
+            status.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:18px;font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-system);';
+            status.innerHTML = '<span style="width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 16px currentColor"></span><span>Live context cycle</span>';
+            panel && panel.insertBefore(status, stageGrid);
+
+            const signal = document.createElement('span');
+            signal.setAttribute('aria-hidden', 'true');
+            signal.style.cssText = 'position:absolute;right:12px;top:12px;width:8px;height:8px;border-radius:999px;background:currentColor;box-shadow:0 0 18px currentColor;transition:opacity .25s ease,transform .25s ease;';
+
+            let active = 0;
+            let interval = null;
+            let resumeTimer = null;
+            const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function render(index) {
+              active = index;
+              stages.forEach((stage, i) => {
+                stage.style.cursor = 'pointer';
+                stage.style.transition = 'opacity .28s ease, transform .28s ease, background-color .28s ease, box-shadow .28s ease';
+                stage.style.opacity = i === active ? '1' : '.42';
+                stage.style.transform = i === active ? 'translateY(-3px)' : 'translateY(0)';
+                stage.style.boxShadow = i === active ? '0 0 0 1px currentColor inset' : 'none';
+                stage.setAttribute('aria-pressed', i === active ? 'true' : 'false');
+                if (i === active) stage.appendChild(signal);
+              });
+
+              details.forEach((detail, i) => {
+                detail.style.transition = 'opacity .28s ease, border-color .28s ease';
+                detail.style.opacity = i === active ? '1' : '.24';
+                detail.style.borderColor = i === active ? 'var(--color-system)' : 'rgba(255,255,255,.10)';
+              });
+
+              if (outputCopy) outputCopy.textContent = outputs[active];
+              status.lastElementChild.textContent = `Live context cycle · ${labels[active]}`;
+            }
+
+            function start() {
+              if (reducedMotion) return;
+              clearInterval(interval);
+              interval = setInterval(() => render((active + 1) % stages.length), 1900);
+            }
+
+            function pauseThenResume() {
+              clearInterval(interval);
+              clearTimeout(resumeTimer);
+              if (!reducedMotion) resumeTimer = setTimeout(start, 6000);
+            }
+
+            stages.forEach((stage, i) => {
+              stage.setAttribute('role', 'button');
+              stage.setAttribute('tabindex', '0');
+              stage.setAttribute('aria-label', `Inspect ${labels[i]} stage`);
+              stage.addEventListener('click', () => { render(i); pauseThenResume(); });
+              stage.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  render(i);
+                  pauseThenResume();
+                }
+              });
+            });
+
+            render(0);
+            start();
+          })();
+          </script>
+          '''
+
+          html = html.replace('</body>', loop_preview + '\n</body>', 1)
           path.write_text(html)
           PY
 

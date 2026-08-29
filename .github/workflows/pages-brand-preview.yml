@@ -82,7 +82,7 @@ jobs:
             const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
             // Portability is a structural visual treatment, not motion-only. Mark it
-            // even when reduced motion is enabled so the network remains legible.
+            // even when reduced motion is enabled so the selective transfer rail remains legible.
             const portabilitySection = [...document.querySelectorAll('main > section')]
               .find((section) => section.textContent.includes('Portable by design'));
             if (portabilitySection) {
@@ -91,8 +91,8 @@ jobs:
                 .map((label) => [...portabilitySection.querySelectorAll('span')]
                   .find((el) => el.textContent.trim() === label))
                 .filter(Boolean);
-              const network = destinations[0] && destinations[0].parentElement;
-              if (network) network.dataset.portabilityNetwork = 'true';
+              const rail = destinations[0] && destinations[0].parentElement;
+              if (rail) rail.dataset.portabilityRail = 'true';
             }
 
             // --- scroll narrative ---
@@ -155,10 +155,10 @@ jobs:
                     .map((label) => exact(section, 'span', label))
                     .filter(Boolean);
                   destinationNodes.forEach(mark);
-                  const network = destinationNodes[0] && destinationNodes[0].parentElement;
-                  if (network) {
-                    network.dataset.portabilityNetwork = 'true';
-                    mark(network);
+                  const rail = destinationNodes[0] && destinationNodes[0].parentElement;
+                  if (rail) {
+                    rail.dataset.portabilityRail = 'true';
+                    mark(rail);
                   }
                 } else if (scene === 'final-cta') {
                   mark(section.querySelector('h2'));

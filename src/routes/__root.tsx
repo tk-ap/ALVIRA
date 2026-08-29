@@ -11,6 +11,7 @@ import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
 import appShellCss from "~/styles/app-shell.css?url";
+import appInterviewCss from "~/styles/app-interview.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -38,6 +39,7 @@ export const Route = createRootRoute({
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: appShellCss },
+      { rel: "stylesheet", href: appInterviewCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       {
         rel: "icon",

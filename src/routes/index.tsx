@@ -144,10 +144,10 @@ function Home() {
             <div className="max-w-md border-t border-[#191715]/20 pt-5 dark:border-white/20">
               <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#74685e] dark:text-[#93877c]">The missing layer</p>
               <p className="mt-5 font-display text-4xl leading-[0.98] tracking-[-0.03em] text-[#2c2824] dark:text-[#e0d7cd] sm:text-5xl">
-                Inference is useful. Context tells it what matters.
+                Intelligence without context is inference.
               </p>
               <p className="mt-7 text-sm leading-7 text-[#6d6258] dark:text-[#a99f94]">
-                Inference fills gaps. Context gives those gaps continuity.
+                Context is what turns inference into understanding—giving AI continuity around what matters, what changed, and what remains uncertain.
               </p>
             </div>
           </aside>

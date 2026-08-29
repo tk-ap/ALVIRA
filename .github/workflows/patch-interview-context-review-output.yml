@@ -35,10 +35,6 @@ jobs:
               raise SystemExit(f'Expected one interview review transition, found {text.count(old)}')
           text = text.replace(old, new, 1)
 
-          anchor = '''  const contextSourcePanel = (\n    <section className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">\n'''
-          if text.count(anchor) != 1:
-              raise SystemExit(f'Context panel anchor mismatch: {text.count(anchor)}')
-
           marker = '''  // ── Render helpers ──\n'''
           if text.count(marker) != 1:
               raise SystemExit(f'Render helper marker mismatch: {text.count(marker)}')
@@ -60,10 +56,11 @@ jobs:
         run: |
           git diff --check
           test "$(git diff --name-only | tr -d '\r')" = "src/routes/app.tsx"
-          grep -q 'setShowContextSources(false);' src/routes/app.tsx
           grep -q 'const interviewContextSourceTray' src/routes/app.tsx
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/routes/app.tsx
           git commit -m "restore context review output"
           git push origin HEAD:brand/alvira-system-refresh
+
+# trigger

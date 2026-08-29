@@ -8,6 +8,7 @@ export interface FoundingBetaAccess {
 }
 
 const FOUNDING_BETA_EXISTING_USER_CUTOFF = "2026-08-29T19:56:50Z";
+const FOUNDING_BETA_PERMANENT_EXPIRY = "9999-12-31T23:59:59Z";
 const FOUNDING_BETA_EXCLUDED_EMAILS = [
   "tahlia.ashwood@gmail.com",
   "codex-smoke-1786676512909@example.com",
@@ -54,21 +55,29 @@ export function ensureFoundingBetaSchema(): Promise<void> {
     await db.query("CREATE INDEX IF NOT EXISTS idx_beta_feedback_user_id ON beta_feedback(user_id)");
     await db.query("CREATE INDEX IF NOT EXISTS idx_beta_feedback_created_at ON beta_feedback(created_at DESC)");
 
-    // One-time cohort backfill: everyone who had already signed up when the
-    // Founding Beta expansion was requested, excluding owner/test identities.
-    // The cutoff prevents future signups from being silently enrolled.
+    // Existing eligible users were the initial Founding Beta cohort. Founding
+    // access is now a permanent complimentary account entitlement rather than
+    // a 45-day trial. The very-far-future timestamp preserves compatibility
+    // with the existing schema while making the entitlement effectively
+    // non-expiring for the life of the account/service.
     const ownerEmail = (process.env.ALVIRA_OWNER_EMAIL ?? FOUNDING_BETA_EXCLUDED_EMAILS[0]).trim().toLowerCase();
     const excluded = Array.from(new Set([ownerEmail, ...FOUNDING_BETA_EXCLUDED_EMAILS]));
     await db.query(
       `INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
        SELECT id,
               CASE WHEN tier = 'founding_beta' THEN 'free' ELSE tier END,
-              NOW() + INTERVAL '45 days'
+              $3::timestamptz
          FROM users
         WHERE created_at <= $1::timestamptz
           AND LOWER(TRIM(email)) <> ALL($2::text[])
        ON CONFLICT (user_id) DO NOTHING`,
-      [FOUNDING_BETA_EXISTING_USER_CUTOFF, excluded],
+      [FOUNDING_BETA_EXISTING_USER_CUTOFF, excluded, FOUNDING_BETA_PERMANENT_EXPIRY],
+    );
+    await db.query(
+      `UPDATE founding_beta_access
+          SET expires_at = $1::timestamptz
+        WHERE expires_at < $1::timestamptz`,
+      [FOUNDING_BETA_PERMANENT_EXPIRY],
     );
     await db.query(
       `UPDATE users u

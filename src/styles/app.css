@@ -148,18 +148,18 @@
 @media (prefers-reduced-motion: no-preference) {
   html[data-scroll-enhanced="true"] [data-scroll-reveal="true"] [data-scroll-step="true"] {
     transition:
-      opacity 720ms cubic-bezier(.2,.7,.2,1) var(--scroll-delay, 0ms),
-      transform 820ms cubic-bezier(.2,.7,.2,1) var(--scroll-delay, 0ms),
-      filter 720ms ease var(--scroll-delay, 0ms),
-      border-color 420ms ease var(--scroll-delay, 0ms),
-      background-color 420ms ease var(--scroll-delay, 0ms);
+      opacity 520ms cubic-bezier(.2,.7,.2,1) var(--scroll-delay, 0ms),
+      transform 620ms cubic-bezier(.2,.7,.2,1) var(--scroll-delay, 0ms),
+      filter 520ms ease var(--scroll-delay, 0ms),
+      border-color 360ms ease var(--scroll-delay, 0ms),
+      background-color 360ms ease var(--scroll-delay, 0ms);
     will-change: opacity, transform, filter;
   }
 
   html[data-scroll-enhanced="true"] [data-scroll-reveal="true"]:not([data-scroll-visible="true"]) [data-scroll-step="true"] {
     opacity: 0;
-    transform: translate3d(0, 18px, 0);
-    filter: blur(4px);
+    transform: translate3d(0, 12px, 0);
+    filter: blur(2px);
   }
 
   html[data-scroll-enhanced="true"] [data-scroll-reveal="true"][data-scroll-visible="true"] [data-scroll-step="true"] {
@@ -169,7 +169,7 @@
   }
 
   html[data-scroll-enhanced="true"] [data-scroll-scene="why-context"]:not([data-scroll-visible="true"]) [data-scroll-step="true"] {
-    transform: translate3d(-14px, 8px, 0) scale(.985);
+    transform: translate3d(-10px, 6px, 0) scale(.99);
   }
 
   html[data-scroll-enhanced="true"] [data-scroll-scene="autonomy"] [data-scroll-step="true"]:nth-of-type(even),
@@ -178,7 +178,7 @@
   }
 
   html[data-scroll-enhanced="true"] [data-scroll-scene="portability"]:not([data-scroll-visible="true"]) [data-scroll-step="true"] {
-    transform: translate3d(0, 12px, 0) scale(.94);
+    transform: translate3d(0, 10px, 0) scale(.97);
   }
 
   html[data-scroll-enhanced="true"] [data-scroll-scene="living-loop"][data-scroll-in-view="true"] {

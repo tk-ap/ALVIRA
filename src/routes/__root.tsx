@@ -11,6 +11,7 @@ import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
+import { HomeUseCaseEducation } from "~/components/HomeUseCaseEducation";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
@@ -56,6 +57,7 @@ function RootComponent() {
       <AppShellInheritance />
       <ScrollNarrative />
       <Outlet />
+      <HomeUseCaseEducation />
       <ContextVersioningBootstrap />
       <LiveContextMirror />
       <FoundingBetaFeedback />

@@ -74,6 +74,7 @@ export function Header() {
               <nav aria-label="Primary navigation" className="flex items-center gap-4 border-r border-warm-gray/15 pr-4">
                 <a href="/context" className={linkClass}>Context</a>
                 <a href="/meos" className={`${linkClass} text-system-dark dark:text-system`}>Reflect</a>
+                <a href="/integrations" className={linkClass}>Reuse</a>
                 <a href="/interview" className={linkClass}>Interview</a>
                 <a href="/pricing" className={linkClass}>Pricing</a>
               </nav>
@@ -83,6 +84,7 @@ export function Header() {
               ) : user ? (
                 <div className="flex items-center gap-4">
                   <a href="/dashboard" className={linkClass}>Dashboard</a>
+                  <a href="/history" className={linkClass}>History</a>
                   <a href="/account" className={linkClass}>Account</a>
                   <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${linkClass} min-h-11 disabled:opacity-50`}>{loggingOut ? "..." : "Logout"}</button>
                 </div>
@@ -117,9 +119,11 @@ export function Header() {
             </div>
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
             <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
+            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Reuse</a>
             <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>Interview</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
+            {user ? <a href="/history" onClick={closeMenu} className={mobileLinkClass}>History</a> : null}
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}
             {user ? (
               <button type="button" onClick={() => { closeMenu(); void handleLogout(); }} disabled={loggingOut} className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}>{loggingOut ? "Logging out..." : "Logout"}</button>

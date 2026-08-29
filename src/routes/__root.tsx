@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 
 import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
+import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
@@ -72,6 +73,7 @@ function RootComponent() {
       <AppShellInheritance />
       <ScrollNarrative />
       <Outlet />
+      <ContextVersioningBootstrap />
       <FoundingBetaFeedback />
       <AuthDiagnosticWatcher />
     </RootDocument>

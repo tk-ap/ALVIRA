@@ -1686,7 +1686,7 @@ function AppPage() {
                   )}
                   <button
                     type="button"
-                    onClick={handleGenerate}
+                    onClick={() => handleGenerate()}
                     disabled={compiling || !state || (state.history.length < 2 && hasGaps)}
                     className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 ${
                       state && (state.history.length >= 2 || !hasGaps)
@@ -1742,7 +1742,7 @@ function AppPage() {
                   </span>
                   <button
                     type="button"
-                    onClick={handleGenerate}
+                    onClick={() => handleGenerate()}
                     disabled={compiling}
                     className="flex-shrink-0 ml-4 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-60"
                   >

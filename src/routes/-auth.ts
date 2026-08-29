@@ -55,5 +55,28 @@ export const getInterviewDraft = createServerFn({ method: "GET" }).handler(async
 export const clearInterviewDraft = createServerFn({ method: "POST" }).handler(async () => { const user = await requireUser(); await getDb().query("DELETE FROM interview_drafts WHERE user_id = $1", [user.id]); return { success: true }; });
 export const getOwnerMetrics = createServerFn({ method: "GET" }).handler(async () => { const user = await requireUser(); if (!isOwnerUser(user)) throw new Error("Not authorized."); return await queryOwnerMetrics(); });
 export const getCurrentUser = createServerFn({ method: "GET" }).handler(async () => { await deleteExpiredSessions(); const token = getSessionTokenFromRequest(); if (!token) return null; const session = await getSessionByToken(token); if (!session) return null; if (new Date(session.expires_at) < new Date()) { await deleteSession(token); return null; } const user = await getUserById(session.user_id); if (!user) return null; return { id: user.id, email: user.email, tier: user.tier, interviewCount: user.interview_count, isOwner: isOwnerUser(user) }; });
-export const trackInterview = createServerFn({ method: "POST" }).handler(async () => { const user = await requireUser(); if (isOwnerUser(user)) return { interviewCount: user.interview_count, tier: user.tier, isOwner: true }; if (user.tier === "free" && user.interview_count >= 3) return { error: "limit_reached", limit: "interviews" }; const newCount = await incrementInterviewCount(user.id); return { interviewCount: newCount, tier: user.tier }; });
+export const trackInterview = createServerFn({ method: "POST" }).handler(async () => {
+  const user = await requireUser();
+  if (isOwnerUser(user)) return { interviewCount: user.interview_count, tier: user.tier, isOwner: true };
+
+  // Updating an already-saved profile is not a new interview. The continuation
+  // flow autosaves its draft using the saved profile's topic, so we can identify
+  // that case without weakening the one-profile free-tier boundary.
+  const existingProfileUpdate = (await getDb().query(
+    `SELECT p.id
+       FROM interview_drafts d
+       JOIN profiles p ON p.user_id = d.user_id AND p.topic = d.topic
+      WHERE d.user_id = $1
+      ORDER BY d.updated_at DESC
+      LIMIT 1`,
+    [user.id],
+  ))[0] as { id: string } | undefined;
+  if (existingProfileUpdate) {
+    return { interviewCount: user.interview_count, tier: user.tier, isUpdate: true };
+  }
+
+  if (user.tier === "free" && user.interview_count >= 3) return { error: "limit_reached", limit: "interviews" };
+  const newCount = await incrementInterviewCount(user.id);
+  return { interviewCount: newCount, tier: user.tier };
+});
 export const fetchUserLimits = createServerFn({ method: "GET" }).handler(async () => { const user = await requireUser(); const limits = await getUserLimits(user.id); if (!limits) throw new Error("User not found."); const owner = isOwnerUser(user); return { ...limits, isOwner: owner, ...(owner ? { maxInterviews: Number.MAX_SAFE_INTEGER, maxProfiles: Number.MAX_SAFE_INTEGER } : {}) }; });

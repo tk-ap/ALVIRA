@@ -511,8 +511,12 @@ function AppPage() {
       setSeedSource("source");
       setExtraction(result);
       setSeedDecisions({});
-      if (screen === "interview") setSeedReviewOverlay(true);
-      else setScreen("seed-review");
+      if (screen === "interview") {
+        setShowContextSources(false);
+        setSeedReviewOverlay(true);
+      } else {
+        setScreen("seed-review");
+      }
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Could not read that source.");
     } finally {
@@ -1439,6 +1443,25 @@ function AppPage() {
     </section>
   );
 
+  const interviewContextSourceTray = (
+    <section className="mb-4 rounded-lg border border-gray-200 bg-gray-50/70 p-3 dark:border-gray-700 dark:bg-gray-900/70" aria-label="Add context">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <span className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">&lt;add-context /&gt;</span>
+          {contextSources.length > 0 && <span className="ml-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">{contextSources.length} attached</span>}
+        </div>
+        <button type="button" onClick={() => setShowContextSources(false)} className="rounded px-2 py-1 font-mono text-[10px] text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Close</button>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        {CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-2.5 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}
+      </div>
+      {(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); void addContextUrl(); }} className="mt-3 flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" disabled={uploading || !contextSourceLocator.trim()} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & attach"}</button></form>}
+      {(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">Choose a file to extract and review before it becomes part of this Context.</p>}
+      {uploadError && <p role="alert" className="mt-3 text-xs text-red-600 dark:text-red-400">{uploadError}</p>}
+      {contextSessionNotice && <p role="status" className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">{contextSessionNotice}</p>}
+    </section>
+  );
+
   // ── Render helpers ──
   const chatBubbleClass = (role: "user" | "assistant") =>
     role === "assistant"
@@ -1716,7 +1739,7 @@ function AppPage() {
                 </div>
               </div>
 
-              {showContextSources && offering && contextSourcePanel}
+              {showContextSources && offering && interviewContextSourceTray}
 
               {/* Generation error — visible so a failure is never a silent hang */}
               {generateError && (

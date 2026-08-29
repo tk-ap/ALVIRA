@@ -29,10 +29,10 @@ jobs:
           path = Path('src/routes/app.tsx')
           text = path.read_text()
 
-          old = '''      if (screen === "interview") setSeedReviewOverlay(true);\n      else setScreen("seed-review");\n'''
-          new = '''      if (screen === "interview") {\n        setShowContextSources(false);\n        setSeedReviewOverlay(true);\n      } else {\n        setScreen("seed-review");\n      }\n'''
+          old = '''      setSeedSource("source");\n      setExtraction(result);\n      setSeedDecisions({});\n      if (screen === "interview") setSeedReviewOverlay(true);\n      else setScreen("seed-review");\n'''
+          new = '''      setSeedSource("source");\n      setExtraction(result);\n      setSeedDecisions({});\n      if (screen === "interview") {\n        setShowContextSources(false);\n        setSeedReviewOverlay(true);\n      } else {\n        setScreen("seed-review");\n      }\n'''
           if text.count(old) != 1:
-              raise SystemExit(f'Expected one interview review transition, found {text.count(old)}')
+              raise SystemExit(f'Expected one URL review transition, found {text.count(old)}')
           text = text.replace(old, new, 1)
 
           marker = '''  // ── Render helpers ──\n'''
@@ -63,4 +63,4 @@ jobs:
           git commit -m "restore context review output"
           git push origin HEAD:brand/alvira-system-refresh
 
-# trigger
+# narrow trigger

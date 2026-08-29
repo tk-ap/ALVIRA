@@ -17,6 +17,12 @@ const DEFAULT_CONFIDENCE_THRESHOLD = 0.6;
  *   2. Partially covered domains (fewer than minAnswers)
  *   3. Domains with low confidence answers
  * Fully covered domains are excluded from results.
+ *
+ * A saved-profile continuation deliberately starts with an empty conversation
+ * history while carrying forward its already-covered knowledge. When everything
+ * is current, reopen the low-priority Living Updates domain exactly once so a
+ * completed Context remains editable instead of becoming a dead end. As soon as
+ * the update conversation has history, normal coverage rules resume.
  */
 export function detectGaps(
   graph: Domain[],
@@ -45,6 +51,20 @@ export function detectGaps(
     }
 
     gaps.push({ domain, coverage, currentAnswers: answerCount });
+  }
+
+  // A completed saved profile is reseeded with history: [] on Continue/Update.
+  // If it has no real gaps, ask one open-ended update question. This keeps the
+  // existing textarea/question flow intact without inventing gaps elsewhere.
+  if (gaps.length === 0 && state.history.length === 0) {
+    const updatesDomain = graph.find((domain) => domain.id === "updates");
+    if (updatesDomain) {
+      gaps.push({
+        domain: updatesDomain,
+        coverage: "shallow",
+        currentAnswers: state.domains[updatesDomain.id]?.answers?.length ?? 0,
+      });
+    }
   }
 
   // Sort by priority: coverage severity first, then domain priority (lower = ask first), then required status

@@ -226,8 +226,8 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
                 How it works:
               </strong>{" "}
               Reflect Build is a standalone one-time purchase. ALVIRA Pro is
-              optional for unlimited interviews, multiple profiles, and
-              continuous context updates. Reflect Care is optional — add it
+              optional for unlimited interviews, multiple saved Contexts, and
+              continuous Context updates. Reflect Care is optional — add it
               anytime for managed portrait refreshes and hosting.
             </p>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -250,7 +250,7 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
                   </span>
                   <ul className="mt-8 space-y-3 text-sm text-gray-600 dark:text-gray-400">
                     {[
-                      "Adaptive Alvira interviews for personal discovery",
+                      "Adaptive ALVIRA interviews for personal discovery",
                       "Optional symbolic frameworks (astrology, Human Design, Enneagram, etc.)",
                       "LLM-powered integrated portrait with source traceability",
                       "Personal and professional purpose statements",

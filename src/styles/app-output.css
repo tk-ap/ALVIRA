@@ -1,0 +1,201 @@
+/* Stage 3 — generated output / compiled Context view only.
+   Scope is the unique compiled Markdown preview pane used by the output render.
+   No generation, save, download, tab, or handoff behavior is changed here. */
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) {
+  padding-top: clamp(2.25rem, 5vw, 4.5rem);
+  padding-bottom: clamp(4rem, 7vw, 6.5rem);
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) > div {
+  max-width: 66rem;
+}
+
+/* The compiled state should read first as maintained intelligence, not a file dump. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: .98;
+  letter-spacing: -.045em;
+  font-weight: 600;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 + p {
+  margin-top: .8rem;
+  max-width: 46rem;
+  line-height: 1.65;
+  color: color-mix(in srgb, currentColor 68%, transparent);
+}
+
+/* Header actions become a compact state/action rail rather than a row of equal CTAs. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex {
+  align-items: stretch;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: .45rem;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex :is(button, a) {
+  min-height: 2.6rem;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  letter-spacing: .015em;
+}
+
+/* Save/confirm actions retain prominence; utility/export actions stay quiet. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex .bg-emerald-700,
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex .dark\:bg-emerald-600 {
+  background: var(--color-system-dark) !important;
+  border-color: transparent;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex .bg-emerald-700,
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex .dark\:bg-emerald-600 {
+  background: color-mix(in srgb, var(--color-system) 70%, var(--color-ink)) !important;
+}
+
+/* The review-before-save message is context governance, not an alert. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .border-emerald-200.bg-emerald-50 {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-system) 36%, transparent);
+  border-left-width: 3px;
+  background: color-mix(in srgb, var(--color-system) 4%, transparent);
+  padding: 1rem 1.15rem;
+  line-height: 1.6;
+}
+
+/* File tabs become representations of one Context model. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b {
+  position: relative;
+  padding-top: 1.5rem;
+  border-color: color-mix(in srgb, var(--color-system) 18%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b::before {
+  content: "CONTEXT REPRESENTATIONS";
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: .54rem;
+  line-height: 1;
+  letter-spacing: .12em;
+  color: var(--color-system-dark);
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b::before {
+  color: var(--color-system);
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b button {
+  padding-inline: .85rem;
+  border-bottom-width: 1px;
+  letter-spacing: .025em;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b button.border-gray-900,
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b button.dark\:border-gray-100 {
+  border-color: var(--color-system) !important;
+  color: var(--color-system-dark) !important;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b button.border-gray-900,
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-x-auto.border-b button.dark\:border-gray-100 {
+  color: var(--color-system) !important;
+}
+
+/* Main compiled-context inspector. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .max-h-\[500px\] {
+  max-height: min(60vh, 42rem);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: transparent;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .max-h-\[500px\] > div {
+  max-width: 48rem;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .max-h-\[500px\] {
+  scrollbar-color: color-mix(in srgb, var(--color-system) 28%, transparent) transparent;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .max-h-\[500px\]::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-system) 28%, transparent);
+}
+
+/* The preview container becomes an inspection surface rather than a rounded file card. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-hidden:has(.max-h-\[500px\]) {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-system) 24%, transparent);
+  background: color-mix(in srgb, var(--color-gray-50) 46%, transparent);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--color-system) 56%, transparent);
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-hidden:has(.max-h-\[500px\]) {
+  background: color-mix(in srgb, white 2.2%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-hidden:has(.max-h-\[500px\]) > div:first-child {
+  min-height: 2.8rem;
+  padding-inline: 1rem;
+  border-color: color-mix(in srgb, var(--color-system) 18%, transparent);
+  background: color-mix(in srgb, var(--color-system) 3%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-hidden:has(.max-h-\[500px\]) > div:first-child span {
+  color: var(--color-system-dark);
+  letter-spacing: .035em;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-hidden:has(.max-h-\[500px\]) > div:first-child span {
+  color: var(--color-system);
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .overflow-hidden:has(.max-h-\[500px\]) > div:first-child button {
+  min-height: 2.2rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-system) 18%, transparent);
+  padding-left: 1rem;
+  border-radius: 0;
+}
+
+/* Compiled Markdown inherits the editorial hierarchy of the public category story. */
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .prose :is(h1, h2, h3) {
+  font-family: var(--font-display);
+  letter-spacing: -.025em;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .prose h1 {
+  font-size: 1.65rem;
+  line-height: 1.1;
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .prose h2 {
+  margin-top: 2.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-system) 16%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) .prose code {
+  border-radius: 0;
+}
+
+@media (max-width: 640px) {
+  html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) {
+    padding-inline: 1rem;
+  }
+
+  html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex {
+    width: 100%;
+  }
+
+  html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) h1 ~ div.flex :is(button, a) {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-alvira-app-shell="true"] main:has(.max-h-\[500px\]) * {
+    scroll-behavior: auto !important;
+  }
+}

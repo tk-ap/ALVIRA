@@ -1,0 +1,217 @@
+/* Stage 3 — app-shell inheritance only.
+   This stylesheet is inert unless AppShellInheritance marks a product route.
+   It intentionally changes presentation tokens, not product behavior. */
+
+html[data-alvira-app-shell="true"] {
+  /* Re-map legacy emerald utility classes to ALVIRA's Context Intelligence signal. */
+  --color-emerald-50: #edf7f4;
+  --color-emerald-100: #d8f0ea;
+  --color-emerald-200: #afe0d5;
+  --color-emerald-300: #79d5c4;
+  --color-emerald-400: #48c4af;
+  --color-emerald-500: #2bb79f;
+  --color-emerald-600: #168b78;
+  --color-emerald-700: #0f6b5d;
+  --color-emerald-800: #145347;
+  --color-emerald-900: #123d36;
+  --color-emerald-950: #102a26;
+
+  /* Product surfaces inherit the quieter editorial geometry from Stage 2. */
+  --radius-sm: 0.2rem;
+  --radius-md: 0.3rem;
+  --radius-lg: 0.4rem;
+  --radius-xl: 0.55rem;
+  --radius-2xl: 0.7rem;
+}
+
+html[data-alvira-app-shell="true"] body {
+  background: var(--color-ink-light);
+  color: var(--color-mineral-dark);
+}
+
+html.dark[data-alvira-app-shell="true"] body {
+  background: var(--color-ink);
+  color: var(--color-mineral);
+}
+
+/* Give functional app surfaces the same quieter separation used on the public site
+   without changing their dimensions, hierarchy, or event targets. */
+html[data-alvira-app-shell="true"] main {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-system) 2.5%, transparent),
+    transparent 22rem
+  );
+}
+
+html[data-alvira-app-shell="true"] :is(input, textarea, select) {
+  accent-color: var(--color-system);
+}
+
+html[data-alvira-app-shell="true"] :is(input, textarea, select):focus-visible {
+  outline-color: var(--color-system-dark);
+}
+
+html.dark[data-alvira-app-shell="true"] :is(input, textarea, select):focus-visible {
+  outline-color: var(--color-system);
+}
+
+/* Typography inheritance: product headings gain the same display voice while
+   labels, controls, and body copy remain Inter/JetBrains Mono as authored. */
+html[data-alvira-app-shell="true"] main :is(h1, h2) {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+}
+
+/* --------------------------------------------------------------------------
+   /app START SCREEN ONLY
+
+   The existing offering selector is unique to this render branch, so :has()
+   gives us a presentation-only scope without adding state hooks or touching
+   interview/review/output JSX. If the start screen is not rendered, none of
+   these rules match.
+   -------------------------------------------------------------------------- */
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) {
+  align-items: flex-start;
+  padding-top: clamp(3.25rem, 7vw, 6rem);
+  padding-bottom: clamp(4rem, 8vw, 7rem);
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) > div {
+  max-width: 72rem;
+}
+
+/* Offering switch: read like a mode selector, not a generic segmented control. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) [role="group"][aria-label="What do you want to build?"] {
+  border-color: color-mix(in srgb, var(--color-system) 22%, transparent);
+  background: color-mix(in srgb, var(--color-system) 3%, transparent);
+  border-radius: 0;
+  padding: 0.3rem;
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) [role="group"][aria-label="What do you want to build?"] button {
+  min-height: 2.5rem;
+  border-radius: 0;
+  letter-spacing: 0.045em;
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) [role="group"][aria-label="What do you want to build?"] button[aria-pressed="true"] {
+  background: var(--color-system-dark) !important;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--color-system) 68%, white 12%);
+}
+
+html.dark[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) [role="group"][aria-label="What do you want to build?"] button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--color-system) 72%, var(--color-ink)) !important;
+}
+
+/* Entry headline: move from utility-page scale toward the public brand hierarchy. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) h1 {
+  font-size: clamp(2rem, 4.5vw, 3.75rem);
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  font-weight: 600;
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) h1 + p {
+  max-width: 44rem;
+  margin-inline: auto;
+  line-height: 1.7;
+}
+
+/* Context/Reflect explanatory panels inherit editorial surfaces instead of
+   looking like alerts. These selectors remain scoped to the start branch. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) :is(.border-emerald-200, .dark\:border-emerald-900) {
+  border-left-width: 2px;
+  border-left-color: color-mix(in srgb, var(--color-system) 70%, transparent);
+}
+
+/* Main two-column builder area: create a clearer editorial divide at desktop. */
+@media (min-width: 768px) {
+  html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) .md\:grid-cols-\[3fr_2fr\] {
+    gap: clamp(2rem, 5vw, 4.5rem);
+  }
+
+  html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) .md\:grid-cols-\[3fr_2fr\] > aside {
+    border-left-color: color-mix(in srgb, var(--color-system) 28%, transparent);
+  }
+}
+
+/* Choice lists are context inputs, not settings checklists. Give each row a
+   quieter selectable surface while preserving native checkbox behavior. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) fieldset label:has(input[type="checkbox"]) {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) fieldset label:has(input[type="checkbox"]:checked) {
+  border-color: color-mix(in srgb, var(--color-system) 34%, transparent);
+  background: color-mix(in srgb, var(--color-system) 5%, transparent);
+}
+
+/* Document/source entry should read as a first-class route into context, not a
+   secondary upload utility. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) .border-dashed:has(input[type="file"]) {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--color-system) 28%, transparent);
+  border-radius: 0;
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+  background: color-mix(in srgb, var(--color-system) 2.5%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) .border-dashed:has(input[type="file"]) button {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-system) 72%, transparent);
+  min-height: 2.6rem;
+}
+
+/* The primary start action is the single dominant control on the page. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) button.w-full {
+  min-height: 3.45rem;
+  border-radius: 0;
+  background: var(--color-system-dark) !important;
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--color-system) 70%, transparent);
+}
+
+html.dark[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) button.w-full {
+  background: color-mix(in srgb, var(--color-system) 70%, var(--color-ink)) !important;
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) button.w-full:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+/* Output preview becomes a reference panel rather than another rounded card. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) aside {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-gray-500) 20%, transparent);
+  background: color-mix(in srgb, var(--color-gray-50) 54%, transparent);
+}
+
+html.dark[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) aside {
+  background: color-mix(in srgb, white 2.2%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) aside > div:first-child {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-system) 18%, transparent);
+}
+
+/* Saved progress remains visible but behaves like continuity state, not a
+   promotional card. */
+html[data-alvira-app-shell="true"] main:has([role="group"][aria-label="What do you want to build?"]) section[aria-labelledby="resume-heading"] {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-system) 38%, transparent);
+  border-left-width: 3px;
+  background: color-mix(in srgb, var(--color-system) 4%, transparent);
+}
+
+/* Keep state transitions purposeful and restrained. Reduced motion remains static. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-alvira-app-shell="true"] :is(button, a, input, textarea, select) {
+    transition-duration: 180ms;
+  }
+}

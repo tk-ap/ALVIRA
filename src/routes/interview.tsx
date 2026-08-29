@@ -5,16 +5,17 @@ import { ConversationToKnowledgeGraphic } from "~/components/ConversationToKnowl
 
 export const Route = createFileRoute("/interview")({
   head: () => ({
-    meta: [{ title: 'The Interview — ALVIRA' }, { name: "description", content: "ALVIRA's adaptive interview builds your AI profile through structured knowledge elicitation." }],
+    meta: [{ title: 'The Interview — ALVIRA' }, { name: "description", content: "ALVIRA's adaptive interview builds maintained Context through structured knowledge elicitation." }],
   }),
   component: InterviewPage,
 });
 
 const files = [
-  ["overview.md", "Who you are, in your own words."],
-  ["communication.md", "How you prefer to think and communicate."],
-  ["decision-making.md", "The principles behind your choices."],
-  ["workflows.md", "The repeatable ways you get things done."],
+  ["overview.md", "Who you are and the context AI should understand first."],
+  ["requirements.md", "The knowledge, terminology, and expectations AI should know."],
+  ["constraints.md", "Your boundaries, non-negotiables, and explicit unknowns."],
+  ["business-rules.md", "How you make decisions and evaluate tradeoffs."],
+  ["workflows.md", "The repeatable ways you work and get things done."],
 ];
 
 function Arrow() {
@@ -37,7 +38,7 @@ function InterviewPage() {
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-gray-600 dark:text-gray-400">
                 A guided conversation turns the way you think, work, and decide
-                into a profile your AI can actually use.
+                into maintained Context AI can actually use.
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-4">
                 <a
@@ -66,7 +67,7 @@ function InterviewPage() {
           </div>
 
           <div className="mt-20 grid items-center gap-12 border-y border-gray-200 py-12 dark:border-gray-800 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] ">
-            <p className="max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Your words are not lost in the chat. ALVIRA compiles the conversation into clear, reusable files your AI can understand.</p>
+            <p className="max-w-md text-base leading-relaxed text-gray-600 dark:text-gray-400">Your words are not lost in the chat. ALVIRA compiles the conversation into clear, inspectable Context representations.</p>
             <ConversationToKnowledgeGraphic />
           </div>
 
@@ -88,12 +89,12 @@ function InterviewPage() {
                 quote: '"Who are the people you typically consult for those bigger decisions, and what kind of input do you look for from each?"',
               },
               {
-                title: "Your profile builds",
-                body: "Your answers are validated, organized, and compiled into structured knowledge. You own the files — readable Markdown, portable anywhere.",
+                title: "Your Context builds",
+                body: "Your answers are validated, organized, and compiled into maintained Context. The representations stay readable, inspectable, and portable.",
               },
               {
                 title: "Your AI improves",
-                body: "When you share your profile with ChatGPT or Claude, responses reflect your actual decision-making style instead of generic advice.",
+                body: "When you carry appropriate Context into an AI interaction, responses can reflect your actual decision-making style instead of generic advice.",
               },
             ].map((step, index) => (
               <li key={step.title} className="relative">
@@ -115,20 +116,20 @@ function InterviewPage() {
             <h3 className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">The difference in practice</h3>
             <div className="mt-5 grid gap-10 border-y border-gray-200 py-8 md:grid-cols-2 dark:border-gray-700">
               <div className="border-l border-gray-300 pl-5 dark:border-gray-700">
-                <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Without your ALVIRA profile</p>
+                <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Without your ALVIRA Context</p>
                 <blockquote className="mt-5 text-base leading-relaxed text-gray-700 dark:text-gray-300">
                   "To make better decisions, try listing pros and cons. Consider asking a mentor for advice. Trust your gut."
                 </blockquote>
               </div>
               <div className="border-l-2 border-system pl-5 dark:border-system">
-                <p className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">With your ALVIRA profile</p>
+                <p className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">With your ALVIRA Context</p>
                 <blockquote className="mt-5 text-base leading-relaxed text-gray-800 dark:text-gray-200">
                   "Since you've said speed is your priority for reversible decisions, I'll give you a quick recommendation: option A based on what you've shared. For the bigger call — given your preference for consulting two trusted people — here are the specific questions worth running by them before you commit."
                 </blockquote>
               </div>
             </div>
             <p className="mt-6 max-w-4xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-              ALVIRA builds this context through conversation. You don't write or organize it yourself. And because it's portable Markdown, it works across ChatGPT, Claude, Gemini, Cursor, and future AI tools.
+              ALVIRA builds Context through conversation. You don't have to organize it yourself, and the confirmed parts remain readable and portable across future AI work.
             </p>
           </div>
         </div>
@@ -194,13 +195,12 @@ function InterviewPage() {
                 Give your AI something to work with.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-400">
-                The more real detail you share, the more useful your profile becomes.
+                The more real detail you share, the more useful your Context becomes.
                 A single sentence with specifics beats a one-word answer every time.
               </p>
             </div>
 
             <div className="mt-12 grid gap-6 lg:grid-cols-2">
-              {/* Bad examples */}
               <div className="rounded-lg border border-red-200 bg-red-50/60 p-6 dark:border-red-800 dark:bg-red-950/20">
                 <p className="font-mono text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
                   Not very helpful
@@ -223,7 +223,6 @@ function InterviewPage() {
                 </div>
               </div>
 
-              {/* Good examples */}
               <div className="rounded-lg border border-system bg-system-soft/60 p-6 dark:border-system-dark dark:bg-ink/20">
                 <p className="font-mono text-xs font-semibold uppercase tracking-wide text-system-dark dark:text-system">
                   Much more useful
@@ -267,10 +266,10 @@ function InterviewPage() {
                   04 / Your output
                 </span>
                 <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                  A profile you can inspect.
+                  Context you can inspect.
                 </h2>
                 <p className="mt-5 text-base leading-relaxed text-gray-600 dark:text-gray-400">
-                  Your answers are compiled into clear, focused files—not hidden
+                  Your answers are compiled into clear, focused representations—not hidden
                   inside a black box. Keep the parts that matter. Update them as
                   you change.
                 </p>
@@ -301,10 +300,10 @@ function InterviewPage() {
                 05 / Portable by design
               </span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                One profile. Every AI tool.
+                One Context. Many AI tools.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-400">
-                Bring your context to the tools you already use. Your knowledge
+                Bring appropriate Context to the tools you already use. Your knowledge
                 stays readable and yours.
               </p>
             </div>
@@ -313,7 +312,7 @@ function InterviewPage() {
                 <div>
                   <p className="font-mono text-lg font-semibold">ALVIRA</p>
                   <p className="mt-2 font-mono text-xs text-system-dark dark:text-system">
-                    your Markdown profile
+                    your maintained Context
                   </p>
                 </div>
               </div>
@@ -338,7 +337,7 @@ function InterviewPage() {
             Give your AI a better starting point.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-gray-400">
-            Start with a free interview. You can see what ALVIRA learns before
+            Start with a free interview. You can see what ALVIRA understands before
             you decide what comes next.
           </p>
           <a

@@ -1,0 +1,201 @@
+/* Stage 3 — authenticated/secondary ALVIRA surface inheritance.
+   Presentation only. Route behavior, state, handlers, auth, persistence,
+   exports, Bridge authorization, and Reflect logic remain untouched. */
+
+:root[data-alvira-app-shell="true"][data-alvira-route="dashboard"],
+:root[data-alvira-app-shell="true"][data-alvira-route="account"],
+:root[data-alvira-app-shell="true"][data-alvira-route="context"],
+:root[data-alvira-app-shell="true"][data-alvira-route="meos"],
+:root[data-alvira-app-shell="true"][data-alvira-route="bridge"] {
+  --secondary-line: color-mix(in srgb, var(--color-system, #168b78) 18%, #d6d1c8);
+  --secondary-surface: color-mix(in srgb, #f4f0e9 78%, white);
+  --secondary-surface-dark: color-mix(in srgb, #0b0e0e 88%, #168b78);
+}
+
+:is(
+  :root[data-alvira-route="dashboard"],
+  :root[data-alvira-route="account"],
+  :root[data-alvira-route="context"],
+  :root[data-alvira-route="meos"],
+  :root[data-alvira-route="bridge"]
+) main#main-content h1 {
+  font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+:is(
+  :root[data-alvira-route="dashboard"],
+  :root[data-alvira-route="account"],
+  :root[data-alvira-route="context"],
+  :root[data-alvira-route="meos"],
+  :root[data-alvira-route="bridge"]
+) main#main-content h2 {
+  font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+:is(
+  :root[data-alvira-route="dashboard"],
+  :root[data-alvira-route="account"],
+  :root[data-alvira-route="meos"],
+  :root[data-alvira-route="bridge"]
+) main#main-content {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-system, #168b78) 4%, transparent),
+    transparent 18rem
+  );
+}
+
+:root[data-alvira-route="dashboard"] main#main-content > div,
+:root[data-alvira-route="account"] main#main-content > div,
+:root[data-alvira-route="meos"] main#main-content:not(:has(#meos-access)),
+:root[data-alvira-route="bridge"] main#main-content > div {
+  position: relative;
+}
+
+:root[data-alvira-route="dashboard"] main#main-content > div::before,
+:root[data-alvira-route="account"] main#main-content > div::before,
+:root[data-alvira-route="meos"] main#main-content:not(:has(#meos-access))::before,
+:root[data-alvira-route="bridge"] main#main-content > div::before {
+  content: "CONTEXT INTELLIGENCE / MAINTAINED STATE";
+  display: block;
+  margin-bottom: 0.9rem;
+  color: var(--color-system, #168b78);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+/* Dashboard — make saved Context and owner telemetry read as system state. */
+:root[data-alvira-route="dashboard"] main#main-content .max-w-4xl > .flex.items-center.justify-between {
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--secondary-line);
+}
+
+:root[data-alvira-route="dashboard"] main#main-content .grid > div.border,
+:root[data-alvira-route="dashboard"] main#main-content section > div.border,
+:root[data-alvira-route="dashboard"] main#main-content .space-y-3 > div {
+  border-radius: 0.2rem !important;
+  box-shadow: none !important;
+}
+
+:root[data-alvira-route="dashboard"] main#main-content table thead {
+  background: color-mix(in srgb, var(--color-system, #168b78) 7%, transparent) !important;
+}
+
+:root[data-alvira-route="dashboard"] main#main-content table th {
+  color: var(--color-system, #168b78) !important;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Account — entitlement and plan cards become one restrained account ledger. */
+:root[data-alvira-route="account"] main#main-content .max-w-2xl {
+  max-width: 52rem;
+}
+
+:root[data-alvira-route="account"] main#main-content .max-w-2xl > div:first-child {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--secondary-line);
+}
+
+:root[data-alvira-route="account"] main#main-content .rounded-lg.border {
+  border-radius: 0.2rem !important;
+  box-shadow: none !important;
+}
+
+:root[data-alvira-route="account"] main#main-content .rounded-lg.border > div:first-child:has(h2) {
+  background: color-mix(in srgb, var(--color-system, #168b78) 5%, transparent);
+}
+
+/* Context — source selection, provenance, and queue read as one evidence system. */
+:root[data-alvira-route="context"] main#main-content > section {
+  scroll-margin-top: 5rem;
+}
+
+:root[data-alvira-route="context"] main#main-content > section:first-child {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-system, #168b78) 6%, transparent),
+    transparent 55%
+  );
+}
+
+:root[data-alvira-route="context"] main#main-content button.border,
+:root[data-alvira-route="context"] main#main-content div.border,
+:root[data-alvira-route="context"] main#main-content a.rounded-lg.border {
+  border-radius: 0.2rem !important;
+}
+
+:root[data-alvira-route="context"] main#main-content button[aria-pressed="true"] {
+  box-shadow: inset 3px 0 0 var(--color-system, #168b78);
+}
+
+:root[data-alvira-route="context"] main#main-content #provide-sources > div > .space-y-4 > div {
+  background: color-mix(in srgb, var(--color-system, #168b78) 2.5%, transparent);
+}
+
+/* Reflect — preserve its public landing and style only workspace primitives. */
+:root[data-alvira-route="meos"] main#main-content nav {
+  gap: 0;
+  border-color: var(--secondary-line) !important;
+}
+
+:root[data-alvira-route="meos"] main#main-content nav button {
+  border-radius: 0 !important;
+  letter-spacing: 0.1em;
+}
+
+:root[data-alvira-route="meos"] main#main-content nav button[class*="border-b-2"] {
+  background: color-mix(in srgb, var(--color-system, #168b78) 6%, transparent);
+}
+
+:root[data-alvira-route="meos"] main#main-content section.max-w-\[65ch\] {
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--secondary-line);
+}
+
+/* Bridge — visibly subordinate to the maintained Context account state. */
+:root[data-alvira-route="bridge"] main#main-content .lg\:grid-cols-\[3fr_2fr\] {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--secondary-line);
+}
+
+:root[data-alvira-route="bridge"] main#main-content section .grid > div.border {
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--color-system, #168b78) 2.5%, transparent);
+}
+
+:root[data-alvira-route="bridge"] main#main-content aside {
+  border-radius: 0.2rem !important;
+  border-color: color-mix(in srgb, var(--color-system, #168b78) 35%, transparent) !important;
+  box-shadow: inset 3px 0 0 var(--color-system, #168b78);
+}
+
+:is(
+  :root[data-alvira-route="dashboard"],
+  :root[data-alvira-route="account"],
+  :root[data-alvira-route="context"],
+  :root[data-alvira-route="meos"],
+  :root[data-alvira-route="bridge"]
+) main#main-content :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-system, #168b78);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    :root[data-alvira-route="dashboard"],
+    :root[data-alvira-route="account"],
+    :root[data-alvira-route="context"],
+    :root[data-alvira-route="meos"],
+    :root[data-alvira-route="bridge"]
+  ) main#main-content * {
+    scroll-behavior: auto !important;
+  }
+}

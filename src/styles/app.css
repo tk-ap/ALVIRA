@@ -1,82 +1,105 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Typography */
-  --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  /* ALVIRA typography */
+  --font-display: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Backgrounds */
+  /* Brand canvas — restrained so Doctor Bird signals stay intentional */
   --color-ink: #0b0e0e;
-  --color-ink-light: #f8f7f5;
+  --color-ink-light: #f4f0e9;
 
-  /* Primary text — warm tan */
-  --color-mineral: #d4bfa5;
-  --color-mineral-dark: #8b6548;
+  /* Editorial mineral text */
+  --color-mineral: #d8c7b5;
+  --color-mineral-dark: #3d3731;
 
-  /* Secondary text — warm tan-gray */
-  --color-warm-gray: #9e8b78;
-  --color-warm-gray-dark: #7a6755;
+  /* Secondary warm neutrals */
+  --color-warm-gray: #a99f94;
+  --color-warm-gray-dark: #6d6258;
 
-  /* Gray scale — warm tan-derived (H≈30°) */
-  --color-gray-50: #f7f4f0;
-  --color-gray-100: #ebe4d8;
-  --color-gray-200: #d9cdba;
-  --color-gray-300: #b8a590;
-  --color-gray-400: #9e8b78;
-  --color-gray-500: #7a6755;
-  --color-gray-600: #5f4f40;
-  --color-gray-700: #423830;
-  --color-gray-800: #2b2420;
-  --color-gray-900: #1a1816;
-  --color-gray-950: #0e0c0a;
+  /* Warm neutral scale */
+  --color-gray-50: #f7f3ed;
+  --color-gray-100: #eee8df;
+  --color-gray-200: #ddd3c7;
+  --color-gray-300: #c1b4a6;
+  --color-gray-400: #a99f94;
+  --color-gray-500: #82776d;
+  --color-gray-600: #645b53;
+  --color-gray-700: #49423c;
+  --color-gray-800: #2f2a26;
+  --color-gray-900: #1d1a18;
+  --color-gray-950: #11100f;
 
-  /* Warm accent scale — reserved for human / MeOS surfaces */
-  --color-warm-50: #faf5f1;
-  --color-warm-100: #efe3d7;
-  --color-warm-200: #ddc8b2;
-  --color-warm-300: #bb9475;
-  --color-warm-400: #a47a55;
-  --color-warm-500: #956842;
-  --color-warm-600: #8b6548;
-  --color-warm-700: #6d4a2d;
-  --color-warm-800: #523621;
-  --color-warm-900: #362316;
-  --color-warm-950: #1d110a;
-  --color-green-50: #faf5f1;
-  --color-green-100: #efe3d7;
-  --color-green-200: #ddc8b2;
-  --color-green-300: #bb9475;
-  --color-green-400: #a47a55;
-  --color-green-500: #956842;
-  --color-green-600: #8b6548;
-  --color-green-700: #6d4a2d;
-  --color-green-800: #523621;
-  --color-green-900: #362316;
-  --color-green-950: #1d110a;
+  /* Doctor Bird / human range — red-bill warmth, kept muted for product use */
+  --color-warm-50: #fcf4f1;
+  --color-warm-100: #f6e4de;
+  --color-warm-200: #ebc7ba;
+  --color-warm-300: #d99a84;
+  --color-warm-400: #cb765d;
+  --color-warm-500: #bd5f49;
+  --color-warm-600: #a84d3c;
+  --color-warm-700: #873d31;
+  --color-warm-800: #693027;
+  --color-warm-900: #47231e;
+  --color-warm-950: #27120f;
 
-  /* System accent — logo teal for AI Profile / system UI */
-  --color-system: #2d9b8c;
-  --color-system-soft: #f0f8f7;
-  --color-system-dark: #217a6e;
+  /* Compatibility aliases retained for existing product surfaces */
+  --color-green-50: #fcf4f1;
+  --color-green-100: #f6e4de;
+  --color-green-200: #ebc7ba;
+  --color-green-300: #d99a84;
+  --color-green-400: #cb765d;
+  --color-green-500: #bd5f49;
+  --color-green-600: #a84d3c;
+  --color-green-700: #873d31;
+  --color-green-800: #693027;
+  --color-green-900: #47231e;
+  --color-green-950: #27120f;
 
-  /* Human accent — logo warm tan for MeOS / human elements */
-  --color-human: #b0886c;
-  --color-human-soft: #faf6f1;
-  --color-human-dark: #8b6548;
+  /* Doctor Bird iridescent green — primary Context Intelligence signal */
+  --color-system: #168b78;
+  --color-system-soft: #edf7f4;
+  --color-system-dark: #0f6b5d;
+
+  /* Doctor Bird red-bill accent — human context / Reflect signal */
+  --color-human: #c56550;
+  --color-human-soft: #fbf1ee;
+  --color-human-dark: #944535;
+
+  /* Iridescent secondary — reserved for sparse states, depth, and identity detail */
+  --color-iridescent: #655a83;
+  --color-iridescent-soft: #f1eff7;
+  --color-iridescent-dark: #49415f;
 }
 
 @layer base {
-  html,
-  body {
-    @apply bg-ink-light text-mineral-dark antialiased dark:bg-ink dark:text-mineral;
+  html {
+    color-scheme: light dark;
   }
 
-  /* Visible focus indicator for every keyboard-focusable element.
-     Elements with explicit focus-visible:* utilities or focus rings override
-     this via the utilities layer. */
+  html.dark {
+    color-scheme: dark;
+    /* Doctor Bird night mapping: brighter iridescent signals against ink. */
+    --color-system: #2bb79f;
+    --color-system-dark: #79d5c4;
+    --color-system-soft: #102a26;
+    --color-human: #dd7b65;
+    --color-human-dark: #f0a08e;
+    --color-human-soft: #321d19;
+    --color-iridescent: #8c80b2;
+    --color-iridescent-dark: #b3a8d2;
+    --color-iridescent-soft: #211d2d;
+  }
+
+  html,
+  body {
+    @apply bg-ink-light font-sans text-mineral-dark antialiased dark:bg-ink dark:text-mineral;
+  }
+
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
@@ -99,22 +122,373 @@
     outline-color: var(--color-system);
   }
 
-  /* Keep the interview assistant avatar visually aligned with the ALVIRA node
-     used by Bridge: warm-brown node, teal compact mark, no circular avatar treatment. */
+  /* Existing assistant-avatar selectors are intentionally retained so the
+     redesign does not alter interview behavior or component structure. */
   div:has(> img[src="/brand/alvira-compact-mark.svg"]) {
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
     min-height: 40px !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     background: var(--color-warm-900) !important;
     border: 1px solid var(--color-system) !important;
-    box-shadow: 0 0 22px rgba(45, 155, 140, 0.16) !important;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--color-system) 14%, transparent) !important;
   }
 
   div:has(> img[src="/brand/alvira-compact-mark.svg"]) img {
     width: 32px !important;
     height: 32px !important;
     display: block !important;
+  }
+}
+
+/* Scroll is part of the public narrative system, not decorative polish.
+   Content remains fully visible without JS; these states are only enabled
+   after the client-side orchestrator mounts on the homepage. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-scroll-enhanced="true"] [data-scroll-reveal="true"] [data-scroll-step="true"] {
+    transition:
+      opacity 520ms cubic-bezier(.2,.7,.2,1) var(--scroll-delay, 0ms),
+      transform 620ms cubic-bezier(.2,.7,.2,1) var(--scroll-delay, 0ms),
+      filter 520ms ease var(--scroll-delay, 0ms),
+      border-color 360ms ease var(--scroll-delay, 0ms),
+      background-color 360ms ease var(--scroll-delay, 0ms);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-reveal="true"]:not([data-scroll-visible="true"]) [data-scroll-step="true"] {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+    filter: blur(2px);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-reveal="true"][data-scroll-visible="true"] [data-scroll-step="true"] {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-scene="why-context"]:not([data-scroll-visible="true"]) [data-scroll-step="true"] {
+    transform: translate3d(-10px, 6px, 0) scale(.99);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-scene="autonomy"] [data-scroll-step="true"]:nth-of-type(even),
+  html[data-scroll-enhanced="true"] [data-scroll-scene="capability"] [data-scroll-step="true"]:nth-of-type(even) {
+    transform-origin: left center;
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-scene="portability"]:not([data-scroll-visible="true"]) [data-portability-rail="true"] > span {
+    transform: translate3d(14px, 0, 0);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-scene="living-loop"][data-scroll-in-view="true"] {
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-system) 16%, transparent);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-scene="final-cta"] [data-scroll-step="true"] {
+    transform-origin: left bottom;
+  }
+}
+
+/* Portable by design — selective transfer rather than an integration map.
+   ALVIRA keeps the full context model intact; only reusable context crosses
+   the portability gate into a user-chosen AI environment. */
+[data-scroll-scene="portability"] [data-portability-rail="true"] {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(190px, .9fr) 108px minmax(160px, 1fr);
+  grid-template-rows: repeat(5, minmax(2.35rem, auto));
+  gap: .55rem 1rem;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 2.5rem;
+}
+
+[data-scroll-scene="portability"] [data-portability-rail="true"]::before {
+  content: "ALVIRA CONTEXT\A\Amaintained here\A— known\A— changing\A— uncertain";
+  white-space: pre;
+  grid-column: 1;
+  grid-row: 1 / 6;
+  display: flex;
+  align-items: flex-start;
+  min-height: 15rem;
+  padding: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-system) 42%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--color-system) 72%, transparent);
+  background: color-mix(in srgb, var(--color-system) 5%, transparent);
+  font-family: var(--font-mono);
+  font-size: .62rem;
+  line-height: 1.85;
+  letter-spacing: .08em;
+  color: var(--color-system-dark);
+}
+
+.dark [data-scroll-scene="portability"] [data-portability-rail="true"]::before {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="portability"] [data-portability-rail="true"]::after {
+  content: "REUSABLE\Aonly\A→";
+  white-space: pre;
+  grid-column: 2;
+  grid-row: 1 / 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 15rem;
+  padding: .75rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-system) 34%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--color-system) 34%, transparent);
+  background: color-mix(in srgb, var(--color-system) 3%, transparent);
+  font-family: var(--font-mono);
+  font-size: .56rem;
+  line-height: 1.7;
+  letter-spacing: .1em;
+  text-align: center;
+  color: var(--color-system-dark);
+}
+
+.dark [data-scroll-scene="portability"] [data-portability-rail="true"]::after {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="portability"] [data-portability-rail="true"] > span {
+  position: relative;
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  min-height: 2.35rem;
+  margin: 0;
+  padding: .62rem .15rem .62rem .9rem;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  background: transparent;
+  font-size: .64rem;
+}
+
+[data-scroll-scene="portability"] [data-portability-rail="true"] > span::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 1rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--color-system) 32%, transparent);
+}
+
+[data-scroll-scene="portability"] [data-portability-rail="true"] > span::after {
+  content: "chosen environment";
+  margin-left: auto;
+  padding-left: .8rem;
+  font-family: var(--font-mono);
+  font-size: .48rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 56%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-scroll-enhanced="true"] [data-scroll-scene="portability"] [data-portability-rail="true"]::before,
+  html[data-scroll-enhanced="true"] [data-scroll-scene="portability"] [data-portability-rail="true"]::after {
+    transition: opacity 480ms ease, transform 620ms cubic-bezier(.2,.7,.2,1);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-scene="portability"]:not([data-scroll-visible="true"]) [data-portability-rail="true"]::before {
+    opacity: .35;
+    transform: translate3d(-6px, 0, 0);
+  }
+
+  html[data-scroll-enhanced="true"] [data-scroll-scene="portability"]:not([data-scroll-visible="true"]) [data-portability-rail="true"]::after {
+    opacity: 0;
+    transform: scaleX(.35);
+  }
+}
+
+@media (max-width: 700px) {
+  [data-scroll-scene="portability"] [data-portability-rail="true"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: .7rem;
+  }
+
+  [data-scroll-scene="portability"] [data-portability-rail="true"]::before {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: 8rem;
+  }
+
+  [data-scroll-scene="portability"] [data-portability-rail="true"]::after {
+    content: "REUSABLE ONLY  ↓";
+    grid-column: 1;
+    grid-row: auto;
+    min-height: auto;
+    padding: .7rem 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-system) 28%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-system) 28%, transparent);
+  }
+
+  [data-scroll-scene="portability"] [data-portability-rail="true"] > span {
+    grid-column: 1;
+  }
+
+  [data-scroll-scene="portability"] [data-portability-rail="true"] > span::before {
+    display: none;
+  }
+
+  [data-scroll-scene="portability"] [data-portability-rail="true"] > span::after {
+    content: "destination";
+  }
+}
+
+/* Evidence of understanding — one inspector, not four marketing cards. */
+[data-scroll-scene="evidence"] [data-evidence-inspector="true"] {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 2.75rem;
+  padding-top: 2.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-system) 22%, transparent);
+  background: color-mix(in srgb, var(--color-system) 3%, transparent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-inspector="true"]::before {
+  content: "CONTEXT STATE / INSPECTABLE";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  min-height: 2.65rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-system) 18%, transparent);
+  font-family: var(--font-mono);
+  font-size: .58rem;
+  letter-spacing: .12em;
+  color: var(--color-system-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-inspector="true"]::before {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state] {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(9.5rem, .58fr) minmax(0, 1.42fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1.1rem 1rem 1.15rem 2.6rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent) !important;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state]:first-child {
+  border-top: 0 !important;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state]::before {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  top: 1.35rem;
+  width: .55rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 14px color-mix(in srgb, currentColor 28%, transparent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state]::after {
+  position: absolute;
+  right: 1rem;
+  top: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: .48rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state] h3 {
+  margin: 0;
+  color: currentColor !important;
+  font-family: var(--font-mono);
+  font-size: .66rem;
+  line-height: 1.55;
+  letter-spacing: .09em;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state] p {
+  margin: 0 !important;
+  padding-right: 7rem;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="known"] {
+  color: var(--color-system-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="known"] {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="known"]::after {
+  content: "established";
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="uncertain"] {
+  color: var(--color-iridescent-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="uncertain"] {
+  color: var(--color-iridescent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="uncertain"]::after {
+  content: "needs clarity";
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="changed"] {
+  color: var(--color-human-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="changed"] {
+  color: var(--color-human);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="changed"]::after {
+  content: "revised";
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="reusable"] {
+  color: var(--color-system-dark);
+  background: color-mix(in srgb, var(--color-system) 5%, transparent);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="reusable"] {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="reusable"]::after {
+  content: "portable";
+}
+
+@media (max-width: 700px) {
+  [data-scroll-scene="evidence"] [data-evidence-state] {
+    grid-template-columns: 1fr;
+    gap: .55rem;
+    padding-right: 1rem;
+  }
+
+  [data-scroll-scene="evidence"] [data-evidence-state] p {
+    padding-right: 0;
+  }
+
+  [data-scroll-scene="evidence"] [data-evidence-state]::after {
+    position: static;
+    grid-row: 1;
+    justify-self: end;
+    margin-top: -1.05rem;
   }
 }

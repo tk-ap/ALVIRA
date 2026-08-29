@@ -1,0 +1,123 @@
+/* Stage 3 — /app interview presentation only.
+   The answer textarea exists only in the active interview render branch, so
+   every rule below is scoped through that stable accessibility attribute.
+   No interview state, validation, generation, autosave, or source logic changes. */
+
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) {
+  background-image:
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-system) 3%, transparent), transparent 18rem),
+    linear-gradient(to right, transparent, color-mix(in srgb, var(--color-system) 2%, transparent), transparent);
+}
+
+/* Transcript becomes a restrained context workspace instead of generic chat UI. */
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .rounded-tl-md {
+  border-radius: 0 !important;
+  border-color: color-mix(in srgb, var(--color-system) 24%, transparent) !important;
+  border-left-width: 2px !important;
+  border-left-color: color-mix(in srgb, var(--color-system) 72%, transparent) !important;
+  background: color-mix(in srgb, var(--color-system) 2.5%, white) !important;
+  box-shadow: none !important;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .rounded-tl-md {
+  background: color-mix(in srgb, var(--color-system) 4%, var(--color-ink)) !important;
+}
+
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .rounded-tr-md {
+  border-radius: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--color-human) 20%, transparent);
+  border-right-width: 2px;
+  border-right-color: color-mix(in srgb, var(--color-human) 62%, transparent);
+  background: color-mix(in srgb, var(--color-human) 4%, white) !important;
+  box-shadow: none !important;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .rounded-tr-md {
+  background: color-mix(in srgb, var(--color-human) 5%, var(--color-ink)) !important;
+}
+
+/* Seed/carry-over information reads like maintained context entering the session. */
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .bg-emerald-50.border-emerald-200,
+html.dark[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .dark\:bg-emerald-950\/30.dark\:border-emerald-800 {
+  border-radius: 0;
+  border-left-width: 3px;
+  border-left-color: color-mix(in srgb, var(--color-system) 72%, transparent);
+  background: color-mix(in srgb, var(--color-system) 4%, transparent) !important;
+}
+
+/* Progress metadata is system state, not a badge-heavy dashboard. */
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) span.border.rounded {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-system) 28%, transparent);
+  color: var(--color-system-dark);
+  background: color-mix(in srgb, var(--color-system) 3%, transparent);
+  letter-spacing: 0.035em;
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) span.border.rounded {
+  color: var(--color-system);
+}
+
+/* Completion / quality states keep their semantics but inherit ALVIRA geometry. */
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) :is(
+  .border-amber-200,
+  .border-red-200,
+  .border-emerald-200
+) {
+  border-radius: 0;
+}
+
+/* Composer becomes the clear active work surface. */
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) textarea[aria-label="Your answer"] {
+  min-height: 3.25rem;
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-gray-500) 28%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--color-system) 56%, transparent);
+  background: color-mix(in srgb, white 82%, transparent);
+  padding-inline: 1rem;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--color-system) 18%, transparent);
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) textarea[aria-label="Your answer"] {
+  background: color-mix(in srgb, white 3.5%, var(--color-ink));
+  border-color: color-mix(in srgb, white 14%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--color-system) 52%, transparent);
+}
+
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) textarea[aria-label="Your answer"]:focus {
+  border-color: color-mix(in srgb, var(--color-system) 68%, transparent) !important;
+  box-shadow: inset 0 -2px 0 var(--color-system);
+}
+
+/* Send remains compact, but now reads as the primary system action. */
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) textarea[aria-label="Your answer"] + button {
+  border-radius: 0;
+  background: var(--color-system-dark) !important;
+  color: white !important;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--color-system) 72%, transparent);
+}
+
+html.dark[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) textarea[aria-label="Your answer"] + button {
+  background: color-mix(in srgb, var(--color-system) 70%, var(--color-ink)) !important;
+  color: var(--color-ink-light) !important;
+}
+
+/* Keep the assistant thinking state quiet and system-like. */
+html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .animate-bounce {
+  background: var(--color-system) !important;
+  opacity: 0.72;
+}
+
+/* On larger screens, give the active conversation slightly more breathing room
+   without changing the functional width contract of the route. */
+@media (min-width: 768px) {
+  html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) {
+    padding-inline: clamp(1.5rem, 4vw, 3.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) .animate-bounce {
+    animation: none !important;
+  }
+}

@@ -7,7 +7,14 @@ import {
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
+import { AppShellInheritance } from "~/components/AppShellInheritance";
+import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
+import appShellCss from "~/styles/app-shell.css?url";
+import appInterviewCss from "~/styles/app-interview.css?url";
+import appSeedReviewCss from "~/styles/app-seed-review.css?url";
+import appOutputCss from "~/styles/app-output.css?url";
+import appSecondaryCss from "~/styles/app-secondary.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -18,12 +25,12 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#0b0e0e" },
       {
         property: "og:title",
-        content: "ALVIRA — AI Agent Context, Structured",
+        content: "ALVIRA — Context Intelligence",
       },
       {
         property: "og:description",
         content:
-          "Discover, organize, and compile your knowledge so ChatGPT, Claude, Gemini, and Cursor actually understand you.",
+          "ALVIRA maintains living context intelligence so AI can understand what matters, what changed, and what remains uncertain.",
       },
       { property: "og:type", content: "website" },
       {
@@ -34,13 +41,13 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "32x32",
-        href: "/favicon-32x32.png",
-      },
+      { rel: "stylesheet", href: appShellCss },
+      { rel: "stylesheet", href: appInterviewCss },
+      { rel: "stylesheet", href: appSeedReviewCss },
+      { rel: "stylesheet", href: appOutputCss },
+      { rel: "stylesheet", href: appSecondaryCss },
+      { rel: "icon", type: "image/svg+xml", href: "/brand/alvira-context-frame.svg?v=2" },
+      { rel: "shortcut icon", href: "/brand/alvira-context-frame.svg?v=2" },
       {
         rel: "apple-touch-icon",
         sizes: "180x180",
@@ -49,7 +56,7 @@ export const Route = createRootRoute({
     ],
     scripts: [
       {
-        children: `(function(){var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}})()`,
+        children: `(function(){var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark")}})()`,
       },
     ],
   }),
@@ -60,6 +67,8 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
+      <AppShellInheritance />
+      <ScrollNarrative />
       <Outlet />
     </RootDocument>
   );

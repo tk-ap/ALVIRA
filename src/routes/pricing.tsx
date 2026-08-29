@@ -3,299 +3,132 @@ import { useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
-import { ComparisonTable } from "~/components/ComparisonTable";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
-    meta: [{ title: 'Pricing — ALVIRA' }, { name: "description", content: 'Free, Pro ($20/mo), and Lifetime ($399) plans for ALVIRA Context.' }],
+    meta: [
+      { title: "Pricing — ALVIRA" },
+      { name: "description", content: "Free, Pro, Lifetime, and limited Founding Beta access for ALVIRA Context." },
+    ],
   }),
   component: Pricing,
 });
 
-const freePlan = {
-  name: "Free",
-  price: "$0",
-  cadence: "forever",
-  description: "Everything you need to build your first ALVIRA Context.",
-  features: [
-    "1 saved Context",
-    "3 guided interviews",
-    "All 19 personal knowledge domains",
-    "No credit card required",
-  ],
-  cta: "Start free",
-  href: "/app",
-} as const;
-
-const lifetimePlan = {
-  name: "Lifetime",
-  price: LIFETIME_PRICE,
-  cadence: "one-time",
-  description: "Pay once — about two years of Pro. Keep one maintained Context for the life of the service.",
-  features: [
-    "One permanent personal Context",
-    "All 19 personal knowledge domains",
-    "Up to 12 guided interviews in the first year",
-    "Four AI-assisted refresh interviews per year after year one",
-    "Unlimited manual edits",
-    "Markdown exports (JSON coming soon)",
-    "Up to 50 saved versions (coming soon)",
-    "Standard support",
-  ],
-  cta: "Go Lifetime",
-  href: STRIPE_LINKS.lifetime,
-} as const;
-
-const arguments_ = [
-  { number: "01", title: "Stop repeating yourself.", body: "Every time you switch AI tools or start a new conversation, you're starting from zero. ALVIRA maintains how you think, work, communicate, and decide — then gives future AI interactions appropriate context instead of making you rebuild it from scratch." },
-  { number: "02", title: "Get help that fits you.", body: "Generic AI gives generic answers. ALVIRA maintains your communication style, values, boundaries, decision frameworks, and workflows as inspectable Context — so AI has something grounded to judge against instead of guessing." },
-  { number: "03", title: "Use and own it anywhere.", body: "Platform-native memory can trap context inside one tool. ALVIRA keeps confirmed context readable and exportable so appropriate parts can travel into ChatGPT, Claude, Gemini, Cursor, and future AI tools." },
-];
-
-const useCases = [
-  ["Developers use ALVIRA to...", "keep coding standards, architecture decisions, and working preferences available in every coding session."],
-  ["Consultants use ALVIRA to...", "move between clients and AI tools without rebuilding their voice, process, or expertise from scratch."],
-  ["Teams use ALVIRA to...", "turn scattered operational knowledge into durable context every teammate and AI agent can use."],
-  ["Creators use ALVIRA to...", "make every draft sound like them, with their audience, values, and boundaries in view."],
-];
-
-const adjacentPlayers = [
-  ["Windsurf", "portable plain-Markdown rules, but developer-only — no elicitation or validation"],
-  ["Khoj", "AI search over your personal notes — no structured, maintained Context model"],
-  ["Obsidian", "a knowledge store you assemble by hand — ALVIRA helps build and maintain Context from evidence"],
-];
-
-const faqs = [
-  ["Can I switch plans?", "Yes. Upgrade or downgrade anytime."],
-  [
-    "What happens to my Context if I cancel?",
-    "Your exported Markdown remains yours. Account-level availability follows your plan and the service terms.",
-  ],
-  [
-    "Is there a team plan?",
-    "ALVIRA Team is coming soon. Join the waitlist for early access.",
-  ],
-  [
-    "What's the difference between Pro and Lifetime?",
-    `Pro is for ongoing use with multiple saved Contexts and unlimited interviews. Lifetime is a one-time ${LIFETIME_PRICE} payment for one permanent personal Context — it pays for itself in about two years vs. annual Pro.`,
-  ],
+const sharedPaidFeatures = [
+  "Unlimited guided interviews",
+  "Multiple saved Contexts",
+  "Continuous Context updates",
+  "Markdown, JSON, and TOON exports",
+  "Reuse workspace for ChatGPT, Claude, Gemini, and Cursor",
+  "Context History — currently in beta",
 ] as const;
 
 function Pricing() {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
 
-  const proPlan = {
-    name: "Pro",
-    price: billing === "annual" ? "$192" : "$20",
-    cadence: billing === "annual" ? "/year" : "/month",
-    description: "For people who want their Context to keep growing with them.",
-    features: [
-      "Unlimited interviews",
-      "Multiple saved Contexts",
-      "Markdown exports (JSON coming soon)",
-      "Version history (coming soon)",
-      "Continuous Context updates",
-    ],
-    cta: "Get Pro",
-    href: billing === "annual" ? STRIPE_LINKS.annual : STRIPE_LINKS.pro,
-    featured: true,
-    annual: billing === "annual",
-  };
-
-  const plans = [freePlan, proPlan, lifetimePlan];
+  const plans = [
+    {
+      name: "Free",
+      price: "$0",
+      cadence: "forever",
+      description: "Build your first maintained ALVIRA Context and see whether continuity changes how useful AI feels to you.",
+      features: [
+        "1 saved Context",
+        "3 guided interviews",
+        "All current Context domains",
+        "Markdown, JSON, and TOON export",
+        "No credit card required",
+      ],
+      cta: "Start free",
+      href: "/app",
+      featured: false,
+    },
+    {
+      name: "Pro",
+      price: billing === "annual" ? "$192" : "$20",
+      cadence: billing === "annual" ? "/year" : "/month",
+      description: "For people who want ALVIRA to keep learning, updating, and carrying Context forward as part of how they work.",
+      features: [...sharedPaidFeatures],
+      cta: "Get Pro",
+      href: billing === "annual" ? STRIPE_LINKS.annual : STRIPE_LINKS.pro,
+      featured: true,
+      annual: billing === "annual",
+    },
+    {
+      name: "Lifetime",
+      price: LIFETIME_PRICE,
+      cadence: "one-time",
+      description: "The current ALVIRA Context feature set without a recurring subscription, for as long as ALVIRA continues to operate the service.",
+      features: [
+        ...sharedPaidFeatures,
+        "One-time payment — no automatic renewal",
+        "Future premium products, team plans, API access, and third-party subscriptions remain separate",
+      ],
+      cta: "Go Lifetime",
+      href: STRIPE_LINKS.lifetime,
+      featured: false,
+    },
+  ];
 
   return (
     <div className="min-h-dvh bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <Header />
       <main id="main-content">
         <section className="px-6 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
-          <div className="mx-auto max-w-5xl text-center">
+          <div className="mx-auto max-w-5xl">
             <div className="max-w-3xl">
-              <span className="inline-block rounded-md border border-system px-3 py-1.5 font-mono text-xs tracking-wide text-system-dark dark:border-system-dark dark:text-system">
-                &lt;pricing /&gt;
-              </span>
-              <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-                ALVIRA Context Pricing
-              </h1>
-              <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-                Start free. Upgrade when maintained Context becomes part of how you work.
-              </p>
-              <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">
-                For ALVIRA Reflect pricing, see the{" "}
-                <a href="/meos" className="text-system-dark hover:text-system dark:text-system dark:hover:text-system underline underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
-                  Reflect page
-                </a>
-                .
-              </p>
+              <span className="inline-block rounded-md border border-system px-3 py-1.5 font-mono text-xs tracking-wide text-system-dark dark:border-system-dark dark:text-system">&lt;pricing /&gt;</span>
+              <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">Start by seeing whether better Context actually helps.</h1>
+              <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Free is enough to build and try your first maintained Context. Upgrade when you want ALVIRA to become an ongoing part of how you work with AI.</p>
+              <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">ALVIRA Reflect is a separate product capability and may have separate commercial terms as it develops.</p>
             </div>
 
-            <div className="mt-10 flex justify-center">
-              <div role="radiogroup" aria-label="Billing period" className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
-                <button
-                  type="button"
-                  onClick={() => setBilling("monthly")}
-                  role="radio"
-                  aria-checked={billing === "monthly"}
-                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system ${
-                    billing === "monthly"
-                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
-                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBilling("annual")}
-                  role="radio"
-                  aria-checked={billing === "annual"}
-                  className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system ${
-                    billing === "annual"
-                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
-                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  }`}
-                >
-                  Annual
-                </button>
+            <div className="mt-10 flex">
+              <div role="radiogroup" aria-label="Pro billing period" className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
+                <button type="button" onClick={() => setBilling("monthly")} role="radio" aria-checked={billing === "monthly"} className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors ${billing === "monthly" ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}`}>Monthly</button>
+                <button type="button" onClick={() => setBilling("annual")} role="radio" aria-checked={billing === "annual"} className={`rounded-md px-4 py-2 font-mono text-sm font-medium transition-colors ${billing === "annual" ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}`}>Annual</button>
               </div>
             </div>
 
             <div className="mt-8 grid items-stretch gap-5 md:grid-cols-3">
               {plans.map((plan) => (
-                <article
-                  key={plan.name}
-                  className={`relative flex h-full flex-col border p-6 sm:p-8 ${
-                    plan.featured
-                      ? "border-system bg-system-soft/50 shadow-lg shadow-ink/10 dark:border-system dark:bg-ink/20 dark:shadow-black/20"
-                      : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40"
-                  }`}
-                >
-                  {plan.featured && (
-                    <span className="absolute -top-3 left-6 bg-system-dark px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-system dark:text-gray-950">
-                      Most popular
-                    </span>
-                  )}
-                  <div>
-                    <h2 className="font-mono text-lg font-semibold">{plan.name}</h2>
-                    <div className="mt-5 flex items-baseline gap-2">
-                      <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                      <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{plan.cadence}</span>
-                    </div>
-                    {"annual" in plan && plan.annual && (
-                      <span className="mt-2 inline-block font-mono text-[11px] text-system-dark dark:text-system">
-                        Save 20% — $16/mo equivalent
-                      </span>
-                    )}
-                    <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
-                    {plan.name === "Lifetime" && (
-                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                        Lifetime access applies to the Context features included with this plan for as long as ALVIRA continues to offer the ALVIRA Context service. Your exported files remain yours permanently.
-                      </p>
-                    )}
-                  </div>
-                  <ul className="mt-8 flex-1 space-y-3 border-t border-gray-200 pt-6 text-sm dark:border-gray-800">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex gap-3 leading-relaxed">
-                        <span className="font-mono text-system-dark dark:text-system" aria-hidden="true">✓</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {plan.name === "Lifetime" && (
-                    <>
-                      <p className="mt-6 border-t border-amber-200 pt-5 text-xs leading-relaxed text-gray-600 dark:border-amber-900/60 dark:text-gray-400">
-                        ALVIRA Reflect, team workspaces, API access, additional saved Contexts, third-party subscriptions, and future premium products are sold separately.
-                      </p>
-                      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                        One-time payment. No automatic renewal. Lifetime access applies while ALVIRA operates the ALVIRA Context service. Your exported files remain yours permanently. ALVIRA Reflect, additional saved Contexts, future premium modules, API access, and third-party subscriptions are sold separately.
-                      </p>
-                    </>
-                  )}
-                  <a
-                    href={plan.href}
-                    {...(plan.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
-                    className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system ${
-                      plan.featured
-                        ? "bg-system text-white hover:bg-system-dark dark:bg-system dark:text-gray-950 dark:hover:bg-system"
-                        : "border border-gray-300 bg-gray-900 text-white hover:bg-gray-800 dark:border-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200"
-                    }`}
-                  >
-                    {plan.cta}<span aria-hidden="true" className="ml-2">→</span>
-                  </a>
+                <article key={plan.name} className={`relative flex h-full flex-col border p-6 sm:p-8 ${plan.featured ? "border-system bg-system-soft/50 shadow-lg shadow-ink/10 dark:border-system dark:bg-ink/20" : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40"}`}>
+                  {plan.featured && <span className="absolute -top-3 left-6 bg-system-dark px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-system dark:text-gray-950">Most flexible</span>}
+                  <h2 className="font-mono text-lg font-semibold">{plan.name}</h2>
+                  <div className="mt-5 flex items-baseline gap-2"><span className="text-4xl font-bold tracking-tight">{plan.price}</span><span className="font-mono text-xs text-gray-500 dark:text-gray-400">{plan.cadence}</span></div>
+                  {"annual" in plan && plan.annual && <span className="mt-2 inline-block font-mono text-[11px] text-system-dark dark:text-system">$16/month equivalent</span>}
+                  <p className="mt-4 min-h-20 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
+                  <ul className="mt-7 flex-1 space-y-3 border-t border-gray-200 pt-6 text-sm dark:border-gray-800">{plan.features.map((feature) => <li key={feature} className="flex gap-3 leading-relaxed"><span className="font-mono text-system-dark dark:text-system" aria-hidden="true">✓</span><span>{feature}</span></li>)}</ul>
+                  <a href={plan.href} {...(plan.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})} className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold ${plan.featured ? "bg-system text-white dark:text-gray-950" : "border border-gray-300 bg-gray-900 text-white dark:border-gray-700 dark:bg-gray-100 dark:text-gray-950"}`}>{plan.cta}<span aria-hidden="true" className="ml-2">→</span></a>
                 </article>
               ))}
             </div>
 
-            <p className="mt-8 text-center font-mono text-xs text-gray-500 dark:text-gray-400">
-              <strong>Pro</strong> is best for ongoing use, multiple saved Contexts, and unlimited interviews.{' '}
-              <strong>Lifetime</strong> is best for one permanent personal Context — it pays for itself in about two years of annual Pro.
-            </p>
+            <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm leading-relaxed text-gray-600 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400"><strong className="text-gray-900 dark:text-gray-100">What is live vs. developing?</strong> Interviews, saved Contexts, ongoing updates, current exports, Reuse, and the first Context History experience are in the product now. Context History is still being validated in beta. New premium modules, broader integrations, team features, and API access should not be assumed to be included until they are explicitly listed here.</div>
           </div>
         </section>
 
-        <section id="why-alvira" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
-          <div className="mx-auto max-w-5xl text-center">
-            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">The case for context</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Why pay for ALVIRA?</h2>
-            <div className="mt-16 space-y-16 sm:mt-20 sm:space-y-24">
-              {arguments_.map((item, index) => (
-                <article key={item.number} className={`grid gap-8 text-left md:grid-cols-[120px_1fr] ${index > 0 ? "border-t border-gray-200 pt-16 dark:border-gray-800 sm:pt-24" : ""}`}>
-                  <div className="flex items-start gap-4 md:block"><span className="font-mono text-3xl tabular-nums text-system dark:text-system">{item.number}</span><span className="mt-4 hidden h-px w-12 bg-system md:block" aria-hidden="true" /></div>
-                  <div className="max-w-3xl"><h3 className="text-3xl font-bold tracking-tight sm:text-4xl">{item.title}</h3><p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-gray-400">{item.body}</p></div>
-                </article>
-              ))}
+        <section className="border-y border-system/20 bg-system-soft/30 px-6 py-16 dark:border-system/20 dark:bg-ink/20 sm:px-8 sm:py-20">
+          <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">Limited Founding Beta</span>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight">Want to help shape ALVIRA instead of just buying it?</h2>
+              <p className="mt-4 max-w-3xl leading-relaxed text-gray-600 dark:text-gray-400">A small number of testers receive complimentary unlimited ALVIRA access for the life of their approved account. In return, we’re looking for people who will genuinely use the product during the beta and give candid feedback on the workflow, UI, relevance, effectiveness, confusion, and failures they encounter.</p>
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Applications are reviewed individually. This is a separate founding entitlement, not “free Pro forever,” and access is never granted automatically from the form.</p>
             </div>
+            <a href="/founding-beta" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-system px-6 py-3 font-semibold text-white dark:text-gray-950">Apply for a slot →</a>
           </div>
         </section>
 
-        <section className="border-t border-gray-100 bg-white px-6 py-20 dark:border-gray-800 dark:bg-gray-950 sm:px-8 sm:py-24">
-          <div className="mx-auto max-w-5xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Already useful in the real world.</h2>
-            <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {useCases.map(([label, body]) => <div key={label}><h3 className="font-mono text-sm">{label}</h3><p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{body}</p></div>)}
+        <section className="px-6 py-20 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-5xl">
+            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">The simple distinction</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Which path fits?</h2>
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              <article className="border-t border-gray-300 pt-5 dark:border-gray-700"><h3 className="font-semibold">Free</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I want to find out whether maintained Context is useful to me.</p></article>
+              <article className="border-t border-system pt-5"><h3 className="font-semibold">Pro / Lifetime</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I already know I want ALVIRA as an ongoing tool; I’m choosing recurring vs. one-time payment.</p></article>
+              <article className="border-t border-iridescent pt-5 dark:border-iridescent-dark"><h3 className="font-semibold">Founding Beta</h3><p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">I genuinely want to test the product closely and help determine what makes it viable for more users.</p></article>
             </div>
-          </div>
-        </section>
-
-        <section id="comparison" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
-          <div className="mx-auto max-w-5xl text-center">
-            <div className="mb-10"><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">How ALVIRA compares</span><h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Context you can keep — everywhere.</h2><p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, maintain, and export structured Context you own.</p></div>
-            <ComparisonTable />
-            <p className="mx-auto mt-10 max-w-2xl text-lg font-semibold leading-snug">Most tools don’t let you elicit, validate, and export your AI context to use everywhere.</p>
-            <p className="mx-auto mt-6 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Adjacent players: {adjacentPlayers.map(([name, detail], index) => <span key={name}>{index > 0 ? <span className="mx-2 text-gray-300 dark:text-gray-600" aria-hidden="true">·</span> : null}<strong className="font-mono text-xs font-semibold">{name}</strong> — {detail}</span>)}</p>
-            <p className="mt-8 font-mono text-xs text-gray-500 dark:text-gray-400">Last reviewed: August 2026</p>
-          </div>
-        </section>
-
-        <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
-          <div className="mx-auto max-w-4xl text-center">
-            <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">FAQ</span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Questions, answered.</h2>
-            <div className="mt-10 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
-              {faqs.map(([question, answer]) => (
-                <details key={question} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-system dark:focus-visible:outline-system [&::-webkit-details-marker]:hidden">
-                    {question}
-                    <span className="font-mono text-xl font-normal text-system-dark transition-transform group-open:rotate-45 dark:text-system" aria-hidden="true">+</span>
-                  </summary>
-                  <p className="mt-3 max-w-2xl pr-8 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="px-6 py-20 text-center sm:px-8 sm:py-28">
-          <div className="mx-auto max-w-2xl">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to stop repeating yourself?</h2>
-            <p className="mt-4 text-base text-gray-600 dark:text-gray-400">Build once. Keep your Context useful as you change.</p>
-            <a
-              href="/app"
-              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200 dark:focus-visible:outline-system"
-            >
-              Build my ALVIRA Context <span aria-hidden="true" className="ml-2">→</span>
-            </a>
-            <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">Free to start · No credit card · Portable Markdown</p>
           </div>
         </section>
       </main>

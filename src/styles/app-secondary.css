@@ -50,14 +50,14 @@
 
 :root[data-alvira-route="dashboard"] main#main-content > div,
 :root[data-alvira-route="account"] main#main-content > div,
-:root[data-alvira-route="meos"] main#main-content,
+:root[data-alvira-route="meos"] main#main-content:not(:has(#meos-access)),
 :root[data-alvira-route="bridge"] main#main-content > div {
   position: relative;
 }
 
 :root[data-alvira-route="dashboard"] main#main-content > div::before,
 :root[data-alvira-route="account"] main#main-content > div::before,
-:root[data-alvira-route="meos"] main#main-content::before,
+:root[data-alvira-route="meos"] main#main-content:not(:has(#meos-access))::before,
 :root[data-alvira-route="bridge"] main#main-content > div::before {
   content: "CONTEXT INTELLIGENCE / MAINTAINED STATE";
   display: block;
@@ -139,7 +139,7 @@
   background: color-mix(in srgb, var(--color-system, #168b78) 2.5%, transparent);
 }
 
-/* Reflect — preserve its personal tone while inheriting ALVIRA's system hierarchy. */
+/* Reflect — preserve its public landing and style only workspace primitives. */
 :root[data-alvira-route="meos"] main#main-content nav {
   gap: 0;
   border-color: var(--secondary-line) !important;

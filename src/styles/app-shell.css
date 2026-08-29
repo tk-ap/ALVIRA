@@ -1,0 +1,71 @@
+/* Stage 3 — app-shell inheritance only.
+   This stylesheet is inert unless AppShellInheritance marks a product route.
+   It intentionally changes presentation tokens, not product behavior. */
+
+html[data-alvira-app-shell="true"] {
+  /* Re-map legacy emerald utility classes to ALVIRA's Context Intelligence signal. */
+  --color-emerald-50: #edf7f4;
+  --color-emerald-100: #d8f0ea;
+  --color-emerald-200: #afe0d5;
+  --color-emerald-300: #79d5c4;
+  --color-emerald-400: #48c4af;
+  --color-emerald-500: #2bb79f;
+  --color-emerald-600: #168b78;
+  --color-emerald-700: #0f6b5d;
+  --color-emerald-800: #145347;
+  --color-emerald-900: #123d36;
+  --color-emerald-950: #102a26;
+
+  /* Product surfaces inherit the quieter editorial geometry from Stage 2. */
+  --radius-sm: 0.2rem;
+  --radius-md: 0.3rem;
+  --radius-lg: 0.4rem;
+  --radius-xl: 0.55rem;
+  --radius-2xl: 0.7rem;
+}
+
+html[data-alvira-app-shell="true"] body {
+  background: var(--color-ink-light);
+  color: var(--color-mineral-dark);
+}
+
+html.dark[data-alvira-app-shell="true"] body {
+  background: var(--color-ink);
+  color: var(--color-mineral);
+}
+
+/* Give functional app surfaces the same quieter separation used on the public site
+   without changing their dimensions, hierarchy, or event targets. */
+html[data-alvira-app-shell="true"] main {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-system) 2.5%, transparent),
+    transparent 22rem
+  );
+}
+
+html[data-alvira-app-shell="true"] :is(input, textarea, select) {
+  accent-color: var(--color-system);
+}
+
+html[data-alvira-app-shell="true"] :is(input, textarea, select):focus-visible {
+  outline-color: var(--color-system-dark);
+}
+
+html.dark[data-alvira-app-shell="true"] :is(input, textarea, select):focus-visible {
+  outline-color: var(--color-system);
+}
+
+/* Typography inheritance: product headings gain the same display voice while
+   labels, controls, and body copy remain Inter/JetBrains Mono as authored. */
+html[data-alvira-app-shell="true"] main :is(h1, h2) {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+}
+
+/* Keep state transitions purposeful and restrained. Reduced motion remains static. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-alvira-app-shell="true"] :is(button, a, input, textarea, select) {
+    transition-duration: 180ms;
+  }
+}

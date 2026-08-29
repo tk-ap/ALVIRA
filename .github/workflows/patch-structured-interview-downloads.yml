@@ -1,0 +1,46 @@
+name: Patch structured interview downloads
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/patch-structured-interview-downloads.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Add JSON and TOON to interview ZIP
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/app.tsx')
+          text = path.read_text()
+
+          old = 'import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";\n'
+          new = old + 'import { buildStructuredInterviewExport, serializeInterviewJson, serializeInterviewToon } from "~/lib/interview-exports";\n'
+          assert text.count(old) == 1, text.count(old)
+          text = text.replace(old, new, 1)
+
+          old = '''    for (const [name, content] of fileMap) {\n      zip.file(name, content);\n    }\n    const blob = await zip.generateAsync({ type: "blob" });'''
+          new = '''    for (const [name, content] of fileMap) {\n      zip.file(name, content);\n    }\n    if (state) {\n      const exportGraph = offering === "meos"\n        ? (isPreview ? getMeosPreviewGraph() : getMeosGraph())\n        : getKnowledgeGraph(state.tier);\n      const structured = buildStructuredInterviewExport(\n        state,\n        exportGraph,\n        offering === "meos" ? "meos" : "context",\n      );\n      zip.file("context.json", serializeInterviewJson(structured));\n      zip.file("context.toon", serializeInterviewToon(structured));\n    }\n    const blob = await zip.generateAsync({ type: "blob" });'''
+          assert text.count(old) == 1, text.count(old)
+          text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
+      - name: Verify and commit
+        run: |
+          git diff --check
+          test "$(git diff --name-only)" = "src/routes/app.tsx"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/app.tsx
+          git commit -m "include JSON and TOON interview downloads"
+          git push origin main

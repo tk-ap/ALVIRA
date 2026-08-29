@@ -89,6 +89,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Let branch-source Pages finish first
+        run: sleep 20
+
+      - name: Deploy brand preview last
         id: deployment
         uses: actions/deploy-pages@v4

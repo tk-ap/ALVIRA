@@ -53,7 +53,7 @@ function Home() {
             <h1 className="mt-7 max-w-5xl font-display text-[clamp(4rem,9vw,8.8rem)] leading-[0.82] tracking-[-0.055em] text-[#191715] dark:text-[#f4f0e9]">
               AI infers
               <br />
-              a lot.
+              <strong className="font-bold">a lot.</strong>
             </h1>
 
             <div className="mt-10 max-w-2xl border-l border-system/60 pl-5 sm:mt-12 sm:pl-7">
@@ -119,6 +119,53 @@ function Home() {
                   <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-system-dark dark:text-system">The ALVIRA shift</p>
                   <p className="mt-4 text-lg leading-8 text-[#4f4740] dark:text-[#c9bdb0]">
                     Instead of repeatedly re-explaining yourself, ALVIRA turns those fragments into a maintained layer of understanding that can deepen over time.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[#191715]/10 bg-[#191715] text-[#f4f0e9] dark:border-white/10 dark:bg-[#111513]">
+          <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 sm:py-24 lg:px-10">
+            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-system">Capability is not context</p>
+                <h2 className="mt-5 max-w-2xl font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">
+                  More powerful AI does not solve missing context.
+                </h2>
+                <p className="mt-7 max-w-lg text-base leading-7 text-white/58">
+                  A model can know an extraordinary amount about the world and still know almost nothing about the situation, person, priorities, constraints, or history that should shape its answer.
+                </p>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2">
+                <div className="border-t border-white/18 pt-5">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/40">Without context / LLMs</p>
+                  <h3 className="mt-4 text-xl font-semibold text-white">Capability becomes generic.</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/58">
+                    The model fills missing information with inference. You get plausible answers that may ignore your actual goals, preferences, constraints, prior decisions, or definition of success.
+                  </p>
+                </div>
+
+                <div className="border-t border-white/18 pt-5">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/40">Without context / Agents</p>
+                  <h3 className="mt-4 text-xl font-semibold text-white">Autonomy can amplify the wrong assumption.</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/58">
+                    Giving an agent more tools, memory, or permission does not tell it what matters to you. It can act faster while still optimizing for an incomplete understanding of the task.
+                  </p>
+                </div>
+
+                <div className="border-t border-system/55 pt-5 sm:col-span-2">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-system">With Context Intelligence</p>
+                  <h3 className="mt-4 max-w-2xl font-display text-3xl leading-[1.02] tracking-[-0.025em] text-white sm:text-4xl">
+                    Intelligence becomes relevant when capability is grounded in the context that matters.
+                  </h3>
+                  <p className="mt-5 max-w-2xl text-sm leading-6 text-white/58">
+                    Context gives models and agents a maintained frame for judgment: what is true about you, what has already been decided, what changed, what remains uncertain, and what should guide the next action.
+                  </p>
+                  <p className="mt-7 font-mono text-xs uppercase tracking-[0.13em] text-system">
+                    The more autonomous the system, the more consequential missing context becomes.
                   </p>
                 </div>
               </div>

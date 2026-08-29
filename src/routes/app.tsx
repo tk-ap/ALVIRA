@@ -181,7 +181,7 @@ function TypingIndicator() {
     <div className="flex items-start gap-3">
       <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
         <img
-          src="/brand/alvira-compact-mark.svg"
+          src="/brand/alvira-context-frame.svg"
           alt=""
           aria-label="ALVIRA"
           className="h-8 w-8"
@@ -909,10 +909,11 @@ function AppPage() {
     setWaiting(true);
     setInterviewError("");
 
-    const initialState = createInitialState(existing.tier, existing.topic, offering, preview);
+    const activeOffering = offering === "meos" ? "meos" : "context";
+    const initialState = createInitialState(tier, trimmed, activeOffering, isPreview);
 
     try {
-      const result = await askNextQuestion(initialState);
+      const result = await askNextQuestion(initialState, false, activeOffering);
       if (result) {
         setState(result);
       } else {
@@ -1589,7 +1590,7 @@ function AppPage() {
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
             {offering && contextSourcePanel}
-            \n
+
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
@@ -1606,7 +1607,7 @@ function AppPage() {
                   {msg.role === "assistant" ? (
                     <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                       <img
-                        src="/brand/alvira-compact-mark.svg"
+                        src="/brand/alvira-context-frame.svg"
                         alt=""
                         aria-label="ALVIRA"
                         className="h-8 w-8"

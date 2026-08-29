@@ -4,36 +4,37 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Typography */
+  /* ALVIRA typography */
   --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Backgrounds */
+  /* Brand canvas */
   --color-ink: #0b0e0e;
-  --color-ink-light: #f8f7f5;
+  --color-ink-light: #f4f0e9;
 
-  /* Primary text — warm tan */
-  --color-mineral: #d4bfa5;
-  --color-mineral-dark: #8b6548;
+  /* Editorial mineral text */
+  --color-mineral: #d8c7b5;
+  --color-mineral-dark: #3d3731;
 
-  /* Secondary text — warm tan-gray */
-  --color-warm-gray: #9e8b78;
-  --color-warm-gray-dark: #7a6755;
+  /* Secondary warm neutrals */
+  --color-warm-gray: #a99f94;
+  --color-warm-gray-dark: #6d6258;
 
-  /* Gray scale — warm tan-derived (H≈30°) */
-  --color-gray-50: #f7f4f0;
-  --color-gray-100: #ebe4d8;
-  --color-gray-200: #d9cdba;
-  --color-gray-300: #b8a590;
-  --color-gray-400: #9e8b78;
-  --color-gray-500: #7a6755;
-  --color-gray-600: #5f4f40;
-  --color-gray-700: #423830;
-  --color-gray-800: #2b2420;
-  --color-gray-900: #1a1816;
-  --color-gray-950: #0e0c0a;
+  /* Warm neutral scale */
+  --color-gray-50: #f7f3ed;
+  --color-gray-100: #eee8df;
+  --color-gray-200: #ddd3c7;
+  --color-gray-300: #c1b4a6;
+  --color-gray-400: #a99f94;
+  --color-gray-500: #82776d;
+  --color-gray-600: #645b53;
+  --color-gray-700: #49423c;
+  --color-gray-800: #2f2a26;
+  --color-gray-900: #1d1a18;
+  --color-gray-950: #11100f;
 
-  /* Warm accent scale — reserved for human / MeOS surfaces */
+  /* Human / Reflect range */
   --color-warm-50: #faf5f1;
   --color-warm-100: #efe3d7;
   --color-warm-200: #ddc8b2;
@@ -45,6 +46,8 @@
   --color-warm-800: #523621;
   --color-warm-900: #362316;
   --color-warm-950: #1d110a;
+
+  /* Compatibility aliases retained for existing product surfaces */
   --color-green-50: #faf5f1;
   --color-green-100: #efe3d7;
   --color-green-200: #ddc8b2;
@@ -57,12 +60,12 @@
   --color-green-900: #362316;
   --color-green-950: #1d110a;
 
-  /* System accent — logo teal for AI Profile / system UI */
+  /* Context Intelligence signal */
   --color-system: #2d9b8c;
-  --color-system-soft: #f0f8f7;
+  --color-system-soft: #edf7f5;
   --color-system-dark: #217a6e;
 
-  /* Human accent — logo warm tan for MeOS / human elements */
+  /* Human context signal */
   --color-human: #b0886c;
   --color-human-soft: #faf6f1;
   --color-human-dark: #8b6548;
@@ -71,12 +74,9 @@
 @layer base {
   html,
   body {
-    @apply bg-ink-light text-mineral-dark antialiased dark:bg-ink dark:text-mineral;
+    @apply bg-ink-light font-sans text-mineral-dark antialiased dark:bg-ink dark:text-mineral;
   }
 
-  /* Visible focus indicator for every keyboard-focusable element.
-     Elements with explicit focus-visible:* utilities or focus rings override
-     this via the utilities layer. */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
@@ -99,17 +99,17 @@
     outline-color: var(--color-system);
   }
 
-  /* Keep the interview assistant avatar visually aligned with the ALVIRA node
-     used by Bridge: warm-brown node, teal compact mark, no circular avatar treatment. */
+  /* Existing assistant-avatar selectors are intentionally retained so the
+     redesign does not alter interview behavior or component structure. */
   div:has(> img[src="/brand/alvira-compact-mark.svg"]) {
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
     min-height: 40px !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     background: var(--color-warm-900) !important;
     border: 1px solid var(--color-system) !important;
-    box-shadow: 0 0 22px rgba(45, 155, 140, 0.16) !important;
+    box-shadow: 0 0 22px rgba(45, 155, 140, 0.14) !important;
   }
 
   div:has(> img[src="/brand/alvira-compact-mark.svg"]) img {

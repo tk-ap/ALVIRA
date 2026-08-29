@@ -2,6 +2,7 @@
 
 **Branch:** `brand/alvira-system-refresh`  
 **Status:** Preview-only rebrand work  
+**Stage 2 status:** **Complete — homepage direction approved for progression into Stage 3.**  
 **Production rule:** `main` and the live production experience remain untouched unless an explicit merge/deploy decision is made later.
 
 ## Purpose
@@ -154,6 +155,23 @@ Rework the public narrative around:
 - scroll-triggered narrative behavior that connects these ideas as one argument
 
 The homepage should explain the product before it explains every feature.
+
+#### Stage 2 completion decision
+
+Stage 2 is complete on the preview branch. The accepted homepage narrative is:
+
+**premise → problem → consequence → mechanism → living system → evidence → portability → action**
+
+The final decision pass established these boundaries:
+
+- keep the category-defining headlines and compressed supporting copy
+- let system visuals and scroll behavior carry explanatory weight instead of restoring long prose
+- retain the interactive **Capture → Understand → Reflect → Update → Reuse** loop as the strongest living-system demonstration
+- keep **Evidence of understanding** as an inspectable state surface rather than marketing cards
+- keep **Portable by design** intentionally restrained; do not force another hub, network, transfer-map, or integration-style graphic without a genuinely stronger visual metaphor
+- destination names in the portability section illustrate user-chosen environments, not claimed native integrations
+- preserve complete static meaning under reduced motion and without client-side enhancement
+- do not reopen homepage concept exploration during Stage 3 unless a specific regression or user-approved problem requires it
 
 ### Stage 3 — App-shell inheritance
 

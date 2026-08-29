@@ -8,7 +8,7 @@ import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
-    meta: [{ title: 'Create your ALVIRA profile' }, { name: "description", content: 'Create an ALVIRA account and build the context your AI is missing.' }],
+    meta: [{ title: 'Create your ALVIRA Context' }, { name: "description", content: 'Create an ALVIRA account and build the context your AI is missing.' }],
   }),
   component: SignupPage,
 });
@@ -40,8 +40,6 @@ function SignupPage() {
 
     setSubmitting(true);
     try {
-      // Pass the stable anonymous id so the server-side signup_completed event
-      // can link pre-signup funnel activity to the new account.
       await signup({ data: { email, password, anonymousId: getOrCreateAnonId() } });
       navigate({ to: "/app" });
     } catch (err) {
@@ -62,7 +60,7 @@ function SignupPage() {
               Create your account
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Start building your AI knowledge profile — free.
+              Start building your ALVIRA Context — free.
             </p>
           </div>
 

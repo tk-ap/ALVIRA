@@ -93,15 +93,52 @@ function Home() {
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">Why Context Intelligence</p>
                 <h2 className="mt-5 font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">When context is missing, inference fills the gap.</h2>
+                <p className="mt-6 max-w-md text-base leading-7 text-[#6d6258] dark:text-[#a99f94]">Your context already exists. The problem is that it is fragmented across conversations, files, decisions, tools, and memory.</p>
               </div>
-              <div className="grid gap-10 lg:grid-cols-2">
-                <div className="border-t border-[#191715]/20 pt-5 dark:border-white/20">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[#74685e] dark:text-[#93877c]">The current pattern</p>
-                  <p className="mt-4 text-lg leading-8 text-[#4f4740] dark:text-[#c9bdb0]">Your goals live in one chat. Preferences in another. Projects, constraints, decisions, and history are scattered across files, tools, and memory.</p>
+
+              <div className="relative overflow-hidden border border-[#191715]/12 bg-[#f4f0e9]/60 p-6 dark:border-white/12 dark:bg-white/[0.025] sm:p-8">
+                <div className="grid gap-7 sm:grid-cols-[1fr_auto_1.05fr] sm:items-center">
+                  <div className="grid grid-cols-2 gap-3">
+                    {["Goals", "Constraints", "History", "Preferences", "Decisions", "Projects"].map((fragment, index) => (
+                      <div
+                        key={fragment}
+                        className={`border px-3 py-4 font-mono text-[11px] uppercase tracking-[0.11em] ${
+                          index % 3 === 0
+                            ? "border-human/35 text-human-dark dark:text-human"
+                            : index % 3 === 1
+                              ? "border-iridescent/35 text-iridescent-dark dark:text-iridescent"
+                              : "border-[#191715]/15 text-[#6d6258] dark:border-white/15 dark:text-white/48"
+                        }`}
+                      >
+                        {fragment}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-center py-1 font-mono text-xl text-system sm:px-2" aria-hidden="true">→</div>
+
+                  <div className="border border-system/45 bg-system/[0.055] p-5 sm:p-6">
+                    <div className="flex items-center justify-between gap-4 border-b border-system/25 pb-4">
+                      <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-system-dark dark:text-system">ALVIRA Context</p>
+                      <span className="h-2.5 w-2.5 rounded-full bg-system shadow-[0_0_18px_color-mix(in_srgb,var(--color-system)_60%,transparent)]" aria-hidden="true" />
+                    </div>
+                    <div className="mt-5 space-y-3">
+                      {["Known", "Changing", "Uncertain", "Reusable"].map((state, index) => (
+                        <div key={state} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                          <span className="font-mono text-[10px] text-system">0{index + 1}</span>
+                          <span className="h-px bg-system/25" aria-hidden="true" />
+                          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#5f574f] dark:text-white/55">{state}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-6 text-sm leading-6 text-[#5f574f] dark:text-white/58">Fragments become one maintained frame for what AI should understand before it responds or acts.</p>
+                  </div>
                 </div>
-                <div className="border-t border-system/45 pt-5">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-system-dark dark:text-system">The ALVIRA shift</p>
-                  <p className="mt-4 text-lg leading-8 text-[#4f4740] dark:text-[#c9bdb0]">ALVIRA reduces that gap by turning those fragments into a maintained layer of understanding that can deepen as your context changes.</p>
+
+                <div className="mt-7 flex items-center gap-3 border-t border-[#191715]/10 pt-5 dark:border-white/10">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Continuity</span>
+                  <span className="h-px flex-1 bg-system/30" aria-hidden="true" />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#74685e] dark:text-white/42">less reconstruction · better judgment</span>
                 </div>
               </div>
             </div>

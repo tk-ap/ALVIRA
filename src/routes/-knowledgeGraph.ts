@@ -24,6 +24,8 @@ export interface InterviewState {
   history: Message[];
   currentDomain: string | null;
   contextSources?: import("~/lib/context-engine").ContextSource[];
+  /** Set after knowledge files have been generated so resume UI can offer an update flow. */
+  generatedAt?: number;
 }
 
 export interface Domain {

@@ -62,6 +62,12 @@ type ResumableDraft = {
   source: "browser" | "account";
 };
 
+function hasMeaningfulDraftInput(state: InterviewState): boolean {
+  if (state.history.some((message) => message.role === "user" && message.content.trim().length > 0)) return true;
+  if ((state.contextSources ?? []).length > 0) return true;
+  return Object.values(state.domains ?? {}).some((domain) => (domain.answers ?? []).some((answer) => answer.trim().length > 0));
+}
+
 // ── Initialize empty interview state ──
 function createInitialState(tier: Tier, topic: string, offering: "context" | "meos" = "context", preview = false): InterviewState {
   const graph = offering === "meos" ? (preview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
@@ -641,13 +647,19 @@ function AppPage() {
             const localDraft = localRaw ? JSON.parse(localRaw) : null;
             const draft = serverDraft ?? localDraft;
             if (draft?.state && !cancelled) {
-              setResumeDraft({
-                offering: draft.offering === "meos" ? "meos" : "context",
-                topic: draft.topic ?? draft.state.topic,
-                state: draft.state as InterviewState,
-                savedAt: draft.savedAt,
-                source: serverDraft ? "account" : "browser",
-              });
+              const draftState = draft.state as InterviewState;
+              if (hasMeaningfulDraftInput(draftState)) {
+                setResumeDraft({
+                  offering: draft.offering === "meos" ? "meos" : "context",
+                  topic: draft.topic ?? draft.state.topic,
+                  state: draftState,
+                  savedAt: draft.savedAt,
+                  source: serverDraft ? "account" : "browser",
+                });
+              } else {
+                try { window.localStorage.removeItem(getInterviewDraftKey(u.id, draft.offering === "meos" ? "meos" : "context")); } catch {}
+                if (serverDraft) await clearInterviewDraft().catch(() => {});
+              }
               draftRestoredRef.current = true;
             }
           } catch { /* malformed or unavailable draft */ }
@@ -687,13 +699,18 @@ function AppPage() {
           if (raw) {
             const draft = JSON.parse(raw);
             if (draft?.state && !cancelled) {
-              setResumeDraft({
-                offering: draft.offering === "meos" ? "meos" : "context",
-                topic: draft.topic ?? draft.state.topic,
-                state: draft.state as InterviewState,
-                savedAt: draft.savedAt,
-                source: "browser",
-              });
+              const draftState = draft.state as InterviewState;
+              if (hasMeaningfulDraftInput(draftState)) {
+                setResumeDraft({
+                  offering: draft.offering === "meos" ? "meos" : "context",
+                  topic: draft.topic ?? draft.state.topic,
+                  state: draftState,
+                  savedAt: draft.savedAt,
+                  source: "browser",
+                });
+              } else {
+                window.localStorage.removeItem(getInterviewDraftKey(authUser?.id, draft.offering === "meos" ? "meos" : "context"));
+              }
             }
           }
         } catch { /* malformed or unavailable draft */ }
@@ -712,6 +729,32 @@ function AppPage() {
     setState(resumeDraft.state);
     setResumeDraft(null);
     setScreen("interview");
+  };
+
+  const handleUpdateGeneratedDraft = async () => {
+    if (!resumeDraft) return;
+    const activeOffering = resumeDraft.offering;
+    const draftPreview = activeOffering === "meos" && !meosAuthorized;
+    setOffering(activeOffering);
+    setPreviewMode(draftPreview);
+    setTopic(resumeDraft.topic);
+    setTier(resumeDraft.state.tier);
+    const seeded = seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview);
+    setState(seeded);
+    setResumeDraft(null);
+    setSeededInfo("Your Context has already been generated. What has changed, or what would you like ALVIRA to know now?");
+    setScreen("interview");
+    setWaiting(true);
+    try {
+      const result = await askNextQuestion(seeded, false, activeOffering);
+      if (result) setState(result);
+      else setState({ ...seeded, currentDomain: null });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      if (msg !== "API key not configured") setInterviewError(msg);
+    } finally {
+      setWaiting(false);
+    }
   };
 
   const handleStartOver = async () => {
@@ -1322,6 +1365,8 @@ function AppPage() {
       } else {
         files = compileKnowledge(compileState, currentGraph);
       }
+      const generatedState = { ...compileState, generatedAt: Date.now() };
+      setState(generatedState);
       setGenerated(files);
       setActiveTab(offering === "meos" ? "portrait.md" : "overview");
       setScreen("output");
@@ -2041,14 +2086,16 @@ function AppPage() {
           
           {resumeDraft && (
             <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">
-              <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Saved progress found</p>
-              <h1 id="resume-heading" className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">Continue your previous interview?</h1>
+              <p className="font-mono text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-400">{resumeDraft.state.generatedAt ? "Context ready" : "Saved progress found"}</p>
+              <h1 id="resume-heading" className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">{resumeDraft.state.generatedAt ? "Update your existing Context?" : "Continue your previous interview?"}</h1>
               <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-                {resumeDraft.topic} · {resumeDraft.state.history.filter((message) => message.role === "user").length} answers saved {resumeDraft.source === "browser" ? "in this browser" : "to your account"}.
+                {resumeDraft.state.generatedAt
+                  ? `${resumeDraft.topic} has generated files. Add new context or tell ALVIRA what changed.`
+                  : `${resumeDraft.topic} · ${resumeDraft.state.history.filter((message) => message.role === "user").length} answers saved ${resumeDraft.source === "browser" ? "in this browser" : "to your account"}.`}
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={handleResumeDraft} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500">
-                  Resume interview
+                <button type="button" onClick={resumeDraft.state.generatedAt ? () => void handleUpdateGeneratedDraft() : handleResumeDraft} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                  {resumeDraft.state.generatedAt ? "Update / add context" : "Continue previous interview"}
                 </button>
                 <button type="button" onClick={() => void handleStartOver()} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:text-gray-100">
                   Start a new interview

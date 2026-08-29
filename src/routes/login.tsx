@@ -55,7 +55,7 @@ function LoginPage() {
               Sign in
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Continue building your AI knowledge profile.
+              Continue building and maintaining your ALVIRA Context.
             </p>
           </div>
 

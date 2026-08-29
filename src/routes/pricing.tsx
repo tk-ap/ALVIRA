@@ -7,7 +7,7 @@ import { ComparisonTable } from "~/components/ComparisonTable";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
-    meta: [{ title: 'Pricing — ALVIRA' }, { name: "description", content: 'Free, Pro ($20/mo), and Lifetime ($399) plans for your AI profile.' }],
+    meta: [{ title: 'Pricing — ALVIRA' }, { name: "description", content: 'Free, Pro ($20/mo), and Lifetime ($399) plans for ALVIRA Context.' }],
   }),
   component: Pricing,
 });
@@ -16,9 +16,9 @@ const freePlan = {
   name: "Free",
   price: "$0",
   cadence: "forever",
-  description: "Everything you need to build your first AI profile.",
+  description: "Everything you need to build your first ALVIRA Context.",
   features: [
-    "1 AI profile",
+    "1 saved Context",
     "3 guided interviews",
     "All 19 personal knowledge domains",
     "No credit card required",
@@ -31,9 +31,9 @@ const lifetimePlan = {
   name: "Lifetime",
   price: LIFETIME_PRICE,
   cadence: "one-time",
-  description: "Pay once — about two years of Pro. Keep your profile forever.",
+  description: "Pay once — about two years of Pro. Keep one maintained Context for the life of the service.",
   features: [
-    "One permanent personal AI profile",
+    "One permanent personal Context",
     "All 19 personal knowledge domains",
     "Up to 12 guided interviews in the first year",
     "Four AI-assisted refresh interviews per year after year one",
@@ -47,9 +47,9 @@ const lifetimePlan = {
 } as const;
 
 const arguments_ = [
-  { number: "01", title: "Stop repeating yourself.", body: "Every time you switch AI tools or start a new conversation, you're starting from zero. ALVIRA captures how you think, work, communicate, and decide — once — then gives every AI you use the context it needs from the first message. No more explaining your background, your preferences, or your constraints over and over." },
-  { number: "02", title: "Get help that fits you.", body: "Generic AI gives generic answers. ALVIRA profiles your communication style, values, boundaries, decision frameworks, and workflows — so every AI you use responds as if it already knows you. Your AI stops guessing and starts working with you, not at you." },
-  { number: "03", title: "Use and own it anywhere.", body: "Platform-native memory features lock your context inside one tool. ALVIRA generates portable Markdown files that work across ChatGPT, Claude, Gemini, Cursor, and future AI tools. Your knowledge is yours — not trapped inside someone else's ecosystem." },
+  { number: "01", title: "Stop repeating yourself.", body: "Every time you switch AI tools or start a new conversation, you're starting from zero. ALVIRA maintains how you think, work, communicate, and decide — then gives future AI interactions appropriate context instead of making you rebuild it from scratch." },
+  { number: "02", title: "Get help that fits you.", body: "Generic AI gives generic answers. ALVIRA maintains your communication style, values, boundaries, decision frameworks, and workflows as inspectable Context — so AI has something grounded to judge against instead of guessing." },
+  { number: "03", title: "Use and own it anywhere.", body: "Platform-native memory can trap context inside one tool. ALVIRA keeps confirmed context readable and exportable so appropriate parts can travel into ChatGPT, Claude, Gemini, Cursor, and future AI tools." },
 ];
 
 const useCases = [
@@ -61,15 +61,15 @@ const useCases = [
 
 const adjacentPlayers = [
   ["Windsurf", "portable plain-Markdown rules, but developer-only — no elicitation or validation"],
-  ["Khoj", "AI search over your personal notes — no structured, reusable profile"],
-  ["Obsidian", "a knowledge store you assemble by hand — ALVIRA builds yours for you"],
+  ["Khoj", "AI search over your personal notes — no structured, maintained Context model"],
+  ["Obsidian", "a knowledge store you assemble by hand — ALVIRA helps build and maintain Context from evidence"],
 ];
 
 const faqs = [
   ["Can I switch plans?", "Yes. Upgrade or downgrade anytime."],
   [
-    "What happens to my profiles if I cancel?",
-    "You keep everything. Your Markdown files are yours forever.",
+    "What happens to my Context if I cancel?",
+    "Your exported Markdown remains yours. Account-level availability follows your plan and the service terms.",
   ],
   [
     "Is there a team plan?",
@@ -77,7 +77,7 @@ const faqs = [
   ],
   [
     "What's the difference between Pro and Lifetime?",
-    `Pro is for ongoing use with multiple profiles and unlimited interviews. Lifetime is a one-time ${LIFETIME_PRICE} payment for a single permanent profile — it pays for itself in about two years vs. annual Pro. Best if you want one profile that lasts.`,
+    `Pro is for ongoing use with multiple saved Contexts and unlimited interviews. Lifetime is a one-time ${LIFETIME_PRICE} payment for one permanent personal Context — it pays for itself in about two years vs. annual Pro.`,
   ],
 ] as const;
 
@@ -88,13 +88,13 @@ function Pricing() {
     name: "Pro",
     price: billing === "annual" ? "$192" : "$20",
     cadence: billing === "annual" ? "/year" : "/month",
-    description: "For people who want their profile to keep growing with them.",
+    description: "For people who want their Context to keep growing with them.",
     features: [
       "Unlimited interviews",
-      "Multiple profiles",
+      "Multiple saved Contexts",
       "Markdown exports (JSON coming soon)",
       "Version history (coming soon)",
-      "Continuous profile updates",
+      "Continuous Context updates",
     ],
     cta: "Get Pro",
     href: billing === "annual" ? STRIPE_LINKS.annual : STRIPE_LINKS.pro,
@@ -115,10 +115,10 @@ function Pricing() {
                 &lt;pricing /&gt;
               </span>
               <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-                AI Profile Pricing
+                ALVIRA Context Pricing
               </h1>
               <p className="mt-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-                Start free. Upgrade when ALVIRA becomes part of how you work.
+                Start free. Upgrade when maintained Context becomes part of how you work.
               </p>
               <p className="mt-3 font-mono text-sm text-gray-500 dark:text-gray-400">
                 For ALVIRA Reflect pricing, see the{" "}
@@ -129,7 +129,6 @@ function Pricing() {
               </p>
             </div>
 
-            {/* Billing toggle */}
             <div className="mt-10 flex justify-center">
               <div role="radiogroup" aria-label="Billing period" className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
                 <button
@@ -190,7 +189,7 @@ function Pricing() {
                     <p className="mt-4 min-h-12 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{plan.description}</p>
                     {plan.name === "Lifetime" && (
                       <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                        Lifetime access applies to the profile features included with this plan for as long as ALVIRA continues to offer the AI Context Profile service. Your exported profile remains yours permanently.
+                        Lifetime access applies to the Context features included with this plan for as long as ALVIRA continues to offer the ALVIRA Context service. Your exported files remain yours permanently.
                       </p>
                     )}
                   </div>
@@ -205,10 +204,10 @@ function Pricing() {
                   {plan.name === "Lifetime" && (
                     <>
                       <p className="mt-6 border-t border-amber-200 pt-5 text-xs leading-relaxed text-gray-600 dark:border-amber-900/60 dark:text-gray-400">
-                        ALVIRA Reflect, team workspaces, API access, additional profiles, third-party subscriptions, and future premium products are sold separately.
+                        ALVIRA Reflect, team workspaces, API access, additional saved Contexts, third-party subscriptions, and future premium products are sold separately.
                       </p>
                       <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                        One-time payment. No automatic renewal. Lifetime access applies while ALVIRA operates the AI Context Profile service. Your exported files remain yours permanently. ALVIRA Reflect, additional profiles, future premium modules, API access, and third-party subscriptions are sold separately.
+                        One-time payment. No automatic renewal. Lifetime access applies while ALVIRA operates the ALVIRA Context service. Your exported files remain yours permanently. ALVIRA Reflect, additional saved Contexts, future premium modules, API access, and third-party subscriptions are sold separately.
                       </p>
                     </>
                   )}
@@ -228,8 +227,8 @@ function Pricing() {
             </div>
 
             <p className="mt-8 text-center font-mono text-xs text-gray-500 dark:text-gray-400">
-              <strong>Pro</strong> is best for ongoing use, multiple profiles, and unlimited interviews.{' '}
-              <strong>Lifetime</strong> is best for one permanent profile — it pays for itself in about two years of annual Pro.
+              <strong>Pro</strong> is best for ongoing use, multiple saved Contexts, and unlimited interviews.{' '}
+              <strong>Lifetime</strong> is best for one permanent personal Context — it pays for itself in about two years of annual Pro.
             </p>
           </div>
         </section>
@@ -260,7 +259,7 @@ function Pricing() {
 
         <section id="comparison" className="scroll-mt-20 border-t border-gray-100 bg-gray-50 px-6 py-20 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-24">
           <div className="mx-auto max-w-5xl text-center">
-            <div className="mb-10"><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">How ALVIRA compares</span><h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Context you can keep — everywhere.</h2><p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, and export structured files you own.</p></div>
+            <div className="mb-10"><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">How ALVIRA compares</span><h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Context you can keep — everywhere.</h2><p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">Platform memory can turn your context into lossy model-generated prose. ALVIRA is designed to elicit, validate, maintain, and export structured Context you own.</p></div>
             <ComparisonTable />
             <p className="mx-auto mt-10 max-w-2xl text-lg font-semibold leading-snug">Most tools don’t let you elicit, validate, and export your AI context to use everywhere.</p>
             <p className="mx-auto mt-6 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Adjacent players: {adjacentPlayers.map(([name, detail], index) => <span key={name}>{index > 0 ? <span className="mx-2 text-gray-300 dark:text-gray-600" aria-hidden="true">·</span> : null}<strong className="font-mono text-xs font-semibold">{name}</strong> — {detail}</span>)}</p>
@@ -289,12 +288,12 @@ function Pricing() {
         <section className="px-6 py-20 text-center sm:px-8 sm:py-28">
           <div className="mx-auto max-w-2xl">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to stop repeating yourself?</h2>
-            <p className="mt-4 text-base text-gray-600 dark:text-gray-400">Build once. Bring your context everywhere.</p>
+            <p className="mt-4 text-base text-gray-600 dark:text-gray-400">Build once. Keep your Context useful as you change.</p>
             <a
               href="/app"
               className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-gray-900 px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200 dark:focus-visible:outline-system"
             >
-              Build my AI profile <span aria-hidden="true" className="ml-2">→</span>
+              Build my ALVIRA Context <span aria-hidden="true" className="ml-2">→</span>
             </a>
             <p className="mt-5 font-mono text-xs text-gray-500 dark:text-gray-400">Free to start · No credit card · Portable Markdown</p>
           </div>

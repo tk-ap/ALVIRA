@@ -49,7 +49,7 @@ export const Route = createRootRoute({
     ],
     scripts: [
       {
-        children: `(function(){var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}})()`,
+        children: `(function(){var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark")}})()`,
       },
     ],
   }),

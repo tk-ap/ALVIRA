@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { createMeosBuilderKit } from "~/lib/meos-builder-kit";
 import { buildCarryOverClaims, handoffTopic, oppositeOffering, type ProfileOffering } from "~/lib/profile-handoff";
 import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";
+import { buildStructuredInterviewExport, serializeInterviewJson, serializeInterviewToon } from "~/lib/interview-exports";
 import { ingestUrlSource } from "./-sourceIngestor";
 
 import { Header } from "~/components/Header";
@@ -1414,6 +1415,18 @@ function AppPage() {
         ];
     for (const [name, content] of fileMap) {
       zip.file(name, content);
+    }
+    if (state) {
+      const exportGraph = offering === "meos"
+        ? (isPreview ? getMeosPreviewGraph() : getMeosGraph())
+        : getKnowledgeGraph(state.tier);
+      const structured = buildStructuredInterviewExport(
+        state,
+        exportGraph,
+        offering === "meos" ? "meos" : "context",
+      );
+      zip.file("context.json", serializeInterviewJson(structured));
+      zip.file("context.toon", serializeInterviewToon(structured));
     }
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);

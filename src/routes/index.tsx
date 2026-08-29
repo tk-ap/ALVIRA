@@ -18,33 +18,33 @@ export const Route = createFileRoute("/")({
 });
 
 const loop = [
-  ["01", "Capture", "Bring conversation, documents, links, files, and context you already have."],
-  ["02", "Understand", "ALVIRA organizes that evidence into a coherent model of how you think, work, and decide."],
-  ["03", "Reflect", "Patterns, gaps, contradictions, and meaningful changes become visible instead of disappearing between chats."],
-  ["04", "Update", "Your context stays living: editable, reviewable, and able to evolve as you do."],
-  ["05", "Reuse", "Carry durable context into future AI work instead of rebuilding yourself from scratch."],
+  ["01", "Capture", "Bring in context you already have."],
+  ["02", "Understand", "Turn evidence into structured understanding."],
+  ["03", "Reflect", "Surface patterns, gaps, contradictions, and change."],
+  ["04", "Update", "Keep context current without erasing its history."],
+  ["05", "Reuse", "Carry appropriate context into future AI work."],
 ] as const;
 
 const loopOutputs = [
-  "New evidence enters the context layer without erasing what is already known.",
-  "Signals become structured understanding: what is established, uncertain, changing, or missing.",
-  "Patterns, contradictions, and meaningful changes are surfaced for review instead of disappearing between interactions.",
-  "Confirmed changes become part of the maintained context model, preserving history while keeping the present accurate.",
-  "Appropriate context becomes portable into the next AI interaction — then new evidence starts the cycle again.",
+  "New evidence enters without erasing what is already known.",
+  "Signals become what is established, uncertain, changing, or missing.",
+  "Patterns, contradictions, and meaningful changes surface for review.",
+  "Confirmed change becomes part of the maintained context model.",
+  "Appropriate context becomes portable — then the cycle continues.",
 ] as const;
 
 const sources = [
-  ["Conversation", "Tell ALVIRA directly through adaptive interviews and ongoing reflection."],
-  ["Documents", "Bring notes, journals, résumés, presentations, and existing AI context."],
-  ["Links", "Use selected websites, portfolios, profiles, and public sources as evidence."],
-  ["Files", "Add source material over time instead of forcing everything into one onboarding session."],
+  ["Conversation", "Adaptive interviews and reflection."],
+  ["Documents", "Notes, journals, résumés, and existing AI context."],
+  ["Links", "Selected public sources."],
+  ["Files", "Add evidence over time."],
 ];
 
 const evidence = [
-  ["Carried forward", "Established context stays visible and trusted instead of being repeatedly re-collected."],
-  ["Still uncertain", "Gaps and inferences remain legible so ALVIRA can ask only what genuinely needs clarification."],
-  ["Changed", "New evidence can challenge an older assumption rather than silently overwrite it."],
-  ["Ready to reuse", "Confirmed understanding becomes durable context that can move into future AI work."],
+  ["Carried forward", "Established context remains available."],
+  ["Still uncertain", "Gaps stay visible until clarified."],
+  ["Changed", "New evidence can revise an older assumption."],
+  ["Ready to reuse", "Confirmed context can move into future AI work."],
 ];
 
 function Home() {
@@ -122,7 +122,7 @@ function Home() {
 
             <div className="mt-10 max-w-2xl border-l border-system/60 pl-5 sm:mt-12 sm:pl-7">
               <p className="max-w-xl text-base leading-7 text-[#6d6258] dark:text-[#a99f94] sm:text-lg">
-                ALVIRA identifies and houses the durable context AI needs to understand your goals, constraints, history, and intent before it responds or acts.
+                ALVIRA maintains the context AI needs to understand what matters before it responds or acts.
               </p>
             </div>
 
@@ -147,7 +147,7 @@ function Home() {
                 Inference is useful. Context tells it what matters.
               </p>
               <p className="mt-7 text-sm leading-7 text-[#6d6258] dark:text-[#a99f94]">
-                Most AI begins with fragments. ALVIRA gives those fragments continuity: what is known, what changed, what is uncertain, and what should guide the next response or action.
+                Inference fills gaps. Context gives those gaps continuity.
               </p>
             </div>
           </aside>
@@ -159,7 +159,7 @@ function Home() {
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">Why Context Intelligence</p>
                 <h2 className="mt-5 font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">When context is missing, inference fills the gap.</h2>
-                <p className="mt-6 max-w-md text-base leading-7 text-[#6d6258] dark:text-[#a99f94]">Your context already exists. The problem is that it is fragmented across conversations, files, decisions, tools, and memory.</p>
+                <p className="mt-6 max-w-md text-base leading-7 text-[#6d6258] dark:text-[#a99f94]">Your context already exists. It is fragmented across conversations, files, decisions, tools, and memory.</p>
               </div>
 
               <div className="relative overflow-hidden border border-[#191715]/12 bg-[#f4f0e9]/60 p-6 dark:border-white/12 dark:bg-white/[0.025] sm:p-8">
@@ -224,8 +224,6 @@ function Home() {
                         </div>
                       </div>
                     </div>
-
-                    <p className="mt-6 text-sm leading-6 text-[#5f574f] dark:text-white/58">Fragments become one maintained frame for what AI should understand before it responds or acts.</p>
                   </div>
                 </div>
 
@@ -245,7 +243,7 @@ function Home() {
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-human">Autonomy without context</p>
                 <h2 className="mt-5 max-w-xl font-display text-5xl leading-[0.92] tracking-[-0.04em] sm:text-6xl">Without context, autonomy is just inference with permission.</h2>
-                <p className="mt-7 max-w-lg text-base leading-7 text-white/55">AI can search, write, plan, execute, spend, message, and decide. None of those capabilities tell it what matters to you.</p>
+                <p className="mt-7 max-w-lg text-base leading-7 text-white/55">Capability does not tell an agent what matters to you.</p>
               </div>
 
               <div className="space-y-8">
@@ -258,7 +256,7 @@ function Home() {
                       <div key={item} className="border-t border-human/55 pt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-human">{item}</div>
                     ))}
                   </div>
-                  <p className="mt-8 max-w-2xl text-lg leading-8 text-white/68">The system can move quickly while optimizing for the wrong objective. More autonomy can simply make a bad assumption travel farther.</p>
+                  <p className="mt-8 max-w-2xl text-lg leading-8 text-white/68">A bad assumption can travel farther.</p>
                 </div>
 
                 <div className="border border-system/35 bg-system/[0.035] p-6 sm:p-8">
@@ -279,25 +277,25 @@ function Home() {
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-system">Capability is not understanding</p>
                 <h2 className="mt-5 max-w-2xl font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">Capability can increase while understanding stays flat.</h2>
-                <p className="mt-7 max-w-lg text-base leading-7 text-white/58">A model can know an extraordinary amount about the world and still know almost nothing about the situation, person, priorities, constraints, or history that should shape its answer.</p>
+                <p className="mt-7 max-w-lg text-base leading-7 text-white/58">A model can know the world and still know almost nothing about your situation.</p>
               </div>
 
               <div className="grid gap-8 sm:grid-cols-2">
                 <div className="border-t border-white/18 pt-5">
                   <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/40">Without context / LLMs</p>
                   <h3 className="mt-4 text-xl font-semibold text-white">Capability becomes generic.</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/58">The model fills missing information with inference. You get plausible answers that may ignore your actual goals, preferences, constraints, prior decisions, or definition of success.</p>
+                  <p className="mt-3 text-sm leading-6 text-white/58">Missing context becomes inference.</p>
                 </div>
                 <div className="border-t border-white/18 pt-5">
                   <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/40">Without context / Agents</p>
                   <h3 className="mt-4 text-xl font-semibold text-white">Autonomy amplifies the gap.</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/58">Giving an agent more tools, memory, or permission does not tell it what matters to you. It can act faster while still optimizing for an incomplete understanding of the task.</p>
+                  <p className="mt-3 text-sm leading-6 text-white/58">Autonomy amplifies that inference.</p>
                 </div>
                 <div className="border-t border-system/55 pt-5 sm:col-span-2">
                   <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-system">With Context Intelligence</p>
                   <h3 className="mt-4 max-w-2xl font-display text-3xl leading-[1.02] tracking-[-0.025em] text-white sm:text-4xl">Context turns raw capability into situated judgment.</h3>
-                  <p className="mt-5 max-w-2xl text-sm leading-6 text-white/58">It gives models and agents a maintained frame for judgment: what is true about you, what has already been decided, what changed, what remains uncertain, and what should guide the next action.</p>
-                  <p className="mt-7 font-mono text-xs uppercase tracking-[0.13em] text-system">The more autonomous the system, the more consequential missing context becomes.</p>
+                  <p className="mt-5 max-w-2xl text-sm leading-6 text-white/58">A maintained frame for what matters, what changed, and what remains uncertain.</p>
+                  <p className="mt-7 font-mono text-xs uppercase tracking-[0.13em] text-system">More autonomy makes missing context more consequential.</p>
                 </div>
               </div>
             </div>
@@ -309,7 +307,7 @@ function Home() {
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">How ALVIRA builds context</p>
               <h2 className="mt-5 font-display text-5xl leading-[0.95] tracking-[-0.035em] sm:text-6xl">Context starts with what already exists.</h2>
-              <p className="mt-6 max-w-md text-base leading-7 text-[#6d6258] dark:text-[#a99f94]">You should not have to complete one giant interview to become understood. Existing context becomes the starting point; ALVIRA can focus attention on what is actually missing.</p>
+              <p className="mt-6 max-w-md text-base leading-7 text-[#6d6258] dark:text-[#a99f94]">Seed what is known. Ask only for genuine gaps.</p>
             </div>
             <div className="lg:col-span-2">
               <div className="grid gap-8 sm:grid-cols-2">
@@ -333,10 +331,10 @@ function Home() {
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-system">A living system</p>
                 <h2 className="mt-5 font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">Context only matters if it stays current.</h2>
-                <p className="mt-7 max-w-md text-base leading-7 text-white/58">That is why ALVIRA is a loop, not an onboarding artifact. Every pass can deepen, correct, or redistribute what the system understands.</p>
+                <p className="mt-7 max-w-md text-base leading-7 text-white/58">ALVIRA is a living loop, not an onboarding artifact.</p>
                 <div className="mt-10 border-l border-system/45 pl-5">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system">No reset to zero</p>
-                  <p className="mt-3 max-w-sm text-sm leading-6 text-white/48">Reuse feeds the next capture cycle. New evidence enters an existing understanding instead of rebuilding the relationship from scratch.</p>
+                  <p className="mt-3 max-w-sm text-sm leading-6 text-white/48">New evidence updates an existing understanding.</p>
                 </div>
               </div>
 
@@ -437,7 +435,7 @@ function Home() {
             <div><p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">Evidence of understanding</p></div>
             <div>
               <h2 className="max-w-4xl font-display text-5xl leading-[0.95] tracking-[-0.035em] text-[#27231f] dark:text-[#ece4da] sm:text-6xl">Understanding should be inspectable, not assumed.</h2>
-              <p className="mt-6 max-w-2xl text-base leading-7 text-[#6d6258] dark:text-[#a99f94] sm:text-lg">If context is going to guide future AI behavior, you should be able to see what ALVIRA believes it knows, where confidence is still developing, and when new evidence changes the picture.</p>
+              <p className="mt-6 max-w-2xl text-base leading-7 text-[#6d6258] dark:text-[#a99f94] sm:text-lg">See what ALVIRA carries forward, questions, revises, and makes reusable.</p>
               <div className="mt-12 grid gap-8 sm:grid-cols-2">
                 {evidence.map(([title, body]) => (
                   <div key={title} className="border-t border-[#191715]/18 pt-5 dark:border-white/18">
@@ -458,13 +456,13 @@ function Home() {
                 <h2 className="mt-5 font-display text-5xl leading-[0.95] tracking-[-0.035em] sm:text-6xl">Context compounds when it can move with you.</h2>
               </div>
               <div className="lg:pt-10">
-                <p className="max-w-2xl text-lg leading-8 text-[#6d6258] dark:text-[#a99f94]">ALVIRA is not meant to become another place where your context gets trapped. Confirmed understanding should remain useful across the AI tools, agents, and workflows you choose to use.</p>
+                <p className="max-w-2xl text-lg leading-8 text-[#6d6258] dark:text-[#a99f94]">Your understanding should not be trapped in one AI system.</p>
                 <div className="mt-10 flex flex-wrap gap-3">
                   {["ChatGPT", "Claude", "Gemini", "Cursor", "Your agents"].map((tool) => (
                     <span key={tool} className="border border-[#191715]/15 px-4 py-2 font-mono text-xs uppercase tracking-[0.1em] text-[#5f574f] dark:border-white/15 dark:text-white/55">{tool}</span>
                   ))}
                 </div>
-                <p className="mt-8 max-w-xl text-sm leading-6 text-[#6d6258] dark:text-[#a99f94]">The value is continuity: each future interaction can begin with more understanding and less reconstruction.</p>
+                <p className="mt-8 max-w-xl text-sm leading-6 text-[#6d6258] dark:text-[#a99f94]">Maintain once. Carry forward where appropriate.</p>
               </div>
             </div>
           </div>
@@ -476,7 +474,7 @@ function Home() {
             <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
                 <h2 className="max-w-5xl font-display text-5xl leading-[0.9] tracking-[-0.04em] sm:text-7xl lg:text-8xl">Give AI more than a prompt to infer from.</h2>
-                <p className="mt-7 max-w-2xl text-base leading-7 text-[#6d6258] dark:text-[#a99f94] sm:text-lg">Start with what already exists. Let ALVIRA identify what matters, fill genuine gaps, and keep that understanding useful as you change.</p>
+                <p className="mt-7 max-w-2xl text-base leading-7 text-[#6d6258] dark:text-[#a99f94] sm:text-lg">Start with what already exists. ALVIRA keeps the context that matters useful as you change.</p>
               </div>
               <a href="/app" className="inline-flex min-h-14 items-center justify-center bg-[#191715] px-8 text-sm font-semibold text-[#f4f0e9] transition-opacity hover:opacity-85 dark:bg-[#f4f0e9] dark:text-[#191715]">Build your ALVIRA Context <span className="ml-3" aria-hidden="true">→</span></a>
             </div>

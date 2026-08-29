@@ -77,6 +77,24 @@ The system may contain sophisticated context logic, but the user should experien
 
 Whenever possible, show the user that ALVIRA has actually understood something: carried-forward context, emerging patterns, changed assumptions, unresolved gaps, or meaningful reflections.
 
+### 6. Scroll is part of the interaction model
+
+Scroll-triggered behavior is a core UI requirement, not optional polish.
+
+Use scroll position intentionally to control when explanatory systems wake up, reveal state, progress through a sequence, and pause when they are no longer meaningfully visible. The page should feel like a living context system being encountered in motion rather than a stack of static marketing sections.
+
+Requirements:
+
+- meaningful diagrams and narrative systems should begin or advance when they enter the user's reading window rather than running unseen offscreen
+- ongoing animation should pause when the relevant experience leaves view
+- direct user interaction must override scroll/autoplay behavior cleanly and remain available by keyboard and touch
+- scroll-triggered transitions should reinforce conceptual relationships such as fragment → context, capture → understand → reflect → update → reuse, and context → portability
+- scroll-triggered behavior must never be required to access essential content, controls, or meaning
+- `prefers-reduced-motion` must receive a complete, legible static equivalent
+- avoid gratuitous parallax, theatrical reveals, or motion that competes with reading
+
+Treat scroll choreography with the same design importance as typography, spacing, hierarchy, and responsive behavior.
+
 ## Visual Direction
 
 The redesign should establish a coherent ALVIRA design system before introducing large page-specific flourishes.
@@ -87,7 +105,7 @@ Priorities:
 - disciplined spacing and grid
 - intentional color/token system
 - strong ALVIRA wordmark/logo treatment
-- restrained motion
+- scroll-triggered system behavior and restrained purposeful motion
 - premium editorial composition
 - clear hierarchy between narrative, context, reflection, and action
 - subtle technical/system cues without defaulting to stereotypical AI dashboards
@@ -133,12 +151,13 @@ Rework the public narrative around:
 - continuous reflection and updating
 - evidence of understanding
 - future reuse of context
+- scroll-triggered narrative behavior that connects these ideas as one argument
 
 The homepage should explain the product before it explains every feature.
 
 ### Stage 3 — App-shell inheritance
 
-Only after the public direction is coherent should the authenticated/app experience inherit the refreshed tokens, typography, navigation language, and component styling.
+Only after the public direction is coherent should the authenticated/app experience inherit the refreshed tokens, typography, navigation language, component styling, and interaction principles.
 
 This stage must remain primarily presentational unless a separate functional change is explicitly approved.
 
@@ -202,7 +221,8 @@ Any agent working on this branch should:
 7. Verify protected flows after changes that touch shared layouts/components.
 8. Avoid making unsupported capability claims in public copy.
 9. Clearly distinguish demonstration/simulated states from live product intelligence when relevant.
-10. Optimize for a coherent product category and experience rather than cosmetic novelty.
+10. Treat scroll-triggered behavior as a first-class UI requirement and provide reduced-motion/static fallbacks.
+11. Optimize for a coherent product category and experience rather than cosmetic novelty.
 
 ## Definition of Success
 
@@ -213,6 +233,7 @@ The refresh is successful when a new visitor can quickly understand all of the f
 - That understanding is built from multiple context sources.
 - The resulting context can be reflected on and updated continuously.
 - ALVIRA becomes more useful as its understanding evolves.
+- The page's motion and scroll behavior help explain that living system rather than merely decorate it.
 - The visual system feels intentional and distinctive without compromising the existing product.
 
 And, critically, the existing working application continues to work.

@@ -263,20 +263,70 @@ function Home() {
 
         <section id="system" className="border-y border-[#191715]/10 bg-[#191715] text-[#f4f0e9] dark:border-white/10 dark:bg-[#111513]">
           <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 sm:py-24 lg:px-10">
-            <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
+            <div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-system">A living system</p>
                 <h2 className="mt-5 font-display text-5xl leading-[0.93] tracking-[-0.035em] sm:text-6xl">Context only matters if it stays current.</h2>
-                <p className="mt-7 max-w-md text-base leading-7 text-white/58">That is why ALVIRA is a loop, not an onboarding artifact: understanding should deepen, change, and remain useful as new evidence appears.</p>
+                <p className="mt-7 max-w-md text-base leading-7 text-white/58">That is why ALVIRA is a loop, not an onboarding artifact. Every pass can deepen, correct, or redistribute what the system understands.</p>
+                <div className="mt-10 border-l border-system/45 pl-5">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system">No reset to zero</p>
+                  <p className="mt-3 max-w-sm text-sm leading-6 text-white/48">Reuse feeds the next capture cycle. New evidence enters an existing understanding instead of rebuilding the relationship from scratch.</p>
+                </div>
               </div>
-              <div className="divide-y divide-white/12 border-y border-white/12">
-                {loop.map(([number, title, body]) => (
-                  <div key={title} className="grid gap-3 py-6 sm:grid-cols-[4rem_9rem_1fr] sm:items-baseline sm:gap-5">
-                    <span className="font-mono text-xs text-system">{number}</span>
-                    <h3 className="text-base font-semibold text-white">{title}</h3>
-                    <p className="text-sm leading-6 text-white/55">{body}</p>
+
+              <div className="relative overflow-hidden border border-white/12 bg-white/[0.02] p-6 sm:p-8">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-system/20 sm:block" aria-hidden="true" />
+                <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-system/12 sm:block" aria-hidden="true" />
+
+                <div className="relative grid gap-3 sm:grid-cols-5">
+                  {loop.map(([number, title], index) => {
+                    const tone = index === 2
+                      ? "border-human/55 text-human"
+                      : index === 3
+                        ? "border-iridescent/50 text-iridescent"
+                        : "border-system/45 text-system";
+                    return (
+                      <div key={title} className="contents">
+                        <div className={`relative border bg-[#111513] p-4 ${tone}`}>
+                          <span className="font-mono text-[10px] opacity-65">{number}</span>
+                          <p className="mt-5 text-sm font-semibold text-white">{title}</p>
+                        </div>
+                        {index < loop.length - 1 && (
+                          <div className="flex items-center justify-center font-mono text-sm text-white/28 sm:hidden" aria-hidden="true">↓</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="relative mt-8 hidden items-center sm:flex" aria-hidden="true">
+                  <span className="h-px flex-1 bg-system/30" />
+                  <span className="px-3 font-mono text-xs text-system">→</span>
+                  <span className="h-px flex-1 bg-human/35" />
+                  <span className="px-3 font-mono text-xs text-human">→</span>
+                  <span className="h-px flex-1 bg-iridescent/35" />
+                  <span className="px-3 font-mono text-xs text-iridescent">→</span>
+                  <span className="h-px flex-1 bg-system/35" />
+                </div>
+
+                <div className="relative mt-8 grid gap-5 border-t border-white/10 pt-6 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/38">Cycle output</p>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-white/58">More confirmed context, clearer uncertainty, recorded change, and context ready to reuse.</p>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.12em] text-system">
+                    <span>Reuse</span><span aria-hidden="true">↻</span><span>Capture</span>
+                  </div>
+                </div>
+
+                <div className="relative mt-6 grid gap-3 sm:grid-cols-5">
+                  {loop.map(([number, title, body]) => (
+                    <div key={`${title}-detail`} className="border-t border-white/10 pt-3">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-white/32">{number} / {title}</p>
+                      <p className="mt-2 text-[11px] leading-5 text-white/45">{body}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

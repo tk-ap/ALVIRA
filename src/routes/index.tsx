@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 
@@ -22,7 +23,15 @@ const loop = [
   ["03", "Reflect", "Patterns, gaps, contradictions, and meaningful changes become visible instead of disappearing between chats."],
   ["04", "Update", "Your context stays living: editable, reviewable, and able to evolve as you do."],
   ["05", "Reuse", "Carry durable context into future AI work instead of rebuilding yourself from scratch."],
-];
+] as const;
+
+const loopOutputs = [
+  "New evidence enters the context layer without erasing what is already known.",
+  "Signals become structured understanding: what is established, uncertain, changing, or missing.",
+  "Patterns, contradictions, and meaningful changes are surfaced for review instead of disappearing between interactions.",
+  "Confirmed changes become part of the maintained context model, preserving history while keeping the present accurate.",
+  "Appropriate context becomes portable into the next AI interaction — then new evidence starts the cycle again.",
+] as const;
 
 const sources = [
   ["Conversation", "Tell ALVIRA directly through adaptive interviews and ongoing reflection."],
@@ -39,6 +48,34 @@ const evidence = [
 ];
 
 function Home() {
+  const [activeLoopIndex, setActiveLoopIndex] = useState(0);
+  const [loopAutoPlay, setLoopAutoPlay] = useState(true);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!loopAutoPlay || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const intervalId = window.setInterval(() => {
+      setActiveLoopIndex((current) => (current + 1) % loop.length);
+    }, 2800);
+
+    return () => window.clearInterval(intervalId);
+  }, [loopAutoPlay]);
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
+  }, []);
+
+  const selectLoopStage = (index: number) => {
+    setActiveLoopIndex(index);
+    setLoopAutoPlay(false);
+
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => setLoopAutoPlay(true), 8000);
+  };
+
   return (
     <div className="min-h-dvh flex flex-col bg-[#f4f0e9] text-[#191715] dark:bg-[#0b0e0e] dark:text-[#f4f0e9]">
       <Header />
@@ -275,24 +312,40 @@ function Home() {
               </div>
 
               <div className="relative overflow-hidden border border-white/12 bg-white/[0.02] p-6 sm:p-8">
-                <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-system/20 sm:block" aria-hidden="true" />
-                <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-system/12 sm:block" aria-hidden="true" />
+                <div className="pointer-events-none absolute left-1/2 top-[42%] hidden h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-system/20 sm:block" aria-hidden="true" />
+                <div className="pointer-events-none absolute left-1/2 top-[42%] hidden h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-system/12 sm:block" aria-hidden="true" />
 
-                <div className="relative grid gap-3 sm:grid-cols-5">
+                <div className="relative grid gap-3 sm:grid-cols-5" role="group" aria-label="ALVIRA living context cycle">
                   {loop.map(([number, title], index) => {
-                    const tone = index === 2
-                      ? "border-human/55 text-human"
+                    const baseTone = index === 2
+                      ? "border-human/45 text-human"
                       : index === 3
-                        ? "border-iridescent/50 text-iridescent"
-                        : "border-system/45 text-system";
+                        ? "border-iridescent/45 text-iridescent"
+                        : "border-system/35 text-system";
+                    const activeTone = index === 2
+                      ? "border-human bg-human/[0.10] shadow-[inset_0_-2px_0_var(--color-human)]"
+                      : index === 3
+                        ? "border-iridescent bg-iridescent/[0.10] shadow-[inset_0_-2px_0_var(--color-iridescent)]"
+                        : "border-system bg-system/[0.10] shadow-[inset_0_-2px_0_var(--color-system)]";
+                    const isActive = activeLoopIndex === index;
+
                     return (
                       <div key={title} className="contents">
-                        <div className={`relative border bg-[#111513] p-4 ${tone}`}>
-                          <span className="font-mono text-[10px] opacity-65">{number}</span>
+                        <button
+                          type="button"
+                          aria-pressed={isActive}
+                          onClick={() => selectLoopStage(index)}
+                          className={`group relative min-h-[92px] border p-4 text-left transition-[border-color,background-color,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system ${baseTone} ${isActive ? activeTone : "bg-[#111513] hover:bg-white/[0.035]"}`}
+                        >
+                          <span className="flex items-center justify-between gap-3 font-mono text-[10px] opacity-70">
+                            {number}
+                            <span className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${isActive ? "scale-100 bg-current" : "scale-75 bg-current opacity-25"}`} aria-hidden="true" />
+                          </span>
                           <p className="mt-5 text-sm font-semibold text-white">{title}</p>
-                        </div>
+                          <span className={`absolute inset-x-3 bottom-2 h-px origin-left bg-current transition-transform duration-[2400ms] ease-linear motion-reduce:transition-none ${isActive && loopAutoPlay ? "scale-x-100" : "scale-x-0"}`} aria-hidden="true" />
+                        </button>
                         {index < loop.length - 1 && (
-                          <div className="flex items-center justify-center font-mono text-sm text-white/28 sm:hidden" aria-hidden="true">↓</div>
+                          <div className={`flex items-center justify-center font-mono text-sm transition-colors duration-300 sm:hidden ${activeLoopIndex === index ? "text-system" : "text-white/28"}`} aria-hidden="true">↓</div>
                         )}
                       </div>
                     );
@@ -300,31 +353,49 @@ function Home() {
                 </div>
 
                 <div className="relative mt-8 hidden items-center sm:flex" aria-hidden="true">
-                  <span className="h-px flex-1 bg-system/30" />
-                  <span className="px-3 font-mono text-xs text-system">→</span>
-                  <span className="h-px flex-1 bg-human/35" />
-                  <span className="px-3 font-mono text-xs text-human">→</span>
-                  <span className="h-px flex-1 bg-iridescent/35" />
-                  <span className="px-3 font-mono text-xs text-iridescent">→</span>
-                  <span className="h-px flex-1 bg-system/35" />
+                  {loop.slice(0, -1).map(([, title], index) => {
+                    const connectorTone = index === 1
+                      ? "text-human"
+                      : index === 2
+                        ? "text-iridescent"
+                        : "text-system";
+                    const isPassed = activeLoopIndex > index || (activeLoopIndex === 0 && index === loop.length - 2);
+                    return (
+                      <div key={`${title}-connector`} className="contents">
+                        <span className={`h-px flex-1 transition-colors duration-300 ${isPassed ? "bg-current" : "bg-white/12"} ${connectorTone}`} />
+                        <span className={`px-3 font-mono text-xs transition-opacity duration-300 ${connectorTone} ${activeLoopIndex === index ? "opacity-100" : "opacity-45"}`}>→</span>
+                      </div>
+                    );
+                  })}
+                  <span className="h-px flex-1 bg-system/30 text-system" />
                 </div>
 
-                <div className="relative mt-8 grid gap-5 border-t border-white/10 pt-6 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div className="relative mt-8 grid gap-5 border-t border-white/10 pt-6 sm:grid-cols-[1fr_auto] sm:items-end" aria-live="polite">
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/38">Cycle output</p>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-white/58">More confirmed context, clearer uncertainty, recorded change, and context ready to reuse.</p>
+                    <div className="flex items-center gap-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/38">Active stage</p>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-system">{loop[activeLoopIndex][0]} / {loop[activeLoopIndex][1]}</span>
+                    </div>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-white/62">{loopOutputs[activeLoopIndex]}</p>
                   </div>
                   <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.12em] text-system">
+                    <span>{loopAutoPlay ? "Live cycle" : "Paused"}</span>
+                    <span aria-hidden="true">·</span>
                     <span>Reuse</span><span aria-hidden="true">↻</span><span>Capture</span>
                   </div>
                 </div>
 
                 <div className="relative mt-6 grid gap-3 sm:grid-cols-5">
-                  {loop.map(([number, title, body]) => (
-                    <div key={`${title}-detail`} className="border-t border-white/10 pt-3">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-white/32">{number} / {title}</p>
-                      <p className="mt-2 text-[11px] leading-5 text-white/45">{body}</p>
-                    </div>
+                  {loop.map(([number, title, body], index) => (
+                    <button
+                      type="button"
+                      key={`${title}-detail`}
+                      onClick={() => selectLoopStage(index)}
+                      className={`border-t pt-3 text-left transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system ${activeLoopIndex === index ? "border-system/75" : "border-white/10 hover:border-white/25"}`}
+                    >
+                      <p className={`font-mono text-[9px] uppercase tracking-[0.1em] transition-colors ${activeLoopIndex === index ? "text-system" : "text-white/32"}`}>{number} / {title}</p>
+                      <p className={`mt-2 text-[11px] leading-5 transition-colors ${activeLoopIndex === index ? "text-white/65" : "text-white/45"}`}>{body}</p>
+                    </button>
                   ))}
                 </div>
               </div>

@@ -115,6 +115,8 @@ jobs:
                   ['Goals','Constraints','History','Preferences','Decisions','Projects'].forEach((label) => mark(exact(section, 'div', label)));
                   const contextLabel = exact(section, 'p', 'ALVIRA Context');
                   mark(contextLabel && contextLabel.closest('div.border'));
+                  const reusableLabel = exact(section, 'span', 'Reusable');
+                  mark(reusableLabel && reusableLabel.closest('div.flex-1'));
                 } else if (scene === 'autonomy') {
                   const first = [...section.querySelectorAll('p')].find((el) => el.textContent.startsWith('The system can move quickly'));
                   const second = exact(section, 'p', 'Context gives capability something to judge against.');
@@ -128,6 +130,8 @@ jobs:
                   ['Conversation','Documents','Links','Files'].forEach((label) => {
                     const h = exact(section, 'h3', label); mark(h && h.parentElement);
                   });
+                  const seed = exact(section, 'p', 'Seed what is known. Trust strong context. Ask only for genuine gaps.');
+                  mark(seed && seed.parentElement);
                 } else if (scene === 'evidence') {
                   ['Carried forward','Still uncertain','Changed','Ready to reuse'].forEach((label) => {
                     const h = exact(section, 'h3', label); mark(h && h.parentElement);
@@ -137,11 +141,11 @@ jobs:
                 } else if (scene === 'final-cta') {
                   mark(section.querySelector('h2'));
                   mark(section.querySelector('h2') && section.querySelector('h2').nextElementSibling);
-                  mark(section.querySelector('a'));
+                  mark(section.querySelector('a[href="/app"]'));
                 }
 
                 [...section.querySelectorAll('[data-scroll-step="true"]')].forEach((step, index) => {
-                  step.style.setProperty('--scroll-delay', Math.min(index * 95, 475) + 'ms');
+                  step.style.setProperty('--scroll-delay', Math.min(index * 85, 425) + 'ms');
                 });
                 observed.push(section);
               });
@@ -149,11 +153,11 @@ jobs:
               const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                   const section = entry.target;
-                  const visible = entry.isIntersecting && entry.intersectionRatio >= .16;
+                  const visible = entry.isIntersecting && entry.intersectionRatio >= .08;
                   section.dataset.scrollInView = visible ? 'true' : 'false';
                   if (visible) section.dataset.scrollVisible = 'true';
                 });
-              }, { threshold: [0,.16,.35,.6], rootMargin: '-8% 0px -12% 0px' });
+              }, { threshold: [0,.08,.2,.4,.65], rootMargin: '-6% 0px -10% 0px' });
 
               observed.forEach((section) => observer.observe(section));
             }
@@ -206,10 +210,10 @@ jobs:
               if (outputCopy) outputCopy.textContent = outputs[active];
             }
 
-            function stop() {
+            function stop(status = 'Paused') {
               clearInterval(interval);
               interval = null;
-              if (liveStatus) liveStatus.textContent = 'Paused';
+              if (liveStatus) liveStatus.textContent = status;
             }
 
             function start() {
@@ -230,13 +234,16 @@ jobs:
               control.addEventListener('click', () => { render(stageIndex); pauseThenResume(); });
             });
 
-            if ('IntersectionObserver' in window) {
+            if (reducedMotion) {
+              inView = true;
+              stop('Motion reduced');
+            } else if ('IntersectionObserver' in window) {
               const loopObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
-                  inView = entry.isIntersecting && entry.intersectionRatio >= .16;
-                  if (inView) start(); else stop();
+                  inView = entry.isIntersecting && entry.intersectionRatio >= .08;
+                  if (inView) start(); else stop('Waiting for view');
                 });
-              }, { threshold: [0,.16,.35], rootMargin: '-8% 0px -12% 0px' });
+              }, { threshold: [0,.08,.2,.4], rootMargin: '-6% 0px -10% 0px' });
               loopObserver.observe(system);
             } else {
               inView = true;

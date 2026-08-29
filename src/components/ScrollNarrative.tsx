@@ -69,10 +69,10 @@ function markSceneSteps(section: HTMLElement, scene: string) {
       .filter((element): element is HTMLElement => Boolean(element));
 
     destinations.forEach(markStep);
-    const network = destinations[0]?.parentElement;
-    if (network) {
-      network.dataset.portabilityNetwork = "true";
-      markStep(network);
+    const rail = destinations[0]?.parentElement;
+    if (rail) {
+      rail.dataset.portabilityRail = "true";
+      markStep(rail);
     }
     return;
   }

@@ -436,6 +436,7 @@ function AppPage() {
   const [seedSource, setSeedSource] = useState<"document" | "profile" | "source">("document");
   const [seedReviewOverlay, setSeedReviewOverlay] = useState(false);
   const seedOfferingRef = useRef<"context" | "meos">("context");
+  const pendingContextSourceRef = useRef<ContextSource | null>(null);
   // The inline MeOS nudge is shown once after the user's third meaningful answer.
   const meaningfulAnswerCountRef = useRef(0);
   const autosaveAnswerCountRef = useRef(0);
@@ -501,7 +502,7 @@ function AppPage() {
     try {
       const ingested = await ingestUrlSource({ data: { locator } });
       const source = { ...makeSource(locator), type: contextSourceType, status: "ready" as const };
-      addContextSource(source);
+      pendingContextSourceRef.current = source;
       const seedOffering = offering === "meos" ? "meos" : "context";
       const uploadTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
       if (!topic.trim()) setTopic(uploadTopic);
@@ -1035,6 +1036,11 @@ function AppPage() {
       }
     } finally {
       setWaiting(false);
+      if (seedSource === "source" && pendingContextSourceRef.current) {
+        const approvedSource = pendingContextSourceRef.current;
+        pendingContextSourceRef.current = null;
+        addContextSource(approvedSource);
+      }
     }
   };
 
@@ -1408,6 +1414,8 @@ function AppPage() {
     setUploadError("");
     setExtraction(null);
     setSeedDecisions({});
+    pendingContextSourceRef.current = null;
+    setContextSourceLocator("");
     setSeededInfo(null);
     meaningfulAnswerCountRef.current = 0;
     setShowInsightCTA(false);
@@ -1562,7 +1570,7 @@ function AppPage() {
           decisions={seedDecisions}
           onDecision={(index, status) => setSeedDecisions((current) => ({ ...current, [index]: { status, text: current[index]?.text } }))}
           onRevise={(index, text) => setSeedDecisions((current) => ({ ...current, [index]: { status: "revise", text } }))}
-          onClose={() => { setSeedReviewOverlay(false); setExtraction(null); setSeedDecisions({}); }}
+          onClose={() => { setSeedReviewOverlay(false); setExtraction(null); setSeedDecisions({}); pendingContextSourceRef.current = null; setContextSourceLocator(""); }}
           onContinue={() => void handleSeedContinue()}
           waiting={waiting}
         />}
@@ -1801,6 +1809,15 @@ function AppPage() {
         </main>
         <SignupPromptBanner show={authUser === null} />
         <TrustFooter />
+        {seedReviewOverlay && extraction && <SeedReviewOverlay
+          extraction={extraction}
+          decisions={seedDecisions}
+          onDecision={(index, status) => setSeedDecisions((current) => ({ ...current, [index]: { status, text: current[index]?.text } }))}
+          onRevise={(index, text) => setSeedDecisions((current) => ({ ...current, [index]: { status: "revise", text } }))}
+          onClose={() => { setSeedReviewOverlay(false); setExtraction(null); setSeedDecisions({}); pendingContextSourceRef.current = null; setContextSourceLocator(""); }}
+          onContinue={() => void handleSeedContinue()}
+          waiting={waiting}
+        />}
       </div>
     );
   }

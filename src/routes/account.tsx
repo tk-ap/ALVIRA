@@ -7,7 +7,7 @@ import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
-    meta: [{ title: 'Account — ALVIRA' }, { name: "description", content: 'Manage your ALVIRA subscription and entitlements.' }],
+    meta: [{ title: 'Account — ALVIRA' }, { name: "description", content: 'Manage your ALVIRA plan, Context usage, and Reflect entitlements.' }],
   }), component: AccountPage });
 
 interface Limits {
@@ -91,7 +91,7 @@ function AccountPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Account</h1>
             <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
-              Manage your plan and view usage
+              Manage your plan, Context capacity, and Reflect access
             </p>
           </div>
 
@@ -110,7 +110,7 @@ function AccountPage() {
               {/* User info card */}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">Profile</h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">Account details</h2>
                 </div>
                 <div className="px-5 py-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -130,7 +130,7 @@ function AccountPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Saved profiles</span>
+                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">Saved Contexts</span>
                     <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
                       {limits.profileCount}{limits.maxProfiles < Infinity ? ` / ${limits.maxProfiles}` : ""}
                     </span>
@@ -144,7 +144,7 @@ function AccountPage() {
                   <div className="px-5 py-4 border-b border-system dark:border-system-dark">
                     <h2 className="font-semibold text-gray-900 dark:text-gray-100">Upgrade your plan</h2>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Pro unlocks unlimited interviews and profiles. Lifetime gives you one permanent profile — no subscription.
+                      Pro unlocks unlimited interviews and multiple saved Contexts. Lifetime gives you one permanent ALVIRA Context — no subscription.
                     </p>
                   </div>
                   <div className="px-5 py-4 space-y-4">
@@ -157,7 +157,7 @@ function AccountPage() {
                         </div>
                         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4 font-mono">
                           <li>· Unlimited interviews</li>
-                          <li>· Multiple profiles</li>
+                          <li>· Multiple saved Contexts</li>
                           <li>· Version history (coming soon)</li>
                           <li>· Markdown export (JSON coming soon)</li>
                         </ul>
@@ -178,7 +178,7 @@ function AccountPage() {
                           <span className="font-mono text-sm text-gray-500 dark:text-gray-400">{LIFETIME_PRICE} once</span>
                         </div>
                         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4 font-mono">
-                          <li>· One permanent personal AI profile</li>
+                          <li>· One permanent ALVIRA Context</li>
                           <li>· Up to 12 guided interviews in year one</li>
                           <li>· 4 refresh interviews per year after year one</li>
                           <li>· Up to 50 saved versions (coming soon)</li>
@@ -219,8 +219,8 @@ function AccountPage() {
                     </h2>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                       {limits.tier === "pro"
-                        ? "Unlimited interviews and profiles. Thank you for subscribing!"
-                        : "Permanent access with no subscription. Your profile and exported files remain yours."}
+                        ? "Unlimited interviews and multiple saved Contexts. Thank you for subscribing!"
+                        : "Permanent access with no subscription. Your Context and exported files remain yours."}
                     </p>
                   </div>
                 </div>

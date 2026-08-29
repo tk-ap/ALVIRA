@@ -1597,8 +1597,6 @@ function AppPage() {
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
-            {offering && contextSourcePanel}
-
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
@@ -1684,6 +1682,16 @@ function AppPage() {
                   {totalDomains > 0 ? Math.round((coveredCount / totalDomains) * 100) : 0}% complete
                 </span>
                 <div className="flex gap-2">
+                  {offering && (
+                    <button
+                      type="button"
+                      onClick={() => setShowContextSources((shown) => !shown)}
+                      aria-expanded={showContextSources}
+                      className="rounded px-2 py-1 font-mono text-xs text-gray-600 transition-colors hover:text-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:text-gray-400 dark:hover:text-emerald-400 dark:focus-visible:ring-emerald-400/50"
+                    >
+                      {showContextSources ? "Hide context" : contextSources.length > 0 ? `Add context · ${contextSources.length}` : "Add context"}
+                    </button>
+                  )}
                   {hasGaps && state?.currentDomain && !waiting && (
                     <button
                       type="button"
@@ -1707,6 +1715,8 @@ function AppPage() {
                   </button>
                 </div>
               </div>
+
+              {showContextSources && offering && contextSourcePanel}
 
               {/* Generation error — visible so a failure is never a silent hang */}
               {generateError && (

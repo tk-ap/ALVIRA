@@ -60,6 +60,11 @@ jobs:
           path = Path('_site/index.html')
           html = path.read_text()
 
+          # The interactive app defaults to dark through its runtime theme logic.
+          # Pages strips that runtime by design, so force the static review snapshot
+          # into the same dark-first state for visual parity.
+          html = html.replace('<html lang="en">', '<html lang="en" class="dark">', 1)
+
           # GitHub project Pages serves this repository under /ALVIRA/.
           html = re.sub(r'(href|src)="/(?!/)', r'\1="/ALVIRA/', html)
 

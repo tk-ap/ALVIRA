@@ -57,9 +57,29 @@ function markSceneSteps(section: HTMLElement, scene: string) {
   }
 
   if (scene === "evidence") {
-    ["Carried forward", "Still uncertain", "Changed", "Ready to reuse"].forEach((label) =>
-      markStep(exactText(section, "h3", label)?.parentElement),
-    );
+    const stateMap = [
+      ["Carried forward", "known"],
+      ["Still uncertain", "uncertain"],
+      ["Changed", "changed"],
+      ["Ready to reuse", "reusable"],
+    ] as const;
+
+    const rows = stateMap
+      .map(([label, state]) => {
+        const row = exactText(section, "h3", label)?.parentElement;
+        if (row instanceof HTMLElement) {
+          row.dataset.evidenceState = state;
+          markStep(row);
+        }
+        return row;
+      })
+      .filter((row): row is HTMLElement => row instanceof HTMLElement);
+
+    const inspector = rows[0]?.parentElement;
+    if (inspector) {
+      inspector.dataset.evidenceInspector = "true";
+      markStep(inspector);
+    }
     return;
   }
 

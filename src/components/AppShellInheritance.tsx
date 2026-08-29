@@ -1,3 +1,4 @@
+import { useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 const APP_SHELL_ROUTES = [
@@ -16,26 +17,22 @@ function isAppShellPath(pathname: string) {
 }
 
 export function AppShellInheritance() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
   useEffect(() => {
     const root = document.documentElement;
+    const normalizedPath = pathname.replace(/\/+$/, "") || "/";
 
-    const sync = () => {
-      const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
-      if (isAppShellPath(pathname)) {
-        root.dataset.alviraAppShell = "true";
-      } else {
-        delete root.dataset.alviraAppShell;
-      }
-    };
-
-    sync();
-    window.addEventListener("popstate", sync);
+    if (isAppShellPath(normalizedPath)) {
+      root.dataset.alviraAppShell = "true";
+    } else {
+      delete root.dataset.alviraAppShell;
+    }
 
     return () => {
-      window.removeEventListener("popstate", sync);
       delete root.dataset.alviraAppShell;
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

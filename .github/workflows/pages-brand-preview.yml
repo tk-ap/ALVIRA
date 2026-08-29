@@ -81,8 +81,11 @@ jobs:
           (() => {
             const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            // Portability is a structural visual treatment, not motion-only. Mark it
-            // even when reduced motion is enabled so the selective transfer rail remains legible.
+            const exact = (section, selector, text) =>
+              [...section.querySelectorAll(selector)].find((el) => el.textContent.trim() === text);
+            const mark = (el) => { if (el) el.dataset.scrollStep = 'true'; };
+
+            // Structural treatments remain visible even when motion is reduced.
             const portabilitySection = [...document.querySelectorAll('main > section')]
               .find((section) => section.textContent.includes('Portable by design'));
             if (portabilitySection) {
@@ -93,6 +96,26 @@ jobs:
                 .filter(Boolean);
               const rail = destinations[0] && destinations[0].parentElement;
               if (rail) rail.dataset.portabilityRail = 'true';
+            }
+
+            const evidenceSection = [...document.querySelectorAll('main > section')]
+              .find((section) => section.textContent.includes('Evidence of understanding'));
+            if (evidenceSection) {
+              evidenceSection.dataset.scrollScene = 'evidence';
+              const stateMap = [
+                ['Carried forward', 'known'],
+                ['Still uncertain', 'uncertain'],
+                ['Changed', 'changed'],
+                ['Ready to reuse', 'reusable']
+              ];
+              const rows = stateMap.map(([label, state]) => {
+                const heading = exact(evidenceSection, 'h3', label);
+                const row = heading && heading.parentElement;
+                if (row) row.dataset.evidenceState = state;
+                return row;
+              }).filter(Boolean);
+              const inspector = rows[0] && rows[0].parentElement;
+              if (inspector) inspector.dataset.evidenceInspector = 'true';
             }
 
             // --- scroll narrative ---
@@ -110,10 +133,6 @@ jobs:
                 ['Portable by design', 'portability'],
                 ['Begin with context', 'final-cta']
               ];
-
-              const exact = (section, selector, text) =>
-                [...section.querySelectorAll(selector)].find((el) => el.textContent.trim() === text);
-              const mark = (el) => { if (el) el.dataset.scrollStep = 'true'; };
 
               const sections = [...document.querySelectorAll('main > section')];
               const observed = [];
@@ -147,9 +166,26 @@ jobs:
                   const seed = exact(section, 'p', 'Seed what is known. Trust strong context. Ask only for genuine gaps.');
                   mark(seed && seed.parentElement);
                 } else if (scene === 'evidence') {
-                  ['Carried forward','Still uncertain','Changed','Ready to reuse'].forEach((label) => {
-                    const h = exact(section, 'h3', label); mark(h && h.parentElement);
-                  });
+                  const stateMap = [
+                    ['Carried forward', 'known'],
+                    ['Still uncertain', 'uncertain'],
+                    ['Changed', 'changed'],
+                    ['Ready to reuse', 'reusable']
+                  ];
+                  const rows = stateMap.map(([label, state]) => {
+                    const h = exact(section, 'h3', label);
+                    const row = h && h.parentElement;
+                    if (row) {
+                      row.dataset.evidenceState = state;
+                      mark(row);
+                    }
+                    return row;
+                  }).filter(Boolean);
+                  const inspector = rows[0] && rows[0].parentElement;
+                  if (inspector) {
+                    inspector.dataset.evidenceInspector = 'true';
+                    mark(inspector);
+                  }
                 } else if (scene === 'portability') {
                   const destinationNodes = ['ChatGPT','Claude','Gemini','Cursor','Your agents']
                     .map((label) => exact(section, 'span', label))

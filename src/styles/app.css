@@ -340,3 +340,155 @@
     content: "destination";
   }
 }
+
+/* Evidence of understanding — one inspector, not four marketing cards. */
+[data-scroll-scene="evidence"] [data-evidence-inspector="true"] {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 2.75rem;
+  padding-top: 2.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-system) 22%, transparent);
+  background: color-mix(in srgb, var(--color-system) 3%, transparent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-inspector="true"]::before {
+  content: "CONTEXT STATE / INSPECTABLE";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  min-height: 2.65rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-system) 18%, transparent);
+  font-family: var(--font-mono);
+  font-size: .58rem;
+  letter-spacing: .12em;
+  color: var(--color-system-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-inspector="true"]::before {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state] {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(9.5rem, .58fr) minmax(0, 1.42fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1.1rem 1rem 1.15rem 2.6rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent) !important;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state]:first-child {
+  border-top: 0 !important;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state]::before {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  top: 1.35rem;
+  width: .55rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 14px color-mix(in srgb, currentColor 28%, transparent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state]::after {
+  position: absolute;
+  right: 1rem;
+  top: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: .48rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state] h3 {
+  margin: 0;
+  color: currentColor !important;
+  font-family: var(--font-mono);
+  font-size: .66rem;
+  line-height: 1.55;
+  letter-spacing: .09em;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state] p {
+  margin: 0 !important;
+  padding-right: 7rem;
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="known"] {
+  color: var(--color-system-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="known"] {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="known"]::after {
+  content: "established";
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="uncertain"] {
+  color: var(--color-iridescent-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="uncertain"] {
+  color: var(--color-iridescent);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="uncertain"]::after {
+  content: "needs clarity";
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="changed"] {
+  color: var(--color-human-dark);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="changed"] {
+  color: var(--color-human);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="changed"]::after {
+  content: "revised";
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="reusable"] {
+  color: var(--color-system-dark);
+  background: color-mix(in srgb, var(--color-system) 5%, transparent);
+}
+
+.dark [data-scroll-scene="evidence"] [data-evidence-state="reusable"] {
+  color: var(--color-system);
+}
+
+[data-scroll-scene="evidence"] [data-evidence-state="reusable"]::after {
+  content: "portable";
+}
+
+@media (max-width: 700px) {
+  [data-scroll-scene="evidence"] [data-evidence-state] {
+    grid-template-columns: 1fr;
+    gap: .55rem;
+    padding-right: 1rem;
+  }
+
+  [data-scroll-scene="evidence"] [data-evidence-state] p {
+    padding-right: 0;
+  }
+
+  [data-scroll-scene="evidence"] [data-evidence-state]::after {
+    position: static;
+    grid-row: 1;
+    justify-self: end;
+    margin-top: -1.05rem;
+  }
+}

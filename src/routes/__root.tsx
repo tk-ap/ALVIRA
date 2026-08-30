@@ -7,6 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
+import { AilhatPortfolioHandoff } from "~/components/AilhatPortfolioHandoff";
 import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
@@ -63,6 +64,7 @@ function RootComponent() {
       <Outlet />
       <HomeUseCaseEducation />
       <DossierOwnershipPositioning />
+      <AilhatPortfolioHandoff />
       <OwnerOperatingBrief />
       <OwnerFoundingBetaPanel />
       <OwnerDashboardDepth />

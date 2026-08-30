@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
+import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { HomeUseCaseEducation } from "~/components/HomeUseCaseEducation";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
@@ -58,6 +59,7 @@ function RootComponent() {
       <ScrollNarrative />
       <Outlet />
       <HomeUseCaseEducation />
+      <DossierOwnershipPositioning />
       <ContextVersioningBootstrap />
       <LiveContextMirror />
       <FoundingBetaFeedback />

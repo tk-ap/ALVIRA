@@ -14,6 +14,7 @@ import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositi
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { HomeUseCaseEducation } from "~/components/HomeUseCaseEducation";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
+import { OwnerFoundingBetaPanel } from "~/components/OwnerFoundingBetaPanel";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
 import appShellCss from "~/styles/app-shell.css?url";
@@ -60,6 +61,7 @@ function RootComponent() {
       <Outlet />
       <HomeUseCaseEducation />
       <DossierOwnershipPositioning />
+      <OwnerFoundingBetaPanel />
       <ContextVersioningBootstrap />
       <LiveContextMirror />
       <FoundingBetaFeedback />

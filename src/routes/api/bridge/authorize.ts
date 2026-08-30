@@ -6,9 +6,11 @@ export const Route = createFileRoute("/api/bridge/authorize")({
     handlers: {
       GET: async ({ request }) => {
         const url = new URL(request.url);
-        const returnTo = url.searchParams.get("return_to") || `${bridgePublicUrl()}/api/auth/callback`;
-        const allowed = `${bridgePublicUrl()}/api/auth/callback`;
-        if (returnTo !== allowed) return Response.json({ error: "Invalid redirect URI." }, { status: 400 });
+        const internalCallback = `${url.origin}/api/bridge/auth/callback`;
+        const legacyCallback = `${bridgePublicUrl()}/api/auth/callback`;
+        const returnTo = url.searchParams.get("return_to") || internalCallback;
+        const allowed = new Set([internalCallback, legacyCallback]);
+        if (!allowed.has(returnTo)) return Response.json({ error: "Invalid redirect URI." }, { status: 400 });
 
         const user = await getBridgeUserFromSession();
         if (!user) {

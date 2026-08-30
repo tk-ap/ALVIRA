@@ -4,7 +4,7 @@ import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser, listProfiles } from "../-auth";
 
-const BRIDGE_URL = "https://alviratech-bridge.vercel.app";
+const ALVIRA_PUBLIC_URL = "https://alviratech.vercel.app";
 
 export const Route = createFileRoute("/bridge/connect")({
   head: () => ({ meta: [{ title: "Authorize Bridge — ALVIRA" }, { name: "description", content: "Authorize an AI tool to read your selected ALVIRA context." }] }),
@@ -34,9 +34,12 @@ function BridgeConnectPage() {
     return () => { cancelled = true; };
   }, []);
 
+  const defaultCallback = typeof window !== "undefined"
+    ? `${window.location.origin}/api/bridge/auth/callback`
+    : `${ALVIRA_PUBLIC_URL}/api/bridge/auth/callback`;
   const returnTo = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("return_to") || `${BRIDGE_URL}/api/auth/callback`
-    : `${BRIDGE_URL}/api/auth/callback`;
+    ? new URLSearchParams(window.location.search).get("return_to") || defaultCallback
+    : defaultCallback;
   const authorizeUrl = `/api/bridge/authorize?return_to=${encodeURIComponent(returnTo)}`;
 
   if (!ready) {

@@ -121,3 +121,24 @@ Before merging:
 - Never delete or move a referenced asset until repository search confirms that no code, documentation, or open pull request depends on its current path.
 
 See `design/brand-references/README.md` for the asset workflow and current reference inventory.
+
+## Agent OS Control-Plane Integration
+
+This repository participates in `tk-ap/agent-os` as the canonical shared workforce/control-plane layer. Agent OS is infrastructure, not an ALVIRA customer-facing offering.
+
+Before material planning or implementation:
+
+1. Read Agent OS `BOOTSTRAP.md` and `registry/product-routing.yaml`.
+2. Read this repository's `.agent-os/product.yaml` and `.agent-os/integration-surface.yaml`.
+3. Resolve the ALVIRA product boundary before selecting agents or skills.
+4. Use Agent OS portable contracts when work crosses product, context, authorization, capability, or outcome boundaries.
+5. Keep ALVIRA as the authoritative source for living user context. Context never grants execution authority.
+6. Treat Bridge as the gated secondary ALVIRA delivery capability described above, not as a standalone product or a second context store.
+7. Route portfolio-level prioritization to ailhat; route shared workforce composition/execution through Agent OS; do not assign generic authorization intelligence to ALVIRA or Bridge.
+8. Preserve human gates for merge, production, secrets, destructive actions, and any other action required by Agent OS or local policy.
+
+The default execution chain is:
+
+`request → product boundary → work-item when crossing boundaries → governed task → agents/skills → authorized harness/host → implementation → verification → evidence`
+
+Local `.agent-os/` metadata may narrow or add ALVIRA-specific implementation detail, but it must not redefine the canonical product role in Agent OS.

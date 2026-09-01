@@ -55,24 +55,27 @@ function splitSqlStatements(script: string): string[] {
       continue;
     }
 
-    // Dollar-quoted string: skip to the matching closing tag.
+    // Dollar-quoted string: copy it verbatim (a `;` inside is not a boundary).
     if (ch === "$") {
       const tagMatch = script.slice(i).match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/);
       if (tagMatch) {
         const tag = tagMatch[0];
         const closeIdx = script.indexOf(tag, i + tag.length);
         if (closeIdx !== -1) {
+          current += script.slice(i, closeIdx + tag.length);
           i = closeIdx + tag.length;
           continue;
         }
         // Malformed/unterminated dollar quote: treat the rest as literal.
+        current += script.slice(i);
         i = n;
         continue;
       }
     }
 
-    // Single-quoted string: skip to closing quote (handling `''`).
+    // Single-quoted string: copy verbatim (handling `''` escapes).
     if (ch === "'") {
+      const start = i;
       i += 1;
       while (i < n) {
         if (script[i] === "'" && script[i + 1] === "'") {
@@ -85,14 +88,17 @@ function splitSqlStatements(script: string): string[] {
         }
         i += 1;
       }
+      current += script.slice(start, i);
       continue;
     }
 
-    // Double-quoted identifier: skip to closing quote.
+    // Double-quoted identifier: copy verbatim.
     if (ch === '"') {
+      const start = i;
       i += 1;
       while (i < n && script[i] !== '"') i++;
-      i += 1;
+      if (i < n) i += 1;
+      current += script.slice(start, i);
       continue;
     }
 

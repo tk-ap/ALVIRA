@@ -22,6 +22,96 @@ import { Pool } from "@neondatabase/serverless";
  * table already exists is harmless; the version table is what stops us from
  * blindly re-running them on every deploy.
  */
+
+/**
+ * Split a SQL script into individual statements on `;`, while ignoring
+ * semicolons that appear inside comments (`-- …`, `/* … *\/`), single-quoted
+ * strings (`'…'` with `''` escapes), double-quoted identifiers, or dollar-quoted
+ * bodies (`$$…$$` / `$tag$…$tag$`). A naive `script.split(";")` breaks on a
+ * `;` inside a comment (e.g. `-- Existing accounts only; future signups…`),
+ * which produced a bogus statement and a `syntax error at or near "future"`.
+ */
+function splitSqlStatements(script: string): string[] {
+  const statements: string[] = [];
+  let current = "";
+  let i = 0;
+  const n = script.length;
+
+  while (i < n) {
+    const ch = script[i];
+    const next = script[i + 1];
+
+    // Line comment: skip to end of line.
+    if (ch === "-" && next === "-") {
+      while (i < n && script[i] !== "\n") i++;
+      continue;
+    }
+
+    // Block comment: skip to closing `*/`.
+    if (ch === "/" && next === "*") {
+      i += 2;
+      while (i < n && !(script[i] === "*" && script[i + 1] === "/")) i++;
+      i += 2;
+      continue;
+    }
+
+    // Dollar-quoted string: skip to the matching closing tag.
+    if (ch === "$") {
+      const tagMatch = script.slice(i).match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/);
+      if (tagMatch) {
+        const tag = tagMatch[0];
+        const closeIdx = script.indexOf(tag, i + tag.length);
+        if (closeIdx !== -1) {
+          i = closeIdx + tag.length;
+          continue;
+        }
+        // Malformed/unterminated dollar quote: treat the rest as literal.
+        i = n;
+        continue;
+      }
+    }
+
+    // Single-quoted string: skip to closing quote (handling `''`).
+    if (ch === "'") {
+      i += 1;
+      while (i < n) {
+        if (script[i] === "'" && script[i + 1] === "'") {
+          i += 2;
+          continue;
+        }
+        if (script[i] === "'") {
+          i += 1;
+          break;
+        }
+        i += 1;
+      }
+      continue;
+    }
+
+    // Double-quoted identifier: skip to closing quote.
+    if (ch === '"') {
+      i += 1;
+      while (i < n && script[i] !== '"') i++;
+      i += 1;
+      continue;
+    }
+
+    if (ch === ";") {
+      statements.push(current);
+      current = "";
+      i += 1;
+      continue;
+    }
+
+    current += ch;
+    i += 1;
+  }
+
+  const tail = current.trim();
+  if (tail) statements.push(tail);
+  return statements.map((s) => s.trim()).filter(Boolean);
+}
+
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required to run database migrations.");
 
@@ -52,10 +142,7 @@ try {
     }
 
     const migration = await readFile(join(migrationsDir, file), "utf8");
-    const statements = migration
-      .split(";")
-      .map((part) => part.trim())
-      .filter(Boolean);
+    const statements = splitSqlStatements(migration);
 
     await client.query("BEGIN");
     try {

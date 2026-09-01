@@ -90,7 +90,7 @@ function BrandPreview() {
                 <a href="#foundational" className="group flex min-h-[26rem] flex-col justify-between bg-[#f4f0e9] p-7 transition-colors hover:bg-[#efe8dd] dark:bg-[#0b0e0e] dark:hover:bg-[#121615] sm:p-9">
                   <div>
                     <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#74685e] dark:text-[#93877c]">01 / New to AI continuity</p>
-                    <h3 className="mt-7 font-display text-4xl leading-[0.98] tracking-[-0.03em] text-[#2c2824] dark:text-[#e0d7cd] sm:text-5xl">I want AI to understand me better.</h3>
+                    <h3 className="mt-7 font-display text-4xl leading-[0.98] tracking-[-0.03em] text-[#2c2824] dark:text-[#e0d7cd] sm:text-5xl">Help me see where better context changes what AI can actually do for me.</h3>
                     <p className="mt-6 text-sm leading-7 text-[#6d6258] dark:text-[#a99f94]">Start with the problem: why useful AI still makes you repeat yourself, lose continuity, and rebuild context from scratch.</p>
                   </div>
                   <span className="mt-10 text-sm font-semibold text-[#2d2925] underline decoration-system/50 underline-offset-4 group-hover:decoration-system dark:text-[#ece4da]">Help me understand why this matters →</span>

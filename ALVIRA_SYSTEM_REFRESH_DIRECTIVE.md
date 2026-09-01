@@ -96,6 +96,61 @@ Requirements:
 
 Treat scroll choreography with the same design importance as typography, spacing, hierarchy, and responsive behavior.
 
+### 7. Meet users at their level of AI fluency
+
+> **ALVIRA should meet people at their level of AI fluency without changing the underlying product.**
+
+The public experience must support two distinct entry points into the same ALVIRA / Context Intelligence system.
+
+These paths are **not** separate offerings, tiers, products, or product logic. They are different framing layers for users who arrive with different levels of familiarity with AI as an ongoing workflow and continuity resource.
+
+#### Entry A — Foundational / problem-first
+
+For users who are new to AI as a persistent workflow or continuity resource, lead with the underlying problem before introducing advanced agent or context-infrastructure language.
+
+The path should help the user recognize this progression:
+
+**AI can help → AI works better when it understands you → that understanding is currently fragmented → ALVIRA creates a living context layer that can travel with your work.**
+
+This entry point should:
+
+- explain the repeated-explanation and fragmented-context problem in familiar language
+- establish why continuity matters before asking the visitor to understand agents, context engineering, orchestration, or workforce concepts
+- make ALVIRA Context creation feel like the natural next step rather than technical setup
+- favor plain-language action framing such as **Build my context** or **Show AI what matters**
+
+Do not require this audience to learn agent terminology in order to understand ALVIRA's value.
+
+#### Entry B — Experienced / architecture-first
+
+For users who already understand how AI tools or agents can support their goals, do not make them repeat foundational AI education.
+
+Their problem is not whether AI is useful. It is that the intelligence and context they rely on are fragmented across tools, sessions, and agents.
+
+This path should move quickly to the transformation ALVIRA provides:
+
+> **Stop rebuilding context for every agent. Create a living intelligence layer that the tools you already use can work from.**
+
+Lead quickly with:
+
+- **Portable context** — user understanding should not belong to a single AI vendor or session
+- **Continuity** — agents and tools should be able to work from what came before instead of repeatedly starting from zero
+- **Reflection** — context should evolve as goals, work, assumptions, and circumstances change
+- **Selective access** — different agents/tools should receive the context relevant to their task rather than requiring an undifferentiated full profile
+
+This audience should be able to understand the architectural advantage within seconds. Suitable action framing includes **Create my context layer** or **Upgrade my AI workflow**.
+
+#### Convergence rule
+
+Both paths must converge on the same **ALVIRA Context creation/interview experience** and the same underlying context model.
+
+The distinction is framing, not capability:
+
+- **“Help me understand why I need this.”**
+- **“I understand the problem. Show me the better architecture.”**
+
+Do not fork the product, data model, interview system, account model, or downstream functionality by entry path unless a separate product decision is explicitly approved.
+
 ## Visual Direction
 
 The redesign should establish a coherent ALVIRA design system before introducing large page-specific flourishes.
@@ -125,6 +180,26 @@ This is directional rather than mandatory final copy. The final hero should pres
 
 The supporting copy should quickly establish **Context Intelligence** and explain that ALVIRA builds and continuously updates an understanding of the user.
 
+### Early-page entry architecture
+
+The homepage should expose the two fluency paths early enough that visitors can choose the explanation depth appropriate to them without forcing either audience through the other's narrative.
+
+A useful interaction model is:
+
+> **How do you use AI today?**
+>
+> **I'm figuring out how AI fits into my work**  
+> Understand why continuity and context matter.  
+> → **Start here**
+>
+> **I already work with AI and agents**  
+> Give the tools you use a persistent context layer.  
+> → **Show me ALVIRA**
+
+This copy is directional rather than mandatory. Preserve the information architecture even if final wording changes.
+
+The foundational path may spend more time establishing the problem. The experienced path should be substantially more concise and may reach product/architecture evidence within roughly one short narrative beat. Both must converge into the same ALVIRA Context action rather than terminating in separate offers.
+
 ## Refresh Stages
 
 ### Stage 1 — Brand shell
@@ -152,6 +227,7 @@ Rework the public narrative around:
 - continuous reflection and updating
 - evidence of understanding
 - future reuse of context
+- two fluency-aware entry paths that let visitors choose problem-first or architecture-first explanation without creating separate products
 - scroll-triggered narrative behavior that connects these ideas as one argument
 
 The homepage should explain the product before it explains every feature.
@@ -162,6 +238,8 @@ Stage 2 is complete on the preview branch. The accepted homepage narrative is:
 
 **premise → problem → consequence → mechanism → living system → evidence → portability → action**
 
+The two-entry architecture is an approved refinement to how visitors enter that narrative. It does not reopen the core Context Intelligence concept or change the underlying product. The foundational path may follow the full explanatory arc; the experienced path may compress the premise/problem stages and move directly toward mechanism, portability, and action.
+
 The final decision pass established these boundaries:
 
 - keep the category-defining headlines and compressed supporting copy
@@ -171,6 +249,7 @@ The final decision pass established these boundaries:
 - keep **Portable by design** intentionally restrained; do not force another hub, network, transfer-map, or integration-style graphic without a genuinely stronger visual metaphor
 - destination names in the portability section illustrate user-chosen environments, not claimed native integrations
 - preserve complete static meaning under reduced motion and without client-side enhancement
+- implement fluency-aware routing as framing/progressive disclosure, not duplicated product pages or divergent application logic
 - do not reopen homepage concept exploration during Stage 3 unless a specific regression or user-approved problem requires it
 
 ### Stage 3 — App-shell inheritance
@@ -241,6 +320,8 @@ Any agent working on this branch should:
 9. Clearly distinguish demonstration/simulated states from live product intelligence when relevant.
 10. Treat scroll-triggered behavior as a first-class UI requirement and provide reduced-motion/static fallbacks.
 11. Optimize for a coherent product category and experience rather than cosmetic novelty.
+12. Preserve the two-entry fluency architecture as two framing paths into one ALVIRA Context product; do not create separate beginner and advanced offerings.
+13. Allow experienced users to bypass foundational AI education and reach portability/continuity/architecture value quickly.
 
 ## Definition of Success
 
@@ -251,6 +332,9 @@ The refresh is successful when a new visitor can quickly understand all of the f
 - That understanding is built from multiple context sources.
 - The resulting context can be reflected on and updated continuously.
 - ALVIRA becomes more useful as its understanding evolves.
+- A visitor who is new to AI can understand the foundational continuity/context problem without needing agent terminology.
+- A visitor who already works with AI/agents can quickly see how ALVIRA changes the architecture of that existing workflow.
+- Both visitors are clearly led toward the same ALVIRA Context experience rather than separate products.
 - The page's motion and scroll behavior help explain that living system rather than merely decorate it.
 - The visual system feels intentional and distinctive without compromising the existing product.
 

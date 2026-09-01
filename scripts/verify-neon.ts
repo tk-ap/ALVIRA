@@ -18,7 +18,6 @@ const expected = [
   "purchases",
   "interview_drafts",
   "draft_transfers",
-  "meos_comps",
   "team_waitlist",
   "events",
   // Bridge

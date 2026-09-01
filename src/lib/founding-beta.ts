@@ -109,6 +109,17 @@ export async function hasActiveFoundingBeta(userId: string): Promise<boolean> {
   return !!access && new Date(access.expires_at).getTime() > Date.now();
 }
 
+export async function claimFoundingBetaReservation(user: { id: string; email: string; tier: string }): Promise<boolean> {
+  await ensureFoundingBetaSchema();
+  const db = getDb();
+  await db.query("CREATE TABLE IF NOT EXISTS founding_beta_reservations (email TEXT PRIMARY KEY, granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  const reservation = (await db.query("DELETE FROM founding_beta_reservations WHERE email = $1 RETURNING email", [user.email.trim().toLowerCase()]))[0];
+  if (!reservation) return false;
+  await db.query("INSERT INTO founding_beta_access (user_id, previous_tier, expires_at) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at", [user.id, user.tier, FOUNDING_BETA_PERMANENT_EXPIRY]);
+  await db.query("UPDATE users SET tier = 'founding_beta' WHERE id = $1 AND tier = 'free'", [user.id]);
+  return true;
+}
+
 export async function syncFoundingBetaTier(user: { id: string; tier: string }): Promise<{ active: boolean; expiresAt: string | null }> {
   const access = await getFoundingBetaAccess(user.id);
   if (!access) return { active: false, expiresAt: null };

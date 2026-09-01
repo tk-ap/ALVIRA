@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { bridgeClientId, exchangeBridgeAuthorizationCode } from "~/lib/bridge";
+import { BridgeExchangeError, bridgeClientId, exchangeBridgeAuthorizationCode, logBridgeError } from "~/lib/bridge";
 
 export const Route = createFileRoute("/api/bridge/token")({
   server: {
@@ -24,8 +24,16 @@ export const Route = createFileRoute("/api/bridge/token")({
             expires_at: result.expiresAt,
             scope: result.scope,
           });
-        } catch {
-          return Response.json({ error: "invalid_grant" }, { status: 400 });
+        } catch (error) {
+          // Log and classify: known client rejections remain the OAuth
+          // invalid_grant; unexpected failures (missing env var, outbound
+          // DB/HTTP failure) are logged and returned as a server_error rather
+          // than surfacing as a bare unhandled error.
+          logBridgeError("token", error);
+          if (error instanceof BridgeExchangeError) {
+            return Response.json({ error: "invalid_grant" }, { status: 400 });
+          }
+          return Response.json({ error: "server_error" }, { status: 502 });
         }
       },
     },

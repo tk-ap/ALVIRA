@@ -6,6 +6,30 @@ const SESSION_COOKIE = "alvira_session";
 const DEFAULT_BRIDGE_CLIENT_ID = "alvira-bridge";
 const DEFAULT_BRIDGE_URL = "https://alviratech-bridge.vercel.app";
 
+/**
+ * Raised when the code-to-token exchange is rejected for a permanent,
+ * client-side reason (bad/expired code, wrong client id or secret). These map
+ * to an OAuth-style 4xx in the calling route.
+ */
+export class BridgeExchangeError extends Error {
+  constructor(message: string, readonly code: string) {
+    super(message);
+    this.name = "BridgeExchangeError";
+  }
+}
+
+/**
+ * Logs an exchange failure with enough context to diagnose an outage (a
+ * missing env var, an outbound DB/HTTP failure, an unexpected error) without
+ * ever printing an authorization code or a client secret.
+ */
+export function logBridgeError(where: string, error: unknown) {
+  const detail = error instanceof Error
+    ? { name: error.name, message: error.message, code: (error as { code?: string }).code, stack: error.stack }
+    : { value: String(error) };
+  console.error(`[bridge:${where}] code-to-token exchange failed`, detail);
+}
+
 let bridgeSchemaReady: Promise<void> | null = null;
 
 function ensureBridgeSchema() {
@@ -86,9 +110,9 @@ export async function issueBridgeAuthorizationCode(userId: string, redirectUri: 
 }
 
 export async function exchangeBridgeAuthorizationCode(code: string, clientId: string, redirectUri: string, clientSecret: string) {
-  if (clientId !== bridgeClientId()) throw new Error("Invalid Bridge client.");
+  if (clientId !== bridgeClientId()) throw new BridgeExchangeError("Invalid Bridge client.", "invalid_client");
   const expectedSecret = process.env.BRIDGE_CLIENT_SECRET?.trim();
-  if (!expectedSecret || clientSecret !== expectedSecret) throw new Error("Invalid Bridge client credentials.");
+  if (!expectedSecret || clientSecret !== expectedSecret) throw new BridgeExchangeError("Invalid Bridge client credentials.", "invalid_client");
 
   await ensureBridgeSchema();
   const db = getDb();
@@ -96,7 +120,7 @@ export async function exchangeBridgeAuthorizationCode(code: string, clientId: st
     "DELETE FROM bridge_authorization_codes WHERE code_hash = $1 AND client_id = $2 AND redirect_uri = $3 AND expires_at > NOW() RETURNING user_id",
     [hashBridgeSecret(code), clientId, redirectUri],
   ))[0] as { user_id: string } | undefined;
-  if (!row) throw new Error("Authorization code is invalid or expired.");
+  if (!row) throw new BridgeExchangeError("Authorization code is invalid or expired.", "invalid_grant");
 
   const accessToken = createBridgeSecret();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();

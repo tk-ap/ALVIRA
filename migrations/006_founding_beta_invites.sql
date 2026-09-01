@@ -24,6 +24,12 @@ WHERE expires_at > NOW()
   AND LOWER(TRIM(email)) NOT LIKE '%@example.com'
 ON CONFLICT (email) DO NOTHING;
 
+-- Manually reserved Founding Beta members who do not yet have an ALVIRA
+-- account. The reservation auto-claims when the same email signs up or logs in.
+INSERT INTO founding_beta_invites (email, status, source)
+VALUES ('mailiggans@gmail.com', 'reserved', 'manual')
+ON CONFLICT (email) DO NOTHING;
+
 -- Expand the fixed historical cohort through the point at which the Founders
 -- Beta Club cohort was finalized. Future signups are not silently enrolled.
 INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)

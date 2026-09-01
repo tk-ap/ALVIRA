@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { setCookie } from "@tanstack/react-start/server";
-import { bridgeClientId, exchangeBridgeAuthorizationCode } from "~/lib/bridge";
+import { BridgeExchangeError, bridgeClientId, exchangeBridgeAuthorizationCode, logBridgeError } from "~/lib/bridge";
 
 const BRIDGE_TOKEN_COOKIE = "alvira_bridge_token";
 
@@ -33,8 +33,16 @@ export const Route = createFileRoute("/api/bridge/auth/callback")({
           const maxAge = Math.max(0, Math.floor((new Date(token.expiresAt).getTime() - Date.now()) / 1000));
           setCookie(BRIDGE_TOKEN_COOKIE, token.accessToken, tokenCookieOptions(maxAge));
           return Response.redirect(new URL("/bridge?connected=1", url.origin), 302);
-        } catch {
-          return Response.json({ error: "authorization_failed" }, { status: 400 });
+        } catch (error) {
+          // Never let an internal exchange failure surface as a bare, unhandled
+          // 500 ("unhandled": true). Log it so a future failure is diagnosable,
+          // and classify: known client rejections are 400s; anything else (a
+          // missing env var or an outbound DB/HTTP failure) is a retryable 502.
+          logBridgeError("callback", error);
+          if (error instanceof BridgeExchangeError) {
+            return Response.json({ error: "authorization_failed" }, { status: 400 });
+          }
+          return Response.json({ error: "exchange_unavailable" }, { status: 502 });
         }
       },
     },

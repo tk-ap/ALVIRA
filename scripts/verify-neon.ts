@@ -4,7 +4,32 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required to verify Neon.");
 
 const sql = neon(connectionString);
-const expected = ["users", "sessions", "password_reset_tokens", "profiles", "purchases", "interview_drafts", "team_waitlist", "meos_comps", "draft_transfers", "events"];
+// Every table the application requires at runtime. This is the deploy gate's
+// definition of a "matching schema": if any of these is absent the app would
+// fail in production, so verification must fail here rather than green-light a
+// broken deploy. Bridge tables are included (a missing
+// `bridge_authorization_codes` table is exactly what caused the live 500s).
+const expected = [
+  // core auth / sessions / profiles / entitlements
+  "users",
+  "sessions",
+  "password_reset_tokens",
+  "profiles",
+  "purchases",
+  "interview_drafts",
+  "draft_transfers",
+  "meos_comps",
+  "team_waitlist",
+  "events",
+  // Bridge
+  "bridge_authorization_codes",
+  "bridge_access_tokens",
+  // founding beta / feedback
+  "founding_beta_access",
+  "beta_feedback",
+  // context versioning
+  "context_versions",
+];
 const tables = await sql.query(
   "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
 ) as Array<{ table_name: string }>;

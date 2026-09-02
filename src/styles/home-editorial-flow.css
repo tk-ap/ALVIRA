@@ -1,0 +1,97 @@
+/*
+ * Homepage editorial flow
+ *
+ * Keep narrow screens left-aligned for scanability. At desktop widths, vary the
+ * horizontal anchor of major copy blocks so the life-first narrative reads as
+ * an editorial sequence rather than one continuous left rail.
+ */
+
+@media (min-width: 1024px) {
+  /* Scope these refinements only to the life-first homepage. */
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type {
+    grid-template-columns: minmax(0, 1.42fr) minmax(18rem, 0.58fr);
+    column-gap: clamp(3rem, 6vw, 6.5rem);
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:first-child > div:first-of-type {
+    width: min(38rem, 78%);
+    margin-left: auto;
+    margin-right: clamp(1rem, 3vw, 3.5rem);
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:first-child > div:nth-of-type(2) {
+    width: min(43rem, 86%);
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities > div > div:first-child {
+    width: min(54rem, 78%);
+    margin-left: auto;
+    margin-right: 4%;
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities > div > p:last-child {
+    margin-left: 17%;
+  }
+
+  /* Let the comparison section breathe across the page instead of beginning
+     on the same vertical rail as the hero. */
+  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:first-child {
+    padding-left: clamp(1rem, 4vw, 4rem);
+  }
+
+  /* Context definition returns to the left, forming the first deliberate
+     counter-movement after the offset possibilities section. */
+  body:has(main#main-content > #possibilities) #why-context > div > div:first-child {
+    padding-right: clamp(1rem, 3vw, 3rem);
+  }
+
+  /* Shift the How it works thesis toward the right before the three-step row. */
+  body:has(main#main-content > #possibilities) #why-context + section > div > div:first-child {
+    width: min(56rem, 76%);
+    margin-left: auto;
+    margin-right: 2%;
+  }
+
+  body:has(main#main-content > #possibilities) #why-context + section > div > div:last-child {
+    width: min(52rem, 70%);
+    margin-left: auto;
+    margin-right: 8%;
+  }
+
+  /* Flip the technical-category section: states lead on the left and the
+     category statement resolves on the right. */
+  body:has(main#main-content > #possibilities) #why-context + section + section > div > div {
+    grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+  }
+
+  body:has(main#main-content > #possibilities) #why-context + section + section > div > div > div:first-child {
+    grid-column: 2;
+    grid-row: 1;
+    padding-left: clamp(1rem, 3vw, 3rem);
+  }
+
+  body:has(main#main-content > #possibilities) #why-context + section + section > div > div > div:last-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  /* Make the closing question a centered pause rather than another left-edge
+     section, while keeping the actual actions simple and obvious. */
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > p:first-child {
+    text-align: center;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div > div:first-child {
+    max-width: 62rem;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div > div:last-child {
+    align-items: center;
+  }
+}

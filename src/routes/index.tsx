@@ -6,11 +6,11 @@ import { TrustFooter } from "~/components/TrustFooter";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ALVIRA — Help AI understand you" },
+      { title: "ALVIRA — Context before capability" },
       {
         name: "description",
         content:
-          "Discover what AI can help with, then give it the context to make that help more personal, useful, and consistent.",
+          "AI can do almost anything. ALVIRA helps you understand what actually matters, then gives AI the context to help in a direction that fits you.",
       },
     ],
   }),
@@ -99,19 +99,40 @@ function Home() {
       <Header />
 
       <main id="main-content" className="flex-1">
-        <section className="mx-auto grid max-w-7xl gap-12 px-6 py-14 sm:px-8 sm:py-20 lg:min-h-[72vh] lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-10 lg:py-28">
+        <section className="mx-auto grid max-w-7xl gap-12 px-6 py-14 sm:px-8 sm:py-20 lg:min-h-[78vh] lg:grid-cols-[1.18fr_0.82fr] lg:items-center lg:px-10 lg:py-28">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">
               ALVIRA
             </p>
 
-            <h1 className="mt-6 max-w-5xl font-display text-[clamp(3rem,7vw,6.7rem)] font-semibold leading-[0.92] tracking-[-0.045em] text-[#191715] dark:text-[#f4f0e9]">
-              Start with something you need help with.
+            <h1 className="mt-6 max-w-5xl font-display text-[clamp(2.9rem,6.3vw,6rem)] font-semibold leading-[0.92] tracking-[-0.045em] text-[#191715] dark:text-[#f4f0e9]">
+              AI can do almost anything. <span className="text-[#685e54] dark:text-[#b8ada1]">The harder part is knowing what matters.</span>
             </h1>
 
-            <p className="mt-8 max-w-2xl text-lg leading-8 text-[#5f554c] dark:text-[#b8ada1] sm:text-xl sm:leading-9">
-              A decision. A message. A trip. A job change. A business idea. Something you want to understand. AI can help with everyday things like these. ALVIRA helps it understand you before it tries.
-            </p>
+            <div className="mt-8 max-w-2xl border-l border-system/50 pl-5 sm:pl-6">
+              <p className="text-base leading-7 text-[#5f554c] dark:text-[#b8ada1] sm:text-lg sm:leading-8">
+                AI can help you do almost anything. The harder part is knowing what actually matters.
+              </p>
+              <div className="mt-5 space-y-1 font-display text-xl leading-7 tracking-[-0.015em] text-[#2c2824] dark:text-[#e0d7cd] sm:text-2xl sm:leading-8">
+                <p>What deserves your attention.</p>
+                <p>What problem is worth solving.</p>
+                <p>What should change.</p>
+                <p>What should stay the same.</p>
+                <p>What’s worth building — and what doesn’t need to be built at all.</p>
+              </div>
+            </div>
+
+            <div className="mt-8 max-w-2xl">
+              <p className="font-display text-3xl font-semibold leading-[1.02] tracking-[-0.025em] text-[#191715] dark:text-[#f4f0e9] sm:text-4xl">
+                ALVIRA starts there.
+              </p>
+              <p className="mt-4 text-base leading-7 text-[#5f554c] dark:text-[#b8ada1] sm:text-lg sm:leading-8">
+                It builds an understanding of your goals, priorities, constraints, experiences, and preferences — so AI can help you move in a direction that actually fits you.
+              </p>
+              <p className="mt-5 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-system-dark dark:text-system">
+                Context before capability.
+              </p>
+            </div>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a

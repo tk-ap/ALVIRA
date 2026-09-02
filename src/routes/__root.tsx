@@ -31,10 +31,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ALVIRA — Help AI understand you" },
+      { title: "ALVIRA — Context before capability" },
       { name: "theme-color", content: "#0b0e0e" },
-      { property: "og:title", content: "ALVIRA — Help AI understand you" },
-      { property: "og:description", content: "Discover what AI can help with, then give it the context to make that help more personal, useful, and consistent." },
+      { property: "og:title", content: "ALVIRA — Context before capability" },
+      { property: "og:description", content: "AI can do almost anything. ALVIRA helps you understand what actually matters, then gives AI the context to help in a direction that fits you." },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://alviratech.vercel.app/alvira-logo-editorial-v2.png" },
       { property: "og:url", content: "https://alviratech.vercel.app/" },

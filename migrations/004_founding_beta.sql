@@ -30,11 +30,11 @@ CREATE INDEX IF NOT EXISTS idx_beta_feedback_user_id ON beta_feedback(user_id);
 CREATE INDEX IF NOT EXISTS idx_beta_feedback_created_at ON beta_feedback(created_at DESC);
 
 -- Founding Beta cohort snapshot requested 2026-08-29T19:56:50Z.
--- Existing accounts only; future signups are not silently enrolled.
+-- Existing eligible accounts receive permanent complimentary access unless revoked.
 INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
 SELECT id,
        CASE WHEN tier = 'founding_beta' THEN 'free' ELSE tier END,
-       NOW() + INTERVAL '45 days'
+       TIMESTAMPTZ '9999-12-31T23:59:59Z'
 FROM users
 WHERE created_at <= TIMESTAMPTZ '2026-08-29T19:56:50Z'
   AND LOWER(TRIM(email)) NOT IN (

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { AilhatPortfolioHandoff } from "~/components/AilhatPortfolioHandoff";
+import { AppFirstRunClarity } from "~/components/AppFirstRunClarity";
 import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
@@ -59,6 +60,7 @@ function RootComponent() {
   return (
     <RootDocument>
       <AppShellInheritance />
+      <AppFirstRunClarity />
       <ScrollNarrative />
       <Outlet />
       <DossierOwnershipPositioning />

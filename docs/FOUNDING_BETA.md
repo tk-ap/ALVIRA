@@ -22,6 +22,8 @@ Expected Founding Beta users who have not created an account are stored by norma
 
 Reservation claiming is atomic: the access row is granted, an eligible free account is promoted to `founding_beta`, and the reservation is consumed in one database transaction. If any part fails, the reservation remains available for a later retry.
 
+The owner dashboard exposes active Founding Beta members and pending reservations separately. Pending reservations show the reserved email and reservation timestamp so the pre-account cohort can be reconciled without direct database inspection.
+
 ## Grant one user manually
 
 Run after the user has created an ALVIRA account when a manual grant is required.

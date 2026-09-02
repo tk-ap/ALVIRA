@@ -110,10 +110,7 @@ function Home() {
             </h1>
 
             <div className="mt-8 max-w-2xl border-l border-system/50 pl-5 sm:pl-6">
-              <p className="text-base leading-7 text-[#5f554c] dark:text-[#b8ada1] sm:text-lg sm:leading-8">
-                AI can help you do almost anything. The harder part is knowing what actually matters.
-              </p>
-              <div className="mt-5 space-y-1 font-display text-xl leading-7 tracking-[-0.015em] text-[#2c2824] dark:text-[#e0d7cd] sm:text-2xl sm:leading-8">
+              <div className="space-y-1 font-display text-xl leading-7 tracking-[-0.015em] text-[#2c2824] dark:text-[#e0d7cd] sm:text-2xl sm:leading-8">
                 <p>What deserves your attention.</p>
                 <p>What problem is worth solving.</p>
                 <p>What should change.</p>

@@ -13,7 +13,6 @@ import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
-import { HomeUseCaseEducation } from "~/components/HomeUseCaseEducation";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
 import { OwnerDashboardDepth } from "~/components/OwnerDashboardDepth";
 import { OwnerFoundingBetaPanel } from "~/components/OwnerFoundingBetaPanel";
@@ -31,10 +30,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ALVIRA — Build the context your AI is missing" },
+      { title: "ALVIRA — Help AI understand you" },
       { name: "theme-color", content: "#0b0e0e" },
-      { property: "og:title", content: "ALVIRA — Context Intelligence" },
-      { property: "og:description", content: "ALVIRA maintains living context intelligence so AI can understand what matters, what changed, and what remains uncertain." },
+      { property: "og:title", content: "ALVIRA — Help AI understand you" },
+      { property: "og:description", content: "Discover what AI can help with, then give it the context to make that help more personal, useful, and consistent." },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://alviratech.vercel.app/alvira-logo-editorial-v2.png" },
       { property: "og:url", content: "https://alviratech.vercel.app/" },
@@ -62,7 +61,6 @@ function RootComponent() {
       <AppShellInheritance />
       <ScrollNarrative />
       <Outlet />
-      <HomeUseCaseEducation />
       <DossierOwnershipPositioning />
       <AilhatPortfolioHandoff />
       <OwnerOperatingBrief />

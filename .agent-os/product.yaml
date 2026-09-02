@@ -1,0 +1,39 @@
+version: 0.1.0
+product_key: alvira-meos
+agent_os_repository: tk-ap/agent-os
+routing_source: registry/product-routing.yaml
+repository: tk-ap/ALVIRA
+
+local:
+  owns:
+    - context-capture
+    - context-structure
+    - living-context-maintenance
+    - reflection
+    - alvira-profile-source-of-truth
+    - nested-bridge-user-experience
+  produces:
+    - approved-context
+    - context-reference
+    - context-update-candidate
+  consumes:
+    - user-provided-context
+    - uploaded-context
+    - verified-outcome-evidence-for-review
+  must_not_own:
+    - portfolio-prioritization
+    - canonical-workforce-routing
+    - generic-authorization-intelligence
+    - external-execution-harness
+  constraints:
+    - context-is-not-authorization
+    - alvira-bridge-is-a-gated-secondary-capability-inside-alvira
+    - bridge-must-reuse-alvira-identity-and-profile-source-of-truth
+    - shared-interview-engine-does-not-imply-one-mega-interview
+    - app-interviews-context-reflect-uploads-auth-and-data-models-are-regression-sensitive
+
+rules:
+  canonical_product_role_from_routing_source: true
+  local_metadata_may_narrow_or_add_implementation_detail: true
+  local_metadata_must_not_redefine_canonical_role: true
+  cross_product_writes_require_explicit_task_authorization: true

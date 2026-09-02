@@ -17,9 +17,16 @@ export type FoundingBetaMemberActivity = {
   last_meaningful_action: string | null;
 };
 
+export type FoundingBetaReservation = {
+  email: string;
+  granted_at: string;
+};
+
 export type OwnerCohortMetrics = {
   foundingBetaCount: number;
+  reservationCount: number;
   members: FoundingBetaMemberActivity[];
+  reservations: FoundingBetaReservation[];
 };
 
 async function requireOwner() {
@@ -43,6 +50,7 @@ async function requireOwner() {
 async function ensureActivitySources() {
   await ensureFoundingBetaSchema();
   const db = getDb();
+  await db.query(`CREATE TABLE IF NOT EXISTS founding_beta_reservations (email TEXT PRIMARY KEY, granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
   // Bridge connection creation is a meaningful product action. Keep this
   // narrow bootstrap idempotent so the owner cohort query remains safe even
   // before a Bridge route has initialized its own tables in a fresh database.
@@ -135,5 +143,18 @@ export const getOwnerCohortMetrics = createServerFn({ method: "GET" }).handler(a
     ORDER BY COALESCE(ma.last_meaningful_at, ll.last_login_at, f.granted_at) DESC
   `)) as FoundingBetaMemberActivity[];
 
-  return { foundingBetaCount: members.length, members };
+  const reservations = (await db.query(`
+    SELECT r.email, r.granted_at
+      FROM founding_beta_reservations r
+      LEFT JOIN users u ON LOWER(TRIM(u.email)) = LOWER(TRIM(r.email))
+     WHERE u.id IS NULL
+     ORDER BY r.granted_at ASC, r.email ASC
+  `)) as FoundingBetaReservation[];
+
+  return {
+    foundingBetaCount: members.length,
+    reservationCount: reservations.length,
+    members,
+    reservations,
+  };
 });

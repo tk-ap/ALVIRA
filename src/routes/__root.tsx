@@ -20,6 +20,7 @@ import { OwnerFoundingBetaPanel } from "~/components/OwnerFoundingBetaPanel";
 import { OwnerOperatingBrief } from "~/components/OwnerOperatingBrief";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
 import appCss from "~/styles/app.css?url";
+import homeEditorialFlowCss from "~/styles/home-editorial-flow.css?url";
 import appShellCss from "~/styles/app-shell.css?url";
 import appInterviewCss from "~/styles/app-interview.css?url";
 import appSeedReviewCss from "~/styles/app-seed-review.css?url";
@@ -41,6 +42,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: homeEditorialFlowCss },
       { rel: "stylesheet", href: appShellCss },
       { rel: "stylesheet", href: appInterviewCss },
       { rel: "stylesheet", href: appSeedReviewCss },

@@ -113,10 +113,18 @@ export async function claimFoundingBetaReservation(user: { id: string; email: st
   await ensureFoundingBetaSchema();
   const db = getDb();
   await db.query("CREATE TABLE IF NOT EXISTS founding_beta_reservations (email TEXT PRIMARY KEY, granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-  const reservation = (await db.query("DELETE FROM founding_beta_reservations WHERE email = $1 RETURNING email", [user.email.trim().toLowerCase()]))[0];
+  const normalizedEmail = user.email.trim().toLowerCase();
+  const reservation = (await db.query("SELECT email FROM founding_beta_reservations WHERE email = $1", [normalizedEmail]))[0];
   if (!reservation) return false;
-  await db.query("INSERT INTO founding_beta_access (user_id, previous_tier, expires_at) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at", [user.id, user.tier, FOUNDING_BETA_PERMANENT_EXPIRY]);
-  await db.query("UPDATE users SET tier = 'founding_beta' WHERE id = $1 AND tier = 'free'", [user.id]);
+
+  await db.transaction([
+    db.query(
+      "INSERT INTO founding_beta_access (user_id, previous_tier, expires_at) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at, previous_tier = CASE WHEN founding_beta_access.previous_tier = 'founding_beta' THEN 'free' ELSE founding_beta_access.previous_tier END",
+      [user.id, user.tier === "founding_beta" ? "free" : user.tier, FOUNDING_BETA_PERMANENT_EXPIRY],
+    ),
+    db.query("UPDATE users SET tier = 'founding_beta' WHERE id = $1 AND tier = 'free'", [user.id]),
+    db.query("DELETE FROM founding_beta_reservations WHERE email = $1", [normalizedEmail]),
+  ]);
   return true;
 }
 

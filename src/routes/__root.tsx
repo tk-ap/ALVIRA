@@ -8,12 +8,12 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { AilhatPortfolioHandoff } from "~/components/AilhatPortfolioHandoff";
+import { AppFirstRunClarity } from "~/components/AppFirstRunClarity";
 import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
-import { HomeUseCaseEducation } from "~/components/HomeUseCaseEducation";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
 import { OwnerDashboardDepth } from "~/components/OwnerDashboardDepth";
 import { OwnerFoundingBetaPanel } from "~/components/OwnerFoundingBetaPanel";
@@ -31,10 +31,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ALVIRA — Build the context your AI is missing" },
+      { title: "ALVIRA — Context before capability" },
       { name: "theme-color", content: "#0b0e0e" },
-      { property: "og:title", content: "ALVIRA — Context Intelligence" },
-      { property: "og:description", content: "ALVIRA maintains living context intelligence so AI can understand what matters, what changed, and what remains uncertain." },
+      { property: "og:title", content: "ALVIRA — Context before capability" },
+      { property: "og:description", content: "AI can do almost anything. ALVIRA helps you understand what actually matters, then gives AI the context to help in a direction that fits you." },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://alviratech.vercel.app/alvira-logo-editorial-v2.png" },
       { property: "og:url", content: "https://alviratech.vercel.app/" },
@@ -60,9 +60,9 @@ function RootComponent() {
   return (
     <RootDocument>
       <AppShellInheritance />
+      <AppFirstRunClarity />
       <ScrollNarrative />
       <Outlet />
-      <HomeUseCaseEducation />
       <DossierOwnershipPositioning />
       <AilhatPortfolioHandoff />
       <OwnerOperatingBrief />

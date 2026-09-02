@@ -2,8 +2,10 @@
 
 ## Product-Direction Authority
 
-- Revision 11 is the latest owner-ratified ALVIRA product direction.
+- Revision 11 remains the baseline owner-ratified ALVIRA product direction.
 - Revisions after 11 are team working hypotheses unless the owner explicitly ratifies them.
+- Explicitly labeled owner-ratified addenda made after Revision 11 are authoritative for their stated scope and supersede conflicting older guidance.
+- Current owner-ratified addendum: `docs/CONTEXT_INTELLIGENCE_ROADMAP.md` → **AI leverage guidance**, ratified 2026-09-02.
 - Label post–Revision 11 assumptions when they influence recommendations or implementation.
 
 ## Update Requests

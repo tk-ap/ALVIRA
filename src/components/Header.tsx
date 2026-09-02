@@ -48,7 +48,7 @@ export function Header() {
 
   const closeMenu = () => setMenuOpen(false);
   const mobileCtaHref = user ? "/dashboard" : "/app";
-  const mobileCtaLabel = user ? "Dashboard" : "Build Context";
+  const mobileCtaLabel = user ? "Dashboard" : "Start here";
   const isOwner = user?.email.trim().toLowerCase() === OWNER_EMAIL;
 
   return (
@@ -72,10 +72,10 @@ export function Header() {
 
             <div className="hidden items-center gap-4 md:flex">
               <nav aria-label="Primary navigation" className="flex items-center gap-4 border-r border-warm-gray/15 pr-4">
+                <a href="/#possibilities" className={linkClass}>How it helps</a>
                 <a href="/context" className={linkClass}>Context</a>
                 <a href="/meos" className={`${linkClass} text-system-dark dark:text-system`}>Reflect</a>
-                <a href="/integrations" className={linkClass}>Reuse</a>
-                <a href="/interview" className={linkClass}>Interview</a>
+                <a href="/integrations" className={linkClass}>Use elsewhere</a>
                 <a href="/pricing" className={linkClass}>Pricing</a>
               </nav>
 
@@ -97,7 +97,7 @@ export function Header() {
                 className="inline-flex min-h-10 items-center justify-center gap-2 border border-mineral-dark/25 bg-mineral-dark px-4 font-mono text-[10px] font-semibold uppercase tracking-[0.11em] text-ink-light transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:border-mineral/25 dark:bg-mineral dark:text-ink"
               >
                 <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5 brightness-0 invert dark:invert-0" aria-hidden="true" />
-                {user ? "Open ALVIRA" : "Build Context"}
+                {user ? "Open ALVIRA" : "Start here"}
               </a>
               <ThemeToggle />
             </div>
@@ -115,12 +115,12 @@ export function Header() {
           <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} border-t border-warm-gray/18 pb-2 md:hidden`}>
             <div className="flex items-center gap-2 py-3 font-mono text-[9px] uppercase tracking-[0.18em] text-warm-gray-dark/65 dark:text-warm-gray/65">
               <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5" aria-hidden="true" />
-              Context Intelligence
+              AI that starts with your context
             </div>
+            <a href="/#possibilities" onClick={closeMenu} className={mobileLinkClass}>What AI can help with</a>
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
             <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
-            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Reuse</a>
-            <a href="/interview" onClick={closeMenu} className={mobileLinkClass}>Interview</a>
+            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Use elsewhere</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
             {user ? <a href="/history" onClick={closeMenu} className={mobileLinkClass}>History</a> : null}

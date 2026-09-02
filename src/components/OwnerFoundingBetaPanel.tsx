@@ -60,11 +60,37 @@ export function OwnerFoundingBetaPanel() {
           <h2 id="founding-beta-cohort-title" className="mt-2 font-display text-3xl tracking-[-0.025em] text-ink dark:text-mineral">Who is actually using the beta?</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Last login is shown separately from meaningful use. Meaningful use only advances when someone makes product progress: interview activity, Context/Reflect updates, Bridge connection, reuse/export, or future Dossier activity.</p>
         </div>
-        <div className="shrink-0 border-l border-system/35 pl-5">
-          <p className="font-display text-4xl text-ink dark:text-mineral">{metrics.foundingBetaCount}</p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Founding Beta members</p>
+        <div className="grid shrink-0 grid-cols-2 gap-5 border-l border-system/35 pl-5">
+          <div>
+            <p className="font-display text-4xl text-ink dark:text-mineral">{metrics.foundingBetaCount}</p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Members</p>
+          </div>
+          <div>
+            <p className="font-display text-4xl text-ink dark:text-mineral">{metrics.reservationCount}</p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Reserved</p>
+          </div>
         </div>
       </div>
+
+      {metrics.reservations.length > 0 && (
+        <div className="border-b border-system/20 px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Pending reservations</p>
+              <p className="mt-1 text-sm text-warm-gray-dark dark:text-warm-gray">These emails will claim Founding Beta automatically when the matching account is created.</p>
+            </div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-warm-gray-dark dark:text-warm-gray">{metrics.reservationCount} awaiting signup</p>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {metrics.reservations.map((reservation) => (
+              <div key={reservation.email} className="border border-ink/10 bg-white/45 px-4 py-3 dark:border-mineral/10 dark:bg-white/[0.025]">
+                <p className="break-all text-sm font-medium text-ink dark:text-mineral">{reservation.email}</p>
+                <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.08em] text-warm-gray-dark dark:text-warm-gray">Reserved {formatDate(reservation.granted_at)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {metrics.members.length === 0 ? (
         <p className="px-6 py-8 text-sm text-warm-gray-dark dark:text-warm-gray">No Founding Beta entitlements are currently recorded.</p>

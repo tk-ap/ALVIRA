@@ -1,20 +1,30 @@
 # ALVIRA Founding Beta
 
-`founding_beta` is an early-access entitlement for the first 5–10 real product users. It is intentionally separate from founder/admin access and from paid conversion data.
+`founding_beta` is an early-access entitlement for the first real product users. It is intentionally separate from founder/admin access and from paid conversion data.
 
 ## Access boundary
 
-Founding Beta users receive unrestricted customer-facing ALVIRA access during the active beta window: Context interviews and updates, saved Context capacity, uploads/URL ingestion, Reflect/Reflect Build, exports, continuation flows, Bridge when available, and other customer-facing non-free features.
+Founding Beta users receive unrestricted customer-facing ALVIRA access while the entitlement is active: Context interviews and updates, saved Context capacity, uploads/URL ingestion, Reflect/Reflect Build, exports, continuation flows, Bridge when available, and other customer-facing non-free features.
 
 They do **not** receive owner metrics, the test-tier switcher, admin controls, other users' data, or internal founder diagnostics.
 
-The app represents the access window in `founding_beta_access`. Free beta users use the internal `founding_beta` tier while access is active so existing free-tier quota checks treat them as unrestricted without recording them as paid Pro/Lifetime customers. Reflect authorization separately recognizes active Founding Beta access.
+The app represents the entitlement in `founding_beta_access`. Free beta users use the internal `founding_beta` tier while access is active so existing free-tier quota checks treat them as unrestricted without recording them as paid Pro/Lifetime customers. Reflect authorization separately recognizes active Founding Beta access.
 
-The beta overlay calls the access synchronizer on normal authenticated navigation. When an access record has expired, an account still carrying the internal `founding_beta` tier is restored to its saved `previous_tier`.
+Current Founding Beta grants use a far-future expiry timestamp (`9999-12-31T23:59:59Z`) so the entitlement behaves as permanent complimentary access while retaining compatibility with the existing expiry-based schema. The beta overlay calls the access synchronizer on normal authenticated navigation. If an access record is ever expired or revoked, an account still carrying the internal `founding_beta` tier is restored to its saved `previous_tier`.
 
-## Grant one user
+## Existing-user backfill
 
-Run after the user has created an ALVIRA account. Forty-five days is the recommended initial window.
+`src/lib/founding-beta.ts` contains the canonical existing-user cutoff and excluded test/owner addresses. Eligible accounts created on or before that cutoff are idempotently inserted into `founding_beta_access`; eligible free accounts are then promoted to the internal `founding_beta` tier.
+
+## Pre-account reservations
+
+Expected Founding Beta users who have not created an account are stored by normalized email in `founding_beta_reservations`. Signup calls `claimFoundingBetaReservation()` immediately after account creation.
+
+Reservation claiming is atomic: the access row is granted, an eligible free account is promoted to `founding_beta`, and the reservation is consumed in one database transaction. If any part fails, the reservation remains available for a later retry.
+
+## Grant one user manually
+
+Run after the user has created an ALVIRA account when a manual grant is required.
 
 ```sql
 WITH target AS (
@@ -25,7 +35,7 @@ WITH target AS (
   INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
   SELECT id,
          CASE WHEN tier = 'founding_beta' THEN 'free' ELSE tier END,
-         NOW() + INTERVAL '45 days'
+         '9999-12-31T23:59:59Z'::timestamptz
   FROM target
   ON CONFLICT (user_id) DO UPDATE
     SET expires_at = EXCLUDED.expires_at,

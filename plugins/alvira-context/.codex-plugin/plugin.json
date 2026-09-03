@@ -1,19 +1,19 @@
 {
   "name": "alvira-context",
-  "version": "0.1.0",
-  "description": "Connect Codex to one user-approved ALVIRA Context through Bridge.",
+  "version": "0.2.0",
+  "description": "Codex adapter for ALVIRA Connect: read one user-approved ALVIRA Context through Bridge.",
   "author": {
     "name": "ALVIRA",
     "url": "https://alviratech.vercel.app/"
   },
   "homepage": "https://alviratech.vercel.app/bridge",
   "repository": "https://github.com/tk-ap/ALVIRA",
-  "keywords": ["alvira", "context", "mcp", "bridge", "personalization"],
+  "keywords": ["alvira", "context", "mcp", "bridge", "personalization", "alvira-connect"],
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "ALVIRA Context",
-    "shortDescription": "Let Codex use one approved ALVIRA Context",
-    "longDescription": "Connect Codex to ALVIRA Bridge so Codex can read one Context you explicitly approve. Access is read-only and can be revoked from ALVIRA at any time.",
+    "shortDescription": "Use one approved ALVIRA Context in Codex",
+    "longDescription": "This is the Codex-native adapter inside ALVIRA Connect. It connects Codex to ALVIRA Bridge so Codex can read one Context you explicitly approve. Access is read-only and can be revoked from ALVIRA at any time.",
     "developerName": "ALVIRA",
     "category": "Developer Tools",
     "capabilities": ["Read"],

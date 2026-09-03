@@ -6,6 +6,12 @@ const SESSION_COOKIE = "alvira_session";
 const DEFAULT_BRIDGE_CLIENT_ID = "alvira-bridge";
 const DEFAULT_BRIDGE_URL = "https://alviratech-bridge.vercel.app";
 
+export type BridgeDestination = "mcp" | "api";
+
+export function isBridgeDestination(value: string | null): value is BridgeDestination {
+  return value === "mcp" || value === "api";
+}
+
 /**
  * Raised when the code-to-token exchange is rejected for a permanent,
  * client-side reason (bad/expired code, wrong client id or secret). These map
@@ -57,9 +63,16 @@ function ensureBridgeSchema() {
         revoked_at TIMESTAMPTZ
       )
     `);
+    // Defensive parity with migrations/014 for environments that initialized
+    // Bridge tables before Context-scoped connections existed.
+    await db.query("ALTER TABLE bridge_authorization_codes ADD COLUMN IF NOT EXISTS selected_profile_id TEXT REFERENCES profiles(id) ON DELETE SET NULL");
+    await db.query("ALTER TABLE bridge_authorization_codes ADD COLUMN IF NOT EXISTS destination TEXT");
+    await db.query("ALTER TABLE bridge_access_tokens ADD COLUMN IF NOT EXISTS selected_profile_id TEXT REFERENCES profiles(id) ON DELETE SET NULL");
+    await db.query("ALTER TABLE bridge_access_tokens ADD COLUMN IF NOT EXISTS destination TEXT");
     await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_codes_expiry ON bridge_authorization_codes(expires_at)");
     await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_tokens_user_id ON bridge_access_tokens(user_id)");
     await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_tokens_expiry ON bridge_access_tokens(expires_at)");
+    await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_tokens_selected_profile ON bridge_access_tokens(selected_profile_id) WHERE revoked_at IS NULL");
   })().catch((error) => {
     bridgeSchemaReady = null;
     throw error;
@@ -98,13 +111,27 @@ export async function getBridgeUserFromSession() {
   return user ?? null;
 }
 
-export async function issueBridgeAuthorizationCode(userId: string, redirectUri: string) {
+export async function issueBridgeAuthorizationCode(
+  userId: string,
+  redirectUri: string,
+  selectedProfileId: string | null = null,
+  destination: BridgeDestination | null = null,
+) {
   await ensureBridgeSchema();
+
+  if (selectedProfileId) {
+    const profile = (await getDb().query(
+      "SELECT id FROM profiles WHERE id = $1 AND user_id = $2",
+      [selectedProfileId, userId],
+    ))[0] as { id: string } | undefined;
+    if (!profile) throw new BridgeExchangeError("Selected Context is not available.", "invalid_profile");
+  }
+
   const code = createBridgeSecret();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
   await getDb().query(
-    "INSERT INTO bridge_authorization_codes (code_hash, user_id, client_id, redirect_uri, expires_at) VALUES ($1, $2, $3, $4, $5)",
-    [hashBridgeSecret(code), userId, bridgeClientId(), redirectUri, expiresAt],
+    "INSERT INTO bridge_authorization_codes (code_hash, user_id, client_id, redirect_uri, selected_profile_id, destination, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    [hashBridgeSecret(code), userId, bridgeClientId(), redirectUri, selectedProfileId, destination, expiresAt],
   );
   return { code, expiresAt };
 }
@@ -117,34 +144,58 @@ export async function exchangeBridgeAuthorizationCode(code: string, clientId: st
   await ensureBridgeSchema();
   const db = getDb();
   const row = (await db.query(
-    "DELETE FROM bridge_authorization_codes WHERE code_hash = $1 AND client_id = $2 AND redirect_uri = $3 AND expires_at > NOW() RETURNING user_id",
+    "DELETE FROM bridge_authorization_codes WHERE code_hash = $1 AND client_id = $2 AND redirect_uri = $3 AND expires_at > NOW() RETURNING user_id, selected_profile_id, destination",
     [hashBridgeSecret(code), clientId, redirectUri],
-  ))[0] as { user_id: string } | undefined;
+  ))[0] as { user_id: string; selected_profile_id: string | null; destination: BridgeDestination | null } | undefined;
   if (!row) throw new BridgeExchangeError("Authorization code is invalid or expired.", "invalid_grant");
 
   const accessToken = createBridgeSecret();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   await db.query(
-    "INSERT INTO bridge_access_tokens (token_hash, user_id, client_id, scope, expires_at) VALUES ($1, $2, $3, $4, $5)",
-    [hashBridgeSecret(accessToken), row.user_id, clientId, "context:read profile:read", expiresAt],
+    "INSERT INTO bridge_access_tokens (token_hash, user_id, client_id, scope, selected_profile_id, destination, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    [hashBridgeSecret(accessToken), row.user_id, clientId, "context:read profile:read", row.selected_profile_id, row.destination, expiresAt],
   );
-  return { accessToken, expiresAt, scope: "context:read profile:read" };
+  return {
+    accessToken,
+    expiresAt,
+    scope: "context:read profile:read",
+    selectedProfileId: row.selected_profile_id,
+    destination: row.destination,
+  };
 }
 
 export async function getBridgePrincipal(accessToken: string) {
   await ensureBridgeSchema();
   const row = (await getDb().query(
-    "SELECT user_id, client_id, scope, expires_at FROM bridge_access_tokens WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()",
+    "SELECT user_id, client_id, scope, selected_profile_id, destination, expires_at FROM bridge_access_tokens WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()",
     [hashBridgeSecret(accessToken)],
-  ))[0] as { user_id: string; client_id: string; scope: string; expires_at: string } | undefined;
+  ))[0] as {
+    user_id: string;
+    client_id: string;
+    scope: string;
+    selected_profile_id: string | null;
+    destination: BridgeDestination | null;
+    expires_at: string;
+  } | undefined;
   if (!row || row.client_id !== bridgeClientId()) return null;
   return row;
 }
 
-export async function getBridgeProfiles(userId: string) {
+export async function revokeBridgeAccessToken(accessToken: string) {
+  await ensureBridgeSchema();
+  const rows = await getDb().query(
+    "UPDATE bridge_access_tokens SET revoked_at = NOW() WHERE token_hash = $1 AND revoked_at IS NULL RETURNING token_hash",
+    [hashBridgeSecret(accessToken)],
+  );
+  return rows.length > 0;
+}
+
+export async function getBridgeProfiles(userId: string, selectedProfileId: string | null = null) {
   const rows = (await getDb().query(
-    "SELECT id, topic, offering, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = $1 ORDER BY updated_at DESC",
-    [userId],
+    selectedProfileId
+      ? "SELECT id, topic, offering, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = $1 AND id = $2 ORDER BY updated_at DESC"
+      : "SELECT id, topic, offering, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = $1 ORDER BY updated_at DESC",
+    selectedProfileId ? [userId, selectedProfileId] : [userId],
   )) as Array<{ id: string; topic: string; offering: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
   return rows.map((row) => ({
     id: row.id,

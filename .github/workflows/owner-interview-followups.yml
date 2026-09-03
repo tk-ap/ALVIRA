@@ -1,0 +1,23 @@
+name: Owner communication rails
+
+on:
+  pull_request:
+    paths:
+      - "src/routes/-ownerDashboardDepth.ts"
+      - "src/components/OwnerDashboardDepth.tsx"
+      - "src/routes/-ownerCohort.ts"
+      - "src/components/OwnerFoundingBetaPanel.tsx"
+      - "migrations/010_lifecycle_email_events.sql"
+      - ".github/workflows/owner-interview-followups.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build

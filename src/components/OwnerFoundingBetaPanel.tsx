@@ -1,7 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { getOwnerCohortMetrics, type OwnerCohortMetrics } from "~/routes/-ownerCohort";
+import { getOwnerCohortMetrics, sendFoundingBetaReservationInvite, type OwnerCohortMetrics } from "~/routes/-ownerCohort";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -33,6 +33,10 @@ export function OwnerFoundingBetaPanel() {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [metrics, setMetrics] = useState<OwnerCohortMetrics | null>(null);
   const [denied, setDenied] = useState(false);
+  const [sendingTo, setSendingTo] = useState<string | null>(null);
+  const [sendMessage, setSendMessage] = useState<Record<string, string>>({});
+
+  const refresh = () => getOwnerCohortMetrics().then(setMetrics).catch(() => setDenied(true));
 
   useEffect(() => {
     if (location.pathname !== "/dashboard") {
@@ -44,13 +48,25 @@ export function OwnerFoundingBetaPanel() {
     const frame = window.requestAnimationFrame(() => {
       setTarget(document.querySelector<HTMLElement>("main#main-content .mx-auto.max-w-4xl"));
     });
-    getOwnerCohortMetrics()
-      .then((result) => setMetrics(result))
-      .catch(() => setDenied(true));
+    refresh();
     return () => window.cancelAnimationFrame(frame);
   }, [location.pathname]);
 
   if (location.pathname !== "/dashboard" || !target || denied || !metrics) return null;
+
+  const sendReservationInvite = async (email: string) => {
+    setSendingTo(email);
+    setSendMessage((current) => ({ ...current, [email]: "" }));
+    try {
+      await sendFoundingBetaReservationInvite({ data: { email } });
+      setSendMessage((current) => ({ ...current, [email]: "Sent via AgentMail." }));
+      await refresh();
+    } catch (error) {
+      setSendMessage((current) => ({ ...current, [email]: error instanceof Error ? error.message : "Invitation could not be sent." }));
+    } finally {
+      setSendingTo(null);
+    }
+  };
 
   return createPortal(
     <section className="mb-10 border border-system/30 bg-system-soft/20 dark:bg-ink/35" aria-labelledby="founding-beta-cohort-title">
@@ -64,6 +80,45 @@ export function OwnerFoundingBetaPanel() {
           <p className="font-display text-4xl text-ink dark:text-mineral">{metrics.foundingBetaCount}</p>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Founding Beta members</p>
         </div>
+      </div>
+
+      <div className="border-b border-system/20 px-5 py-5 sm:px-6">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Reserved access</p>
+            <h3 className="mt-2 font-display text-2xl text-ink dark:text-mineral">Pre-account invitations</h3>
+            <p className="mt-2 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Only the owner can send these invitations. A reservation is rechecked before sending, and the AgentMail receipt is stored so the same initial invitation cannot be sent twice.</p>
+          </div>
+          <span className="font-display text-3xl text-ink dark:text-mineral">{metrics.reservations.length}</span>
+        </div>
+        {metrics.reservations.length === 0 ? (
+          <p className="mt-4 text-sm text-warm-gray-dark dark:text-warm-gray">No unclaimed Founding Beta reservations.</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {metrics.reservations.map((reservation) => (
+              <div key={reservation.email} className="grid gap-3 border-t border-system/15 pt-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div>
+                  <p className="text-sm font-medium text-ink dark:text-mineral">{reservation.email}</p>
+                  <p className="mt-1 font-mono text-[9px] text-warm-gray-dark dark:text-warm-gray">Reserved {formatDate(reservation.reserved_at)} · {reservation.source}</p>
+                  {reservation.invite_sent_at ? <p className="mt-1 text-xs text-system-dark dark:text-system">Invited {formatDate(reservation.invite_sent_at)}</p> : null}
+                  {sendMessage[reservation.email] ? <p className="mt-1 text-xs text-warm-gray-dark dark:text-warm-gray">{sendMessage[reservation.email]}</p> : null}
+                </div>
+                {reservation.invite_sent_at ? (
+                  <span className="border border-system/30 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-system-dark dark:text-system">Invited</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void sendReservationInvite(reservation.email)}
+                    disabled={sendingTo === reservation.email}
+                    className="border border-system/40 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-system-dark transition hover:border-system disabled:cursor-wait disabled:opacity-50 dark:text-system"
+                  >
+                    {sendingTo === reservation.email ? "Sending…" : "Send invitation"}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {metrics.members.length === 0 ? (
@@ -94,9 +149,7 @@ export function OwnerFoundingBetaPanel() {
                   <td className="whitespace-nowrap px-4 py-4 text-warm-gray-dark dark:text-warm-gray">{formatDate(member.granted_at)}</td>
                   <td className="px-4 py-4 font-display text-xl text-ink dark:text-mineral">{member.profile_count}</td>
                   <td className="px-4 py-4 font-display text-xl text-ink dark:text-mineral">{member.feedback_count}</td>
-                  <td className="px-4 py-4">
-                    <p className="text-ink dark:text-mineral">{formatDate(member.last_login_at)}</p>
-                  </td>
+                  <td className="px-4 py-4"><p className="text-ink dark:text-mineral">{formatDate(member.last_login_at)}</p></td>
                   <td className="px-4 py-4">
                     <p className="font-medium text-ink dark:text-mineral">{relativeDate(member.last_meaningful_at)}</p>
                     <p className="mt-1 text-xs text-warm-gray-dark dark:text-warm-gray">{member.last_meaningful_action ?? "Signed in, but no qualifying progress recorded yet."}</p>

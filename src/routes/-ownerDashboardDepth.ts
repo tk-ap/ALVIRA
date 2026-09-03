@@ -1,10 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { getDb } from "~/db";
+import { sendEmail } from "~/email";
 import { ensureFoundingBetaSchema } from "~/lib/founding-beta";
 
 const SESSION_COOKIE = "alvira_session";
 const TEST_EMAILS = ["codex-smoke-1786676512909@example.com", "alvira@agentmail.to"];
+
+type InterviewFollowUpKind = "interview_not_started" | "interview_incomplete";
 
 export type OwnerDashboardDepth = {
   commercial: {
@@ -16,10 +19,14 @@ export type OwnerDashboardDepth = {
     revenueLedgerInstrumented: false;
   };
   interventions: Array<{
+    userId: string;
     email: string;
     reason: string;
     ageDays: number;
     severity: "attention" | "risk";
+    followUpKind: InterviewFollowUpKind | null;
+    lastFollowUpAt: string | null;
+    followUpCount: number;
   }>;
   adoption: {
     activeUsers30d: number;
@@ -70,6 +77,16 @@ async function ensureSources() {
     client_id TEXT NOT NULL, scope TEXT NOT NULL DEFAULT 'context:read profile:read',
     expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), revoked_at TIMESTAMPTZ
   )`);
+  await db.query(`CREATE TABLE IF NOT EXISTS lifecycle_email_events (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    message_id TEXT,
+    sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL
+  )`);
+  await db.query("CREATE INDEX IF NOT EXISTS idx_lifecycle_email_events_user_kind_sent ON lifecycle_email_events(user_id, kind, sent_at DESC)");
 }
 
 export const getOwnerDashboardDepth = createServerFn({ method: "GET" }).handler(async (): Promise<OwnerDashboardDepth> => {
@@ -101,7 +118,7 @@ export const getOwnerDashboardDepth = createServerFn({ method: "GET" }).handler(
       ), draft_age AS (
         SELECT user_id, MAX(updated_at) AS updated_at FROM interview_drafts GROUP BY user_id
       )
-      SELECT u.email,
+      SELECT u.id AS user_id, u.email,
         CASE
           WHEN bf.severity='blocker' THEN 'Founding Beta blocker feedback needs review'
           WHEN da.updated_at IS NOT NULL AND COALESCE(pc.count,0)=0 AND da.updated_at < NOW()-INTERVAL '3 days' THEN 'Interview started but no Context saved'
@@ -109,8 +126,15 @@ export const getOwnerDashboardDepth = createServerFn({ method: "GET" }).handler(
           WHEN f.user_id IS NOT NULL AND lp.last_at < NOW()-INTERVAL '14 days' THEN 'Founding Beta member is dormant'
           ELSE NULL
         END AS reason,
+        CASE
+          WHEN da.updated_at IS NOT NULL AND COALESCE(pc.count,0)=0 AND da.updated_at < NOW()-INTERVAL '3 days' THEN 'interview_incomplete'
+          WHEN COALESCE(pc.count,0)=0 AND da.updated_at IS NULL AND u.created_at < NOW()-INTERVAL '1 day' THEN 'interview_not_started'
+          ELSE NULL
+        END AS follow_up_kind,
         FLOOR(EXTRACT(EPOCH FROM (NOW()-COALESCE(lp.last_at, da.updated_at, u.created_at)))/86400)::int AS age_days,
-        CASE WHEN bf.severity='blocker' OR (f.user_id IS NOT NULL AND lp.last_at < NOW()-INTERVAL '14 days') THEN 'risk' ELSE 'attention' END AS severity
+        CASE WHEN bf.severity='blocker' OR (f.user_id IS NOT NULL AND lp.last_at < NOW()-INTERVAL '14 days') THEN 'risk' ELSE 'attention' END AS severity,
+        lf.last_follow_up_at,
+        COALESCE(lf.follow_up_count,0)::int AS follow_up_count
       FROM users u
       LEFT JOIN last_progress lp ON lp.user_id=u.id
       LEFT JOIN profile_counts pc ON pc.user_id=u.id
@@ -119,6 +143,11 @@ export const getOwnerDashboardDepth = createServerFn({ method: "GET" }).handler(
       LEFT JOIN LATERAL (
         SELECT severity FROM beta_feedback b WHERE b.user_id=u.id AND b.created_at>=NOW()-INTERVAL '30 days' ORDER BY b.created_at DESC LIMIT 1
       ) bf ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT MAX(sent_at) AS last_follow_up_at, COUNT(*)::int AS follow_up_count
+        FROM lifecycle_email_events le
+        WHERE le.user_id=u.id AND le.kind IN ('interview_not_started','interview_incomplete')
+      ) lf ON TRUE
       WHERE LOWER(u.email) <> ALL($1::text[])
         AND (
           bf.severity='blocker'
@@ -171,10 +200,16 @@ export const getOwnerDashboardDepth = createServerFn({ method: "GET" }).handler(
       revenueLedgerInstrumented: false,
     },
     interventions: (interventionRows as Array<Record<string, unknown>>).map((row) => ({
+      userId: String(row.user_id),
       email: String(row.email),
       reason: String(row.reason),
       ageDays: Number(row.age_days ?? 0),
       severity: row.severity === 'risk' ? 'risk' : 'attention',
+      followUpKind: row.follow_up_kind === 'interview_incomplete' || row.follow_up_kind === 'interview_not_started'
+        ? row.follow_up_kind
+        : null,
+      lastFollowUpAt: row.last_follow_up_at ? String(row.last_follow_up_at) : null,
+      followUpCount: Number(row.follow_up_count ?? 0),
     })),
     adoption: {
       activeUsers30d: Number(a.active_users_30d ?? 0),
@@ -198,3 +233,69 @@ export const getOwnerDashboardDepth = createServerFn({ method: "GET" }).handler(
     },
   };
 });
+
+export const sendInterviewFollowUp = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    const email = String((input as { email?: string })?.email ?? "").trim().toLowerCase();
+    if (!email || !email.includes("@")) throw new Error("A valid customer email is required.");
+    return { email };
+  })
+  .handler(async ({ data }) => {
+    const owner = await requireOwner();
+    await ensureSources();
+    const db = getDb();
+    const excluded = [owner.ownerEmail, ...TEST_EMAILS];
+
+    const target = (await db.query(`
+      WITH profile_counts AS (
+        SELECT user_id, COUNT(*)::int AS count FROM profiles GROUP BY user_id
+      ), draft_age AS (
+        SELECT user_id, MAX(updated_at) AS updated_at FROM interview_drafts GROUP BY user_id
+      )
+      SELECT u.id, u.email,
+        CASE
+          WHEN da.updated_at IS NOT NULL AND COALESCE(pc.count,0)=0 AND da.updated_at < NOW()-INTERVAL '3 days' THEN 'interview_incomplete'
+          WHEN COALESCE(pc.count,0)=0 AND da.updated_at IS NULL AND u.created_at < NOW()-INTERVAL '1 day' THEN 'interview_not_started'
+          ELSE NULL
+        END AS kind
+      FROM users u
+      LEFT JOIN profile_counts pc ON pc.user_id=u.id
+      LEFT JOIN draft_age da ON da.user_id=u.id
+      WHERE LOWER(u.email)=$1
+        AND LOWER(u.email) <> ALL($2::text[])
+      LIMIT 1`, [data.email, excluded]))[0] as { id: string; email: string; kind: InterviewFollowUpKind | null } | undefined;
+
+    if (!target?.kind) throw new Error("This user no longer qualifies for an incomplete-interview follow-up.");
+
+    const recent = (await db.query(
+      `SELECT sent_at FROM lifecycle_email_events
+       WHERE user_id=$1 AND kind IN ('interview_not_started','interview_incomplete')
+         AND sent_at > NOW()-INTERVAL '5 minutes'
+       ORDER BY sent_at DESC LIMIT 1`,
+      [target.id],
+    ))[0] as { sent_at: string } | undefined;
+    if (recent) throw new Error("A follow-up was just sent to this user. Wait before sending another.");
+
+    const siteUrl = (process.env.PUBLIC_SITE_URL || "https://alviratech.vercel.app").replace(/\/$/, "");
+    const subject = "Finish building your ALVIRA Context";
+    const text = target.kind === "interview_incomplete"
+      ? `Hi there,\n\nYou started building your ALVIRA Context, but it looks like you haven't finished it yet. Your progress is saved, so you can pick up where you left off.\n\nContinue your Context here:\n${siteUrl}/app\n\nFinishing your first Context gets you to the part that makes ALVIRA useful: reusable context you can bring to tools like ChatGPT and Claude so they can understand you better and help in ways that fit your life, work, and goals.\n\nIf anything was confusing or got in your way, just reply to this email.\n\n— ALVIRA`
+      : `Hi there,\n\nYou created an ALVIRA account, but it looks like you haven't started your first Context yet.\n\nStart building your Context here:\n${siteUrl}/app\n\nYour first Context gives tools like ChatGPT and Claude the background they usually start without, so they can understand you better and help in ways that fit your life, work, and goals.\n\nIf anything is confusing or you want help getting started, just reply to this email.\n\n— ALVIRA`;
+
+    const receipt = await sendEmail({
+      to: target.email,
+      subject,
+      text,
+      replyTo: "alvira@agentmail.to",
+    });
+    if (receipt.provider !== "agentmail") throw new Error(`Expected AgentMail delivery; got ${receipt.provider}.`);
+
+    const sentAt = new Date().toISOString();
+    await db.query(
+      `INSERT INTO lifecycle_email_events (id, user_id, email, kind, message_id, sent_at, created_by_user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [crypto.randomUUID(), target.id, target.email, target.kind, receipt.messageId ?? null, sentAt, owner.id],
+    );
+
+    return { ok: true, sentAt, messageId: receipt.messageId ?? null };
+  });

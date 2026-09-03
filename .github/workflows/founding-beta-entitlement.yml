@@ -1,0 +1,22 @@
+name: Founding Beta entitlement
+
+on:
+  pull_request:
+    paths:
+      - "src/lib/founding-beta.ts"
+      - "migrations/004_founding_beta.sql"
+      - "migrations/006_founding_beta_reservations.sql"
+      - "migrations/007_founding_beta_hardening.sql"
+      - "migrations/008_stripe_billing.sql"
+      - "tests/founding-beta.test.ts"
+      - "package.json"
+      - ".github/workflows/founding-beta-entitlement.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/founding-beta.test.ts

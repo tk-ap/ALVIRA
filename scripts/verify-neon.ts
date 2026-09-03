@@ -10,7 +10,6 @@ const sql = neon(connectionString);
 // broken deploy. Bridge tables are included (a missing
 // `bridge_authorization_codes` table is exactly what caused the live 500s).
 const expected = [
-  // core auth / sessions / profiles / entitlements
   "users",
   "sessions",
   "password_reset_tokens",
@@ -20,14 +19,13 @@ const expected = [
   "draft_transfers",
   "team_waitlist",
   "events",
-  // Bridge
   "bridge_authorization_codes",
   "bridge_access_tokens",
-  // founding beta / feedback
   "founding_beta_access",
   "beta_feedback",
-  // context versioning
   "context_versions",
+  "stripe_events",
+  "stripe_subscriptions",
 ];
 const tables = await sql.query(
   "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",

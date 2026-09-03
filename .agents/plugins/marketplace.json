@@ -1,0 +1,21 @@
+{
+  "name": "alvira",
+  "interface": {
+    "displayName": "ALVIRA"
+  },
+  "plugins": [
+    {
+      "name": "alvira-context",
+      "source": {
+        "source": "local",
+        "path": "./plugins/alvira-context"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL",
+        "products": ["CODEX"]
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

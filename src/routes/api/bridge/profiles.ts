@@ -17,7 +17,10 @@ export const Route = createFileRoute("/api/bridge/profiles")({
         if (!principal || !principal.scope.split(" ").includes("profile:read")) {
           return Response.json({ error: "invalid_token" }, { status: 401 });
         }
-        const profiles = await getBridgeProfiles(principal.user_id);
+        if (principal.destination && principal.destination !== "api") {
+          return Response.json({ error: "destination_mismatch" }, { status: 403 });
+        }
+        const profiles = await getBridgeProfiles(principal.user_id, principal.selected_profile_id);
         return Response.json({ profiles });
       },
     },

@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "ALVIRA Connect",
+  "version": "0.1.0",
+  "description": "Insert a reviewed ALVIRA Context View into supported AI prompt boxes. Never auto-sends.",
+  "permissions": ["storage"],
+  "action": {
+    "default_title": "ALVIRA Connect",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://www.perplexity.ai/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

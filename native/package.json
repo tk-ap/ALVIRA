@@ -1,0 +1,22 @@
+{
+  "name": "@alvira/native-shell",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bootstrap": "bun install && bunx cap add ios && bunx cap add android && bunx cap sync",
+    "sync": "bunx cap sync",
+    "doctor": "bunx cap doctor",
+    "open:ios": "bunx cap open ios",
+    "open:android": "bunx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.1",
+    "@capacitor/core": "8.5.1",
+    "@capacitor/ios": "8.5.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.1",
+    "typescript": "^5.9.0"
+  }
+}

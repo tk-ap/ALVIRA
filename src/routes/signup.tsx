@@ -8,7 +8,7 @@ import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
-    meta: [{ title: 'Create your ALVIRA Context' }, { name: "description", content: 'Create an ALVIRA account and build the context your AI is missing.' }],
+    meta: [{ title: 'Create your ALVIRA Context' }, { name: "description", content: 'Create an ALVIRA account so the useful context from your conversations can stay connected to you.' }],
   }),
   component: SignupPage,
 });
@@ -60,7 +60,7 @@ function SignupPage() {
               Create your account
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Start building your ALVIRA Context — free.
+              Keep the useful context you build with ALVIRA connected to you.
             </p>
           </div>
 
@@ -98,8 +98,12 @@ function SignupPage() {
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 placeholder="At least 8 characters"
                 autoComplete="new-password"
+                aria-describedby="password-help"
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-system dark:focus:border-system outline-none transition-colors focus-visible:ring-2 focus-visible:ring-system/40 dark:focus-visible:ring-system/40"
               />
+              <p id="password-help" className="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                Use at least 8 characters.
+              </p>
             </div>
 
             <div>
@@ -121,7 +125,7 @@ function SignupPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+              <div role="alert" aria-live="assertive" className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                 {error}
               </div>
             )}
@@ -133,6 +137,18 @@ function SignupPage() {
             >
               {submitting ? "Creating account..." : "Create account"}
             </button>
+
+            <div className="space-y-3 border-t border-gray-200 pt-4 text-xs leading-5 text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              <p>
+                By creating an account, you agree to the{" "}
+                <a href="/terms" className="underline underline-offset-2 hover:text-gray-800 dark:hover:text-gray-200">Terms</a>{" "}
+                and acknowledge the{" "}
+                <a href="/privacy" className="underline underline-offset-2 hover:text-gray-800 dark:hover:text-gray-200">Privacy Policy</a>.
+              </p>
+              <p>
+                Started an interview before signing up? A browser-local draft from this device can still be available when you return to ALVIRA. If your account already has saved interview progress, the account copy takes precedence.
+              </p>
+            </div>
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">

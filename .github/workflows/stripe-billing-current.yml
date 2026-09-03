@@ -1,0 +1,24 @@
+name: Stripe billing current-main validation
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/pricing.ts'
+      - 'src/lib/stripe-billing.server.ts'
+      - 'src/routes/api/stripe/**'
+      - 'src/routes/checkout/**'
+      - 'src/routes/api/health/ready.ts'
+      - 'scripts/verify-neon.ts'
+      - '.github/workflows/stripe-billing-current.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build

@@ -14,6 +14,19 @@ function bearer(request: Request) {
   return value.slice(7).trim() || null;
 }
 
+function unauthorized(request: Request) {
+  const origin = new URL(request.url).origin;
+  const metadata = `${origin}/.well-known/oauth-protected-resource/api/bridge/mcp`;
+  return new Response(JSON.stringify({ error: "Unauthorized", message: "Connect this MCP server through your AI app; ALVIRA will open a secure sign-in and Context approval flow." }), {
+    status: 401,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      "WWW-Authenticate": `Bearer resource_metadata="${metadata}", scope="context:read profile:read"`,
+    },
+  });
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -43,12 +56,7 @@ async function authorizedProfiles(request: Request) {
 
 async function handlePost(request: Request) {
   const profiles = await authorizedProfiles(request);
-  if (!profiles) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" },
-    });
-  }
+  if (!profiles) return unauthorized(request);
 
   let message: JsonRpcRequest;
   try {
@@ -70,7 +78,7 @@ async function handlePost(request: Request) {
         capabilities: { resources: {}, tools: {} },
         serverInfo: {
           name: "alvira-bridge",
-          version: "0.3.0",
+          version: "0.4.0",
           description: "ALVIRA Bridge: portable, user-owned Context for AI tools.",
         },
       }));
@@ -150,15 +158,10 @@ export const Route = createFileRoute("/api/bridge/mcp")({
       POST: async ({ request }) => handlePost(request),
       GET: async ({ request }) => {
         const profiles = await authorizedProfiles(request);
-        if (!profiles) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" },
-          });
-        }
+        if (!profiles) return unauthorized(request);
         return json({
           name: "alvira-bridge",
-          version: "0.3.0",
+          version: "0.4.0",
           transport: "stateless-json",
           endpoint: "/api/bridge/mcp",
           resources: ["alvira://profiles"],
@@ -167,12 +170,7 @@ export const Route = createFileRoute("/api/bridge/mcp")({
       },
       DELETE: async ({ request }) => {
         const profiles = await authorizedProfiles(request);
-        if (!profiles) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" },
-          });
-        }
+        if (!profiles) return unauthorized(request);
         return new Response(null, { status: 204 });
       },
       OPTIONS: async () => new Response(null, {

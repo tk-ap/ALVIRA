@@ -15,6 +15,7 @@ import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootst
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
+import { OwnerCustomerInbox } from "~/components/OwnerCustomerInbox";
 import { OwnerDashboardDepth } from "~/components/OwnerDashboardDepth";
 import { OwnerFoundingBetaPanel } from "~/components/OwnerFoundingBetaPanel";
 import { OwnerOperatingBrief } from "~/components/OwnerOperatingBrief";
@@ -69,6 +70,7 @@ function RootComponent() {
       <AilhatPortfolioHandoff />
       <OwnerOperatingBrief />
       <OwnerFoundingBetaPanel />
+      <OwnerCustomerInbox />
       <OwnerDashboardDepth />
       <ContextVersioningBootstrap />
       <LiveContextMirror />

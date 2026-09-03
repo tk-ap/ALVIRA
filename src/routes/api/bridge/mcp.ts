@@ -37,7 +37,8 @@ async function authorizedProfiles(request: Request) {
   if (!token) return null;
   const principal = await getBridgePrincipal(token);
   if (!principal) return null;
-  return getBridgeProfiles(principal.user_id);
+  if (principal.destination && principal.destination !== "mcp") return null;
+  return getBridgeProfiles(principal.user_id, principal.selected_profile_id);
 }
 
 async function handlePost(request: Request) {
@@ -100,7 +101,7 @@ async function handlePost(request: Request) {
             description: "Read the user's existing ALVIRA Context. Bridge distributes Context; it does not regenerate it.",
             inputSchema: {
               type: "object",
-              properties: { profileId: { type: "string", description: "Optional ALVIRA profile ID. Defaults to the most recently updated profile." } },
+              properties: { profileId: { type: "string", description: "Optional ALVIRA profile ID. Defaults to the Context authorized for this connection." } },
               additionalProperties: false,
             },
           },

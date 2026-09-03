@@ -1,0 +1,22 @@
+name: AgentMail onboarding
+
+on:
+  pull_request:
+    paths:
+      - "src/email.ts"
+      - "scripts/send-founding-beta-invites.ts"
+      - "tests/email.test.ts"
+      - ".env.example"
+      - ".github/workflows/agentmail-onboarding.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/email.test.ts

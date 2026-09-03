@@ -7,13 +7,40 @@ export interface FoundingBetaAccess {
   granted_at: string;
 }
 
-const FOUNDING_BETA_EXISTING_USER_CUTOFF = "2026-08-29T19:56:50Z";
-const FOUNDING_BETA_PERMANENT_EXPIRY = "9999-12-31T23:59:59Z";
-const FOUNDING_BETA_EXCLUDED_EMAILS = [
+export interface FoundingBetaReservation {
+  email: string;
+  source: string;
+  reserved_at: string;
+  claimed_at: string | null;
+  claimed_user_id: string | null;
+  revoked_at: string | null;
+}
+
+export const FOUNDING_BETA_EXISTING_USER_CUTOFF = "2026-08-29T19:56:50Z";
+export const FOUNDING_BETA_PERMANENT_EXPIRY = "9999-12-31T23:59:59Z";
+export const FOUNDING_BETA_EXCLUDED_EMAILS = [
   "tahlia.ashwood@gmail.com",
   "codex-smoke-1786676512909@example.com",
   "alvira@agentmail.to",
 ];
+
+type Queryable = {
+  query: (query: string, params?: unknown[]) => Promise<unknown[]>;
+};
+
+export function normalizeFoundingBetaEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+export function isExistingFoundingBetaEligible(input: {
+  email: string;
+  createdAt: string;
+  excludedEmails?: string[];
+}): boolean {
+  const excluded = new Set((input.excludedEmails ?? FOUNDING_BETA_EXCLUDED_EMAILS).map(normalizeFoundingBetaEmail));
+  return new Date(input.createdAt).getTime() <= new Date(FOUNDING_BETA_EXISTING_USER_CUTOFF).getTime()
+    && !excluded.has(normalizeFoundingBetaEmail(input.email));
+}
 
 let foundingBetaSchemaReady: Promise<void> | null = null;
 
@@ -30,6 +57,25 @@ export function ensureFoundingBetaSchema(): Promise<void> {
         granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS founding_beta_reservations (
+        email TEXT PRIMARY KEY,
+        granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        source TEXT NOT NULL DEFAULT 'manual',
+        reserved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        claimed_at TIMESTAMPTZ,
+        claimed_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        revoked_at TIMESTAMPTZ
+      )
+    `);
+    await db.query("ALTER TABLE founding_beta_reservations ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual'");
+    await db.query("ALTER TABLE founding_beta_reservations ADD COLUMN IF NOT EXISTS reserved_at TIMESTAMPTZ");
+    await db.query("ALTER TABLE founding_beta_reservations ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ");
+    await db.query("ALTER TABLE founding_beta_reservations ADD COLUMN IF NOT EXISTS claimed_user_id TEXT REFERENCES users(id) ON DELETE SET NULL");
+    await db.query("ALTER TABLE founding_beta_reservations ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ");
+    await db.query("UPDATE founding_beta_reservations SET reserved_at = COALESCE(reserved_at, granted_at, NOW()) WHERE reserved_at IS NULL");
+    await db.query("ALTER TABLE founding_beta_reservations ALTER COLUMN reserved_at SET DEFAULT NOW()");
+    await db.query("ALTER TABLE founding_beta_reservations ALTER COLUMN reserved_at SET NOT NULL");
     await db.query(`
       CREATE TABLE IF NOT EXISTS beta_feedback (
         id TEXT PRIMARY KEY,
@@ -52,16 +98,12 @@ export function ensureFoundingBetaSchema(): Promise<void> {
       )
     `);
     await db.query("CREATE INDEX IF NOT EXISTS idx_founding_beta_expiry ON founding_beta_access(expires_at)");
+    await db.query("CREATE INDEX IF NOT EXISTS idx_founding_beta_reservation_claimed_user ON founding_beta_reservations(claimed_user_id)");
     await db.query("CREATE INDEX IF NOT EXISTS idx_beta_feedback_user_id ON beta_feedback(user_id)");
     await db.query("CREATE INDEX IF NOT EXISTS idx_beta_feedback_created_at ON beta_feedback(created_at DESC)");
 
-    // Existing eligible users were the initial Founding Beta cohort. Founding
-    // access is now a permanent complimentary account entitlement rather than
-    // a 45-day trial. The very-far-future timestamp preserves compatibility
-    // with the existing schema while making the entitlement effectively
-    // non-expiring for the life of the account/service.
-    const ownerEmail = (process.env.ALVIRA_OWNER_EMAIL ?? FOUNDING_BETA_EXCLUDED_EMAILS[0]).trim().toLowerCase();
-    const excluded = Array.from(new Set([ownerEmail, ...FOUNDING_BETA_EXCLUDED_EMAILS]));
+    const ownerEmail = normalizeFoundingBetaEmail(process.env.ALVIRA_OWNER_EMAIL ?? FOUNDING_BETA_EXCLUDED_EMAILS[0]);
+    const excluded = Array.from(new Set([ownerEmail, ...FOUNDING_BETA_EXCLUDED_EMAILS.map(normalizeFoundingBetaEmail)]));
     await db.query(
       `INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
        SELECT id,
@@ -109,15 +151,42 @@ export async function hasActiveFoundingBeta(userId: string): Promise<boolean> {
   return !!access && new Date(access.expires_at).getTime() > Date.now();
 }
 
+export async function claimFoundingBetaReservationWithDb(
+  db: Queryable,
+  user: { id: string; email: string; tier: string },
+): Promise<boolean> {
+  const rows = await db.query(
+    `WITH reservation AS (
+       UPDATE founding_beta_reservations
+          SET claimed_at = NOW(),
+              claimed_user_id = $2
+        WHERE email = $1
+          AND claimed_at IS NULL
+          AND revoked_at IS NULL
+       RETURNING email
+     ), grant_access AS (
+       INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
+       SELECT $2, CASE WHEN $3 = 'founding_beta' THEN 'free' ELSE $3 END, $4::timestamptz
+         FROM reservation
+       ON CONFLICT (user_id) DO UPDATE
+         SET expires_at = EXCLUDED.expires_at
+       RETURNING user_id
+     ), promote_user AS (
+       UPDATE users
+          SET tier = 'founding_beta'
+        WHERE id IN (SELECT user_id FROM grant_access)
+          AND tier = 'free'
+       RETURNING id
+     )
+     SELECT EXISTS (SELECT 1 FROM grant_access) AS claimed`,
+    [normalizeFoundingBetaEmail(user.email), user.id, user.tier, FOUNDING_BETA_PERMANENT_EXPIRY],
+  ) as Array<{ claimed: boolean }>;
+  return rows[0]?.claimed === true;
+}
+
 export async function claimFoundingBetaReservation(user: { id: string; email: string; tier: string }): Promise<boolean> {
   await ensureFoundingBetaSchema();
-  const db = getDb();
-  await db.query("CREATE TABLE IF NOT EXISTS founding_beta_reservations (email TEXT PRIMARY KEY, granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-  const reservation = (await db.query("DELETE FROM founding_beta_reservations WHERE email = $1 RETURNING email", [user.email.trim().toLowerCase()]))[0];
-  if (!reservation) return false;
-  await db.query("INSERT INTO founding_beta_access (user_id, previous_tier, expires_at) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at", [user.id, user.tier, FOUNDING_BETA_PERMANENT_EXPIRY]);
-  await db.query("UPDATE users SET tier = 'founding_beta' WHERE id = $1 AND tier = 'free'", [user.id]);
-  return true;
+  return claimFoundingBetaReservationWithDb(getDb(), user);
 }
 
 export async function syncFoundingBetaTier(user: { id: string; tier: string }): Promise<{ active: boolean; expiresAt: string | null }> {

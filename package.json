@@ -9,6 +9,7 @@
     "vercel-build": "bash ./build-vercel.sh",
     "db:migrate": "bun run scripts/migrate-db.ts",
     "db:verify": "bun run scripts/verify-neon.ts",
+    "test": "bun test",
     "start": "bun run serve.ts",
     "publish": "bash ./publish.sh",
     "go-live": "bash ./go-live.sh",

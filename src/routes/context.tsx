@@ -47,6 +47,13 @@ function ContextEnginePage() {
             <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Your Context</span>
             <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">The information ALVIRA knows about you.</h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Context is the destination. Documents, websites, profiles, and interviews are different sources ALVIRA can observe together.</p>
+            <div className="mt-7 flex flex-col gap-4 border-l-2 border-system pl-4 sm:flex-row sm:items-center sm:justify-between sm:pl-5">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Concrete example</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">See a clearly fictional Context to understand the kinds of preferences, rules, constraints, and working instructions that maintained context can contain.</p>
+              </div>
+              <a href="/context-example" className="shrink-0 font-mono text-xs font-semibold text-system-dark underline decoration-system/35 underline-offset-4 dark:text-system">Inspect example →</a>
+            </div>
           </div>
         </section>
 

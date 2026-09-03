@@ -22,6 +22,13 @@ function clientHasProbe(probeId: string): boolean {
     .some((part) => part === `${AUTH_PROBE_COOKIE}=${probeId}`);
 }
 
+function getSafeReturnTo(): string {
+  if (typeof window === "undefined") return "/app";
+  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+  if (!returnTo || !returnTo.startsWith("/") || returnTo.startsWith("//")) return "/app";
+  return returnTo;
+}
+
 function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -71,7 +78,9 @@ function LoginPage() {
         }
       }
 
-      navigate({ to: "/app" });
+      const returnTo = getSafeReturnTo();
+      if (returnTo === "/app") navigate({ to: "/app" });
+      else window.location.assign(returnTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {

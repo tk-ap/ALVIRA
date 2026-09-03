@@ -1,0 +1,38 @@
+name: ALVIRA Connect PR check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/lib/portable-context.ts"
+      - "src/lib/portable-context.test.ts"
+      - "src/routes/bridge/use-elsewhere.tsx"
+      - "src/routes/integrations.tsx"
+      - "plugins/alvira-context/**"
+      - "public/downloads/alvira-connect-browser-extension.zip"
+      - ".github/workflows/alvira-connect-pr.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test portable Context boundaries
+        run: bun test src/lib/portable-context.test.ts
+
+      - name: Build application
+        run: bun run build

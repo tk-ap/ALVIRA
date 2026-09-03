@@ -19,6 +19,12 @@ function replaceExactText(root: ParentNode, selector: string, from: string, to: 
   return element;
 }
 
+function finishFirstPaintClarity() {
+  const root = document.documentElement;
+  delete root.dataset.alviraClarityPending;
+  root.dataset.alviraClarityReady = "true";
+}
+
 function applyFirstRunClarity() {
   const main = document.querySelector<HTMLElement>("main#main-content");
   if (!main) return;
@@ -35,6 +41,7 @@ function applyFirstRunClarity() {
 
   if (!isContextStart) {
     delete main.dataset.alviraBeginnerStart;
+    finishFirstPaintClarity();
     return;
   }
 
@@ -111,6 +118,8 @@ function applyFirstRunClarity() {
   );
   const addContextPanel = addContextLabel?.closest("section");
   if (addContextPanel instanceof HTMLElement) addContextPanel.dataset.alviraBeginnerAdvanced = "true";
+
+  finishFirstPaintClarity();
 }
 
 export function AppFirstRunClarity() {
@@ -119,18 +128,19 @@ export function AppFirstRunClarity() {
   useEffect(() => {
     if (location.pathname !== "/app") return;
 
-    const run = () => window.requestAnimationFrame(applyFirstRunClarity);
-    const frame = run();
+    applyFirstRunClarity();
     const observer = new MutationObserver(() => {
-      run();
+      applyFirstRunClarity();
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      window.cancelAnimationFrame(frame);
       observer.disconnect();
       const main = document.querySelector<HTMLElement>("main#main-content");
       if (main) delete main.dataset.alviraBeginnerStart;
+      const root = document.documentElement;
+      delete root.dataset.alviraClarityPending;
+      delete root.dataset.alviraClarityReady;
     };
   }, [location.pathname, location.search]);
 
@@ -138,6 +148,14 @@ export function AppFirstRunClarity() {
 
   return (
     <style>{`
+      html[data-alvira-route="app"][data-alvira-clarity-pending="true"] main#main-content {
+        visibility: hidden;
+      }
+
+      html[data-alvira-route="app"][data-alvira-clarity-ready="true"] main#main-content {
+        visibility: visible;
+      }
+
       html[data-alvira-route="app"] main[data-alvira-beginner-start="true"] [data-alvira-beginner-layout="true"] {
         grid-template-columns: minmax(0, 1fr) !important;
         max-width: 46rem;

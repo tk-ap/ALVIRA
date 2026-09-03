@@ -62,6 +62,7 @@ cat > .vercel/output/static/bridge-oauth-server.json <<JSON
   "issuer": "${BRIDGE_ORIGIN}",
   "authorization_endpoint": "${BRIDGE_ORIGIN}/api/bridge/authorize",
   "token_endpoint": "${BRIDGE_ORIGIN}/api/bridge/token",
+  "client_id_metadata_document_supported": true,
   "registration_endpoint": "${BRIDGE_ORIGIN}/api/bridge/register",
   "response_types_supported": ["code"],
   "grant_types_supported": ["authorization_code"],

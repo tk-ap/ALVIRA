@@ -2,7 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { getDb } from "~/db";
 import { sendEmail } from "~/email";
-import { ensureFoundingBetaSchema } from "~/lib/founding-beta";
+import {
+  ensureFoundingBetaSchema,
+  FOUNDING_BETA_PERMANENT_EXPIRY,
+  normalizeFoundingBetaEmail,
+} from "~/lib/founding-beta";
 
 const SESSION_COOKIE = "alvira_session";
 
@@ -26,10 +30,31 @@ export type FoundingBetaReservationActivity = {
   invite_message_id: string | null;
 };
 
+export type FoundingBetaApplicationActivity = {
+  id: string;
+  email: string;
+  name: string | null;
+  use_case: string;
+  ai_tools: string | null;
+  ai_frequency: string;
+  feedback_commitment: string;
+  motivation: string;
+  source: string;
+  status: "pending" | "approved" | "denied";
+  created_at: string;
+  reviewed_at: string | null;
+  entitlement_mode: "account" | "reservation" | "none" | null;
+  decision_email_sent_at: string | null;
+  decision_message_id: string | null;
+  decision_email_error: string | null;
+};
+
 export type OwnerCohortMetrics = {
   foundingBetaCount: number;
   members: FoundingBetaMemberActivity[];
   reservations: FoundingBetaReservationActivity[];
+  applications: FoundingBetaApplicationActivity[];
+  recentApplicationDecisions: FoundingBetaApplicationActivity[];
 };
 
 async function requireOwner() {
@@ -67,14 +92,39 @@ async function ensureActivitySources() {
   await db.query("CREATE INDEX IF NOT EXISTS idx_bridge_tokens_user_id ON bridge_access_tokens(user_id)");
   await db.query("ALTER TABLE founding_beta_reservations ADD COLUMN IF NOT EXISTS invite_sent_at TIMESTAMPTZ");
   await db.query("ALTER TABLE founding_beta_reservations ADD COLUMN IF NOT EXISTS invite_message_id TEXT");
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS founding_beta_applications (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      name TEXT,
+      use_case TEXT NOT NULL,
+      ai_tools TEXT,
+      ai_frequency TEXT NOT NULL,
+      feedback_commitment TEXT NOT NULL,
+      motivation TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'alvira',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await db.query("ALTER TABLE founding_beta_applications ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ");
+  await db.query("ALTER TABLE founding_beta_applications ADD COLUMN IF NOT EXISTS reviewed_by TEXT");
+  await db.query("ALTER TABLE founding_beta_applications ADD COLUMN IF NOT EXISTS entitlement_mode TEXT");
+  await db.query("ALTER TABLE founding_beta_applications ADD COLUMN IF NOT EXISTS decision_email_sent_at TIMESTAMPTZ");
+  await db.query("ALTER TABLE founding_beta_applications ADD COLUMN IF NOT EXISTS decision_message_id TEXT");
+  await db.query("ALTER TABLE founding_beta_applications ADD COLUMN IF NOT EXISTS decision_email_error TEXT");
+  await db.query("CREATE INDEX IF NOT EXISTS idx_founding_beta_applications_pending ON founding_beta_applications(created_at DESC) WHERE status='pending'");
 }
+
+const APPLICATION_COLUMNS = `id, email, name, use_case, ai_tools, ai_frequency, feedback_commitment, motivation,
+  source, status, created_at, reviewed_at, entitlement_mode, decision_email_sent_at, decision_message_id, decision_email_error`;
 
 export const getOwnerCohortMetrics = createServerFn({ method: "GET" }).handler(async (): Promise<OwnerCohortMetrics> => {
   await requireOwner();
   await ensureActivitySources();
   const db = getDb();
 
-  const [members, reservations] = await Promise.all([
+  const [members, reservations, applications, recentApplicationDecisions] = await Promise.all([
     db.query(`
       SELECT
         u.id AS user_id,
@@ -150,14 +200,186 @@ export const getOwnerCohortMetrics = createServerFn({ method: "GET" }).handler(a
       WHERE claimed_at IS NULL AND revoked_at IS NULL
       ORDER BY reserved_at ASC
     `),
+    db.query(`SELECT ${APPLICATION_COLUMNS} FROM founding_beta_applications WHERE status='pending' ORDER BY created_at ASC`),
+    db.query(`SELECT ${APPLICATION_COLUMNS} FROM founding_beta_applications WHERE status IN ('approved','denied') ORDER BY reviewed_at DESC NULLS LAST LIMIT 8`),
   ]);
 
   return {
     foundingBetaCount: members.length,
     members: members as FoundingBetaMemberActivity[],
     reservations: reservations as FoundingBetaReservationActivity[],
+    applications: applications as FoundingBetaApplicationActivity[],
+    recentApplicationDecisions: recentApplicationDecisions as FoundingBetaApplicationActivity[],
   };
 });
+
+export function buildFoundingBetaDecisionEmail(input: {
+  decision: "approve" | "deny";
+  name?: string | null;
+  hasAccount: boolean;
+  siteUrl?: string;
+}) {
+  const siteUrl = (input.siteUrl || "https://alviratech.vercel.app").replace(/\/$/, "");
+  const greeting = input.name?.trim() ? `Hi ${input.name.trim()},` : "Hi there,";
+  if (input.decision === "approve") {
+    const nextStep = input.hasAccount
+      ? `Your complimentary Founding Beta access is now active. Continue in ALVIRA here:\n${siteUrl}/app`
+      : `Your complimentary Founding Beta place is now reserved. Create your account using the same email address you applied with:\n${siteUrl}/signup\n\nYour Founding Beta access will be applied automatically when you sign up.`;
+    return {
+      subject: "You’re approved for ALVIRA Founding Beta",
+      text: `${greeting}\n\nYour application for ALVIRA’s Founding Beta has been approved.\n\n${nextStep}\n\nIf anything is confusing, or you want help getting started, just reply to this email.\n\n— ALVIRA`,
+    };
+  }
+  return {
+    subject: "Update on your ALVIRA Founding Beta application",
+    text: `${greeting}\n\nThank you for applying to ALVIRA’s Founding Beta. We’re keeping this early group intentionally small, and we aren’t able to offer a Founding Beta place for this application right now.\n\nWe appreciate the time you took to tell us how you hoped to use ALVIRA. If you have any questions, you can reply directly to this email.\n\n— ALVIRA`,
+  };
+}
+
+async function sendApplicationDecisionEmail(application: FoundingBetaApplicationActivity) {
+  const hasAccount = application.entitlement_mode === "account";
+  const copy = buildFoundingBetaDecisionEmail({
+    decision: application.status === "approved" ? "approve" : "deny",
+    name: application.name,
+    hasAccount,
+    siteUrl: process.env.PUBLIC_SITE_URL,
+  });
+  const receipt = await sendEmail({
+    to: application.email,
+    subject: copy.subject,
+    text: copy.text,
+    replyTo: "alvira@agentmail.to",
+  });
+  if (receipt.provider !== "agentmail") throw new Error(`Expected AgentMail delivery; got ${receipt.provider}.`);
+  return receipt;
+}
+
+export const reviewFoundingBetaApplication = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    const d = input as { applicationId?: string; decision?: string };
+    const applicationId = String(d.applicationId ?? "").trim();
+    if (!applicationId) throw new Error("Application ID is required.");
+    if (d.decision !== "approve" && d.decision !== "deny") throw new Error("Decision must be approve or deny.");
+    return { applicationId, decision: d.decision as "approve" | "deny" };
+  })
+  .handler(async ({ data }) => {
+    const owner = await requireOwner();
+    await ensureActivitySources();
+    const db = getDb();
+    const application = (await db.query(
+      `SELECT ${APPLICATION_COLUMNS} FROM founding_beta_applications WHERE id=$1 AND status='pending' LIMIT 1`,
+      [data.applicationId],
+    ))[0] as FoundingBetaApplicationActivity | undefined;
+    if (!application) throw new Error("This application has already been reviewed or no longer exists.");
+
+    let entitlementMode: "account" | "reservation" | "none" = "none";
+    if (data.decision === "approve") {
+      const normalizedEmail = normalizeFoundingBetaEmail(application.email);
+      const user = (await db.query(
+        `SELECT id, email, tier FROM users WHERE LOWER(TRIM(email))=$1 LIMIT 1`,
+        [normalizedEmail],
+      ))[0] as { id: string; email: string; tier: string } | undefined;
+
+      if (user) {
+        entitlementMode = "account";
+        await db.transaction([
+          db.query(
+            `INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
+             VALUES ($1, CASE WHEN $2='founding_beta' THEN 'free' ELSE $2 END, $3::timestamptz)
+             ON CONFLICT (user_id) DO UPDATE SET expires_at=EXCLUDED.expires_at`,
+            [user.id, user.tier, FOUNDING_BETA_PERMANENT_EXPIRY],
+          ),
+          db.query(`UPDATE users SET tier='founding_beta' WHERE id=$1 AND tier='free'`, [user.id]),
+          db.query(
+            `UPDATE founding_beta_reservations
+             SET claimed_at=COALESCE(claimed_at, NOW()), claimed_user_id=COALESCE(claimed_user_id, $2)
+             WHERE email=$1 AND revoked_at IS NULL`,
+            [normalizedEmail, user.id],
+          ),
+          db.query(
+            `UPDATE founding_beta_applications
+             SET status='approved', reviewed_at=NOW(), reviewed_by=$2, entitlement_mode='account', decision_email_error=NULL
+             WHERE id=$1 AND status='pending'`,
+            [application.id, owner.id],
+          ),
+        ]);
+      } else {
+        entitlementMode = "reservation";
+        const reservationSource = `application:${application.source || "alvira"}`.slice(0, 120);
+        await db.transaction([
+          db.query(
+            `INSERT INTO founding_beta_reservations (email, source, reserved_at)
+             VALUES ($1, $2, NOW())
+             ON CONFLICT (email) DO UPDATE
+               SET source=EXCLUDED.source, revoked_at=NULL
+             WHERE founding_beta_reservations.claimed_at IS NULL`,
+            [normalizedEmail, reservationSource],
+          ),
+          db.query(
+            `UPDATE founding_beta_applications
+             SET status='approved', reviewed_at=NOW(), reviewed_by=$2, entitlement_mode='reservation', decision_email_error=NULL
+             WHERE id=$1 AND status='pending'`,
+            [application.id, owner.id],
+          ),
+        ]);
+      }
+    } else {
+      await db.query(
+        `UPDATE founding_beta_applications
+         SET status='denied', reviewed_at=NOW(), reviewed_by=$2, entitlement_mode='none', decision_email_error=NULL
+         WHERE id=$1 AND status='pending'`,
+        [application.id, owner.id],
+      );
+    }
+
+    const decided = (await db.query(
+      `SELECT ${APPLICATION_COLUMNS} FROM founding_beta_applications WHERE id=$1 LIMIT 1`,
+      [application.id],
+    ))[0] as FoundingBetaApplicationActivity;
+
+    try {
+      const receipt = await sendApplicationDecisionEmail(decided);
+      const sentAt = new Date().toISOString();
+      await db.query(
+        `UPDATE founding_beta_applications
+         SET decision_email_sent_at=$2, decision_message_id=$3, decision_email_error=NULL
+         WHERE id=$1`,
+        [decided.id, sentAt, receipt.messageId ?? null],
+      );
+      return { ok: true, decision: data.decision, entitlementMode, notificationSent: true, sentAt };
+    } catch (error) {
+      const message = error instanceof Error ? error.message.slice(0, 1000) : "Unknown AgentMail delivery error";
+      await db.query(`UPDATE founding_beta_applications SET decision_email_error=$2 WHERE id=$1`, [decided.id, message]);
+      return { ok: true, decision: data.decision, entitlementMode, notificationSent: false, notificationError: message };
+    }
+  });
+
+export const retryFoundingBetaDecisionEmail = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    const applicationId = String((input as { applicationId?: string })?.applicationId ?? "").trim();
+    if (!applicationId) throw new Error("Application ID is required.");
+    return { applicationId };
+  })
+  .handler(async ({ data }) => {
+    await requireOwner();
+    await ensureActivitySources();
+    const db = getDb();
+    const application = (await db.query(
+      `SELECT ${APPLICATION_COLUMNS} FROM founding_beta_applications
+       WHERE id=$1 AND status IN ('approved','denied') AND decision_email_sent_at IS NULL LIMIT 1`,
+      [data.applicationId],
+    ))[0] as FoundingBetaApplicationActivity | undefined;
+    if (!application) throw new Error("This decision email has already been sent or the application is not review-complete.");
+    const receipt = await sendApplicationDecisionEmail(application);
+    const sentAt = new Date().toISOString();
+    await db.query(
+      `UPDATE founding_beta_applications
+       SET decision_email_sent_at=$2, decision_message_id=$3, decision_email_error=NULL
+       WHERE id=$1 AND decision_email_sent_at IS NULL`,
+      [application.id, sentAt, receipt.messageId ?? null],
+    );
+    return { ok: true, sentAt, messageId: receipt.messageId ?? null };
+  });
 
 export const sendFoundingBetaReservationInvite = createServerFn({ method: "POST" })
   .validator((input: unknown) => {

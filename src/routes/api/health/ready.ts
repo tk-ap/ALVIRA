@@ -18,6 +18,7 @@ const REQUIRED_TABLES = [
   "events",
   "bridge_authorization_codes",
   "bridge_access_tokens",
+  "bridge_oauth_clients",
   "founding_beta_access",
   "beta_feedback",
   "context_versions",

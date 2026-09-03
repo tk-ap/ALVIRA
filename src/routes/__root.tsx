@@ -54,7 +54,7 @@ export const Route = createRootRoute({
       { rel: "shortcut icon", href: "/brand/alvira-context-frame.svg?v=2" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
     ],
-    scripts: [{ children: `(function(){var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark")}})()` }],
+    scripts: [{ children: `(function(){var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark")}if(location.pathname==="/app"){document.documentElement.dataset.alviraRoute="app";document.documentElement.dataset.alviraClarityPending="true"}})()` }],
   }),
   notFoundComponent: () => <div>Page not found</div>,
   component: RootComponent,

@@ -60,6 +60,8 @@ export async function createCheckoutSession(user: User, plan: BillingPlan): Prom
   if (user.stripe_customer_id) body.set("customer", user.stripe_customer_id);
   else body.set("customer_email", user.email);
   if (config.mode === "subscription") {
+    body.set("allow_promotion_codes", "true");
+    body.set("payment_method_collection", "if_required");
     body.set("subscription_data[metadata][app]", "alvira");
     body.set("subscription_data[metadata][alvira_user_id]", user.id);
     body.set("subscription_data[metadata][entitlement]", "pro");

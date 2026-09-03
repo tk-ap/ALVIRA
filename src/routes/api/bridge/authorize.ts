@@ -20,12 +20,20 @@ export const Route = createFileRoute("/api/bridge/authorize")({
         const url = new URL(request.url);
         const requestedClientId = url.searchParams.get("client_id");
 
-        // Standards-based OAuth path for external MCP clients. Compatible
-        // clients discover this endpoint from ALVIRA's well-known metadata,
-        // register, and use Authorization Code + PKCE. The user never handles
-        // a bearer token manually.
+        // Standards-based OAuth path for external MCP clients. MCP 2026-07-28
+        // clients should use a Client ID Metadata Document URL as client_id.
+        // Older clients may still arrive with an ALVIRA DCR client id.
         if (requestedClientId && requestedClientId !== bridgeClientId()) {
-          const client = await getBridgeOAuthClient(requestedClientId);
+          let client;
+          try {
+            client = await getBridgeOAuthClient(requestedClientId);
+          } catch (error) {
+            if (error instanceof BridgeExchangeError) {
+              return Response.json({ error: "invalid_client", error_description: error.message }, { status: 400 });
+            }
+            throw error;
+          }
+
           const redirectUri = url.searchParams.get("redirect_uri") || "";
           const responseType = url.searchParams.get("response_type");
           const codeChallenge = url.searchParams.get("code_challenge");

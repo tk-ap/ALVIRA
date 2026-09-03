@@ -9,6 +9,10 @@ export const Route = createFileRoute("/api/bridge/oauth/authorization-server")({
           issuer: origin,
           authorization_endpoint: `${origin}/api/bridge/authorize`,
           token_endpoint: `${origin}/api/bridge/token`,
+          // MCP 2026-07-28 prefers Client ID Metadata Documents (CIMD).
+          // DCR remains advertised only as a compatibility fallback for clients
+          // that have not adopted CIMD yet.
+          client_id_metadata_document_supported: true,
           registration_endpoint: `${origin}/api/bridge/register`,
           response_types_supported: ["code"],
           grant_types_supported: ["authorization_code"],

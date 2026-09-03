@@ -1,10 +1,15 @@
 import { createHash, randomBytes } from "node:crypto";
+import { lookup } from "node:dns/promises";
+import { BlockList, isIP } from "node:net";
+import { request as httpsRequest } from "node:https";
 import { getCookie } from "@tanstack/react-start/server";
 import { getDb } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
 const DEFAULT_BRIDGE_CLIENT_ID = "alvira-bridge";
 const DEFAULT_BRIDGE_URL = "https://alviratech-bridge.vercel.app";
+const CIMD_MAX_BYTES = 64 * 1024;
+const CIMD_TIMEOUT_MS = 4_000;
 
 export type BridgeDestination = "mcp" | "api";
 
@@ -115,12 +120,161 @@ function pkceChallenge(verifier: string) {
 function validPublicRedirect(uri: string, applicationType: string) {
   try {
     const parsed = new URL(uri);
+    if (parsed.username || parsed.password || parsed.hash) return false;
     if (parsed.protocol === "https:") return true;
-    const local = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1" || parsed.hostname === "::1" || parsed.hostname === "[::1]";
+    const host = parsed.hostname.replace(/^\[|\]$/g, "");
+    const local = host === "localhost" || host === "127.0.0.1" || host === "::1";
     return applicationType === "native" && parsed.protocol === "http:" && local;
   } catch {
     return false;
   }
+}
+
+const blockedMetadataAddresses = new BlockList();
+for (const [network, prefix] of [
+  ["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8],
+  ["169.254.0.0", 16], ["172.16.0.0", 12], ["192.0.0.0", 24], ["192.0.2.0", 24],
+  ["192.168.0.0", 16], ["198.18.0.0", 15], ["198.51.100.0", 24], ["203.0.113.0", 24],
+  ["224.0.0.0", 4], ["240.0.0.0", 4],
+] as const) blockedMetadataAddresses.addSubnet(network, prefix, "ipv4");
+for (const [network, prefix] of [
+  ["::", 128], ["::1", 128], ["::ffff:0:0", 96], ["fc00::", 7], ["fe80::", 10],
+  ["ff00::", 8], ["2001:db8::", 32],
+] as const) blockedMetadataAddresses.addSubnet(network, prefix, "ipv6");
+
+function publicMetadataAddress(address: string, family: number) {
+  return !blockedMetadataAddresses.check(address, family === 6 ? "ipv6" : "ipv4");
+}
+
+function parseCimdUrl(clientId: string) {
+  let parsed: URL;
+  try { parsed = new URL(clientId); } catch { return null; }
+  if (parsed.protocol !== "https:" || parsed.pathname === "/" || !parsed.pathname) return null;
+  if (parsed.username || parsed.password || parsed.hash || parsed.search) return null;
+  if (/\/(?:\.{1,2})(?:\/|$)/.test(clientId)) return null;
+  return parsed;
+}
+
+async function resolveMetadataAddress(url: URL) {
+  const host = url.hostname.replace(/^\[|\]$/g, "");
+  const literalFamily = isIP(host);
+  if (literalFamily) {
+    if (!publicMetadataAddress(host, literalFamily)) throw new BridgeExchangeError("Client metadata URL is not public.", "invalid_client");
+    return { address: host, family: literalFamily };
+  }
+
+  let addresses: Awaited<ReturnType<typeof lookup>>;
+  try {
+    addresses = await lookup(host, { all: true, verbatim: true });
+  } catch {
+    throw new BridgeExchangeError("Client metadata host could not be resolved.", "invalid_client");
+  }
+  if (!Array.isArray(addresses) || addresses.length === 0 || addresses.some((entry) => !publicMetadataAddress(entry.address, entry.family))) {
+    throw new BridgeExchangeError("Client metadata URL is not public.", "invalid_client");
+  }
+  return addresses[0];
+}
+
+async function fetchCimdDocument(url: URL) {
+  const pinned = await resolveMetadataAddress(url);
+  return await new Promise<Record<string, unknown>>((resolve, reject) => {
+    const req = httpsRequest(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "ALVIRA-Bridge/0.5",
+      },
+      // Pin the vetted DNS result so a second lookup cannot rebind the request
+      // onto loopback/private infrastructure after validation.
+      lookup: ((_hostname: string, _options: unknown, callback: (error: Error | null, address: string, family: number) => void) => {
+        callback(null, pinned.address, pinned.family);
+      }) as never,
+    }, (response) => {
+      const status = response.statusCode || 0;
+      const contentType = response.headers["content-type"] || "";
+      if (status !== 200 || (!contentType.includes("application/json") && !contentType.includes("+json"))) {
+        response.resume();
+        reject(new BridgeExchangeError("Client metadata document is unavailable.", "invalid_client"));
+        return;
+      }
+
+      let total = 0;
+      let body = "";
+      response.setEncoding("utf8");
+      response.on("data", (chunk: string) => {
+        total += Buffer.byteLength(chunk);
+        if (total > CIMD_MAX_BYTES) {
+          req.destroy(new BridgeExchangeError("Client metadata document is too large.", "invalid_client"));
+          return;
+        }
+        body += chunk;
+      });
+      response.on("end", () => {
+        try {
+          const parsed = JSON.parse(body);
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid metadata");
+          resolve(parsed as Record<string, unknown>);
+        } catch {
+          reject(new BridgeExchangeError("Client metadata document is invalid JSON.", "invalid_client"));
+        }
+      });
+    });
+    req.setTimeout(CIMD_TIMEOUT_MS, () => req.destroy(new BridgeExchangeError("Client metadata request timed out.", "invalid_client")));
+    req.on("error", (error) => reject(error instanceof BridgeExchangeError ? error : new BridgeExchangeError("Client metadata document could not be fetched.", "invalid_client")));
+    req.end();
+  });
+}
+
+async function resolveCimdClient(clientId: string): Promise<BridgeOAuthClient | null> {
+  const url = parseCimdUrl(clientId);
+  if (!url) return null;
+  const metadata = await fetchCimdDocument(url);
+  if (metadata.client_id !== clientId || typeof metadata.client_name !== "string" || !Array.isArray(metadata.redirect_uris)) {
+    throw new BridgeExchangeError("Client metadata document is incomplete.", "invalid_client");
+  }
+
+  const redirectUris = Array.from(new Set(metadata.redirect_uris.filter((value): value is string => typeof value === "string").map((value) => value.trim()).filter(Boolean)));
+  const applicationType = metadata.application_type === "web"
+    ? "web"
+    : metadata.application_type === "native" || redirectUris.some((uri) => uri.startsWith("http://localhost") || uri.startsWith("http://127.0.0.1") || uri.startsWith("http://[::1]"))
+      ? "native"
+      : "web";
+  const tokenEndpointAuthMethod = typeof metadata.token_endpoint_auth_method === "string" ? metadata.token_endpoint_auth_method : "none";
+  if (redirectUris.length === 0 || redirectUris.length > 20 || redirectUris.some((uri) => !validPublicRedirect(uri, applicationType))) {
+    throw new BridgeExchangeError("Client metadata contains an invalid redirect URI.", "invalid_client");
+  }
+  if (tokenEndpointAuthMethod !== "none") {
+    throw new BridgeExchangeError("This client authentication method is not supported.", "invalid_client");
+  }
+  if (Array.isArray(metadata.grant_types) && !metadata.grant_types.includes("authorization_code")) {
+    throw new BridgeExchangeError("Client metadata does not allow authorization_code.", "invalid_client");
+  }
+  if (Array.isArray(metadata.response_types) && !metadata.response_types.includes("code")) {
+    throw new BridgeExchangeError("Client metadata does not allow code responses.", "invalid_client");
+  }
+
+  const client: BridgeOAuthClient = {
+    client_id: clientId,
+    client_name: metadata.client_name.trim().slice(0, 120) || "AI app",
+    redirect_uris: redirectUris,
+    application_type: applicationType,
+    token_endpoint_auth_method: tokenEndpointAuthMethod,
+  };
+
+  // Persist only display/redirect metadata. The HTTPS document remains the
+  // authority and is re-fetched whenever a CIMD client authorizes or redeems.
+  await getDb().query(
+    `INSERT INTO bridge_oauth_clients (client_id, client_name, redirect_uris_json, application_type, token_endpoint_auth_method, last_seen_at)
+     VALUES ($1, $2, $3, $4, $5, NOW())
+     ON CONFLICT (client_id) DO UPDATE SET
+       client_name = EXCLUDED.client_name,
+       redirect_uris_json = EXCLUDED.redirect_uris_json,
+       application_type = EXCLUDED.application_type,
+       token_endpoint_auth_method = EXCLUDED.token_endpoint_auth_method,
+       last_seen_at = NOW()`,
+    [client.client_id, client.client_name, JSON.stringify(client.redirect_uris), client.application_type, client.token_endpoint_auth_method],
+  );
+  return client;
 }
 
 export async function registerBridgeOAuthClient(input: {
@@ -149,8 +303,7 @@ export async function registerBridgeOAuthClient(input: {
   } satisfies BridgeOAuthClient;
 }
 
-export async function getBridgeOAuthClient(clientId: string): Promise<BridgeOAuthClient | null> {
-  await ensureBridgeSchema();
+async function getRegisteredBridgeOAuthClient(clientId: string): Promise<BridgeOAuthClient | null> {
   const row = (await getDb().query(
     "SELECT client_id, client_name, redirect_uris_json, application_type, token_endpoint_auth_method FROM bridge_oauth_clients WHERE client_id = $1",
     [clientId],
@@ -171,6 +324,12 @@ export async function getBridgeOAuthClient(clientId: string): Promise<BridgeOAut
     application_type: row.application_type,
     token_endpoint_auth_method: row.token_endpoint_auth_method,
   };
+}
+
+export async function getBridgeOAuthClient(clientId: string): Promise<BridgeOAuthClient | null> {
+  await ensureBridgeSchema();
+  if (parseCimdUrl(clientId)) return resolveCimdClient(clientId);
+  return getRegisteredBridgeOAuthClient(clientId);
 }
 
 export async function getBridgeUserFromSession() {

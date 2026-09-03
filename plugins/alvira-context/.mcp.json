@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "alvira-context": {
+      "type": "http",
+      "url": "https://alviratech.vercel.app/api/bridge/mcp"
+    }
+  }
+}

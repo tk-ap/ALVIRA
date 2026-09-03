@@ -32,7 +32,15 @@ export const Route = createFileRoute("/api/bridge/auth/callback")({
           const token = await exchangeBridgeAuthorizationCode(code, bridgeClientId(), redirectUri, secret);
           const maxAge = Math.max(0, Math.floor((new Date(token.expiresAt).getTime() - Date.now()) / 1000));
           setCookie(BRIDGE_TOKEN_COOKIE, token.accessToken, tokenCookieOptions(maxAge));
-          return Response.redirect(new URL("/bridge?connected=1", url.origin), 302);
+
+          // Response.redirect() creates an immutable Headers object in Node/Undici.
+          // TanStack Start merges event response headers (including Set-Cookie)
+          // after the handler returns, so use a normal Response whose headers stay
+          // mutable during that merge.
+          return new Response(null, {
+            status: 302,
+            headers: { Location: new URL("/bridge?connected=1", url.origin).toString() },
+          });
         } catch (error) {
           // Never let an internal exchange failure surface as a bare, unhandled
           // 500 ("unhandled": true). Log it so a future failure is diagnosable,

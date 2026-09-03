@@ -1,0 +1,27 @@
+{
+  "name": "alvira-context",
+  "version": "0.1.0",
+  "description": "Connect Codex to one user-approved ALVIRA Context through Bridge.",
+  "author": {
+    "name": "ALVIRA",
+    "url": "https://alviratech.vercel.app/"
+  },
+  "homepage": "https://alviratech.vercel.app/bridge",
+  "repository": "https://github.com/tk-ap/ALVIRA",
+  "keywords": ["alvira", "context", "mcp", "bridge", "personalization"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "ALVIRA Context",
+    "shortDescription": "Let Codex use one approved ALVIRA Context",
+    "longDescription": "Connect Codex to ALVIRA Bridge so Codex can read one Context you explicitly approve. Access is read-only and can be revoked from ALVIRA at any time.",
+    "developerName": "ALVIRA",
+    "category": "Developer Tools",
+    "capabilities": ["Read"],
+    "websiteURL": "https://alviratech.vercel.app/",
+    "privacyPolicyURL": "https://alviratech.vercel.app/privacy",
+    "termsOfServiceURL": "https://alviratech.vercel.app/terms",
+    "defaultPrompt": [
+      "Use my approved ALVIRA Context to understand how you should work with me."
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+name: Founding Beta application review
+
+on:
+  pull_request:
+    paths:
+      - "src/routes/-ownerCohort.ts"
+      - "src/components/OwnerFoundingBetaPanel.tsx"
+      - "migrations/012_founding_beta_application_review.sql"
+      - "tests/founding-beta-application-review.test.ts"
+      - ".github/workflows/founding-beta-application-review.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/founding-beta-application-review.test.ts
+      - run: bun run build

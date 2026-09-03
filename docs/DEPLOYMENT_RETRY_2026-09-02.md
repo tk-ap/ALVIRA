@@ -6,4 +6,5 @@ Purpose: trigger a fresh Vercel production deployment from the current non-Strip
 - Stripe PR #97: intentionally excluded and remains unmerged.
 - Expected production content: current `main`, including the life-first / `Context before capability` homepage, Agent OS metadata, Founding Beta owner communication/review rails, advisory AI review, and AgentMail inbound reply monitoring.
 - 2026-09-02 19:50 PT: Vercel preview builds are succeeding again; marker updated to trigger the current non-Stripe production deployment after quota reset.
+- 2026-09-02 23:14 PT: production redeploy retriggered from the current `main` tree after the quota window cleared.
 - This marker can be removed in a later documentation cleanup; it has no application behavior.

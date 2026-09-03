@@ -17,6 +17,7 @@ import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
 import { OwnerCustomerInbox } from "~/components/OwnerCustomerInbox";
 import { OwnerDashboardDepth } from "~/components/OwnerDashboardDepth";
+import { OwnerFoundingBetaAIReview } from "~/components/OwnerFoundingBetaAIReview";
 import { OwnerFoundingBetaPanel } from "~/components/OwnerFoundingBetaPanel";
 import { OwnerOperatingBrief } from "~/components/OwnerOperatingBrief";
 import { ScrollNarrative } from "~/components/ScrollNarrative";
@@ -70,6 +71,7 @@ function RootComponent() {
       <AilhatPortfolioHandoff />
       <OwnerOperatingBrief />
       <OwnerFoundingBetaPanel />
+      <OwnerFoundingBetaAIReview />
       <OwnerCustomerInbox />
       <OwnerDashboardDepth />
       <ContextVersioningBootstrap />

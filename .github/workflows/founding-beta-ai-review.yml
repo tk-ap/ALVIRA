@@ -1,0 +1,24 @@
+name: Founding Beta AI review
+
+on:
+  pull_request:
+    paths:
+      - "src/routes/-foundingBetaAIReview.ts"
+      - "src/components/OwnerFoundingBetaAIReview.tsx"
+      - "src/routes/__root.tsx"
+      - "migrations/013_founding_beta_ai_review.sql"
+      - "tests/founding-beta-ai-review.test.ts"
+      - ".github/workflows/founding-beta-ai-review.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/founding-beta-ai-review.test.ts
+      - run: bun run build

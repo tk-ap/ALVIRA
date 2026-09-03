@@ -10,6 +10,8 @@
     "db:migrate": "bun run scripts/migrate-db.ts",
     "db:verify": "bun run scripts/verify-neon.ts",
     "test": "bun test",
+    "founding-beta:invites": "bun run scripts/send-founding-beta-invites.ts",
+    "founding-beta:invites:send": "bun run scripts/send-founding-beta-invites.ts --send",
     "start": "bun run serve.ts",
     "publish": "bash ./publish.sh",
     "go-live": "bash ./go-live.sh",

@@ -28,8 +28,18 @@ export async function requireBillingUser(): Promise<User> {
 }
 
 function stripeSecretKey(): string {
-  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  const override = process.env.ALVIRA_STRIPE_SECRET_KEY?.trim();
+  const key = override || process.env.STRIPE_SECRET_KEY?.trim();
+  const source = override ? "ALVIRA_STRIPE_SECRET_KEY" : "STRIPE_SECRET_KEY";
   if (!key) throw new Error("Stripe checkout is not configured.");
+  if (key.startsWith("mk_")) {
+    console.error("[stripe-checkout] invalid Stripe credential", { source, kind: "managed_key_id" });
+    throw new Error("Stripe checkout credential is a key ID, not an API secret.");
+  }
+  if (!key.startsWith("sk_") && !key.startsWith("rk_")) {
+    console.error("[stripe-checkout] invalid Stripe credential", { source, kind: "unexpected_prefix" });
+    throw new Error("Stripe checkout credential is not a supported secret API key.");
+  }
   return key;
 }
 

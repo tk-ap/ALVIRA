@@ -7,8 +7,8 @@ const sql = neon(connectionString);
 // Every table the application requires at runtime. This is the deploy gate's
 // definition of a "matching schema": if any of these is absent the app would
 // fail in production, so verification must fail here rather than green-light a
-// broken deploy. Bridge tables are included (a missing
-// `bridge_authorization_codes` table is exactly what caused the live 500s).
+// broken deploy. Bridge tables are included because authorization depends on
+// both token state and the registered OAuth client metadata.
 const expected = [
   "users",
   "sessions",
@@ -21,6 +21,7 @@ const expected = [
   "events",
   "bridge_authorization_codes",
   "bridge_access_tokens",
+  "bridge_oauth_clients",
   "founding_beta_access",
   "beta_feedback",
   "context_versions",

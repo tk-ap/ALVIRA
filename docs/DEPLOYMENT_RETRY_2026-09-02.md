@@ -8,4 +8,5 @@ Purpose: trigger fresh Vercel production deployments when Hobby-plan build-rate 
 - 2026-09-02 23:14 PT: production redeploy retriggered from the current `main` tree after the quota window cleared.
 - 2026-09-02 23:45 PT: production redeploy requested again from the current non-Stripe `main` state.
 - 2026-09-03 10:08 PT: production redeploy retriggered for current Stripe-enabled `main` after the later release-polish merges (#115, #116, #117).
+- 2026-09-03 11:15 PT: production redeploy retriggered after adding the dedicated `ALVIRA_STRIPE_SECRET_KEY` production environment variable so the new runtime captures the ALVIRA-owned Stripe credential.
 - This marker can be removed in a later documentation cleanup; it has no application behavior.

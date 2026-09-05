@@ -562,6 +562,11 @@ function AppPage() {
   const hasGaps = gaps.length > 0;
   const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
 
+  // Deferred (skipped or vague-but-accepted) domains — available for a revisit pass.
+  const deferredDomains = state?.skippedDomains ?? [];
+  const vagueCount = deferredDomains.filter((d) => (state?.domains[d]?.answers.length ?? 0) > 0).length;
+  const skippedCount = deferredDomains.length - vagueCount;
+
   // ── Knowledge quality check ──
   // Warns when compiled files would be too thin to be useful.
   const qualityWarnings: string[] = [];
@@ -953,6 +958,23 @@ function AppPage() {
     } catch (err) {
       setInterviewError(err instanceof Error ? err.message : "Unable to save profile.");
     } finally { setSaving(false); }
+  };
+
+  const handleRevisit = () => {
+    if (!state) return;
+    const deferred = state.skippedDomains ?? [];
+    if (deferred.length === 0) return;
+    // Re-open the interview focused on the deferred domains: clear them from
+    // skippedDomains so gap detection re-asks exactly those, in priority order.
+    const revisitedState: InterviewState = { ...state, skippedDomains: [], currentDomain: null };
+    setState(revisitedState);
+    setWaiting(true);
+    askNextQuestion(revisitedState, false)
+      .then((ns) => {
+        setWaiting(false);
+        if (ns) setState(ns);
+      })
+      .catch(() => setWaiting(false));
   };
 
   const handleStart = async () => {
@@ -2098,20 +2120,42 @@ function AppPage() {
 
               {/* Interview complete banner */}
               {!hasGaps && !waiting && (
-                <div className="mb-4 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
+                <div className="mb-4 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-4">
                   <span>
                     {requiredCovered
                       ? "✓ All domains covered. Ready to generate your knowledge files."
                       : "✓ Interview complete (some optional domains remain uncovered)."}
+                    {deferredDomains.length > 0 && (
+                      <span className="opacity-80">
+                        {" "}
+                        {skippedCount > 0 && vagueCount > 0
+                          ? `Skipped ${skippedCount} · ${vagueCount} thin`
+                          : skippedCount > 0
+                            ? `Skipped ${skippedCount}`
+                            : `${vagueCount} left thin`}
+                        .
+                      </span>
+                    )}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleGenerate()}
-                    disabled={compiling}
-                    className="flex-shrink-0 ml-4 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-60"
-                  >
-                    {compiling ? "Compiling..." : "Generate"}
-                  </button>
+                  <div className="flex-shrink-0 flex items-center gap-2">
+                    {deferredDomains.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleRevisit}
+                        className="rounded-lg border border-emerald-300 dark:border-emerald-700 px-4 py-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
+                      >
+                        Revisit
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleGenerate()}
+                      disabled={compiling}
+                      className="rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors disabled:opacity-60"
+                    >
+                      {compiling ? "Compiling..." : "Generate"}
+                    </button>
+                  </div>
                 </div>
               )}
 

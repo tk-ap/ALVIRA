@@ -224,6 +224,16 @@ const TOPIC_GROUPS = [
   },
 ] as const;
 
+// Short, human names for the checklist topics — used for the context title and
+// export filename, never the raw concatenated checklist string.
+const TOPIC_SHORT_NAMES: Record<string, string> = {
+  "My communication style and decision-making process": "Communication & Decision-Making",
+  "My daily routines, habits, and personal workflows": "Routines & Workflows",
+  "My values, boundaries, and what I won't compromise on": "Values & Boundaries",
+  "My key relationships and how I collaborate with others": "Relationships & Collaborations",
+  "My goals, priorities, and how I evaluate tradeoffs": "Goals, Priorities, and Mental Models",
+};
+
 // ── Page ──
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -963,6 +973,11 @@ function AppPage() {
       ? [topic.trim(), ...chapterSuggestions].filter(Boolean).join(", ")
       : topic.trim();
     const activeOffering = offering === "meos" ? "meos" : "context";
+    const title = (offering === "meos")
+      ? (topic.trim() || "My Reflection")
+      : (customTopic.trim() || (selectedTopics.length > 0
+        ? selectedTopics.map((t) => TOPIC_SHORT_NAMES[t] ?? t).join(", ")
+        : topic.trim() || "My Context"));
     const name = nameDraft.trim();
     setUserName(name);
     setScreen("interview");
@@ -981,6 +996,7 @@ function AppPage() {
     }];
     const seededState: InterviewState = {
       ...initialState,
+      title,
       skippedDomains: skipped.length > 0 ? skipped : undefined,
       history: greeting,
     };
@@ -1456,6 +1472,7 @@ function AppPage() {
       ? Object.entries(generated).map(([name, content]) => [name, content] as [string, string])
       : [
           ["context.md", generated.context ?? ""],
+          ["context.txt", generated.context ?? ""],
         ];
     for (const [name, content] of fileMap) {
       if (content) zip.file(name, content);
@@ -1476,7 +1493,22 @@ function AppPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${topic.trim().toLowerCase().replace(/\s+/g, "-") || "alvira"}-context.zip`;
+    const exportName = (state?.title || state?.topic || topic || "alvira").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "alvira";
+    a.download = `${exportName}-context.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadTxt = () => {
+    if (!generated || !generated.context) return;
+    const exportName = (state?.title || state?.topic || topic || "alvira").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "alvira";
+    const blob = new Blob([generated.context], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${exportName}-context.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1666,6 +1698,9 @@ function AppPage() {
                   <div className="flex flex-wrap gap-2">
                     <button type="button" onClick={() => copyToClipboard(contextMarkdown, "context.md")} className={btnPrimary}>
                       {copyMsg || "Copy context"}
+                    </button>
+                    <button type="button" onClick={downloadTxt} className={btnSecondary}>
+                      <span className="font-mono text-xs">⬇ Download .txt</span>
                     </button>
                     <button type="button" onClick={downloadZip} className={btnSecondary}>
                       <span className="font-mono text-xs">⬇ Download .zip</span>

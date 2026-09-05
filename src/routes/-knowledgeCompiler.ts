@@ -12,7 +12,7 @@ import type { Domain, InterviewState } from "./-knowledgeGraph";
  * never contains empty placeholders.
  */
 export function compileKnowledge(state: InterviewState, graph: Domain[]): string {
-  const title = state.topic?.trim() || "My Context";
+  const title = state.title?.trim() || state.topic?.trim() || "My Context";
 
   const lines: string[] = [
     `# ${title}`,

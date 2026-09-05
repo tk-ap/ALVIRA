@@ -13,6 +13,8 @@ export interface Message {
 export interface InterviewState {
   tier: Tier;
   topic: string;
+  /** Short human title for display/export (falls back to `topic` when absent). */
+  title?: string;
   domains: Record<
     string,
     {

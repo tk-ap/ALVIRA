@@ -1,0 +1,39 @@
+name: Normalize Reflect navigation once
+
+on:
+  push:
+    branches:
+      - fix/reflect-canonical-route
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/reflect-canonical-route
+      - name: Point user-facing Reflect CTAs at canonical route
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          target = '/app?offering=meos&preview=false'
+          paths = [Path('src/components/MeOSCTA.tsx'), Path('src/routes/app.tsx')]
+          for path in paths:
+              text = path.read_text()
+              before = text.count('href="/meos"')
+              text = text.replace('href="/meos"', f'href="{target}"')
+              path.write_text(text)
+              print(f'{path}: replaced {before} direct legacy Reflect links')
+          PY
+      - name: Commit normalized links
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/MeOSCTA.tsx src/routes/app.tsx
+          git commit -m 'fix: point Reflect CTAs at canonical route'
+          git push

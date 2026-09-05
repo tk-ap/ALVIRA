@@ -48,6 +48,61 @@ See [`ALVIRA_MARK_USAGE.md`](ALVIRA_MARK_USAGE.md) for the approved hierarchy, u
 - Production use: Reference only; do not load the PNG in the website header
 - Preservation: Keep this file unchanged because implementation briefs and repository history reference it
 
+## UI Audit References
+
+Annotated evidence renders produced by the 2026-09-05 marketing-homepage design review (`ALVIRA_UI_REBALANCE_BRIEF.md`, work item `alvira-ui-rebalance-2026-09-05`). These are diagnostic overlays on the live deployment, not brand-mark direction, and they do not carry owner-ratified product direction.
+
+Captured at 1440x5743 from `https://alviratech.vercel.app/` after `document.fonts.ready`, then colour-quantised for size.
+
+### Homepage heading-axis audit
+
+- File: `source/2026-09-05/ui-audit-heading-axes.png`
+- Date added: 2026-09-05
+- SHA-256: `a625f7fd86fb0f82f66fbddcce6c98668af4671323874049e1847b0e991ec137`
+- Status: exploratory
+- Purpose: Annotated full-page render marking every distinct H1/H2 left edge on the marketing homepage, with per-axis occurrence counts and per-heading column width, size and line count.
+- Production use: Reference only; never load these files in the website
+- Preservation: Immutable
+
+### Homepage proposed 12-column grid
+
+- File: `source/2026-09-05/ui-audit-proposed-12col-grid.png`
+- Date added: 2026-09-05
+- SHA-256: `0eaea10eb4760ab7f1d59cdb04e582e09a11e944822965a7fe092e7052a6b9bb`
+- Status: exploratory
+- Purpose: The proposed 12-column / 1200px / 24px-gutter grid overlaid on the current homepage, highlighting columns 1 and 5 as the only two proposed content axes.
+- Production use: Reference only; never load these files in the website
+- Preservation: Immutable
+
+### Homepage display-measure audit
+
+- File: `source/2026-09-05/ui-audit-display-measure.png`
+- Date added: 2026-09-05
+- SHA-256: `758d11fafbcb4c3051190205d045a4c2c7b5aaa88ceeaae37a8e581283f982b2`
+- Status: exploratory
+- Purpose: Every heading at or above 56px boxed, marked red where its column is under 640px, with a dashed 640px minimum-measure bar beneath each failing heading.
+- Production use: Reference only; never load these files in the website
+- Preservation: Immutable
+
+### Homepage section-rhythm audit
+
+- File: `source/2026-09-05/ui-audit-section-rhythm.png`
+- Date added: 2026-09-05
+- SHA-256: `14380e88c2f34ec87abcdf77da7e0f8f451f37169534af896b6a9d0b26bd9077`
+- Status: exploratory
+- Purpose: Each homepage section banded and labelled with its height and vertical padding, marking the four sections that carry no padding.
+- Production use: Reference only; never load these files in the website
+- Preservation: Immutable
+### Homepage navigation audit
+
+- File: `source/2026-09-05/ui-audit-navigation.png`
+- Date added: 2026-09-05
+- SHA-256: `f779656981b477a99a6fbe484827cea40e1dd10719c9a0e2c775d69bf226ff0a`
+- Status: exploratory
+- Purpose: Annotated header crop marking every interactive item's width and every inter-item gap, showing the near-uniform 15-16px spacing that prevents the bar from grouping into navigation and account/action blocks.
+- Production use: Reference only; never load these files in the website
+- Preservation: Immutable
+
 ## Directory Convention
 
 Use this structure for future asset intake:

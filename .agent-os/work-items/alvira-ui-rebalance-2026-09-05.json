@@ -1,0 +1,177 @@
+{
+  "work_id": "alvira-ui-rebalance-2026-09-05",
+  "routing_source": "registry/product-routing.yaml",
+  "source_product": "agent-os-workforce",
+  "owning_product": "alvira-meos",
+  "workspace": "tk-ap/ALVIRA",
+  "problem_or_opportunity": {
+    "summary": "The ALVIRA public marketing homepage reads as a series of separately-designed bands rather than one document. Copy and colour are strong; the composition is not.",
+    "surface": "https://alviratech.vercel.app/ (public marketing homepage)",
+    "root_causes": [
+      "No shared grid: 8 major headings resolve to 6 distinct left edges, including two near-miss pairs (504 vs 528, 178 vs 120) that read as misalignment rather than intent.",
+      "Display type set below its usable measure: 4 headings at 60px render in 360-437px columns (~5-6 characters per line), forcing 4-line blocks with heavy rag.",
+      "Gap in the type scale: sizes jump 24px -> 60px with nothing between, so the page has no middle voice.",
+      "Inconsistent display weight: H1 is weight 600 while every H2 is weight 400 at the same 60px.",
+      "Ad-hoc vertical rhythm: 4 of 8 sections carry zero vertical padding and rely on internal spacing.",
+      "Seven hardcoded near-identical grey hex values bypass the existing ink/mineral/warm-gray token system.",
+      "Header crowding: 9 interactive items at 73.4% ink occupancy of the 1280px inner container, with near-uniform 15-16px gaps that prevent the bar grouping into navigation and account/action blocks; the 375px branding block is 29% of the container and the hamburger does not take over until 760px."
+    ],
+    "explicitly_not_a_problem": [
+      "Copy quality and voice are strong and are out of scope.",
+      "Mobile (<=640px) is already well balanced and must not change.",
+      "Light and dark themes both render correctly at identical height (5743px).",
+      "Contrast is broadly compliant: 104 of 106 text nodes pass WCAG AA."
+    ]
+  },
+  "originating_signal": {
+    "type": "founder-requested design review",
+    "requested_by": "human owner",
+    "date": "2026-09-05",
+    "method": "live-deployment inspection at 1440x900 and 390x844, deviceScaleFactor 2, headless Chromium with native sandbox enabled, measured after document.fonts.ready"
+  },
+  "priority": {
+    "level": "p2",
+    "confidence": 0.6,
+    "rationale": "Pre-launch presentation quality on a public surface. Not a functional or security defect and not launch-blocking on its own. Final priority is the human owner's call, not the reviewing agent's."
+  },
+  "evidence": [
+    {
+      "kind": "measurement",
+      "name": "heading-left-edges",
+      "viewport": "1440x900",
+      "finding": "8 headings across 6 distinct x values: 120 (3x), 178, 224, 504, 528, 887",
+      "artifact": "design/brand-references/source/2026-09-05/ui-audit-heading-axes.png"
+    },
+    {
+      "kind": "measurement",
+      "name": "display-measure",
+      "viewport": "1440x900",
+      "finding": "4 of the >=56px headings run in columns under 640px: 379px, 360px, 433px, 437px",
+      "artifact": "design/brand-references/source/2026-09-05/ui-audit-display-measure.png"
+    },
+    {
+      "kind": "measurement",
+      "name": "section-rhythm",
+      "viewport": "1440x900",
+      "finding": "Section heights 1230/907/428/590/796/449/510/700 with padding 112,0,0,96,0,0,96,0",
+      "artifact": "design/brand-references/source/2026-09-05/ui-audit-section-rhythm.png"
+    },
+    {
+      "kind": "proposal",
+      "name": "target-grid",
+      "finding": "12 columns, 1200px container, 24px gutter, all sections starting at col 1 (x=120) or col 5 (x=528)",
+      "artifact": "design/brand-references/source/2026-09-05/ui-audit-proposed-12col-grid.png"
+    },
+    {
+      "kind": "measurement",
+      "name": "contrast-baseline",
+      "finding": "106 text nodes checked against composited backgrounds; 2 below WCAG AA: 9px header tagline at 3.99:1, 10px 'Without ALVIRA' label at 3.83:1",
+      "note": "Baseline to protect. No change may reduce any text below 4.5:1, or 3:1 at >=24px."
+    },
+    {
+      "kind": "measurement",
+      "name": "header-crowding",
+      "viewport": "1440x900",
+      "finding": "9 interactive items, 73.4% ink occupancy, gaps 133/16/15/16/16/33/16/16; raising all header text to 12px adds +108px ink (73.4% -> 81.8%); removing two nav links returns it to 70.2%",
+      "artifact": "design/brand-references/source/2026-09-05/ui-audit-navigation.png"
+    }
+  ],
+  "desired_outcome": {
+    "statement": "The homepage reads as one document on a single grid, with display type set at a usable measure and a type scale that has a middle register, without any change to copy, palette, theme behaviour, or the mobile layout.",
+    "observable_change": [
+      "Every H1/H2 at 1440px sits on one of exactly two left-edge axes.",
+      "No heading >=56px renders in a column narrower than 640px.",
+      "No display heading wraps beyond 3 lines at 1440px.",
+      "Type scale includes 32px and 40px steps; prose body is 16px.",
+      "All headings >=40px share one font weight.",
+      "Every section uses symmetric vertical padding drawn from two spacing tokens.",
+      "The seven hardcoded grey hex values are replaced by three semantic tokens with dark: counterparts.",
+      "Header reduced to three primary nav links with a ~40px navigation/actions separator, ink occupancy at or below 72%, and the hamburger breakpoint raised to ~1000px."
+    ]
+  },
+  "required_capabilities": [
+    "frontend-ui-implementation",
+    "design-system-tokens",
+    "tailwind-configuration",
+    "quality-railguards",
+    "end-to-end-verification"
+  ],
+  "required_tools": [
+    "repository read/write on tk-ap/ALVIRA",
+    "local dev server",
+    "ripgrep"
+  ],
+  "context_references": [
+    "ALVIRA_UI_REBALANCE_BRIEF.md",
+    "design/brand-references/source/2026-09-05/ui-audit-heading-axes.png",
+    "design/brand-references/source/2026-09-05/ui-audit-proposed-12col-grid.png",
+    "design/brand-references/source/2026-09-05/ui-audit-display-measure.png",
+    "design/brand-references/source/2026-09-05/ui-audit-section-rhythm.png",
+    "design/brand-references/source/2026-09-05/ui-audit-navigation.png",
+    "AGENTS.md",
+    ".agent-os/product.yaml",
+    "tk-ap/agent-os:policies/QUALITY_RAILGUARDS.md",
+    "tk-ap/agent-os:policies/HANDOFF_POLICY.md",
+    "tk-ap/agent-os:contracts/work-item.schema.json"
+  ],
+  "authority_class": "bounded-implementation-requires-authorization",
+  "constraints": {
+    "preserve_contract": [
+      "Zero changes to user-facing copy. Every headline, paragraph, label and button string stays byte-identical.",
+      "No changes to the colour palette, brand teal, logo, or light/dark theme behaviour.",
+      "No section reordering, additions, or removals.",
+      "No changes to the mobile layout below the md breakpoint.",
+      "No new CSS framework, component library, or animation library.",
+      "Repository-local instructions and regression boundaries in tk-ap/ALVIRA take precedence over this brief."
+    ],
+    "cross_product_write_rule": "This item is authored by the workforce and proposes work owned by alvira-meos. It must not be implemented as a silent direct edit. Explicit task authorization on tk-ap/ALVIRA is required before execution.",
+    "browser_execution": {
+      "rule": "The executing Codex agent must not launch a browser to verify this work.",
+      "basis": "adapters/codex/browser.py fails closed. prepare_codex_browser_execution unconditionally appends the reason 'provider receipt authentication is not implemented; caller trust flags are insufficient', so the decision is BLOCKED even when a complete attestation is supplied (tests/test_codex_browser_adapter.py::test_caller_authenticated_complete_attestation_is_denied).",
+      "consequence": "Rendered-layout assertions are human- or authorized-surface-produced evidence, supplied back to the work item. Codex verifies only the statically checkable criteria.",
+      "never": "Do not pass --no-sandbox to any Chromium-family browser under any circumstance."
+    },
+    "aesthetic_authority": "Quality railguards may reject unsupported or low-quality work but hold no aesthetic authority over deliberate ALVIRA product direction. Where this brief and repository-local art direction conflict, the repository wins and the conflict is escalated, not resolved unilaterally.",
+    "product_direction_status": "Post-Revision 11 working hypothesis, not owner-ratified direction. Per AGENTS.md, revisions after 11 are team working hypotheses unless the owner explicitly ratifies them. The measurements in the brief are verified facts; the proposed grid, type scale and hierarchy changes are recommendations awaiting ratification.",
+    "repository_local_rules": [
+      "Branch from latest main as codex/<short-task-name>; never commit or push to main.",
+      "Open a draft pull request; satisfy the AGENTS.md Merge Gate including desktop, mobile, light and dark verification.",
+      "Design-reference images live under design/brand-references/ and must never be loaded by the production website.",
+      "Free-tier smoke account acceptance applies only if a change reaches an authenticated surface."
+    ],
+    "nav_architecture_note": "Removing Reflect and Use elsewhere from the primary navigation touches product-surface architecture and requires owner ratification beyond the compositional tasks. AGENTS.md defines Bridge as a gated secondary capability that stays visible but subordinate and says main navigation may link to it, so removal from primary nav is permitted, not a departure. Both remain reachable in-page and at their own routes."
+  },
+  "human_oversight": {
+    "acceptance_gate": "required",
+    "basis": "policies/HANDOFF_POLICY.md — 'If the acceptance question is materially aesthetic or experiential, preserve a human acceptance gate. Agents may surface evidence and specific concerns but must not manufacture visual approval.'",
+    "gate_owner": "human product owner",
+    "what_the_agent_may_do": "Surface before/after renders and the mechanical assertion results as evidence.",
+    "what_the_agent_may_not_do": "Declare the visual outcome accepted, or treat passing mechanical assertions as proof that the page looks right."
+  },
+  "acceptance_criteria": [
+    "Every H1/H2 at a 1440px viewport resolves to one of exactly two left-edge axes.",
+    "No heading at or above 56px renders in a column narrower than 640px.",
+    "No display heading wraps to more than 3 lines at 1440px.",
+    "The type scale exposes 32px and 40px steps and prose body copy renders at 16px.",
+    "Every heading at or above 40px shares a single font weight.",
+    "Every section has non-zero symmetric vertical padding drawn from --section-y or --section-y-lg.",
+    "No arbitrary grey hex values remain in homepage class attributes; three semantic tokens with dark: counterparts are used instead.",
+    "Hero emphasis favours 'The harder part is knowing what matters.' over the first sentence.",
+    "'With ALVIRA' is visually distinguished from 'Without ALVIRA' by more than a label and a rule.",
+    "Header nav and header tagline render at 12px or larger, both at 4.5:1 or better.",
+    "The two known WCAG AA failures are resolved and no new contrast failure is introduced.",
+    "git diff shows zero changes to user-facing strings.",
+    "Rendered page height remains identical between light and dark themes.",
+    "Mobile layout at 390x844 is visually unchanged from the current deployment.",
+    "Header reduced to 3 primary nav links (How it helps, Context, Pricing) with a ~40px navigation/actions separator.",
+    "Header ink occupancy at 1440px is at or below 72%.",
+    "Hamburger breakpoint raised to approximately 1000px.",
+    "Task 8 (header type sizing) is not shipped without Task 9 (header crowding); the two are coupled.",
+    "Producer has run the quality-railguard self-check per policies/QUALITY_RAILGUARDS.md before handoff.",
+    "Human product owner has recorded visual acceptance."
+  ],
+  "evidence_destination": "contracts/outcome-event.schema.json",
+  "status": "proposed",
+  "created_at": "2026-09-05T08:30:00Z",
+  "updated_at": "2026-09-05T09:00:00Z"
+}

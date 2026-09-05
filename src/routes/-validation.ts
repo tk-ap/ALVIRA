@@ -5,6 +5,8 @@ export interface ValidationResult {
   warnings: string[];
   needsClarification: boolean; // true when confidence is too low — the answer isn't usable
   insufficientKnowledge: boolean; // true when user admits they don't know / haven't prepared
+  /** True only for genuinely unusable input (gibberish, contradiction) that must be re-asked. */
+  isUnusable: boolean;
   /**
    * Existing interview routing flag. Normally means the user asked a clarifying
    * question. A strong topical mismatch also uses this non-answer clarification
@@ -367,6 +369,7 @@ export function validateAnswer(
       warnings: [],
       needsClarification: false,
       insufficientKnowledge: false,
+      isUnusable: false,
       isUserQuestion: true,
     };
   }
@@ -387,6 +390,7 @@ export function validateAnswer(
       ],
       needsClarification: true,
       insufficientKnowledge: false,
+      isUnusable: true,
       isUserQuestion: true,
       topicMismatch: true,
       suggestedDomainId: topical.suggestedDomainId,
@@ -398,6 +402,7 @@ export function validateAnswer(
   // ═══════════════════════════════════════════
 
   let insufficientKnowledge = false;
+  let isUnusable = false;
 
   // 0a. Insufficient knowledge phrases — user admits they don't know / haven't prepared
   if (wordCount < 20) {
@@ -442,6 +447,7 @@ export function validateAnswer(
         "Your answer repeats the same word multiple times — please provide a more meaningful response.",
       );
       score -= 0.5;
+      isUnusable = true;
     }
   }
 
@@ -462,6 +468,7 @@ export function validateAnswer(
         "Your answer contains mostly unrecognizable words — please try again with clearer language.",
       );
       score -= 0.5;
+      isUnusable = true;
     }
   }
 
@@ -474,6 +481,7 @@ export function validateAnswer(
       "Your answer contains many non-alphabetic characters — please provide a clearer response.",
     );
     score -= 0.5;
+    isUnusable = true;
   }
 
   // ═══════════════════════════════════════════
@@ -543,6 +551,7 @@ export function validateAnswer(
             `Possible contradiction with a previous answer. Shared terms: ${sharedWords.join(", ")}. Please clarify.`,
           );
           score -= 0.2;
+          isUnusable = true;
           break; // Only flag one contradiction
         }
       }
@@ -555,5 +564,5 @@ export function validateAnswer(
   // needsClarification: true when confidence is too low for the answer to be usable
   const needsClarification = confidence < 0.4;
 
-  return { confidence, warnings, needsClarification, insufficientKnowledge, isUserQuestion: false };
+  return { confidence, warnings, needsClarification, insufficientKnowledge, isUnusable, isUserQuestion: false };
 }

@@ -1140,6 +1140,7 @@ function AppPage() {
     let updatedDomains = { ...state.domains };
     let needsClarify = false;
     let meaningfulAnswer = false;
+    let skippedDomains = state.skippedDomains ?? [];
 
     if (currentDomain) {
       const existing = updatedDomains[currentDomain]?.answers ?? [];
@@ -1222,31 +1223,22 @@ function AppPage() {
         return;
       }
 
-      if (validation.needsClarification && validation.insufficientKnowledge) {
+      if (validation.isUnusable) {
+        // Genuinely unusable (gibberish, contradiction) — re-ask, don't file it.
         needsClarify = true;
         const warningText =
           validation.warnings.length > 0
-            ? validation.warnings[0]
-            : "It sounds like you may not have enough clarity on this yet. No problem — take some time to research or think it through. I'll ask again when you're ready. You can also skip this domain for now and come back to it later.";
+            ? `Hmm, I couldn't quite parse that. ${validation.warnings[0]}`
+            : "Hmm, I didn't quite catch that. Could you try again?";
         newHistory.push({ role: "assistant", content: warningText });
-
-        updatedDomains = {
-          ...updatedDomains,
-          [currentDomain]: {
-            answers: [...existing, trimmed],
-            confidence: validation.confidence,
-            covered: false,
-          },
-        };
       }
       else if (validation.needsClarification) {
-        needsClarify = true;
-        const warningText =
-          validation.warnings.length > 0
-            ? `Hmm, I didn't quite catch that. ${validation.warnings.join(" ")}`
-            : "Hmm, I didn't quite catch that. Could you try again with a bit more detail?";
-        newHistory.push({ role: "assistant", content: warningText });
-
+        // Weak but real — accept it honestly, defer re-asking, and move on so a
+        // vague answer never traps the user in a clarification loop.
+        const note = validation.insufficientKnowledge
+          ? "Noted — I'll leave this open for now. We can come back to it later."
+          : "Got it — that's a bit broad. A specific example would make it sharper, but I'll keep going with what's here.";
+        newHistory.push({ role: "assistant", content: note });
         updatedDomains = {
           ...updatedDomains,
           [currentDomain]: {
@@ -1255,6 +1247,7 @@ function AppPage() {
             covered: false,
           },
         };
+        skippedDomains = Array.from(new Set([...skippedDomains, currentDomain]));
       }
       else {
         meaningfulAnswer = true;
@@ -1276,6 +1269,7 @@ function AppPage() {
       domains: updatedDomains,
       history: newHistory,
       currentDomain: needsClarify ? currentDomain : null,
+      skippedDomains,
     };
 
     setState(updatedState);

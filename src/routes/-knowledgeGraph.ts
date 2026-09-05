@@ -23,6 +23,8 @@ export interface InterviewState {
   >;
   history: Message[];
   currentDomain: string | null;
+  /** Domain ids the user chose to skip at the start; excluded from gap detection. */
+  skippedDomains?: string[];
   contextSources?: import("~/lib/context-engine").ContextSource[];
   /** Set after knowledge files have been generated so resume UI can offer an update flow. */
   generatedAt?: number;

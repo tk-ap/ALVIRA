@@ -10,6 +10,11 @@ export interface Gap {
 
 const DEFAULT_CONFIDENCE_THRESHOLD = 0.6;
 
+/** A domain the user explicitly skipped at the start is resolved, not a gap. */
+function isSkipped(domainId: string, state: InterviewState): boolean {
+  return (state.skippedDomains ?? []).includes(domainId);
+}
+
 /**
  * Pure function: compare the current interview state against the knowledge graph.
  * Returns gaps sorted by priority:
@@ -35,6 +40,9 @@ export function detectGaps(
     const domainState = state.domains[domain.id];
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;
+
+    // User chose to skip this domain — treat it as resolved, not a gap.
+    if (isSkipped(domain.id, state)) continue;
 
     // Fully covered: meets minAnswers AND confidence >= threshold
     if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) {
@@ -94,6 +102,10 @@ export function countCovered(
     const domainState = state.domains[domain.id];
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;
+    if (isSkipped(domain.id, state)) {
+      covered++;
+      continue;
+    }
     if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) {
       covered++;
     }
@@ -111,6 +123,7 @@ export function allRequiredCovered(
 ): boolean {
   for (const domain of graph) {
     if (!domain.required) continue;
+    if (isSkipped(domain.id, state)) continue;
     const domainState = state.domains[domain.id];
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;

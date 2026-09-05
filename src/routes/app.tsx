@@ -24,7 +24,7 @@ import {
 } from "./-knowledgeGraph";
 import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
-import { validateAnswer } from "./-validation";
+import { validateAnswer, detectMoveOnRequest } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
@@ -206,19 +206,6 @@ function TypingIndicator() {
 }
 
 // ── Constants ──
-const FILES = [
-  { key: "aiProfile", label: "ai-working-profile.md" },
-  { key: "overview", label: "overview.md" },
-  { key: "requirements", label: "requirements.md" },
-  { key: "constraints", label: "constraints.md" },
-  { key: "businessRules", label: "business-rules.md" },
-  { key: "workflows", label: "workflows.md" },
-  { key: "chatgpt", label: "chatgpt-instructions.md" },
-  { key: "claude", label: "claude-instructions.md" },
-  { key: "gemini", label: "gemini-instructions.md" },
-  { key: "cursor", label: "cursor-rules.md" },
-] as const;
-
 const TIERS: { value: Tier; label: string; description: string }[] = [
   { value: "personal", label: "Personal", description: "Personal knowledge & preferences" },
 ];
@@ -402,8 +389,8 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
 }
 
 function AppPage() {
-  // Screen state: "start" | "seed-review" | "interview" | "output" | "api-error"
-  const [screen, setScreen] = useState<"start" | "seed-review" | "interview" | "output" | "api-error">("start");
+  // Screen state: "start" | "intro" | "seed-review" | "interview" | "output" | "api-error"
+  const [screen, setScreen] = useState<"start" | "intro" | "seed-review" | "interview" | "output" | "api-error">("start");
 
   // Start screen state
   const [topic, setTopic] = useState("");
@@ -411,6 +398,10 @@ function AppPage() {
   const [customTopic, setCustomTopic] = useState("");
   const [chapterSuggestions, setChapterSuggestions] = useState<string[]>([]);
   const [tier, setTier] = useState<Tier>("personal");
+  // Interview intro — human greeting, briefing, and domain start/skip
+  const [userName, setUserName] = useState("");
+  const [nameDraft, setNameDraft] = useState("");
+  const [introDomains, setIntroDomains] = useState<Record<string, boolean>>({});
   // A single active topic group locks the other group. Enterprise selects both,
   // so both groups remain available for that scope.
   const selectedGroups = TOPIC_GROUPS.filter((group) => group.topics.some((topicOption) => selectedTopics.includes(topicOption)));
@@ -954,25 +945,54 @@ function AppPage() {
     setStartError("");
     meaningfulAnswerCountRef.current = 0;
     setShowInsightCTA(false);
+    setInterviewError("");
+
+    // Route a fresh interview through the human-intro step (name, greeting,
+    // briefing, and domain start/skip) before the first question.
+    const activeOffering = offering === "meos" ? "meos" : "context";
+    const graph = activeOffering === "meos"
+      ? (isPreview ? getMeosPreviewGraph() : getMeosGraph())
+      : getKnowledgeGraph(tier);
+    setIntroDomains(Object.fromEntries(graph.map((domain) => [domain.id, true])));
+    setScreen("intro");
+  };
+
+  const handleBeginIntro = async () => {
+    const trimmed = (offering === "meos" && chapterSuggestions.length > 0)
+      ? [topic.trim(), ...chapterSuggestions].filter(Boolean).join(", ")
+      : topic.trim();
+    const activeOffering = offering === "meos" ? "meos" : "context";
+    const name = nameDraft.trim();
+    setUserName(name);
     setScreen("interview");
     setWaiting(true);
     setInterviewError("");
 
-    const activeOffering = offering === "meos" ? "meos" : "context";
     const initialState = createInitialState(tier, trimmed, activeOffering, isPreview);
+    const skipped = Object.entries(introDomains)
+      .filter(([, selected]) => !selected)
+      .map(([id]) => id);
+    const greeting: Message[] = [{
+      role: "assistant",
+      content: name
+        ? `Nice to meet you, ${name}. I'm ALVIRA — I'll ask a few questions about how you think, work, and decide. Take your time, and remember you can stop and save at any point.`
+        : "I'm ALVIRA — I'll ask a few questions about how you think, work, and decide. Take your time, and remember you can stop and save at any point.",
+    }];
+    const seededState: InterviewState = {
+      ...initialState,
+      skippedDomains: skipped.length > 0 ? skipped : undefined,
+      history: greeting,
+    };
 
     try {
-      const result = await askNextQuestion(initialState, false, activeOffering);
-      if (result) {
-        setState(result);
-      } else {
-        setState(initialState);
-      }
+      const result = await askNextQuestion(seededState, false, activeOffering);
+      if (result) setState(result);
+      else setState(seededState);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong.";
       if (msg !== "API key not configured") {
         setInterviewError(msg);
-        setState(initialState);
+        setState(seededState);
       }
     } finally {
       setWaiting(false);
@@ -1106,6 +1126,38 @@ function AppPage() {
 
     if (currentDomain) {
       const existing = updatedDomains[currentDomain]?.answers ?? [];
+
+      // Honor an explicit "move on" / frustration request the first time: mark
+      // the domain as uninterested-in-exploration and advance without re-probing.
+      if (detectMoveOnRequest(trimmed)) {
+        const skippedDomains = Array.from(new Set([...(state.skippedDomains ?? []), currentDomain]));
+        newHistory.push({ role: "assistant", content: "No problem — I'll set that aside for now. We can come back to it later if you'd like." });
+        const movedState: InterviewState = {
+          ...state,
+          history: newHistory,
+          skippedDomains,
+          currentDomain: null,
+        };
+        setState(movedState);
+        setAnswer("");
+        setWaiting(true);
+        setInterviewError("");
+        try {
+          const result = await askNextQuestion(movedState, false);
+          if (result) setState(result);
+          else setState({ ...movedState, currentDomain: null });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "Something went wrong.";
+          if (msg !== "API key not configured") {
+            setInterviewError(msg);
+            setState(movedState);
+          }
+        } finally {
+          setWaiting(false);
+        }
+        return;
+      }
+
       const validation = validateAnswer(currentDomain, trimmed, existing);
 
       if (validation.isUserQuestion) {
@@ -1364,12 +1416,12 @@ function AppPage() {
           setPortraitError(true);
         }
       } else {
-        files = compileKnowledge(compileState, currentGraph);
+        files = { context: compileKnowledge(compileState, currentGraph) };
       }
       const generatedState = { ...compileState, generatedAt: Date.now() };
       setState(generatedState);
       setGenerated(files);
-      setActiveTab(offering === "meos" ? "portrait.md" : "overview");
+      setActiveTab(offering === "meos" ? "portrait.md" : "context");
       setScreen("output");
     } catch (err: unknown) {
       // Never strand the user on "Compiling...": surface a clear, human-readable
@@ -1402,19 +1454,10 @@ function AppPage() {
     const fileMap: [string, string][] = offering === "meos"
       ? Object.entries(generated).map(([name, content]) => [name, content] as [string, string])
       : [
-          ["ai-working-profile.md", generated.aiProfile],
-          ["overview.md", generated.overview],
-          ["requirements.md", generated.requirements],
-          ["constraints.md", generated.constraints],
-          ["business-rules.md", generated.businessRules],
-          ["workflows.md", generated.workflows],
-          ["chatgpt-instructions.md", generated.chatgpt],
-          ["claude-instructions.md", generated.claude],
-          ["gemini-instructions.md", generated.gemini],
-          ["cursor-rules.md", generated.cursor],
+          ["context.md", generated.context ?? ""],
         ];
     for (const [name, content] of fileMap) {
-      zip.file(name, content);
+      if (content) zip.file(name, content);
     }
     if (state) {
       const exportGraph = offering === "meos"
@@ -1560,10 +1603,12 @@ function AppPage() {
 
   // ── Render: Output Screen ──
   if (screen === "output" && generated) {
-    const outputFiles = offering === "meos"
-      ? Object.keys(generated).map((key) => ({ key, label: key }))
-      : FILES;
+    const isContext = offering !== "meos";
+    const outputFiles = isContext
+      ? [{ key: "context", label: "context.md" }]
+      : Object.keys(generated).map((key) => ({ key, label: key }));
     const activeContent = generated[activeTab] || "";
+    const contextMarkdown = generated.context || "";
     return (
       <div className="min-h-dvh flex flex-col">
         <Header />
@@ -1576,71 +1621,145 @@ function AppPage() {
             
             {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Compiled ALVIRA Context</h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-mono">
-                    Source-backed instructions and portable setup files · {state?.topic || topic}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={downloadZip} className={btnSecondary}>
-                    <span className="font-mono text-xs">⬇ Download .zip</span>
-                  </button>
-                  {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>}
-                  {savedProfileId && <a href="/bridge" className={btnSecondary}>Your context is ready — connect an AI tool →</a>}
-                  {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Confirm & save profile"}</button>)}
-                  {savedProfileId && <a href={`/app?handoff=${savedProfileId}`} className={btnSecondary}>{offering === "meos" ? "Carry into AI Context" : "Continue into Reflect"} →</a>}
-                  {offering === "meos" && <a href="/app?offering=meos&preview=false" className={btnSecondary}>View ALVIRA Reflect →</a>}
-                  <button type="button" onClick={startNew} className={btnPrimary}>
-                    + Start new
-                  </button>
-                </div>
-              </div>
+              {isContext ? (
+                <>
+                  {/* Title + what it is */}
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Your context is ready</h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      This is the context your AI tools are missing — how you think, work, and decide, written so they can actually use it.
+                    </p>
+                  </div>
 
-              {offering === "meos" && portraitError && <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">Portrait generation encountered an issue. Your knowledge files are ready, and you can regenerate your portrait from your ALVIRA Reflect dashboard.</p>}
+                  {/* Why it matters — visual */}
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-5">
+                    <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">Why this matters</p>
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-md border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-gray-900 px-4 py-3 font-mono text-sm text-emerald-700 dark:text-emerald-400">context.md</div>
+                      <span className="text-gray-400" aria-hidden="true">→</span>
+                      <div className="flex flex-col gap-1 font-mono text-xs text-gray-600 dark:text-gray-300">
+                        <span>ChatGPT</span>
+                        <span>Claude</span>
+                        <span>Cursor</span>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                      Without it, these tools give you generic advice. With it, they already know who they&apos;re helping.
+                    </p>
+                  </div>
 
-              {/* Tabs */}
-              {offering !== "meos" && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100"><strong>Review before saving.</strong> The AI Working Profile organizes direct interview evidence into operating guidance. Provider files are portable setup instructions—not a silent sync or connection.</div>}
-              <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
-                {outputFiles.map((f) => (
-                  <button
-                    key={f.key}
-                    type="button"
-                    onClick={() => setActiveTab(f.key)}
-                    className={`flex-shrink-0 px-4 py-2.5 text-xs font-mono border-b-2 transition-colors whitespace-nowrap ${
-                      activeTab === f.key
-                        ? "border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100"
-                        : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
+                  {/* What to do with it */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                      <p className="font-mono text-xs font-semibold text-gray-900 dark:text-gray-100">Paste it yourself</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Copy context.md into a tool&apos;s project or custom instructions as background.</p>
+                    </div>
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                      <p className="font-mono text-xs font-semibold text-gray-900 dark:text-gray-100">Connect it with Bridge</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Carry approved context into a tool automatically, without copy-paste.</p>
+                    </div>
+                  </div>
 
-              {/* Preview */}
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-hidden">
-                <div className="flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
-                  <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
-                    {outputFiles.find((f) => f.key === activeTab)?.label}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(activeContent, outputFiles.find((f) => f.key === activeTab)?.label || "")}
-                    className="text-xs font-mono text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-                  >
-                    {copyMsg || "Copy"}
-                  </button>
-                </div>
-                <div className="p-5 max-h-[500px] overflow-y-auto">
-                  <MarkdownPreview content={activeContent} />
-                </div>
-              </div>
+                  {/* Primary actions */}
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => copyToClipboard(contextMarkdown, "context.md")} className={btnPrimary}>
+                      {copyMsg || "Copy context"}
+                    </button>
+                    <button type="button" onClick={downloadZip} className={btnSecondary}>
+                      <span className="font-mono text-xs">⬇ Download .zip</span>
+                    </button>
+                    {savedProfileId
+                      ? <a href="/bridge" className={btnSecondary}>Connect an AI tool →</a>
+                      : authUser && <button type="button" onClick={handleSave} disabled={saving} className={btnSecondary}>{saving ? "Saving..." : "Save profile"}</button>}
+                    <button type="button" onClick={startNew} className={btnSecondary}>Start over</button>
+                  </div>
 
-              <div className="mt-8">
-                <MeOSCTA placement="post-interview" />
-              </div>
+                  {/* Preview */}
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-hidden">
+                    <div className="flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
+                      <span className="text-xs font-mono text-gray-500 dark:text-gray-400">context.md</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(contextMarkdown, "context.md")}
+                        className="text-xs font-mono text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <div className="p-5 max-h-[500px] overflow-y-auto">
+                      <MarkdownPreview content={contextMarkdown} />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* MeOS header + actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Compiled ALVIRA Context</h1>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-mono">
+                        Source-backed instructions and portable setup files · {state?.topic || topic}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={downloadZip} className={btnSecondary}>
+                        <span className="font-mono text-xs">⬇ Download .zip</span>
+                      </button>
+                      <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>
+                      {savedProfileId && <a href="/bridge" className={btnSecondary}>Your context is ready — connect an AI tool →</a>}
+                      {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Confirm & save profile"}</button>)}
+                      {savedProfileId && <a href={`/app?handoff=${savedProfileId}`} className={btnSecondary}>{offering === "meos" ? "Carry into AI Context" : "Continue into Reflect"} →</a>}
+                      <a href="/app?offering=meos&preview=false" className={btnSecondary}>View ALVIRA Reflect →</a>
+                      <button type="button" onClick={startNew} className={btnPrimary}>
+                        + Start new
+                      </button>
+                    </div>
+                  </div>
+
+                  {portraitError && <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">Portrait generation encountered an issue. Your knowledge files are ready, and you can regenerate your portrait from your ALVIRA Reflect dashboard.</p>}
+
+                  {/* Tabs */}
+                  <div className="flex gap-0 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
+                    {outputFiles.map((f) => (
+                      <button
+                        key={f.key}
+                        type="button"
+                        onClick={() => setActiveTab(f.key)}
+                        className={`flex-shrink-0 px-4 py-2.5 text-xs font-mono border-b-2 transition-colors whitespace-nowrap ${
+                          activeTab === f.key
+                            ? "border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100"
+                            : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Preview */}
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-hidden">
+                    <div className="flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
+                      <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+                        {outputFiles.find((f) => f.key === activeTab)?.label}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(activeContent, outputFiles.find((f) => f.key === activeTab)?.label || "")}
+                        className="text-xs font-mono text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                      >
+                        {copyMsg || "Copy"}
+                      </button>
+                    </div>
+                    <div className="p-5 max-h-[500px] overflow-y-auto">
+                      <MarkdownPreview content={activeContent} />
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <MeOSCTA placement="post-interview" />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </main>
@@ -1655,6 +1774,88 @@ function AppPage() {
           onContinue={() => void handleSeedContinue()}
           waiting={waiting}
         />}
+      </div>
+    );
+  }
+
+  // ── Render: Interview Intro (human greeting + briefing + domain choice) ──
+  if (screen === "intro") {
+    const introGraph = offering === "meos"
+      ? (isPreview ? getMeosPreviewGraph() : getMeosGraph())
+      : getKnowledgeGraph(tier);
+    const trimmedName = nameDraft.trim();
+    return (
+      <div className="min-h-dvh flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 flex items-start justify-center px-6 py-12">
+          <div className="mx-auto w-full max-w-2xl space-y-8">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Before we begin</span>
+              <h1 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">A quick hello first</h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">The interview works best when it feels like a conversation — so let's start there.</p>
+            </div>
+
+            {/* Name */}
+            <div>
+              <label htmlFor="interview-name" className="block font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">What should I call you?</label>
+              <input
+                id="interview-name"
+                type="text"
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                placeholder="Your name"
+                autoFocus
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
+              />
+              {trimmedName && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">Nice to meet you, {trimmedName}. Here's how this works.</p>}
+            </div>
+
+            {/* Briefing */}
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-5">
+              <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">How this works</p>
+              <ul className="space-y-2.5 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                <li><strong className="text-gray-900 dark:text-gray-100">I ask the questions.</strong> I'll ask how you think, work, and decide. There are no wrong answers, and you can skip anything.</li>
+                <li><strong className="text-gray-900 dark:text-gray-100">Specific beats short.</strong> A sentence or two with real detail is far more useful than a one-word answer. Answer like you're explaining yourself to a thoughtful colleague.</li>
+                <li><strong className="text-gray-900 dark:text-gray-100">Stop and save anytime.</strong> Your progress is saved as you go — leave whenever you like and pick it back up later.</li>
+              </ul>
+            </div>
+
+            {/* Domain selection */}
+            <div>
+              <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Where would you like to start?</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Choose the areas to cover now. You can skip the rest and revisit them later.</p>
+              <fieldset className="space-y-2">
+                {introGraph.map((domain) => (
+                  <label key={domain.id} className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-600">
+                    <input
+                      type="checkbox"
+                      checked={introDomains[domain.id] !== false}
+                      onChange={(e) => setIntroDomains((current) => ({ ...current, [domain.id]: e.target.checked }))}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-600"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {domain.label}
+                        {domain.required && <span className="ml-2 font-mono text-[10px] uppercase text-emerald-600 dark:text-emerald-400">recommended</span>}
+                      </span>
+                      <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">{domain.description}</span>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            </div>
+
+            {/* Begin */}
+            <button
+              type="button"
+              onClick={() => void handleBeginIntro()}
+              className="w-full rounded-lg bg-emerald-700 dark:bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50"
+            >
+              {trimmedName ? `Let's begin, ${trimmedName}` : "Let's begin"}
+            </button>
+          </div>
+        </main>
+        <TrustFooter />
       </div>
     );
   }
@@ -1702,7 +1903,7 @@ function AppPage() {
                     </div>
                   ) : (
                     <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 dark:bg-gray-100 text-xs font-bold text-white dark:text-gray-900">
-                      Y
+                      {(userName.trim().charAt(0) || "Y").toUpperCase()}
                     </div>
                   )}
                   {/* Bubble */}

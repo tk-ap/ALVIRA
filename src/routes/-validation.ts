@@ -294,6 +294,45 @@ export function detectUserQuestion(answer: string): boolean {
   return false;
 }
 
+// ── Move-on / frustration detection ──
+// Explicit requests to leave the current topic. When detected, the interview
+// marks the domain as "unexplored / uninterested in exploration" and advances
+// immediately instead of re-probing — the user is asking to move on, not for a
+// follow-up question.
+
+const MOVE_ON_PHRASES = [
+  "move on", "moving on", "next question", "next topic", "next please",
+  "change topic", "different topic", "let's move", "can we move on",
+  "skip this", "skip it", "let's skip",
+  "not interested", "uninterested", "don't care", "do not care", "no comment",
+  "not relevant", "irrelevant", "doesn't apply", "does not apply", "not applicable",
+  "don't want to talk", "don't want to answer", "don't want to discuss",
+  "don't want to go into", "would rather not", "rather not",
+  "stop asking", "tired of this", "enough about this",
+  "frustrating", "i'm frustrated", "this is annoying",
+];
+
+const MOVE_ON_SHORT_RESPONSES = ["skip", "next", "pass", "boring", "irrelevant", "nah", "n/a"];
+
+export function detectMoveOnRequest(answer: string): boolean {
+  const trimmed = answer.trim();
+  const lower = trimmed.toLowerCase();
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+
+  for (const phrase of MOVE_ON_PHRASES) {
+    if (lower.includes(phrase)) return true;
+  }
+
+  // Short, whole-word deflections — only when the answer is a brief dismissal,
+  // never when a longer answer merely mentions the word.
+  if (wordCount <= 5) {
+    const tokens = lower.replace(/[^a-z0-9/]/g, " ").split(/\s+/).filter(Boolean);
+    if (tokens.some((token) => MOVE_ON_SHORT_RESPONSES.includes(token))) return true;
+  }
+
+  return false;
+}
+
 /**
  * Pure function: validate an answer against existing answers for the same domain.
  * Returns a confidence score (0–1), any warnings, and a needsClarification flag.

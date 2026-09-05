@@ -89,6 +89,21 @@ function ReuseContextPage() {
 
       <section className="px-6 py-12 sm:px-8 lg:px-10"><div className="mx-auto max-w-6xl">
         {user === undefined ? <p className="font-mono text-sm text-warm-gray-dark dark:text-warm-gray">Loading reuse workspace…</p> : user === null ? <div className="max-w-2xl border border-ink/12 p-8 dark:border-mineral/12"><h2 className="font-display text-3xl">Sign in to reuse your Context.</h2><p className="mt-3 text-warm-gray-dark dark:text-warm-gray">Portability is tied to the Context saved in your ALVIRA account.</p><a href="/login" className="mt-6 inline-flex bg-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-mineral dark:bg-mineral dark:text-ink">Sign in →</a></div> : profiles.length === 0 ? <div className="max-w-2xl border border-ink/12 p-8 dark:border-mineral/12"><h2 className="font-display text-3xl">Build a Context first.</h2><p className="mt-3 text-warm-gray-dark dark:text-warm-gray">Reuse becomes useful once ALVIRA has a maintained Context to carry forward.</p><a href="/app" className="mt-6 inline-flex bg-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-mineral dark:bg-mineral dark:text-ink">Build Context →</a></div> : <>
+          <div className="mb-8 grid gap-4 lg:grid-cols-2">
+            <a href="/bridge/use-elsewhere" className="border border-system/45 bg-system-soft/20 p-6 transition-colors hover:bg-system-soft/40">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Any AI / free</p>
+              <h2 className="mt-3 text-xl font-semibold">Review exactly what leaves ALVIRA.</h2>
+              <p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Choose one Context, include only the sections you want, label the task, then copy or download a portable `.md` Context View. No paid connector, API key, or agent harness required.</p>
+              <span className="mt-5 inline-flex font-mono text-xs font-semibold text-system-dark dark:text-system">Create portable Context View →</span>
+            </a>
+            <a href="/downloads/alvira-connect-browser-extension.zip" download className="border border-iridescent/40 bg-iridescent-soft/10 p-6 transition-colors hover:bg-iridescent-soft/25">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-iridescent-dark dark:text-iridescent">ALVIRA Connect / installable preview</p>
+              <h2 className="mt-3 text-xl font-semibold">Install a free browser-level adapter.</h2>
+              <p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">The Chromium preview stores one reviewed Context View locally and inserts it into supported ChatGPT, Claude, Gemini, or Perplexity prompt boxes only when you click. It never auto-sends.</p>
+              <span className="mt-5 inline-flex font-mono text-xs font-semibold text-iridescent-dark dark:text-iridescent">Download extension .zip →</span>
+            </a>
+          </div>
+
           <div className="mb-9 flex flex-col justify-between gap-5 border-b border-ink/10 pb-7 dark:border-mineral/10 sm:flex-row sm:items-end">
             <div><h2 className="font-display text-3xl">Choose what you are carrying forward.</h2><p className="mt-2 text-sm text-warm-gray-dark dark:text-warm-gray">The prepared text is generated from your saved interview state for review before copying.</p></div>
             <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">Saved Context<select value={profileId} onChange={(event) => setProfileId(event.target.value)} className="mt-2 block min-w-72 border border-ink/15 bg-transparent px-3 py-3 font-sans text-sm normal-case tracking-normal dark:border-mineral/15">{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic} · {profile.offering === "meos" ? "Reflect" : "Context"}</option>)}</select></label>

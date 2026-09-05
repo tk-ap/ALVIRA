@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ALVIRA Connect</title>
+    <style>
+      body { font: 14px/1.45 system-ui, sans-serif; margin: 0; min-width: 340px; background: #f7f7f5; color: #171717; }
+      main { padding: 18px; }
+      h1 { font-size: 18px; margin: 0; }
+      p { color: #5c5c58; }
+      textarea { width: 100%; min-height: 180px; box-sizing: border-box; resize: vertical; border: 1px solid #cfcfca; border-radius: 10px; padding: 10px; background: white; color: #171717; }
+      .row { display: flex; gap: 8px; margin-top: 10px; }
+      button { border: 0; border-radius: 9px; padding: 9px 12px; cursor: pointer; font-weight: 650; }
+      #save { background: #b8dfb8; color: #102710; }
+      #clear { background: white; border: 1px solid #d5d5d0; }
+      #status { min-height: 20px; font-size: 12px; }
+      .eyebrow { font: 11px/1.3 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .12em; color: #487348; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">ALVIRA Connect</div>
+      <h1>Your portable Context</h1>
+      <p>Paste a reviewed ALVIRA Context View here. It stays in this browser extension and is only inserted when you click the ALVIRA button on a supported AI site.</p>
+      <textarea id="context" placeholder="# ALVIRA Context View…"></textarea>
+      <div class="row">
+        <button id="save" type="button">Save Context</button>
+        <button id="clear" type="button">Clear</button>
+      </div>
+      <p id="status" role="status"></p>
+      <p><strong>Privacy:</strong> this extension does not read other conversations, cookies, passwords, or page history, and it never sends a prompt automatically.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

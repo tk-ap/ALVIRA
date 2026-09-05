@@ -1591,7 +1591,7 @@ function AppPage() {
                   {savedProfileId && <a href="/bridge" className={btnSecondary}>Your context is ready — connect an AI tool →</a>}
                   {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Confirm & save profile"}</button>)}
                   {savedProfileId && <a href={`/app?handoff=${savedProfileId}`} className={btnSecondary}>{offering === "meos" ? "Carry into AI Context" : "Continue into Reflect"} →</a>}
-                  {offering === "meos" && <a href="/meos" className={btnSecondary}>View ALVIRA Reflect →</a>}
+                  {offering === "meos" && <a href="/app?offering=meos&preview=false" className={btnSecondary}>View ALVIRA Reflect →</a>}
                   <button type="button" onClick={startNew} className={btnPrimary}>
                     + Start new
                   </button>
@@ -2139,7 +2139,7 @@ function AppPage() {
           {/* Offering selection */}
           {offering !== "meos" && <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-sm leading-relaxed text-gray-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-gray-300">
             <strong className="text-gray-900 dark:text-gray-100">What you&apos;ll get:</strong> five editable Markdown files covering who you are, how you decide, what you need, your boundaries, and how you work.
-            <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal reflection, alignment, and decision support? <a href="/meos" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore ALVIRA Reflect →</a></span>
+            <span className="mt-2 block font-mono text-xs text-gray-500 dark:text-gray-400">Looking for personal reflection, alignment, and decision support? <a href="/app?offering=meos&preview=false" className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-400">Explore ALVIRA Reflect →</a></span>
           </div>}
           {offering === "meos" && <p className="mb-5 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">Build a living reflection of what you know, value, and are becoming. ALVIRA Reflect turns your values, patterns, goals, professional history, and optional self-knowledge frameworks into an evolving source of clarity for personal and professional decisions.</p>}
           {offering === "meos" && isPreview && <div className="mb-5 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm leading-relaxed text-gray-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-gray-300"><strong>You&#39;re in the free ALVIRA Reflect preview — 3 of 12 domains.</strong> It gives you a taste of the experience. Upgrade to standalone Reflect Build ($149 one-time) for your full integrated portrait, purpose statements, decision compass, daily alignment, and optional frameworks. <a href="/meos#pricing-heading" className="font-mono text-xs font-semibold text-amber-700 underline dark:text-amber-400">Upgrade to Reflect Build →</a></div>}

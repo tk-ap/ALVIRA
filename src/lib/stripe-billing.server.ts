@@ -1,21 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getCookie } from "@tanstack/react-start/server";
 import { getDb, getSessionByToken, getUserById, type User } from "~/db";
+import { buildCheckoutSessionParams, type BillingPlan } from "~/lib/stripe-checkout-params";
+
+export { isBillingPlan, PLAN_CONFIG, type BillingPlan } from "~/lib/stripe-checkout-params";
 
 const SESSION_COOKIE = "alvira_session";
-const SITE_URL = process.env.PUBLIC_SITE_URL || "https://alviratech.vercel.app";
-
-export type BillingPlan = "pro-monthly" | "pro-annual" | "lifetime";
-
-const PLAN_CONFIG: Record<BillingPlan, { priceId: string; entitlement: "pro" | "lifetime"; mode: "subscription" | "payment" }> = {
-  "pro-monthly": { priceId: "price_1UAx9zFVePBsKetGtqocur09", entitlement: "pro", mode: "subscription" },
-  "pro-annual": { priceId: "price_1UAxAeFVePBsKetGKHON6EsG", entitlement: "pro", mode: "subscription" },
-  lifetime: { priceId: "price_1UAxB6FVePBsKetGLLCEt5Z9", entitlement: "lifetime", mode: "payment" },
-};
-
-export function isBillingPlan(value: unknown): value is BillingPlan {
-  return value === "pro-monthly" || value === "pro-annual" || value === "lifetime";
-}
 
 export async function requireBillingUser(): Promise<User> {
   const token = getCookie(SESSION_COOKIE);
@@ -44,40 +34,27 @@ function stripeSecretKey(): string {
 }
 
 export async function createCheckoutSession(user: User, plan: BillingPlan): Promise<string> {
-  const config = PLAN_CONFIG[plan];
-  const body = new URLSearchParams();
-  body.set("mode", config.mode);
-  body.set("line_items[0][price]", config.priceId);
-  body.set("line_items[0][quantity]", "1");
-  body.set("success_url", `${SITE_URL}/account?checkout=success&plan=${encodeURIComponent(plan)}`);
-  body.set("cancel_url", `${SITE_URL}/pricing?checkout=cancelled`);
-  body.set("client_reference_id", user.id);
-  body.set("metadata[app]", "alvira");
-  body.set("metadata[alvira_user_id]", user.id);
-  body.set("metadata[entitlement]", config.entitlement);
-  body.set("metadata[plan]", plan);
-  body.set("metadata[catalog_version]", "2026-09-01");
-  if (user.stripe_customer_id) body.set("customer", user.stripe_customer_id);
-  else body.set("customer_email", user.email);
-  if (config.mode === "subscription") {
-    body.set("allow_promotion_codes", "true");
-    body.set("payment_method_collection", "if_required");
-    body.set("subscription_data[metadata][app]", "alvira");
-    body.set("subscription_data[metadata][alvira_user_id]", user.id);
-    body.set("subscription_data[metadata][entitlement]", "pro");
-    body.set("subscription_data[metadata][plan]", plan);
-  } else {
-    body.set("customer_creation", "always");
-  }
-
   const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
     headers: { Authorization: `Bearer ${stripeSecretKey()}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+    body: buildCheckoutSessionParams(user, plan),
   });
-  const payload = (await response.json()) as { url?: string; error?: { message?: string } };
+  const payload = (await response.json()) as {
+    url?: string;
+    error?: { message?: string; code?: string; type?: string; param?: string };
+  };
   if (!response.ok || !payload.url) {
-    console.error("[stripe-checkout] session creation failed", { status: response.status, message: payload.error?.message ?? "unknown_error", plan, userId: user.id });
+    // code/type/param name the rejected field, which distinguishes a bad price id
+    // or mode mismatch from a transient Stripe failure.
+    console.error("[stripe-checkout] session creation failed", {
+      status: response.status,
+      message: payload.error?.message ?? "unknown_error",
+      code: payload.error?.code ?? null,
+      type: payload.error?.type ?? null,
+      param: payload.error?.param ?? null,
+      plan,
+      userId: user.id,
+    });
     throw new Error("Unable to start secure checkout.");
   }
   return payload.url;

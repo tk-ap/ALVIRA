@@ -7,7 +7,10 @@ describe("Bridge compatibility status", () => {
     const response = disconnectedLegacyBridgeContextResponse();
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(await response.json()).toEqual({ connected: false, error: "not_connected" });
+    const body = await response.json() as Record<string, unknown>;
+    expect(body).toEqual({ connected: false, error: "not_connected" });
+    expect(body).not.toHaveProperty("profiles");
+    expect(body).not.toHaveProperty("connection");
   });
 
   test("does not weaken bearer-protected Bridge APIs", () => {

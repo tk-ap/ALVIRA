@@ -19,10 +19,8 @@ function replaceExactText(root: ParentNode, selector: string, from: string, to: 
   return element;
 }
 
-function finishFirstPaintClarity() {
-  const root = document.documentElement;
-  delete root.dataset.alviraClarityPending;
-  root.dataset.alviraClarityReady = "true";
+function finishFirstPaintClarity(main: HTMLElement) {
+  main.dataset.alviraClarityReady = "true";
 }
 
 function applyFirstRunClarity() {
@@ -41,7 +39,7 @@ function applyFirstRunClarity() {
 
   if (!isContextStart) {
     delete main.dataset.alviraBeginnerStart;
-    finishFirstPaintClarity();
+    finishFirstPaintClarity(main);
     return;
   }
 
@@ -119,7 +117,7 @@ function applyFirstRunClarity() {
   const addContextPanel = addContextLabel?.closest("section");
   if (addContextPanel instanceof HTMLElement) addContextPanel.dataset.alviraBeginnerAdvanced = "true";
 
-  finishFirstPaintClarity();
+  finishFirstPaintClarity(main);
 }
 
 export function AppFirstRunClarity() {
@@ -137,10 +135,10 @@ export function AppFirstRunClarity() {
     return () => {
       observer.disconnect();
       const main = document.querySelector<HTMLElement>("main#main-content");
-      if (main) delete main.dataset.alviraBeginnerStart;
-      const root = document.documentElement;
-      delete root.dataset.alviraClarityPending;
-      delete root.dataset.alviraClarityReady;
+      if (main) {
+        delete main.dataset.alviraBeginnerStart;
+        delete main.dataset.alviraClarityReady;
+      }
     };
   }, [location.pathname, location.search]);
 
@@ -148,11 +146,14 @@ export function AppFirstRunClarity() {
 
   return (
     <style>{`
-      html[data-alvira-route="app"][data-alvira-clarity-pending="true"] main#main-content {
+      /* This style is part of the server + first client render for /app, so it
+         can hide the raw start copy without mutating React-owned DOM before
+         hydration. The effect reveals the main element after clarity updates. */
+      main#main-content {
         visibility: hidden;
       }
 
-      html[data-alvira-route="app"][data-alvira-clarity-ready="true"] main#main-content {
+      main#main-content[data-alvira-clarity-ready="true"] {
         visibility: visible;
       }
 

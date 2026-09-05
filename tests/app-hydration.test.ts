@@ -27,6 +27,7 @@ describe("/app hydration boundary", () => {
   test("scopes hydration suppression to the root html element for the intentional theme class bootstrap", () => {
     expect(root).toContain('<html lang="en" suppressHydrationWarning>');
     expect((root.match(/suppressHydrationWarning/g) ?? []).length).toBe(1);
+    expect(clarity).not.toContain("suppressHydrationWarning");
   });
 
   test("defers first-run DOM rewrites until the streamed route subtree has had time to hydrate", () => {

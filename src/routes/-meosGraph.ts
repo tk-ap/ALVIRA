@@ -28,10 +28,13 @@ function toDomain([id, label, description, required, priority]: Array<string | b
 }
 export function getMeosGraph(): Domain[] { return definitions.map(toDomain); }
 
-/** The free entry point: only the three most relatable MeOS domains. */
-export function getMeosPreviewGraph(): Domain[] {
-  return definitions.filter(([id]) => ["values", "decisionPatterns", "goals"].includes(id)).map(toDomain);
-}
+/**
+ * Free Reflect uses the same complete domain model as every other ALVIRA plan.
+ * The commercial boundary is Context capacity and ongoing usage, not a reduced
+ * quality of understanding. Keep this alias for backward-compatible callers
+ * that still pass preview=true while the old preview route is retired.
+ */
+export function getMeosPreviewGraph(): Domain[] { return getMeosGraph(); }
 
 export function getMeosPlaybook(): MeosPlaybook {
   return { tier: "meos", phases: definitions.map(([id]) => id), knowledgePriorities: ["values", "boundaries", "definitionOfSuccess"], completion: { minimumConfidence: 0.85, unresolvedGaps: 0 }, outputs: ["markdown", "integratedPortrait", "meosSite"] };

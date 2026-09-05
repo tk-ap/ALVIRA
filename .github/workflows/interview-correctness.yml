@@ -1,0 +1,28 @@
+name: Interview correctness
+
+on:
+  pull_request:
+    paths:
+      - 'src/routes/-validation.ts'
+      - 'src/routes/-questionGenerator.ts'
+      - 'src/routes/app.tsx'
+      - 'src/components/LiveContextMirror.tsx'
+      - 'src/components/MeOSCTA.tsx'
+      - 'src/lib/opportunity-candidates.ts'
+      - 'src/routes/integrations.tsx'
+      - 'tests/interview-topical-fit.test.ts'
+      - 'tests/opportunity-candidates.test.ts'
+      - '.github/workflows/interview-correctness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/interview-topical-fit.test.ts tests/opportunity-candidates.test.ts
+      - run: bun run build

@@ -13,7 +13,8 @@
       "Gap in the type scale: sizes jump 24px -> 60px with nothing between, so the page has no middle voice.",
       "Inconsistent display weight: H1 is weight 600 while every H2 is weight 400 at the same 60px.",
       "Ad-hoc vertical rhythm: 4 of 8 sections carry zero vertical padding and rely on internal spacing.",
-      "Seven hardcoded near-identical grey hex values bypass the existing ink/mineral/warm-gray token system."
+      "Seven hardcoded near-identical grey hex values bypass the existing ink/mineral/warm-gray token system.",
+      "Header crowding: 9 interactive items at 73.4% ink occupancy of the 1280px inner container, with near-uniform 15-16px gaps that prevent the bar grouping into navigation and account/action blocks; the 375px branding block is 29% of the container and the hamburger does not take over until 760px."
     ],
     "explicitly_not_a_problem": [
       "Copy quality and voice are strong and are out of scope.",
@@ -66,6 +67,13 @@
       "name": "contrast-baseline",
       "finding": "106 text nodes checked against composited backgrounds; 2 below WCAG AA: 9px header tagline at 3.99:1, 10px 'Without ALVIRA' label at 3.83:1",
       "note": "Baseline to protect. No change may reduce any text below 4.5:1, or 3:1 at >=24px."
+    },
+    {
+      "kind": "measurement",
+      "name": "header-crowding",
+      "viewport": "1440x900",
+      "finding": "9 interactive items, 73.4% ink occupancy, gaps 133/16/15/16/16/33/16/16; raising all header text to 12px adds +108px ink (73.4% -> 81.8%); removing two nav links returns it to 70.2%",
+      "artifact": "design/brand-references/source/2026-09-05/ui-audit-navigation.png"
     }
   ],
   "desired_outcome": {
@@ -77,7 +85,8 @@
       "Type scale includes 32px and 40px steps; prose body is 16px.",
       "All headings >=40px share one font weight.",
       "Every section uses symmetric vertical padding drawn from two spacing tokens.",
-      "The seven hardcoded grey hex values are replaced by three semantic tokens with dark: counterparts."
+      "The seven hardcoded grey hex values are replaced by three semantic tokens with dark: counterparts.",
+      "Header reduced to three primary nav links with a ~40px navigation/actions separator, ink occupancy at or below 72%, and the hamburger breakpoint raised to ~1000px."
     ]
   },
   "required_capabilities": [
@@ -98,6 +107,7 @@
     "design/brand-references/source/2026-09-05/ui-audit-proposed-12col-grid.png",
     "design/brand-references/source/2026-09-05/ui-audit-display-measure.png",
     "design/brand-references/source/2026-09-05/ui-audit-section-rhythm.png",
+    "design/brand-references/source/2026-09-05/ui-audit-navigation.png",
     "AGENTS.md",
     ".agent-os/product.yaml",
     "tk-ap/agent-os:policies/QUALITY_RAILGUARDS.md",
@@ -128,7 +138,8 @@
       "Open a draft pull request; satisfy the AGENTS.md Merge Gate including desktop, mobile, light and dark verification.",
       "Design-reference images live under design/brand-references/ and must never be loaded by the production website.",
       "Free-tier smoke account acceptance applies only if a change reaches an authenticated surface."
-    ]
+    ],
+    "nav_architecture_note": "Removing Reflect and Use elsewhere from the primary navigation touches product-surface architecture and requires owner ratification beyond the compositional tasks. AGENTS.md defines Bridge as a gated secondary capability that stays visible but subordinate and says main navigation may link to it, so removal from primary nav is permitted, not a departure. Both remain reachable in-page and at their own routes."
   },
   "human_oversight": {
     "acceptance_gate": "required",
@@ -152,10 +163,15 @@
     "git diff shows zero changes to user-facing strings.",
     "Rendered page height remains identical between light and dark themes.",
     "Mobile layout at 390x844 is visually unchanged from the current deployment.",
+    "Header reduced to 3 primary nav links (How it helps, Context, Pricing) with a ~40px navigation/actions separator.",
+    "Header ink occupancy at 1440px is at or below 72%.",
+    "Hamburger breakpoint raised to approximately 1000px.",
+    "Task 8 (header type sizing) is not shipped without Task 9 (header crowding); the two are coupled.",
     "Producer has run the quality-railguard self-check per policies/QUALITY_RAILGUARDS.md before handoff.",
     "Human product owner has recorded visual acceptance."
   ],
   "evidence_destination": "contracts/outcome-event.schema.json",
   "status": "proposed",
-  "created_at": "2026-09-05T08:30:00Z"
+  "created_at": "2026-09-05T08:30:00Z",
+  "updated_at": "2026-09-05T09:00:00Z"
 }

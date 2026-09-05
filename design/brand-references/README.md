@@ -93,6 +93,16 @@ Captured at 1440x5743 from `https://alviratech.vercel.app/` after `document.font
 - Purpose: Each homepage section banded and labelled with its height and vertical padding, marking the four sections that carry no padding.
 - Production use: Reference only; never load these files in the website
 - Preservation: Immutable
+### Homepage navigation audit
+
+- File: `source/2026-09-05/ui-audit-navigation.png`
+- Date added: 2026-09-05
+- SHA-256: `f779656981b477a99a6fbe484827cea40e1dd10719c9a0e2c775d69bf226ff0a`
+- Status: exploratory
+- Purpose: Annotated header crop marking every interactive item's width and every inter-item gap, showing the near-uniform 15-16px spacing that prevents the bar from grouping into navigation and account/action blocks.
+- Production use: Reference only; never load these files in the website
+- Preservation: Immutable
+
 ## Directory Convention
 
 Use this structure for future asset intake:

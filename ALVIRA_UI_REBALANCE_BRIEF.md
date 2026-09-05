@@ -31,7 +31,7 @@
 
 The homepage copy and colour palette are strong and must not change. The problem is **compositional**: section content does not sit on a shared grid, display type is set in columns too narrow for its size, and the type scale has a hole in the middle. The page reads as a series of separately-designed bands rather than one document.
 
-Fix the grid, the display measure, and the type scale. Do not rewrite the page.
+Fix the grid, the display measure, the type scale, and header crowding. Do not rewrite the page.
 
 ## 2. Preserve contract — do not do these
 
@@ -46,7 +46,7 @@ Agent OS quality railguards may reject unsupported or low-quality work but hold 
 
 ## 3. Reference images
 
-Four annotated full-page renders at 1440px, captured from the live deployment after `document.fonts.ready`, stored as design references under `design/brand-references/source/2026-09-05/`. Per that directory's rules they are **reference only and must never be loaded by the production website**.
+Five annotated renders at 1440px, captured from the live deployment after `document.fonts.ready`, stored as design references under `design/brand-references/source/2026-09-05/`. The first four are full-page; the navigation audit is a header crop. Per that directory's rules they are **reference only and must never be loaded by the production website**.
 
 | Image | What it shows |
 |---|---|
@@ -54,6 +54,7 @@ Four annotated full-page renders at 1440px, captured from the live deployment af
 | [`ui-audit-proposed-12col-grid.png`](design/brand-references/source/2026-09-05/ui-audit-proposed-12col-grid.png) | **The proposed target.** A 12-column / 1200px / 24px-gutter grid overlaid on the current page, with columns 1 and 5 highlighted as the only two proposed content axes. |
 | [`ui-audit-display-measure.png`](design/brand-references/source/2026-09-05/ui-audit-display-measure.png) | **Task 2 scope.** Every ≥56px heading boxed — red where its column is under 640px, teal where it is not — with a dashed 640px minimum-measure bar beneath each failing heading. |
 | [`ui-audit-section-rhythm.png`](design/brand-references/source/2026-09-05/ui-audit-section-rhythm.png) | **Task 6 scope.** Each `<section>` banded and labelled with height and padding, existing padding hatched. Red bands are the four sections with zero vertical padding. |
+| [`ui-audit-navigation.png`](design/brand-references/source/2026-09-05/ui-audit-navigation.png) | **Task 9 scope.** The header with every interactive item's width and every inter-item gap marked. Yellow gaps are 15–16px; the single teal 33px gap is the only grouping signal in the bar. |
 
 Read the heading-axes and display-measure images before touching code. They make the diagnosis checkable rather than something to take on trust.
 
@@ -201,8 +202,41 @@ Replace the seven arbitrary hex values in §5.5 with three semantic roles — `t
 
 ### Task 8 — Minor type sizing
 
+> **Correction (2026-09-05): Task 8 must not ship without Task 9.**
+> Raising header type in isolation measurably worsens the crowding documented in Task 9. Simulated on the live page at 1440px, bumping every sub-12px header element to 12px increases header ink width by **+108px** and occupancy from **73.4% → 81.8%** of the inner container. It does not overflow — the flex layout absorbs it — but it spends the bar's entire remaining slack. Task 8 was written before the header was reviewed as a composition; the two changes are coupled.
+
 - Header nav 10px → **12px**. It passes contrast at 4.91:1 but is undersized for a primary navigation.
-- Header `Context Intelligence` tagline 9px → **12px**, and resolve its 3.99:1 contrast.
+- Header `Context Intelligence` tagline: see Task 9 — the recommendation is to **remove it from the header**, not resize it. If it is kept, it must go to 12px and resolve its 3.99:1 contrast.
+
+### Task 9 — Reduce header crowding
+
+The header carries **9 interactive items at 73.4% ink occupancy** of the 1280px inner container, leaving 80px of slack across the whole bar.
+
+Item count is not the whole problem. Measured gaps at 1440px:
+
+```
+ALVIRA/> Context Intelligence  ·133·  How it helps ·16· Context ·15· Reflect
+·16· Use elsewhere ·16· Pricing ·33· Sign In ·16· Start here ·16· [theme]
+```
+
+Every item after the wordmark is spaced at 15–16px. Five section links, the account link and the primary CTA sit at nearly identical intervals, so the bar parses as **one undifferentiated run of seven items** rather than navigation plus account/actions. The single 33px gap before "Sign In" is the only grouping signal and is too weak to chunk the bar.
+
+Two further measurements:
+
+- **The branding block is 375px** — 29% of the container — for wordmark plus the 9px "Context Intelligence" tagline. That tagline is the single largest space consumer in the bar and is also one of the two WCAG failures in §5.6.
+- **The 133px gap after branding collapses to 24px at ≤1150px**, and the hamburger does not take over until **760px**. Between 1150px and 760px the full 9-item bar runs in visibly cramped space.
+
+Recommended changes:
+
+1. **Remove `Reflect` and `Use elsewhere` from the primary navigation.** Both remain reachable in-page and at their own routes. This is consistent with ratified architecture rather than a departure from it: `AGENTS.md` defines Bridge as "a gated secondary capability" that must stay "visible but subordinate," and says main navigation *may* link to the Bridge route — permissive, not required. Reflect likewise belongs inside the ALVIRA loop rather than being a separate commercial boundary. The page's stated audience is people who have never used AI, and "How it helps" is more legible to that reader than pillar names.
+2. **Remove the "Context Intelligence" tagline from the header.** It is redundant with the hero, which states the category ~200px below the fold line, and removing it recovers the largest single block of header space while eliminating a contrast failure.
+3. **Resulting primary nav: `How it helps · Context · Pricing`** — three links, then a clear separator, then `Sign In · Start here · [theme]`.
+4. **Widen the navigation-to-actions separator to ~40px** so the bar reads as two groups rather than one run.
+5. **Raise the hamburger breakpoint from 760px to ~1000px**, removing the cramped 1150–760px band entirely.
+
+Measured effect of (1) combined with Task 8: occupancy returns to **70.2%** — better than today, with legible 12px type.
+
+> **These cuts touch product-surface architecture and are a post–Revision 11 working hypothesis. They require owner ratification before implementation**, more so than Tasks 1–7, which are purely compositional.
 
 ## 7. Verification
 
@@ -308,6 +342,9 @@ Agent asserts:
 - [ ] Every section uses symmetric padding from the two spacing tokens
 - [ ] Seven hardcoded greys replaced by three semantic tokens with `dark:` variants
 - [ ] No sub-12px type remains
+- [ ] Header reduced to 3 primary nav links with a ~40px navigation/actions separator
+- [ ] Header ink occupancy at 1440px is at or below 72%
+- [ ] Hamburger breakpoint raised to ~1000px
 - [ ] Zero copy changes in `git diff`
 - [ ] Quality-railguard self-check completed
 

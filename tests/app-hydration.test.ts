@@ -24,7 +24,15 @@ describe("/app hydration boundary", () => {
     expect(appShell).toContain("root.dataset.alviraRoute = routeKey(normalizedPath)");
   });
 
-  test("does not hide hydration warnings as a substitute for fixing the mismatch", () => {
+  test("does not mask hydration mismatches with suppression", () => {
+    expect(root).toContain('<html lang="en">');
     expect(root).not.toContain("suppressHydrationWarning");
+    expect(clarity).not.toContain("suppressHydrationWarning");
+  });
+
+  test("defers first-run DOM rewrites until the streamed route subtree has had time to hydrate", () => {
+    expect(clarity).toContain("window.requestAnimationFrame(() =>");
+    expect((clarity.match(/window\.requestAnimationFrame/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(clarity.indexOf("applyFirstRunClarity();")).toBeLessThan(clarity.indexOf("observer.observe(document.body"));
   });
 });

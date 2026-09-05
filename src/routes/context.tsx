@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { Header } from "~/components/Header";
+import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { TrustFooter } from "~/components/TrustFooter";
 import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";
 
@@ -107,6 +108,7 @@ function ContextEnginePage() {
 
         <section className="border-t border-gray-200 bg-gray-50 px-6 py-14 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-16"><div className="mx-auto max-w-5xl"><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Trust model</span><h2 className="mt-3 text-2xl font-bold">Observed · Inferred · Confirmed · Outdated</h2><p className="mt-4 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Every useful signal should remain traceable to its source and separated from inference. Your confirmation is what turns an observation into trusted context.</p></div></section>
       </main>
+      <DossierOwnershipPositioning />
       <TrustFooter />
     </div>
   );

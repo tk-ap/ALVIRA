@@ -126,14 +126,31 @@ export function AppFirstRunClarity() {
   useEffect(() => {
     if (location.pathname !== "/app") return;
 
-    applyFirstRunClarity();
-    const observer = new MutationObserver(() => {
-      applyFirstRunClarity();
+    // The route subtree is streamed and may finish hydrating after this parent
+    // effect is scheduled. Do not mutate React-owned text or attach the observer
+    // until two animation frames have passed, so hydration sees the untouched SSR
+    // content first. The page stays hidden by server-rendered CSS during this gap.
+    let cancelled = false;
+    let frameOne = 0;
+    let frameTwo = 0;
+    let observer: MutationObserver | null = null;
+
+    frameOne = window.requestAnimationFrame(() => {
+      frameTwo = window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        applyFirstRunClarity();
+        observer = new MutationObserver(() => {
+          applyFirstRunClarity();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
     });
-    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      observer.disconnect();
+      cancelled = true;
+      window.cancelAnimationFrame(frameOne);
+      window.cancelAnimationFrame(frameTwo);
+      observer?.disconnect();
       const main = document.querySelector<HTMLElement>("main#main-content");
       if (main) {
         delete main.dataset.alviraBeginnerStart;

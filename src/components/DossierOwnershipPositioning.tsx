@@ -1,28 +1,5 @@
-import { useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-
-export function DossierOwnershipPositioning() {
-  const location = useLocation();
-  const [target, setTarget] = useState<HTMLElement | null>(null);
-  const supported = location.pathname === "/" || location.pathname === "/context" || location.pathname === "/pricing";
-
-  useEffect(() => {
-    if (!supported) {
-      setTarget(null);
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => {
-      setTarget(document.querySelector<HTMLElement>("main#main-content"));
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [location.pathname, supported]);
-
-  if (!target || !supported) return null;
-
-  const compact = location.pathname === "/pricing";
-
-  return createPortal(
+export function DossierOwnershipPositioning({ compact = false }: { compact?: boolean }) {
+  return (
     <section id="dossier" className="border-t border-[#191715]/10 bg-[#0d1110] text-[#f4f0e9] dark:border-white/10 dark:bg-[#080b0a]">
       <div className={`mx-auto max-w-7xl px-6 sm:px-8 lg:px-10 ${compact ? "py-14 sm:py-16" : "py-20 sm:py-24"}`}>
         <div className="grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
@@ -86,7 +63,6 @@ export function DossierOwnershipPositioning() {
           </div>
         </div>
       </div>
-    </section>,
-    target,
+    </section>
   );
 }

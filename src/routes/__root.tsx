@@ -12,7 +12,6 @@ import { AppFirstRunClarity } from "~/components/AppFirstRunClarity";
 import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
-import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
 import { OwnerCustomerInbox } from "~/components/OwnerCustomerInbox";
@@ -70,7 +69,6 @@ function RootComponent() {
       <AppFirstRunClarity />
       <ScrollNarrative />
       <Outlet />
-      <DossierOwnershipPositioning />
       <AilhatPortfolioHandoff />
       <OwnerOperatingBrief />
       <OwnerFoundingBetaPanel />

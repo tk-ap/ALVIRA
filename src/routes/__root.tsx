@@ -54,7 +54,10 @@ export const Route = createRootRoute({
       { rel: "shortcut icon", href: "/brand/alvira-context-frame.svg?v=2" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
     ],
-    scripts: [{ children: `(function(){var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark")}if(location.pathname==="/app"){document.documentElement.dataset.alviraRoute="app";document.documentElement.dataset.alviraClarityPending="true"}})()` }],
+    // Theme is the only first-paint mutation that needs to happen before React
+    // hydrates. Route/clarity markers are applied after hydration by their
+    // React effects so the DOM React receives still matches the server output.
+    scripts: [{ children: `(function(){var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark")}})()` }],
   }),
   notFoundComponent: () => <div>Page not found</div>,
   component: RootComponent,

@@ -116,7 +116,7 @@
       "Never store, commit, print, or document the smoke account password or tokens."
     ],
     "live_stripe_warning": "The working checkout path opens a cs_live_ session. Automated smoke tests should use a Stripe test-mode path so runs cannot create real sessions.",
-    "browser_execution": "The Agent OS Codex browser adapter fails closed and returns BLOCKED, so a Codex agent must not launch a browser to verify these findings. Rendered verification is produced by the owner or another authorized surface."
+    "browser_execution": "Rendered verification for these findings is produced by the owner or another authorized surface rather than by the implementing agent, because the findings were gathered outside this repository and re-running them is not part of the implementation task. A control-plane policy governing agent browser execution is in progress in tk-ap/agent-os but is not yet published, so no policy citation is made here. Revisit this constraint when that work lands."
   },
   "human_oversight": {
     "acceptance_gate": "required",
@@ -140,5 +140,5 @@
   "evidence_destination": "contracts/outcome-event.schema.json",
   "status": "proposed",
   "created_at": "2026-09-05T09:40:00Z",
-  "updated_at": "2026-09-05T10:10:00Z"
+  "updated_at": "2026-09-05T11:00:00Z"
 }

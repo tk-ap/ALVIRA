@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
+import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { TrustFooter } from "~/components/TrustFooter";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
@@ -295,6 +296,7 @@ function Pricing() {
           </div>
         </section>
       </main>
+      <DossierOwnershipPositioning compact />
       <TrustFooter />
     </div>
   );

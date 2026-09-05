@@ -24,9 +24,9 @@ describe("/app hydration boundary", () => {
     expect(appShell).toContain("root.dataset.alviraRoute = routeKey(normalizedPath)");
   });
 
-  test("scopes hydration suppression to the root html element for the intentional theme class bootstrap", () => {
-    expect(root).toContain('<html lang="en" suppressHydrationWarning>');
-    expect((root.match(/suppressHydrationWarning/g) ?? []).length).toBe(1);
+  test("does not mask hydration mismatches with suppression", () => {
+    expect(root).toContain('<html lang="en">');
+    expect(root).not.toContain("suppressHydrationWarning");
     expect(clarity).not.toContain("suppressHydrationWarning");
   });
 

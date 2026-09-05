@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
+import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { TrustFooter } from "~/components/TrustFooter";
 
 export const Route = createFileRoute("/")({
@@ -399,6 +400,7 @@ function Home() {
         </section>
       </main>
 
+      <DossierOwnershipPositioning />
       <TrustFooter />
     </div>
   );

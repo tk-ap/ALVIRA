@@ -12,7 +12,6 @@ import { AppFirstRunClarity } from "~/components/AppFirstRunClarity";
 import { AppShellInheritance } from "~/components/AppShellInheritance";
 import { AuthDiagnosticWatcher } from "~/components/AuthDiagnosticWatcher";
 import { ContextVersioningBootstrap } from "~/components/ContextVersioningBootstrap";
-import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { FoundingBetaFeedback } from "~/components/FoundingBetaFeedback";
 import { LiveContextMirror } from "~/components/LiveContextMirror";
 import { OwnerCustomerInbox } from "~/components/OwnerCustomerInbox";
@@ -70,7 +69,6 @@ function RootComponent() {
       <AppFirstRunClarity />
       <ScrollNarrative />
       <Outlet />
-      <DossierOwnershipPositioning />
       <AilhatPortfolioHandoff />
       <OwnerOperatingBrief />
       <OwnerFoundingBetaPanel />
@@ -107,7 +105,7 @@ function ThemeToggle() {
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head><HeadContent /></head>
       <body>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-5 focus:py-3 focus:font-mono focus:text-sm focus:font-semibold focus:text-mineral focus:shadow-xl dark:focus:bg-ink-light dark:focus:text-mineral-dark">Skip to main content</a>

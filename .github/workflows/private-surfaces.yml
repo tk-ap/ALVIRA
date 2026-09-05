@@ -1,0 +1,22 @@
+name: Private surface correctness
+
+on:
+  pull_request:
+    paths:
+      - 'src/routes/brand-preview.tsx'
+      - 'tests/private-surfaces.test.ts'
+      - '.github/workflows/pages-brand-preview.yml'
+      - '.github/workflows/private-surfaces.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/private-surfaces.test.ts
+      - run: bun run build

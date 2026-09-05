@@ -6,7 +6,7 @@ const browser = await chromium.launch({ headless: true });
 
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  for (const route of ['/', '/app', '/pricing']) {
+  for (const route of ['/', '/app', '/pricing', '/context']) {
     const page = await context.newPage();
     const errors = [];
     page.on('console', (msg) => {
@@ -29,6 +29,12 @@ try {
       const visibility = await main.evaluate((element) => getComputedStyle(element).visibility);
       assert.equal(visibility, 'visible', '/app: first-run clarity never revealed main content');
       await page.getByRole('button', { name: 'Start the conversation' }).waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    if (route === '/' || route === '/pricing' || route === '/context') {
+      const dossier = page.locator('#dossier');
+      await dossier.waitFor({ state: 'visible', timeout: 10000 });
+      assert.equal(await dossier.count(), 1, `${route}: expected exactly one native Dossier section`);
     }
 
     console.log(`PASS ${route} hydrates without React #418`);

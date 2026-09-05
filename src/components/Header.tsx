@@ -84,6 +84,7 @@ export function Header() {
               ) : user ? (
                 <div className="flex items-center gap-4">
                   <a href="/dashboard" className={linkClass}>Dashboard</a>
+                  <a href="/build-brief" className={`${linkClass} text-system-dark dark:text-system`}>Build Brief</a>
                   <a href="/history" className={linkClass}>History</a>
                   <a href="/account" className={linkClass}>Account</a>
                   <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${linkClass} min-h-11 disabled:opacity-50`}>{loggingOut ? "..." : "Logout"}</button>
@@ -123,6 +124,7 @@ export function Header() {
             <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Use elsewhere</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
+            {user ? <a href="/build-brief" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Build Brief</a> : null}
             {user ? <a href="/history" onClick={closeMenu} className={mobileLinkClass}>History</a> : null}
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}
             {user ? (

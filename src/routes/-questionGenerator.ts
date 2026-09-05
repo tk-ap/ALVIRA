@@ -104,7 +104,7 @@ Respond ONLY with a JSON object: {"question": "the complete ALVIRA response, inc
 export const generateClarification = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
     const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier };
-    if (!d.userQuestion || !d.domainLabel) throw new Error("User question and domain label are required.");
+    if (!d.userQuestion || !d.domainLabel) throw new Error("User input and domain label are required.");
     if (!Array.isArray(d.history)) throw new Error("History is required.");
     return {
       userQuestion: d.userQuestion as string,
@@ -116,12 +116,16 @@ export const generateClarification = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     if (!hasApiKey()) throw new Error("API key not configured");
     const openai = getOpenAIClient();
-    const systemPrompt = `You are ALVIRA, a Context Intelligence interviewer. The user just asked a clarifying question in response to your question about a specific area.
+    const systemPrompt = `You are ALVIRA, a Context Intelligence interviewer. The user's latest input cannot be safely treated as an answer to the specific area you were asking about.
 
 The area you were asking about: "${data.domainLabel}"
-The user asked: "${data.userQuestion}"
+The user's input: "${data.userQuestion}"
 
-Briefly explain what you meant. Be helpful and concrete. Use relevant conversation context if it genuinely helps, but do not invent facts. Keep it to 2-3 sentences. Do NOT ask a new question here — just clarify.
+There are two possible cases:
+1. The user is asking a clarifying question. Briefly explain what you meant, concretely.
+2. The user gave a declarative answer that appears to address a different area. Acknowledge that the information may still be useful, but explicitly say you will not file it under "${data.domainLabel}" yet. Briefly restate what this area is trying to understand. If the other area is obvious from the user's own words, you may name it conversationally (for example, "that sounds more like how you make decisions"), but do not pretend the classification is certain and do not silently move or save the statement elsewhere.
+
+Use relevant conversation context only when it genuinely helps. Never invent facts. Keep the clarification to 2-3 sentences. Do NOT ask a new question here — the interview engine will ask the next targeted question separately.
 
 Respond ONLY with a JSON object: {"clarification": "your clarification here"}`;
 
@@ -129,10 +133,10 @@ Respond ONLY with a JSON object: {"clarification": "your clarification here"}`;
       model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: "Please clarify." },
+        { role: "user", content: "Clarify what should happen next." },
       ],
       response_format: { type: "json_object" },
-      temperature: 0.65,
+      temperature: 0.45,
     });
 
     const raw = response.choices[0]?.message?.content || "";

@@ -1,0 +1,24 @@
+name: App hydration correctness
+
+on:
+  pull_request:
+    paths:
+      - 'src/routes/__root.tsx'
+      - 'src/routes/app.tsx'
+      - 'src/components/AppFirstRunClarity.tsx'
+      - 'src/components/AppShellInheritance.tsx'
+      - 'tests/app-hydration.test.ts'
+      - '.github/workflows/app-hydration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/app-hydration.test.ts
+      - run: bun run build

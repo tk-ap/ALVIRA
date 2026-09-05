@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getCookie } from "@tanstack/react-start/server";
 import OpenAI from "openai";
+import { getSessionByToken, getUserById } from "~/db";
 
 export type BuildBrief = {
   projectName: string;
@@ -29,6 +31,18 @@ const MAX_INTENT_CHARS = 6_000;
 const MAX_CONTEXT_CHARS = 30_000;
 const MAX_LIST_ITEMS = 12;
 const MAX_ITEM_CHARS = 700;
+const SESSION_COOKIE = "alvira_session";
+
+async function requireBuildBriefUser() {
+  let token: string | null = null;
+  try { token = getCookie(SESSION_COOKIE) ?? null; } catch {}
+  if (!token) throw new Error("Authentication required.");
+  const session = await getSessionByToken(token);
+  if (!session || new Date(session.expires_at) < new Date()) throw new Error("Authentication required.");
+  const user = await getUserById(session.user_id);
+  if (!user) throw new Error("Authentication required.");
+  return user;
+}
 
 function cleanText(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value.trim().slice(0, 2_000) : fallback;
@@ -78,6 +92,8 @@ export const generateBuildBrief = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
+    await requireBuildBriefUser();
+
     const apiKey = process.env.OPENAI_API_KEY || "";
     if (!apiKey) throw new Error("Build Brief generation is not configured yet.");
 

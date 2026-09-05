@@ -1,0 +1,27 @@
+name: Production E2E QA
+
+on:
+  push:
+    branches:
+      - qa/production-e2e-2026-09-05
+
+permissions:
+  contents: read
+
+jobs:
+  production-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run production E2E regression QA
+        env:
+          E2E_BASE_URL: https://alviratech.vercel.app
+        run: node tests/e2e-production.mjs

@@ -577,6 +577,19 @@ function AppPage() {
   }
   const hasQualityWarning = qualityWarnings.length > 0;
 
+  // Live feedback on the answer being typed — honest but never blocks sending.
+  const liveQuality = useMemo(() => {
+    const text = answer.trim();
+    if (!text || !state?.currentDomain) return null;
+    if (detectMoveOnRequest(text)) return null; // "skip"/"move on" isn't an answer to grade
+    const existing = state.domains[state.currentDomain]?.answers ?? [];
+    const v = validateAnswer(state.currentDomain, text, existing);
+    if (v.isUserQuestion) return null;
+    if (v.isUnusable) return { tone: "unusable", text: "That doesn't read as a clear answer yet." };
+    if (v.needsClarification) return { tone: "weak", text: "A bit broad — a specific example would make this sharper." };
+    return { tone: "good", text: "Specific and useful." };
+  }, [answer, state]);
+
   // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -2126,6 +2139,11 @@ function AppPage() {
                     </svg>
                   </button>
                 </div>
+              )}
+              {liveQuality && (
+                <p className={`mt-1.5 font-mono text-[11px] ${liveQuality.tone === "good" ? "text-emerald-600 dark:text-emerald-400" : liveQuality.tone === "weak" ? "text-amber-600 dark:text-amber-400" : "text-red-500 dark:text-red-400"}`}>
+                  {liveQuality.text}
+                </p>
               )}
             </div>
           </div>

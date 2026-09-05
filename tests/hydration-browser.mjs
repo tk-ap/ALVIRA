@@ -19,6 +19,18 @@ try {
     assert(response && response.status() < 500, `${route}: HTTP ${response?.status()}`);
     await page.waitForTimeout(700);
     assert.equal(errors.length, 0, `${route}: ${errors.join(' | ')}`);
+
+    const bodyText = (await page.locator('body').innerText()).trim();
+    assert(bodyText.length > 0, `${route}: hydrated body is empty`);
+
+    if (route === '/app') {
+      const main = page.locator('main#main-content');
+      await main.waitFor({ state: 'visible', timeout: 10000 });
+      const visibility = await main.evaluate((element) => getComputedStyle(element).visibility);
+      assert.equal(visibility, 'visible', '/app: first-run clarity never revealed main content');
+      await page.getByRole('button', { name: 'Start the conversation' }).waitFor({ state: 'visible', timeout: 10000 });
+    }
+
     console.log(`PASS ${route} hydrates without React #418`);
     await page.close();
   }

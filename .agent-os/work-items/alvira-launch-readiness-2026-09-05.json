@@ -1,0 +1,108 @@
+{
+  "work_id": "alvira-launch-readiness-2026-09-05",
+  "routing_source": "registry/product-routing.yaml",
+  "source_product": "agent-os-workforce",
+  "owning_product": "alvira-meos",
+  "workspace": "tk-ap/ALVIRA",
+  "problem_or_opportunity": {
+    "summary": "Launch readiness audit of the live ALVIRA surface. Two blockers prevent unattended public traffic: compiled Context is filed under systematically wrong headings, and the lifetime purchase path returns a server error.",
+    "surface": "https://alviratech.vercel.app",
+    "supersedes": "codex/launch-readiness-report, audited 2026-08-07 against alvira.ctonew.app, predating roughly 40 merged pull requests (#75-#135)",
+    "blockers": [
+      "P0.1 Interview answers are assigned to a fixed category sequence in arrival order rather than by content. Reproduced in guest (5 of 6 wrong) and authenticated (3 of 4 wrong) sessions. The mislabeled categories flow into the compiled .md files handed to external AI tools.",
+      "P0.2 GET/POST /api/stripe/checkout returns 502 for the lifetime plan; /checkout/lifetime renders 'Checkout needs another try.' The monthly plan works and reaches Stripe correctly."
+    ],
+    "high": [
+      "P1.1 /api/bridge/context returns 401 for an authenticated user on every /bridge load.",
+      "P1.2 No page links to /bridge in either signed-in or signed-out state; signed out it 307s to /app. The 'Use elsewhere' nav item points to /integrations instead. AGENTS.md names /bridge the canonical Bridge UI."
+    ],
+    "medium": [
+      "P1.3 React error #418 hydration mismatch on every /app load.",
+      "P2.1 /brand-preview returns 200 to anonymous visitors.",
+      "P2.2 The 'Reflect' nav item points to the legacy /meos route."
+    ],
+    "verified_working": [
+      "All 26 page routes return 200 with no broken internal links.",
+      "Guest interview runs end to end without an account, with no failed network requests.",
+      "Compilation succeeds in roughly six seconds and produces seven .md representations plus a .zip. The 2026-08-07 P0.1 compilation hang does not reproduce.",
+      "Login, session persistence, and the returning-user Context prompt all work.",
+      "Authenticated navigation is complete; /build-brief is correctly auth-gated per #134.",
+      "Footer legal complete: Privacy, Terms, Refunds, Support, Data.",
+      "Monthly checkout reaches Stripe with the correct price and prefilled email."
+    ]
+  },
+  "originating_signal": {
+    "type": "owner-requested launch readiness audit",
+    "date": "2026-09-05",
+    "definition_of_done_given_by_owner": "Clean end-to-end workflow, every landing page reachable by an active link at the applicable occasion, interview flow works and provides context successfully, and enough confidence to point a stranger at the site.",
+    "method": "Headless Chromium with native sandbox enabled at 1440x900, measured after document.fonts.ready. Unauthenticated crawl of all 26 page routes plus an authenticated pass using the AGENTS.md free-tier smoke account."
+  },
+  "priority": {
+    "level": "p0",
+    "confidence": 0.85,
+    "rationale": "P0.1 breaks the core product promise in the artifact users hand to external AI tools. P0.2 disables half the purchase surface. Both are reproducible. Final priority remains the owner's call."
+  },
+  "evidence": [
+    {"kind": "reproduction", "name": "category-misassignment-authenticated", "finding": "Background correct; 'I decide slowly and over-research' filed as Current Projects; 'My constraints are cash runway' filed as Identity & values; 'I prefer direct, concrete advice' filed as Goals. Observed order is fixed: Background, Current Projects, Identity & values, Goals, Decision frameworks, Constraints, Daily Life."},
+    {"kind": "reproduction", "name": "category-misassignment-guest", "finding": "Same fixed order across six answers, five of six mis-filed."},
+    {"kind": "http", "name": "lifetime-checkout-502", "finding": "/checkout/lifetime renders 'Checkout needs another try.'; /api/stripe/checkout returns 502. /checkout/pro-monthly redirects to a cs_live_ Stripe session at $20.00/month."},
+    {"kind": "http", "name": "bridge-context-401", "finding": "GET /api/bridge/context returns 401 with a valid authenticated session."},
+    {"kind": "crawl", "name": "route-reachability", "finding": "26/26 routes return 200. /bridge and /bridge/connect have zero inbound links in either auth state. /account, /dashboard, /history, /interview, /reset-password are correctly unlinked for signed-out visitors."},
+    {"kind": "console", "name": "hydration-error", "finding": "Minified React error #418 on every /app load; absent on marketing routes."}
+  ],
+  "desired_outcome": {
+    "statement": "A stranger can be pointed at the live site and complete the intended path end to end, receiving context that is accurately categorized, with every offered purchase path functional.",
+    "observable_change": [
+      "Interview answers are categorized by content, verified by a fixed-input regression test.",
+      "Both /checkout/pro-monthly and /checkout/lifetime reach Stripe without a 5xx.",
+      "/api/bridge/context returns 200 for an authenticated user.",
+      "/bridge is linked from the authenticated navigation and reachable as a customer surface.",
+      "No React hydration error on /app.",
+      "/brand-preview is not publicly reachable."
+    ]
+  },
+  "required_capabilities": ["frontend-ui-implementation", "backend-api-debugging", "stripe-integration", "end-to-end-verification", "quality-railguards"],
+  "required_tools": ["repository read/write on tk-ap/ALVIRA", "Stripe dashboard access", "Vercel logs"],
+  "context_references": [
+    "docs/LAUNCH_READINESS_2026-09-05.md",
+    "codex/launch-readiness-report",
+    "AGENTS.md",
+    ".agent-os/product.yaml",
+    "tk-ap/agent-os:policies/HANDOFF_POLICY.md",
+    "tk-ap/agent-os:contracts/work-item.schema.json"
+  ],
+  "authority_class": "bounded-implementation-requires-authorization",
+  "constraints": {
+    "product_direction_status": "Post-Revision 11 working hypothesis. Findings are verified observations; severity rankings and recommendations require owner ratification.",
+    "repository_local_rules": [
+      "Branch from latest main as codex/<short-task-name>; never commit or push to main.",
+      "Open a draft pull request and satisfy the AGENTS.md Merge Gate.",
+      "Free-tier smoke account acceptance testing comes before owner-profile verification.",
+      "Never store, commit, print, or document the smoke account password or tokens."
+    ],
+    "live_stripe_warning": "The working checkout path opens a cs_live_ session. Automated smoke tests should use a Stripe test-mode path so runs cannot create real sessions.",
+    "browser_execution": "The Agent OS Codex browser adapter fails closed and returns BLOCKED, so a Codex agent must not launch a browser to verify these findings. Rendered verification is produced by the owner or another authorized surface."
+  },
+  "human_oversight": {
+    "acceptance_gate": "required",
+    "basis": "Launch readiness is an owner decision. Agents surface evidence; they do not declare a product launch-ready.",
+    "gate_owner": "human product owner"
+  },
+  "acceptance_criteria": [
+    "Interview answers are categorized by content, not by arrival order, verified with a fixed-input regression test covering at least background, constraints, goals, decision style and preferences.",
+    "A compiled Context produced from that fixed input places every answer under a defensible heading.",
+    "/checkout/lifetime completes to Stripe without a 5xx.",
+    "/checkout/pro-monthly continues to reach Stripe with the correct price.",
+    "/api/bridge/context returns 200 for an authenticated user.",
+    "/bridge is linked from authenticated navigation and does not redirect signed-out visitors to /app without explanation.",
+    "No React hydration error is logged on /app.",
+    "/brand-preview is not reachable by an anonymous visitor.",
+    "The 'Reflect' navigation item points at its canonical route.",
+    "All page routes still return 200 after the changes.",
+    "Free-tier smoke account acceptance passes before owner-profile verification.",
+    "Owner has reviewed and accepted the launch decision."
+  ],
+  "evidence_destination": "contracts/outcome-event.schema.json",
+  "status": "proposed",
+  "created_at": "2026-09-05T09:40:00Z"
+}

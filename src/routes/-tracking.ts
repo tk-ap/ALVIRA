@@ -40,6 +40,14 @@ export const ALLOWED_EVENTS = [
   "meos_cta_impression",
   "meos_cta_click",
   "meos_cta_dismiss",
+  "opportunity_cue_impression",
+  "opportunity_cue_open",
+  "opportunity_cue_not_for_me",
+  "opportunity_cue_dismiss",
+  "opportunity_recap_impression",
+  "opportunity_recap_dismiss",
+  "opportunity_use",
+  "opportunity_handoff_prefill",
 ] as const;
 
 export type AllowedEvent = (typeof ALLOWED_EVENTS)[number];

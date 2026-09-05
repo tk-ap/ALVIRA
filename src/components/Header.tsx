@@ -11,9 +11,10 @@ interface UserInfo {
 }
 
 const OWNER_EMAIL = "tahlia.ashwood@gmail.com";
-const linkClass =
-  "font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-warm-gray-dark/78 transition-colors hover:text-mineral-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:text-warm-gray/78 dark:hover:text-mineral dark:focus-visible:outline-system";
-const mobileLinkClass = `${linkClass} flex min-h-12 items-center border-b border-warm-gray/18`;
+const desktopLinkClass =
+  "font-mono text-xs font-medium uppercase tracking-[0.12em] text-warm-gray-dark/78 transition-colors hover:text-mineral-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:text-warm-gray/78 dark:hover:text-mineral dark:focus-visible:outline-system";
+const mobileLinkClass =
+  "font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-warm-gray-dark/78 transition-colors hover:text-mineral-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:text-warm-gray/78 dark:hover:text-mineral dark:focus-visible:outline-system flex min-h-12 items-center border-b border-warm-gray/18";
 
 export function Header() {
   const [user, setUser] = useState<UserInfo | null | undefined>(undefined);
@@ -60,50 +61,43 @@ export function Header() {
               <span className="flex items-center gap-3">
                 <img src="/brand/alvira-wordmark-primary-dark.svg" alt="ALVIRA wordmark" className="hidden h-7 w-auto dark:block" />
                 <img src="/brand/alvira-wordmark-primary-light.svg" alt="ALVIRA wordmark" className="h-7 w-auto dark:hidden" />
-                <span className="hidden h-5 w-px bg-warm-gray/18 sm:block" aria-hidden="true" />
-                <span className="hidden items-center gap-2 sm:flex">
-                  <img src="/brand/alvira-context-frame.svg" alt="" className="h-[15px] w-[15px] opacity-90" aria-hidden="true" />
-                  <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-warm-gray-dark/68 dark:text-warm-gray/68">
-                    Context Intelligence
-                  </span>
-                </span>
               </span>
             </a>
 
-            <div className="hidden items-center gap-4 md:flex">
-              <nav aria-label="Primary navigation" className="flex items-center gap-4 border-r border-warm-gray/15 pr-4">
-                <a href="/#possibilities" className={linkClass}>How it helps</a>
-                <a href="/context" className={linkClass}>Context</a>
-                <a href="/meos" className={`${linkClass} text-system-dark dark:text-system`}>Reflect</a>
-                <a href="/integrations" className={linkClass}>Use elsewhere</a>
-                <a href="/pricing" className={linkClass}>Pricing</a>
+            <div className="hidden items-center lg:flex">
+              <nav aria-label="Primary navigation" className="flex items-center gap-5">
+                <a href="/#possibilities" className={desktopLinkClass}>How it helps</a>
+                <a href="/context" className={desktopLinkClass}>Context</a>
+                <a href="/pricing" className={desktopLinkClass}>Pricing</a>
               </nav>
 
-              {user === undefined ? (
-                <div className="h-8 w-16 bg-gray-100 dark:bg-gray-800 animate-pulse" />
-              ) : user ? (
-                <div className="flex items-center gap-4">
-                  <a href="/dashboard" className={linkClass}>Dashboard</a>
-                  <a href="/build-brief" className={`${linkClass} text-system-dark dark:text-system`}>Build Brief</a>
-                  <a href="/history" className={linkClass}>History</a>
-                  <a href="/account" className={linkClass}>Account</a>
-                  <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${linkClass} min-h-11 disabled:opacity-50`}>{loggingOut ? "..." : "Logout"}</button>
-                </div>
-              ) : (
-                <a href="/login" className={`${linkClass} min-h-11 flex items-center`}>Sign In</a>
-              )}
+              <div className="ml-10 flex items-center gap-4 border-l border-warm-gray/18 pl-10">
+                {user === undefined ? (
+                  <div className="h-8 w-16 bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                ) : user ? (
+                  <div className="flex items-center gap-4">
+                    <a href="/dashboard" className={desktopLinkClass}>Dashboard</a>
+                    <a href="/build-brief" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Build Brief</a>
+                    <a href="/history" className={desktopLinkClass}>History</a>
+                    <a href="/account" className={desktopLinkClass}>Account</a>
+                    <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${desktopLinkClass} min-h-11 disabled:opacity-50`}>{loggingOut ? "..." : "Logout"}</button>
+                  </div>
+                ) : (
+                  <a href="/login" className={`${desktopLinkClass} min-h-11 flex items-center`}>Sign In</a>
+                )}
 
-              <a
-                href={user ? "/dashboard" : "/app"}
-                className="inline-flex min-h-10 items-center justify-center gap-2 border border-mineral-dark/25 bg-mineral-dark px-4 font-mono text-[10px] font-semibold uppercase tracking-[0.11em] text-ink-light transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:border-mineral/25 dark:bg-mineral dark:text-ink"
-              >
-                <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5 brightness-0 invert dark:invert-0" aria-hidden="true" />
-                {user ? "Open ALVIRA" : "Start here"}
-              </a>
-              <ThemeToggle />
+                <a
+                  href={user ? "/dashboard" : "/app"}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 border border-mineral-dark/25 bg-mineral-dark px-4 font-mono text-xs font-semibold uppercase tracking-[0.1em] text-ink-light transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:border-mineral/25 dark:bg-mineral dark:text-ink"
+                >
+                  <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5 brightness-0 invert dark:invert-0" aria-hidden="true" />
+                  {user ? "Open ALVIRA" : "Start here"}
+                </a>
+                <ThemeToggle />
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex items-center gap-2 lg:hidden">
               <a href={mobileCtaHref} className="inline-flex min-h-11 items-center px-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-system-dark underline decoration-system/35 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-system dark:hover:text-mineral">{mobileCtaLabel}</a>
               <ThemeToggle />
               <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-controls="mobile-navigation" className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
@@ -113,7 +107,7 @@ export function Header() {
             </div>
           </div>
 
-          <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} border-t border-warm-gray/18 pb-2 md:hidden`}>
+          <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} border-t border-warm-gray/18 pb-2 lg:hidden`}>
             <div className="flex items-center gap-2 py-3 font-mono text-[9px] uppercase tracking-[0.18em] text-warm-gray-dark/65 dark:text-warm-gray/65">
               <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5" aria-hidden="true" />
               AI that starts with your context

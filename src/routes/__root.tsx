@@ -107,7 +107,7 @@ function ThemeToggle() {
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head><HeadContent /></head>
       <body>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-5 focus:py-3 focus:font-mono focus:text-sm focus:font-semibold focus:text-mineral focus:shadow-xl dark:focus:bg-ink-light dark:focus:text-mineral-dark">Skip to main content</a>

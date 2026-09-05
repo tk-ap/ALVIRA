@@ -11,32 +11,34 @@
 
 ## Decision
 
-**NO-GO for unattended public traffic** on two blockers: compiled Context is filed under systematically wrong headings, and one of the two purchase paths returns a server error. Everything else is close.
+**NO-GO for unattended public traffic** on one blocker: the lifetime purchase path returns a server error. A separate high-severity gap — nothing verifies that an interview answer is about the question asked — degrades artifact quality without blocking the path. Everything else is close.
 
 ---
 
-## P0.1 — Interview answers are filed under the wrong Context headings
+## P1.0 — Nothing checks that an answer is about the question that was asked
 
-**Severity: critical. Reproduced in both guest and authenticated sessions.**
+**Severity: high. Corrected 2026-09-05 after source tracing — see "Correction" below.**
 
-Answers appear to be assigned to a fixed category sequence in arrival order rather than by content.
+Source trace of the capture pipeline:
 
-Authenticated run, four answers:
+- `src/routes/app.tsx:874` `askNextQuestion` selects the next uncovered domain via gap detection, sets `state.currentDomain` to `topGap.domain.id`, and generates a question **for that domain**.
+- `src/routes/app.tsx:1107-1202` `handleSend` appends the answer to `updatedDomains[currentDomain].answers`.
+- `src/routes/-validation.ts:102` `validateAnswer(domainId, answer, existingAnswers)` **accepts `domainId` but never reads it.** Its checks are user-question detection, insufficient-knowledge phrases, deflection words, gibberish, non-trivial length, specificity, vague phrases and contradiction — all answer *quality*, none answer *topic*.
+- `src/routes/-knowledgeCompiler.ts:42-47` groups by the stored `domain.outputFile`. There is **no re-classification at compile time.**
 
-| Answer given | Filed under | Content actually is |
-|---|---|---|
-| "I run a small design consultancy, six years in, three people…" | Background | Background — correct |
-| "I decide slowly and over-research. I want to see the downside before committing…" | **Current Projects** | Decision frameworks |
-| "My constraints are cash runway and that I am the only person who sells." | **Identity & values** | Constraints |
-| "I prefer direct, concrete advice with the tradeoffs named." | **Goals** | Preferences / communication style |
+So the design is: ask about domain X, file the answer under X, compile it as X. **When the user answers the question they were asked, categorization is correct.**
 
-Three of four wrong. An earlier six-answer guest run produced the identical pattern with five of six wrong.
+The defect is that nothing detects the case where they do not. Conversational interviews routinely produce adjacent answers — asked about current projects, a person explains how they decide; asked about constraints, they describe what they value. That content is filed under the asked heading at full confidence, with no warning to the user and no flag in the artifact. `domainId` is already plumbed into `validateAnswer`, so a topical-fit check has the data it needs and is not an architectural change.
 
-The assignment order observed in both runs is fixed: `Background → Current Projects → Identity & values → Goals → Decision frameworks → Constraints → Daily Life`. The "Still clarifying" label advances through that same list, and each answer lands in the slot pending before its question was asked.
+**Impact.** Compiled files are handed to ChatGPT or Claude as setup instructions. A drifted answer becomes a confident false assertion about the user — their communication preference recorded as a constraint, their constraints recorded as identity.
 
-**Why this blocks launch.** Compilation succeeds and produces `ai-working-profile.md`, `overview.md`, `requirements.md`, `constraints.md`, `business-rules.md`, `workflows.md` and `chatgpt-instructions.md`, plus a downloadable `.zip`. Those files are the product — they are handed to ChatGPT or Claude as setup instructions. A file asserting that the user's communication preference is a *constraint*, or that their constraints are their *identity*, actively misinforms the downstream model. The product promise is accurate portable context; this delivers confidently mislabeled context.
+### Correction
 
-**Recommended verification:** confirm whether category assignment is content-derived at all, or positional by arrival index.
+An earlier revision of this audit recorded this as **P0.1, critical**, and stated that answers are "assigned to a fixed category sequence in arrival order rather than by content." That characterisation was wrong and is withdrawn.
+
+The evidence was a scripted black-box run that sent a fixed list of answers without reading the question asked at each turn. That reliably produces mismatches under a correct design, so the observed pattern was an artifact of the test, not proof of positional assignment. Source tracing shows assignment follows the asked domain.
+
+Severity is reduced from critical to high: a cooperative user answering on-topic receives correctly categorised context. The launch decision no longer rests on this finding.
 
 ## P0.2 — Lifetime checkout returns a server error
 
@@ -94,8 +96,8 @@ Unlinked and **not** correct: `/bridge`, `/bridge/connect` — see P1.2.
 
 ## Recommended order
 
-1. P0.1 — category assignment. Blocks the core promise.
-2. P0.2 — lifetime checkout 502. Blocks revenue.
+1. P0.2 — lifetime checkout 502. Blocks revenue outright.
+2. P1.0 — topical-fit check on interview answers. Degrades the artifact whenever a user drifts off-question.
 3. P1.1 / P1.2 — Bridge API authorization and customer-surface wiring.
 4. P1.3 — hydration mismatch on `/app`.
 5. P2.1 / P2.2 — surface hygiene.

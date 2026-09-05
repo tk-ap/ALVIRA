@@ -5,14 +5,14 @@
   "owning_product": "alvira-meos",
   "workspace": "tk-ap/ALVIRA",
   "problem_or_opportunity": {
-    "summary": "Launch readiness audit of the live ALVIRA surface. Two blockers prevent unattended public traffic: compiled Context is filed under systematically wrong headings, and the lifetime purchase path returns a server error.",
+    "summary": "Launch readiness audit of the live ALVIRA surface. One blocker prevents unattended public traffic: the lifetime purchase path returns a server error. A separate high-severity gap means nothing verifies that an interview answer is about the question asked.",
     "surface": "https://alviratech.vercel.app",
     "supersedes": "codex/launch-readiness-report, audited 2026-08-07 against alvira.ctonew.app, predating roughly 40 merged pull requests (#75-#135)",
     "blockers": [
-      "P0.1 Interview answers are assigned to a fixed category sequence in arrival order rather than by content. Reproduced in guest (5 of 6 wrong) and authenticated (3 of 4 wrong) sessions. The mislabeled categories flow into the compiled .md files handed to external AI tools.",
-      "P0.2 GET/POST /api/stripe/checkout returns 502 for the lifetime plan; /checkout/lifetime renders 'Checkout needs another try.' The monthly plan works and reaches Stripe correctly."
+      "P0.2 POST /api/stripe/checkout returns 502 for the lifetime plan; /checkout/lifetime renders 'Checkout needs another try.' The monthly plan works and reaches Stripe correctly."
     ],
     "high": [
+      "P1.0 Nothing checks topical fit between an answer and the domain it is filed under. askNextQuestion (app.tsx:874) sets currentDomain, handleSend (app.tsx:1107-1202) files the answer there, validateAnswer (-validation.ts:102) accepts domainId but never reads it, and -knowledgeCompiler.ts does not re-classify. Correct when the user answers on-topic; silently wrong and unflagged when they drift.",
       "P1.1 /api/bridge/context returns 401 for an authenticated user on every /bridge load.",
       "P1.2 No page links to /bridge in either signed-in or signed-out state; signed out it 307s to /app. The 'Use elsewhere' nav item points to /integrations instead. AGENTS.md names /bridge the canonical Bridge UI."
     ],
@@ -29,7 +29,8 @@
       "Authenticated navigation is complete; /build-brief is correctly auth-gated per #134.",
       "Footer legal complete: Privacy, Terms, Refunds, Support, Data.",
       "Monthly checkout reaches Stripe with the correct price and prefilled email."
-    ]
+    ],
+    "withdrawn_finding": "An earlier revision recorded a critical P0.1 claiming interview answers are assigned to a fixed category sequence in arrival order rather than by content. Source tracing disproved it: assignment follows the asked domain. The original evidence was a scripted run that sent fixed answers without reading each question, which manufactures mismatches under a correct design. Withdrawn and replaced by P1.0."
   },
   "originating_signal": {
     "type": "owner-requested launch readiness audit",
@@ -38,22 +39,46 @@
     "method": "Headless Chromium with native sandbox enabled at 1440x900, measured after document.fonts.ready. Unauthenticated crawl of all 26 page routes plus an authenticated pass using the AGENTS.md free-tier smoke account."
   },
   "priority": {
-    "level": "p0",
+    "level": "p1",
     "confidence": 0.85,
-    "rationale": "P0.1 breaks the core product promise in the artifact users hand to external AI tools. P0.2 disables half the purchase surface. Both are reproducible. Final priority remains the owner's call."
+    "rationale": "P0.2 disables half the purchase surface and is unambiguous. The interview finding was reduced from critical to high after source tracing showed categorisation is correct for on-topic answers. Final priority remains the owner's call."
   },
   "evidence": [
-    {"kind": "reproduction", "name": "category-misassignment-authenticated", "finding": "Background correct; 'I decide slowly and over-research' filed as Current Projects; 'My constraints are cash runway' filed as Identity & values; 'I prefer direct, concrete advice' filed as Goals. Observed order is fixed: Background, Current Projects, Identity & values, Goals, Decision frameworks, Constraints, Daily Life."},
-    {"kind": "reproduction", "name": "category-misassignment-guest", "finding": "Same fixed order across six answers, five of six mis-filed."},
-    {"kind": "http", "name": "lifetime-checkout-502", "finding": "/checkout/lifetime renders 'Checkout needs another try.'; /api/stripe/checkout returns 502. /checkout/pro-monthly redirects to a cs_live_ Stripe session at $20.00/month."},
-    {"kind": "http", "name": "bridge-context-401", "finding": "GET /api/bridge/context returns 401 with a valid authenticated session."},
-    {"kind": "crawl", "name": "route-reachability", "finding": "26/26 routes return 200. /bridge and /bridge/connect have zero inbound links in either auth state. /account, /dashboard, /history, /interview, /reset-password are correctly unlinked for signed-out visitors."},
-    {"kind": "console", "name": "hydration-error", "finding": "Minified React error #418 on every /app load; absent on marketing routes."}
+    {
+      "kind": "source-trace",
+      "name": "answer-domain-assignment",
+      "finding": "app.tsx:874 sets currentDomain from gap detection; app.tsx:1107-1202 files the answer under it; -validation.ts:102 accepts domainId but never references it in the function body; -knowledgeCompiler.ts:42-47 groups by stored assignment without re-classification."
+    },
+    {
+      "kind": "withdrawn",
+      "name": "category-misassignment-black-box",
+      "finding": "Guest and authenticated scripted runs appeared to show positional assignment. Withdrawn: the scripts sent fixed answers without tracking the question asked, so mismatch was expected under a correct design."
+    },
+    {
+      "kind": "http",
+      "name": "lifetime-checkout-502",
+      "finding": "/checkout/lifetime renders 'Checkout needs another try.'; /api/stripe/checkout returns 502. /checkout/pro-monthly redirects to a cs_live_ Stripe session at $20.00/month."
+    },
+    {
+      "kind": "http",
+      "name": "bridge-context-401",
+      "finding": "GET /api/bridge/context returns 401 with a valid authenticated session."
+    },
+    {
+      "kind": "crawl",
+      "name": "route-reachability",
+      "finding": "26/26 routes return 200. /bridge and /bridge/connect have zero inbound links in either auth state. /account, /dashboard, /history, /interview, /reset-password are correctly unlinked for signed-out visitors."
+    },
+    {
+      "kind": "console",
+      "name": "hydration-error",
+      "finding": "Minified React error #418 on every /app load; absent on marketing routes."
+    }
   ],
   "desired_outcome": {
     "statement": "A stranger can be pointed at the live site and complete the intended path end to end, receiving context that is accurately categorized, with every offered purchase path functional.",
     "observable_change": [
-      "Interview answers are categorized by content, verified by a fixed-input regression test.",
+      "An interview answer that does not address the domain being asked is detected and surfaced, rather than filed under that domain at full confidence.",
       "Both /checkout/pro-monthly and /checkout/lifetime reach Stripe without a 5xx.",
       "/api/bridge/context returns 200 for an authenticated user.",
       "/bridge is linked from the authenticated navigation and reachable as a customer surface.",
@@ -61,8 +86,18 @@
       "/brand-preview is not publicly reachable."
     ]
   },
-  "required_capabilities": ["frontend-ui-implementation", "backend-api-debugging", "stripe-integration", "end-to-end-verification", "quality-railguards"],
-  "required_tools": ["repository read/write on tk-ap/ALVIRA", "Stripe dashboard access", "Vercel logs"],
+  "required_capabilities": [
+    "frontend-ui-implementation",
+    "backend-api-debugging",
+    "stripe-integration",
+    "end-to-end-verification",
+    "quality-railguards"
+  ],
+  "required_tools": [
+    "repository read/write on tk-ap/ALVIRA",
+    "Stripe dashboard access",
+    "Vercel logs"
+  ],
   "context_references": [
     "docs/LAUNCH_READINESS_2026-09-05.md",
     "codex/launch-readiness-report",
@@ -89,8 +124,8 @@
     "gate_owner": "human product owner"
   },
   "acceptance_criteria": [
-    "Interview answers are categorized by content, not by arrival order, verified with a fixed-input regression test covering at least background, constraints, goals, decision style and preferences.",
-    "A compiled Context produced from that fixed input places every answer under a defensible heading.",
+    "validateAnswer performs a topical-fit check using the domainId it already receives, and a low-fit answer is surfaced to the user rather than filed silently.",
+    "A regression test covers the drifted-answer case: an answer that does not address the asked domain is flagged rather than recorded at full confidence.",
     "/checkout/lifetime completes to Stripe without a 5xx.",
     "/checkout/pro-monthly continues to reach Stripe with the correct price.",
     "/api/bridge/context returns 200 for an authenticated user.",
@@ -104,5 +139,6 @@
   ],
   "evidence_destination": "contracts/outcome-event.schema.json",
   "status": "proposed",
-  "created_at": "2026-09-05T09:40:00Z"
+  "created_at": "2026-09-05T09:40:00Z",
+  "updated_at": "2026-09-05T10:10:00Z"
 }

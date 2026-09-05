@@ -48,7 +48,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
   if (variant === "inline") {
     return (
       <a
-        href="/meos"
+        href="/app?offering=meos&preview=false"
         onClick={handlePrimaryClick}
         className="inline-flex items-center gap-1.5 font-mono text-sm text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
       >
@@ -69,7 +69,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
           </p>
         </div>
         <a
-          href="/meos"
+          href="/app?offering=meos&preview=false"
           onClick={handlePrimaryClick}
           className="shrink-0 inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
         >
@@ -101,7 +101,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
         ALVIRA Context makes what AI should know portable. ALVIRA Reflect helps you revisit, validate, and evolve that understanding across decisions, direction, work, and daily life.
       </p>
       <a
-        href="/meos"
+        href="/app?offering=meos&preview=false"
         onClick={handlePrimaryClick}
         className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
       >

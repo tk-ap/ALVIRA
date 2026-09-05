@@ -51,6 +51,12 @@ export function Header() {
   const mobileCtaHref = user ? "/dashboard" : "/app";
   const mobileCtaLabel = user ? "Dashboard" : "Start here";
   const isOwner = user?.email.trim().toLowerCase() === OWNER_EMAIL;
+  // Signed-in navigation carries more account destinations, so it stays compact
+  // until xl. Signed-out navigation switches at lg, matching the audit's ~1000px
+  // recommendation without forcing a crowded authenticated header.
+  const desktopNavClass = user ? "hidden items-center xl:flex" : "hidden items-center lg:flex";
+  const compactNavClass = user ? "flex items-center gap-2 xl:hidden" : "flex items-center gap-2 lg:hidden";
+  const mobileNavBreakpointClass = user ? "xl:hidden" : "lg:hidden";
 
   return (
     <>
@@ -64,7 +70,7 @@ export function Header() {
               </span>
             </a>
 
-            <div className="hidden items-center lg:flex">
+            <div className={desktopNavClass}>
               <nav aria-label="Primary navigation" className="flex items-center gap-5">
                 <a href="/#possibilities" className={desktopLinkClass}>How it helps</a>
                 <a href="/context" className={desktopLinkClass}>Context</a>
@@ -77,7 +83,8 @@ export function Header() {
                 ) : user ? (
                   <div className="flex items-center gap-4">
                     <a href="/dashboard" className={desktopLinkClass}>Dashboard</a>
-                    <a href="/build-brief" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Build Brief</a>
+                    <a href="/bridge" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Bridge</a>
+                    <a href="/build-brief" className={desktopLinkClass}>Build Brief</a>
                     <a href="/history" className={desktopLinkClass}>History</a>
                     <a href="/account" className={desktopLinkClass}>Account</a>
                     <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${desktopLinkClass} min-h-11 disabled:opacity-50`}>{loggingOut ? "..." : "Logout"}</button>
@@ -97,7 +104,7 @@ export function Header() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 lg:hidden">
+            <div className={compactNavClass}>
               <a href={mobileCtaHref} className="inline-flex min-h-11 items-center px-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-system-dark underline decoration-system/35 underline-offset-4 transition-colors hover:text-mineral-dark dark:text-system dark:hover:text-mineral">{mobileCtaLabel}</a>
               <ThemeToggle />
               <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-controls="mobile-navigation" className="flex min-h-11 min-w-11 items-center justify-center text-warm-gray-dark hover:text-mineral-dark dark:text-warm-gray dark:hover:text-mineral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
@@ -107,18 +114,19 @@ export function Header() {
             </div>
           </div>
 
-          <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} border-t border-warm-gray/18 pb-2 lg:hidden`}>
+          <nav id="mobile-navigation" aria-label="Mobile navigation" role="navigation" className={`${menuOpen ? "block" : "hidden"} ${mobileNavBreakpointClass} border-t border-warm-gray/18 pb-2`}>
             <div className="flex items-center gap-2 py-3 font-mono text-[9px] uppercase tracking-[0.18em] text-warm-gray-dark/65 dark:text-warm-gray/65">
               <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5" aria-hidden="true" />
               AI that starts with your context
             </div>
             <a href="/#possibilities" onClick={closeMenu} className={mobileLinkClass}>What AI can help with</a>
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
-            <a href="/meos" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
+            <a href="/app?offering=meos&preview=false" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
             <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Use elsewhere</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
-            {user ? <a href="/build-brief" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Build Brief</a> : null}
+            {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Bridge</a> : null}
+            {user ? <a href="/build-brief" onClick={closeMenu} className={mobileLinkClass}>Build Brief</a> : null}
             {user ? <a href="/history" onClick={closeMenu} className={mobileLinkClass}>History</a> : null}
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}
             {user ? (

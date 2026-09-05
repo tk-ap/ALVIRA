@@ -234,6 +234,18 @@ const TOPIC_SHORT_NAMES: Record<string, string> = {
   "My goals, priorities, and how I evaluate tradeoffs": "Goals, Priorities, and Mental Models",
 };
 
+// Pre-written response starters — context-aware prompts the user can accept by tabbing
+// (or clicking) so they never have to start an answer from a blank box.
+const RESPONSE_STARTERS: Record<string, string[]> = {
+  default: ["I usually…", "For example, …", "I prefer… because…"],
+  identity: ["What matters most to me is…", "I'm defined by…", "I believe…"],
+  goals: ["I'm working toward…", "Success looks like…", "This year I want…"],
+  decisionFrameworks: ["When it's reversible, I…", "I ask myself…", "I decide by…"],
+  constraints: ["I won't compromise on…", "A hard boundary for me is…", "I can't…"],
+  communication: ["I communicate best when…", "I prefer writing over meetings because…", "My style is…"],
+  dailyLife: ["A typical day starts with…", "I stay organized by…", "My mornings are…"],
+};
+
 // ── Page ──
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -576,6 +588,10 @@ function AppPage() {
     }
   }
   const hasQualityWarning = qualityWarnings.length > 0;
+
+  const starters = state?.currentDomain
+    ? RESPONSE_STARTERS[state.currentDomain] ?? RESPONSE_STARTERS.default
+    : [];
 
   // Live feedback on the answer being typed — honest but never blocks sending.
   const liveQuality = useMemo(() => {
@@ -1572,6 +1588,9 @@ function AppPage() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    } else if (e.key === "Tab" && !answer.trim() && starters.length > 0) {
+      e.preventDefault();
+      setAnswer(starters[0]);
     }
   };
 
@@ -2144,6 +2163,20 @@ function AppPage() {
                 <p className={`mt-1.5 font-mono text-[11px] ${liveQuality.tone === "good" ? "text-emerald-600 dark:text-emerald-400" : liveQuality.tone === "weak" ? "text-amber-600 dark:text-amber-400" : "text-red-500 dark:text-red-400"}`}>
                   {liveQuality.text}
                 </p>
+              )}
+              {!answer.trim() && starters.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {starters.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setAnswer(s)}
+                      className="rounded-full border border-gray-200 px-2.5 py-1 font-mono text-[11px] text-gray-500 transition-colors hover:border-emerald-400 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-emerald-500 dark:hover:text-emerald-400"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>

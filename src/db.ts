@@ -58,7 +58,18 @@ export async function deleteExpiredSessions(): Promise<void> { await run("DELETE
 export async function getProfileCount(userId: string): Promise<number> { return Number((await first<{ count: string | number }>("SELECT COUNT(*) AS count FROM profiles WHERE user_id = $1", [userId]))?.count ?? 0); }
 export async function hasEntitlement(userId: string, product: string): Promise<boolean> { return !!(await first("SELECT 1 FROM purchases WHERE user_id = $1 AND product = $2 LIMIT 1", [userId, product])); }
 export async function recordPurchase(userId: string, product: string): Promise<void> { await run("INSERT INTO purchases (id, user_id, product) VALUES ($1, $2, $3)", [crypto.randomUUID(), userId, product]); }
-export async function listEntitlements(userId: string): Promise<string[]> { return (await rows<{ product: string }>("SELECT DISTINCT product FROM purchases WHERE user_id = $1 ORDER BY product", [userId])).map((row) => row.product); }
+export async function listEntitlements(userId: string): Promise<string[]> {
+  const products = (await rows<{ product: string }>(
+    "SELECT DISTINCT product FROM purchases WHERE user_id = $1 ORDER BY product",
+    [userId],
+  )).map((row) => row.product);
+
+  // Reflect is core ALVIRA functionality for every authenticated account.
+  // Keep the legacy meos_build entitlement as a compatibility alias until all
+  // old client-side purchase gates have been removed.
+  if (!products.includes("meos_build")) products.push("meos_build");
+  return products;
+}
 export async function incrementInterviewCount(userId: string): Promise<number> { return Number((await first<{ interview_count: number }>("UPDATE users SET interview_count = interview_count + 1 WHERE id = $1 RETURNING interview_count", [userId]))?.interview_count ?? 0); }
 export async function getInterviewCount(userId: string): Promise<number> { return Number((await first<{ interview_count: number }>("SELECT interview_count FROM users WHERE id = $1", [userId]))?.interview_count ?? 0); }
 export async function upgradeUserTier(userId: string, tier: string): Promise<User | null> { await run("UPDATE users SET tier = $1 WHERE id = $2", [tier, userId]); return getUserById(userId); }

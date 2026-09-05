@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "../routes/-tracking";
 
 // ── Props ──
@@ -14,14 +14,26 @@ export interface MeOSCTAProps {
 // ── Component ──
 export function MeOSCTA({ placement, variant = "default", dismissible = true }: MeOSCTAProps) {
   const [dismissed, setDismissed] = useState(false);
+  const [suppressedByOpportunity, setSuppressedByOpportunity] = useState(false);
+  const trackedImpressionRef = useRef(false);
 
-  // ── Impression tracking on mount ──
+  // A specific, interview-derived AI possibility should outrank a generic Reflect nudge.
+  // LiveContextMirror toggles this dataset/event only while that contextual cue is visible.
   useEffect(() => {
-    trackEvent("meos_cta_impression", { placement });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const sync = () => {
+      setSuppressedByOpportunity(document.documentElement.dataset.alviraOpportunityCue === "active");
+    };
+    sync();
+    window.addEventListener("alvira:opportunity-cue", sync as EventListener);
+    return () => window.removeEventListener("alvira:opportunity-cue", sync as EventListener);
   }, []);
 
-  // ── Handlers ──
+  useEffect(() => {
+    if (suppressedByOpportunity || trackedImpressionRef.current) return;
+    trackedImpressionRef.current = true;
+    trackEvent("meos_cta_impression", { placement });
+  }, [placement, suppressedByOpportunity]);
+
   const handlePrimaryClick = () => {
     trackEvent("meos_cta_click", { placement, action: "primary" });
   };
@@ -31,9 +43,8 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
     setDismissed(true);
   };
 
-  if (dismissed) return null;
+  if (dismissed || suppressedByOpportunity) return null;
 
-  // ── Inline variant ──
   if (variant === "inline") {
     return (
       <a
@@ -46,7 +57,6 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
     );
   }
 
-  // ── Compact variant ──
   if (variant === "compact") {
     return (
       <div className="relative flex items-start gap-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-5 py-4">
@@ -79,25 +89,17 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
     );
   }
 
-  // ── Default (full card) ──
   return (
     <div className="relative rounded-xl border border-system/50 dark:border-system-dark/40 bg-gradient-to-br from-system-soft/80 to-white dark:from-ink/20 dark:to-gray-950 px-6 py-6 sm:px-8 sm:py-7">
-      {/* Eyebrow */}
       <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-system-dark dark:text-system">
         KEEP YOUR CONTEXT LIVING
       </p>
-
-      {/* Headline */}
       <h3 className="mt-3 text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:text-2xl">
         Understand what is changing—not just what is true today.
       </h3>
-
-      {/* Body */}
       <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
         ALVIRA Context makes what AI should know portable. ALVIRA Reflect helps you revisit, validate, and evolve that understanding across decisions, direction, work, and daily life.
       </p>
-
-      {/* CTA */}
       <a
         href="/meos"
         onClick={handlePrimaryClick}
@@ -106,8 +108,6 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
         Explore ALVIRA Reflect
         <span aria-hidden="true">→</span>
       </a>
-
-      {/* Dismiss */}
       {dismissible && (
       <button
         type="button"

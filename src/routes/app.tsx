@@ -11,6 +11,7 @@ import { ingestUrlSource } from "./-sourceIngestor";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ProcessGraph } from "~/components/ProcessGraph";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { extractClaims, type ExtractionResult } from "./-extractor";
@@ -1634,15 +1635,16 @@ function AppPage() {
                   {/* Why it matters — visual */}
                   <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-5">
                     <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">Why this matters</p>
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-md border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-gray-900 px-4 py-3 font-mono text-sm text-emerald-700 dark:text-emerald-400">context.md</div>
-                      <span className="text-gray-400" aria-hidden="true">→</span>
-                      <div className="flex flex-col gap-1 font-mono text-xs text-gray-600 dark:text-gray-300">
-                        <span>ChatGPT</span>
-                        <span>Claude</span>
-                        <span>Cursor</span>
-                      </div>
-                    </div>
+                    <ProcessGraph
+                      nodes={[
+                        { id: "you", label: "You", sublabel: "what you told ALVIRA" },
+                        { id: "interview", label: "Interview", sublabel: "questions + answers" },
+                        { id: "context", label: "context.md", sublabel: "your compiled context" },
+                        { id: "tools", label: "AI tools", sublabel: "ChatGPT · Claude · Cursor" },
+                      ]}
+                      highlightIds={["context"]}
+                      pathLabel="you → interview → context.md → your AI tools"
+                    />
                     <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                       Without it, these tools give you generic advice. With it, they already know who they&apos;re helping.
                     </p>

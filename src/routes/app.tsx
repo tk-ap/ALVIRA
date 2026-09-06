@@ -18,7 +18,6 @@ import { extractClaims, type ExtractionResult } from "./-extractor";
 import {
   getKnowledgeGraph,
   getPlaybook,
-  shouldConfirmLockedChange,
   checkLockedFidelity,
   type Domain,
   type InterviewState,
@@ -28,6 +27,7 @@ import {
 import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer, detectMoveOnRequest } from "./-validation";
+import { nextAction } from "./-answerRouting";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
@@ -1202,18 +1202,17 @@ function AppPage() {
     const trimmed = answer.trim();
     if (!trimmed || waiting || !state) return;
 
-    const currentDomain = state.currentDomain;
-
-    // Soft-confirm a change to a locked constraint before filing it (domain-level, prior answer exists).
-    if (currentDomain && !lockedConfirmBypassRef.current) {
-      const prior = state.domains[currentDomain]?.answers ?? [];
-      if (shouldConfirmLockedChange(graph, currentDomain, prior.length)) {
-        setPendingLockedConfirm({ domainId: currentDomain, text: trimmed });
-        return;
-      }
-    }
+    const action = nextAction(state, graph, confThreshold, answer, { bypassConfirm: lockedConfirmBypassRef.current });
     lockedConfirmBypassRef.current = false;
+    if (!action) return;
 
+    // A change to a locked constraint is gated before it is filed.
+    if (action.type === "soft-confirm") {
+      setPendingLockedConfirm({ domainId: action.domainId, text: action.text });
+      return;
+    }
+
+    const currentDomain = action.domainId;
     const newHistory: Message[] = [...state.history, { role: "user", content: trimmed }];
 
     let updatedDomains = { ...state.domains };
@@ -1221,126 +1220,118 @@ function AppPage() {
     let meaningfulAnswer = false;
     let skippedDomains = state.skippedDomains ?? [];
 
-    if (currentDomain) {
-      const existing = updatedDomains[currentDomain]?.answers ?? [];
+    // Honor an explicit "move on" / frustration request the first time: mark
+    // the domain as uninterested-in-exploration and advance without re-probing.
+    if (action.type === "move-on") {
+      const skippedDomains = Array.from(new Set([...(state.skippedDomains ?? []), currentDomain]));
+      newHistory.push({ role: "assistant", content: "No problem — I'll set that aside for now. We can come back to it later if you'd like." });
+      const movedState: InterviewState = {
+        ...state,
+        history: newHistory,
+        skippedDomains,
+        currentDomain: null,
+      };
+      setState(movedState);
+      setAnswer("");
+      setWaiting(true);
+      setInterviewError("");
+      try {
+        const result = await askNextQuestion(movedState, false);
+        if (result) setState(result);
+        else setState({ ...movedState, currentDomain: null });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Something went wrong.";
+        if (msg !== "API key not configured") {
+          setInterviewError(msg);
+          setState(movedState);
+        }
+      } finally {
+        setWaiting(false);
+      }
+      return;
+    }
 
-      // Honor an explicit "move on" / frustration request the first time: mark
-      // the domain as uninterested-in-exploration and advance without re-probing.
-      if (detectMoveOnRequest(trimmed)) {
-        const skippedDomains = Array.from(new Set([...(state.skippedDomains ?? []), currentDomain]));
-        newHistory.push({ role: "assistant", content: "No problem — I'll set that aside for now. We can come back to it later if you'd like." });
-        const movedState: InterviewState = {
+    if (action.type === "clarify") {
+      setState({ ...state, history: newHistory, currentDomain });
+      setAnswer("");
+      setWaiting(true);
+      setInterviewError("");
+
+      try {
+        const domainLabel = graph.find((d) => d.id === currentDomain)?.label ?? "";
+        const clarificationResult = await generateClarification({
+          data: {
+            userQuestion: trimmed,
+            domainLabel,
+            history: newHistory,
+            tier: state.tier,
+          },
+        });
+
+        const clarificationHistory: Message[] = [
+          ...newHistory,
+          { role: "assistant", content: clarificationResult.clarification },
+        ];
+        const clarificationState: InterviewState = {
           ...state,
-          history: newHistory,
-          skippedDomains,
-          currentDomain: null,
+          history: clarificationHistory,
+          currentDomain,
         };
-        setState(movedState);
-        setAnswer("");
-        setWaiting(true);
-        setInterviewError("");
-        try {
-          const result = await askNextQuestion(movedState, false);
-          if (result) setState(result);
-          else setState({ ...movedState, currentDomain: null });
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Something went wrong.";
-          if (msg !== "API key not configured") {
-            setInterviewError(msg);
-            setState(movedState);
-          }
-        } finally {
-          setWaiting(false);
+
+        const result = await askNextQuestion(clarificationState, false);
+        if (result) {
+          setState(result);
+        } else {
+          setState({ ...clarificationState, currentDomain: null });
         }
-        return;
-      }
-
-      const validation = validateAnswer(currentDomain, trimmed, existing);
-
-      if (validation.isUserQuestion) {
-        setState({ ...state, history: newHistory, currentDomain });
-        setAnswer("");
-        setWaiting(true);
-        setInterviewError("");
-
-        try {
-          const domainLabel = graph.find((d) => d.id === currentDomain)?.label ?? "";
-          const clarificationResult = await generateClarification({
-            data: {
-              userQuestion: trimmed,
-              domainLabel,
-              history: newHistory,
-              tier: state.tier,
-            },
-          });
-
-          const clarificationHistory = [
-            ...newHistory,
-            { role: "assistant", content: clarificationResult.clarification },
-          ];
-          const clarificationState: InterviewState = {
-            ...state,
-            history: clarificationHistory,
-            currentDomain,
-          };
-
-          const result = await askNextQuestion(clarificationState, false);
-          if (result) {
-            setState(result);
-          } else {
-            setState({ ...clarificationState, currentDomain: null });
-          }
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Something went wrong.";
-          if (msg !== "API key not configured") {
-            setInterviewError(msg);
-            setState({ ...state, history: newHistory, currentDomain });
-          }
-        } finally {
-          setWaiting(false);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Something went wrong.";
+        if (msg !== "API key not configured") {
+          setInterviewError(msg);
+          setState({ ...state, history: newHistory, currentDomain });
         }
-        return;
+      } finally {
+        setWaiting(false);
       }
+      return;
+    }
 
-      if (validation.isUnusable) {
-        // Genuinely unusable (gibberish, contradiction) — re-ask, don't file it.
-        needsClarify = true;
-        const warningText =
-          validation.warnings.length > 0
-            ? `Hmm, I couldn't quite parse that. ${validation.warnings[0]}`
-            : "Hmm, I didn't quite catch that. Could you try again?";
-        newHistory.push({ role: "assistant", content: warningText });
-      }
-      else if (validation.needsClarification) {
-        // Weak but real — accept it honestly, defer re-asking, and move on so a
-        // vague answer never traps the user in a clarification loop.
-        const note = validation.insufficientKnowledge
-          ? "Noted — I'll leave this open for now. We can come back to it later."
-          : "Got it — that's a bit broad. A specific example would make it sharper, but I'll keep going with what's here.";
-        newHistory.push({ role: "assistant", content: note });
-        updatedDomains = {
-          ...updatedDomains,
-          [currentDomain]: {
-            answers: [...existing, trimmed],
-            confidence: validation.confidence,
-            covered: false,
-          },
-        };
-        skippedDomains = Array.from(new Set([...skippedDomains, currentDomain]));
-      }
-      else {
-        meaningfulAnswer = true;
-        updatedDomains = {
-          ...updatedDomains,
-          [currentDomain]: {
-            answers: [...existing, trimmed],
-            confidence: validation.confidence,
-            covered:
-              validation.confidence >= confThreshold &&
-              existing.length + 1 >= (graph.find((d) => d.id === currentDomain)?.minAnswers ?? 1),
-          },
-        };
-      }
+    // re-ask or accept — fall through to filing.
+    const existing = updatedDomains[currentDomain]?.answers ?? [];
+
+    if (action.type === "re-ask") {
+      // Genuinely unusable (gibberish, contradiction) — re-ask, don't file it.
+      needsClarify = true;
+      const warningText = action.warning
+        ? `Hmm, I couldn't quite parse that. ${action.warning}`
+        : "Hmm, I didn't quite catch that. Could you try again?";
+      newHistory.push({ role: "assistant", content: warningText });
+    } else if (action.deferred) {
+      // Weak but real — accept it honestly, defer re-asking, and move on so a
+      // vague answer never traps the user in a clarification loop.
+      const note = action.insufficientKnowledge
+        ? "Noted — I'll leave this open for now. We can come back to it later."
+        : "Got it — that's a bit broad. A specific example would make it sharper, but I'll keep going with what's here.";
+      newHistory.push({ role: "assistant", content: note });
+      updatedDomains = {
+        ...updatedDomains,
+        [currentDomain]: {
+          answers: [...existing, action.answer],
+          confidence: action.confidence,
+          covered: false,
+        },
+      };
+      skippedDomains = Array.from(new Set([...skippedDomains, currentDomain]));
+    } else {
+      meaningfulAnswer = true;
+      updatedDomains = {
+        ...updatedDomains,
+        [currentDomain]: {
+          answers: [...existing, action.answer],
+          confidence: action.confidence,
+          covered: action.covered,
+        },
+      };
     }
 
     // Post-action fidelity: a locked requirement must survive an update, and a

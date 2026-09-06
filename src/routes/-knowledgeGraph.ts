@@ -350,3 +350,9 @@ export function getKnowledgeGraph(tier: Tier): Domain[] {
 
   return withOrg;
 }
+
+/** True when filing a new answer for a locked domain that already has a prior answer — a change that should be soft-confirmed. */
+export function shouldConfirmLockedChange(graph: Domain[], domainId: string, priorAnswerCount: number): boolean {
+  const domain = graph.find((d) => d.id === domainId);
+  return domain?.kind === "locked" && priorAnswerCount > 0;
+}

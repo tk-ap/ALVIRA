@@ -18,6 +18,7 @@ import { extractClaims, type ExtractionResult } from "./-extractor";
 import {
   getKnowledgeGraph,
   getPlaybook,
+  shouldConfirmLockedChange,
   type Domain,
   type InterviewState,
   type Message,
@@ -440,6 +441,8 @@ function AppPage() {
   const [state, setState] = useState<InterviewState | null>(null);
   const [resumeDraft, setResumeDraft] = useState<ResumableDraft | null>(null);
   const [answer, setAnswer] = useState("");
+  const [pendingLockedConfirm, setPendingLockedConfirm] = useState<{ domainId: string; text: string } | null>(null);
+  const lockedConfirmBypassRef = useRef(false);
   const [waiting, setWaiting] = useState(false);
   const [interviewError, setInterviewError] = useState("");
   const [startError, setStartError] = useState("");
@@ -1180,11 +1183,35 @@ function AppPage() {
     }
   };
 
+  const confirmLockedChange = () => {
+    if (!pendingLockedConfirm) return;
+    const text = pendingLockedConfirm.text;
+    setPendingLockedConfirm(null);
+    setAnswer(text);
+    lockedConfirmBypassRef.current = true;
+    void handleSend();
+  };
+
+  const cancelLockedChange = () => {
+    setPendingLockedConfirm(null);
+    setAnswer("");
+  };
+
   const handleSend = async () => {
     const trimmed = answer.trim();
     if (!trimmed || waiting || !state) return;
 
     const currentDomain = state.currentDomain;
+
+    // Soft-confirm a change to a locked constraint before filing it (domain-level, prior answer exists).
+    if (currentDomain && !lockedConfirmBypassRef.current) {
+      const prior = state.domains[currentDomain]?.answers ?? [];
+      if (shouldConfirmLockedChange(graph, currentDomain, prior.length)) {
+        setPendingLockedConfirm({ domainId: currentDomain, text: trimmed });
+        return;
+      }
+    }
+    lockedConfirmBypassRef.current = false;
 
     const newHistory: Message[] = [...state.history, { role: "user", content: trimmed }];
 
@@ -2172,6 +2199,19 @@ function AppPage() {
                   >
                     Create account →
                   </a>
+                </div>
+              )}
+
+              {pendingLockedConfirm && (
+                <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-200" role="alert">
+                  <p className="font-semibold">Update this constraint?</p>
+                  <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                    This is a locked requirement (🔒). Changing it changes what the AI is allowed to do.
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" onClick={confirmLockedChange} className="rounded-md bg-amber-600 dark:bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700">Update constraint</button>
+                    <button type="button" onClick={cancelLockedChange} className="rounded-md border border-amber-300 dark:border-amber-600 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40">Cancel</button>
+                  </div>
                 </div>
               )}
 

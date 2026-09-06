@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getKnowledgeGraph, type InterviewState } from "../src/routes/-knowledgeGraph";
+import { getKnowledgeGraph, shouldConfirmLockedChange, type InterviewState } from "../src/routes/-knowledgeGraph";
 import { compileKnowledge } from "../src/routes/-knowledgeCompiler";
 
 function makeState(domains: InterviewState["domains"]): InterviewState {
@@ -31,5 +31,12 @@ describe("locked context class", () => {
     const out = compileKnowledge(state, graph);
     expect(out).toContain("## Identity");
     expect(out).not.toContain("## Identity 🔒");
+  });
+
+  test("shouldConfirmLockedChange is true only for a locked domain with a prior answer", () => {
+    const graph = getKnowledgeGraph("personal");
+    expect(shouldConfirmLockedChange(graph, "constraints", 1)).toBe(true);
+    expect(shouldConfirmLockedChange(graph, "constraints", 0)).toBe(false);
+    expect(shouldConfirmLockedChange(graph, "identity", 1)).toBe(false);
   });
 });

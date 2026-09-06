@@ -65,6 +65,12 @@ This section is an owner-ratified requirement, not a post–Revision 11 working 
 3. Regressions affecting the free workflow block release even when the same feature works for the owner profile.
 4. Owner-profile testing is performed when the change affects privileged access, paid entitlements, administrative behavior, or owner overrides.
 
+### Preview URL (stable)
+
+- Smoke-test against the branch-preview alias, which auto-updates to the latest deployment on push. Do not pin the per-commit deployment URL (`alvira-<hash>-alvira2.vercel.app`) — it goes stale after every push.
+- Format: `<project>-git-<branch-with-dashes>-<scope>.vercel.app` — project `alvira`, scope `alvira2`; branch `/` becomes `-`.
+- Current branch (`codex/interview-intro`): `https://alvira-git-codex-interview-intro-alvira2.vercel.app`
+
 ## Shared Repository Safety
 
 This repository may be accessed by multiple agents. Treat `main` as the stable integration branch.

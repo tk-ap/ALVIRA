@@ -43,6 +43,8 @@ export interface Domain {
   priority: number;
   /** Which output file this domain's content belongs to */
   outputFile: "overview" | "requirements" | "constraints" | "businessRules" | "workflows";
+  /** Normative vs descriptive. `locked` = a requirement the AI must satisfy, not mere background. Defaults to descriptive. */
+  kind?: "descriptive" | "locked";
 }
 
 // ── Playbook: tier-specific interview configuration ──
@@ -106,6 +108,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "decisionFrameworks",
+    kind: "locked",
     label: "Decision Frameworks",
     description: "How important decisions are made — approval rules, escalation criteria, prioritization methods, risk tolerance, trade-off preferences",
     promptHint: "Ask how they make important decisions. Who needs to approve? What factors do they weigh? How do they handle trade-offs?",
@@ -116,6 +119,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "constraints",
+    kind: "locked",
     label: "Constraints",
     description: "Limitations — policies, compliance requirements, legal restrictions, budget limits, security requirements, non-negotiables",
     promptHint: "Ask about boundaries and limitations. What rules must be followed? What can't be done? Are there budget, legal, or security constraints?",
@@ -186,6 +190,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "rules",
+    kind: "locked",
     label: "Rules",
     description: "Operational rules — business rules, approval rules, eligibility criteria, calculation rules",
     promptHint: "Ask about rules that govern their work. Are there specific business rules? What conditions trigger different outcomes? How are calculations done?",
@@ -196,6 +201,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "exceptions",
+    kind: "locked",
     label: "Exceptions",
     description: "Situations where rules change — edge cases, special approvals, overrides, emergency procedures",
     promptHint: "Ask about exceptions to the rules. When do normal processes not apply? What edge cases exist? Who can override standard procedures?",

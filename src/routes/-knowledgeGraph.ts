@@ -1,6 +1,8 @@
 // ── Knowledge Graph: defines what domains of knowledge exist per tier ──
 // Based on the Alvira Knowledge Schema
 
+import { answersContradict } from "./-validation";
+
 // ── Shared types ──
 export type Tier = "personal" | "team" | "enterprise";
 export type Role = "user" | "assistant";
@@ -355,4 +357,56 @@ export function getKnowledgeGraph(tier: Tier): Domain[] {
 export function shouldConfirmLockedChange(graph: Domain[], domainId: string, priorAnswerCount: number): boolean {
   const domain = graph.find((d) => d.id === domainId);
   return domain?.kind === "locked" && priorAnswerCount > 0;
+}
+
+export interface FidelityIssue {
+  domainId: string;
+  label: string;
+  message: string;
+}
+
+/**
+ * Post-update fidelity check on locked domains. Returns issues when a locked
+ * requirement was silently dropped, or a new answer contradicts a prior locked
+ * answer. Signal only — the caller decides how to surface; it never blocks.
+ */
+export function checkLockedFidelity(
+  graph: Domain[],
+  before: Record<string, { answers: string[] }>,
+  after: Record<string, { answers: string[] }>,
+): FidelityIssue[] {
+  const issues: FidelityIssue[] = [];
+  for (const domain of graph) {
+    if (domain.kind !== "locked") continue;
+    const beforeAnswers = before[domain.id]?.answers ?? [];
+    const afterAnswers = after[domain.id]?.answers ?? [];
+
+    // Survival: a locked entry that existed must not be silently removed.
+    if (beforeAnswers.length > 0 && afterAnswers.length === 0) {
+      issues.push({
+        domainId: domain.id,
+        label: domain.label,
+        message: `${domain.label} was cleared — a locked requirement must not be silently removed.`,
+      });
+      continue;
+    }
+
+    // Contradiction: a revision that negates a prior locked requirement is flagged.
+    if (beforeAnswers.length > 0 && afterAnswers.length > beforeAnswers.length) {
+      const revisions = afterAnswers.slice(beforeAnswers.length);
+      for (const prior of beforeAnswers) {
+        for (const revision of revisions) {
+          if (answersContradict(prior, revision)) {
+            issues.push({
+              domainId: domain.id,
+              label: domain.label,
+              message: `A new ${domain.label} answer may contradict a previously locked requirement.`,
+            });
+            break;
+          }
+        }
+      }
+    }
+  }
+  return issues;
 }

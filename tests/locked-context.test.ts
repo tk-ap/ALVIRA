@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getKnowledgeGraph, shouldConfirmLockedChange, type InterviewState } from "../src/routes/-knowledgeGraph";
+import { getKnowledgeGraph, shouldConfirmLockedChange, checkLockedFidelity, type InterviewState } from "../src/routes/-knowledgeGraph";
 import { compileKnowledge } from "../src/routes/-knowledgeCompiler";
 
 function makeState(domains: InterviewState["domains"]): InterviewState {
@@ -38,5 +38,41 @@ describe("locked context class", () => {
     expect(shouldConfirmLockedChange(graph, "constraints", 1)).toBe(true);
     expect(shouldConfirmLockedChange(graph, "constraints", 0)).toBe(false);
     expect(shouldConfirmLockedChange(graph, "identity", 1)).toBe(false);
+  });
+
+  test("checkLockedFidelity flags a cleared locked requirement", () => {
+    const graph = getKnowledgeGraph("personal");
+    const issues = checkLockedFidelity(
+      graph,
+      { constraints: { answers: ["Never ship without owner review."] } },
+      { constraints: { answers: [] } },
+    );
+    expect(issues.some((i) => i.domainId === "constraints" && /cleared/i.test(i.message))).toBe(true);
+  });
+
+  test("checkLockedFidelity flags a revision that contradicts a locked requirement", () => {
+    const graph = getKnowledgeGraph("personal");
+    const issues = checkLockedFidelity(
+      graph,
+      { constraints: { answers: ["We must always encrypt user data."] } },
+      { constraints: { answers: ["We must always encrypt user data.", "We don't encrypt user data."] } },
+    );
+    expect(issues.some((i) => i.domainId === "constraints" && /contradict/i.test(i.message))).toBe(true);
+  });
+
+  test("checkLockedFidelity ignores descriptive domains and non-contradicting additions", () => {
+    const graph = getKnowledgeGraph("personal");
+    const issues = checkLockedFidelity(
+      graph,
+      {
+        identity: { answers: ["I run a studio."] },
+        constraints: { answers: ["Never ship without review."] },
+      },
+      {
+        identity: { answers: ["I run a design studio."] },
+        constraints: { answers: ["Never ship without review.", "Also cap infra spend."] },
+      },
+    );
+    expect(issues).toEqual([]);
   });
 });

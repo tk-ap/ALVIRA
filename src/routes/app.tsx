@@ -19,6 +19,7 @@ import {
   getKnowledgeGraph,
   getPlaybook,
   shouldConfirmLockedChange,
+  checkLockedFidelity,
   type Domain,
   type InterviewState,
   type Message,
@@ -1340,6 +1341,13 @@ function AppPage() {
           },
         };
       }
+    }
+
+    // Post-action fidelity: a locked requirement must survive an update, and a
+    // revision that contradicts it is flagged rather than silently filed.
+    const fidelityIssues = checkLockedFidelity(graph, state.domains, updatedDomains);
+    if (fidelityIssues.length > 0) {
+      newHistory.push({ role: "assistant", content: fidelityIssues.map((issue) => issue.message).join(" ") });
     }
 
     const updatedState: InterviewState = {

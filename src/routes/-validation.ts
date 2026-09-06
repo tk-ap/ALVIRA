@@ -336,6 +336,31 @@ export function detectMoveOnRequest(answer: string): boolean {
 }
 
 /**
+ * Pair-wise contradiction check: one statement negates while the other affirms,
+ * and they share at least two meaningful terms. Basic keyword heuristic.
+ */
+export function answersContradict(prior: string, next: string): boolean {
+  const lowerNext = next.toLowerCase();
+  const lowerPrior = prior.toLowerCase();
+  const hasNegInNext = NEGATION_WORDS.some((nw) => lowerNext.includes(nw));
+  const hasNegInPrior = NEGATION_WORDS.some((nw) => lowerPrior.includes(nw));
+  if (hasNegInNext === hasNegInPrior) return false;
+
+  const nextWords = new Set(
+    lowerNext.replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter((w) => w.length > 2),
+  );
+  const priorWords = new Set(
+    lowerPrior.replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter((w) => w.length > 2),
+  );
+
+  let shared = 0;
+  for (const w of nextWords) {
+    if (priorWords.has(w) && w.length > 3 && !NEGATION_WORDS.includes(w)) shared += 1;
+  }
+  return shared >= 2;
+}
+
+/**
  * Pure function: validate an answer against existing answers for the same domain.
  * Returns a confidence score (0–1), any warnings, and a needsClarification flag.
  * Checks (in priority order):
@@ -516,45 +541,12 @@ export function validateAnswer(
   }
 
   // 5. Contradiction check (basic keyword-based)
-  if (existingAnswers.length > 0) {
-    const answerWords = new Set(
-      lower
-        .replace(/[^a-z0-9\s]/g, "")
-        .split(/\s+/)
-        .filter((w) => w.length > 2),
-    );
-
-    for (const existing of existingAnswers) {
-      const existingLower = existing.toLowerCase();
-      const existingWords = new Set(
-        existingLower
-          .replace(/[^a-z0-9\s]/g, "")
-          .split(/\s+/)
-          .filter((w) => w.length > 2),
-      );
-
-      // Check for negation patterns: if an existing answer says "we use X" and new says "we don't use X"
-      // Look for overlapping significant words with negation in one but not the other
-      const hasNegInNew = NEGATION_WORDS.some((nw) => lower.includes(nw));
-      const hasNegInExisting = NEGATION_WORDS.some((nw) => existingLower.includes(nw));
-
-      if (hasNegInNew !== hasNegInExisting) {
-        // One has negation, the other doesn't — check for shared key terms
-        const sharedWords: string[] = [];
-        for (const w of answerWords) {
-          if (existingWords.has(w) && w.length > 3 && !NEGATION_WORDS.includes(w)) {
-            sharedWords.push(w);
-          }
-        }
-        if (sharedWords.length >= 2) {
-          warnings.push(
-            `Possible contradiction with a previous answer. Shared terms: ${sharedWords.join(", ")}. Please clarify.`,
-          );
-          score -= 0.2;
-          isUnusable = true;
-          break; // Only flag one contradiction
-        }
-      }
+  for (const existing of existingAnswers) {
+    if (answersContradict(existing, trimmed)) {
+      warnings.push("Possible contradiction with a previous answer. Please clarify.");
+      score -= 0.2;
+      isUnusable = true;
+      break; // Only flag one contradiction
     }
   }
 

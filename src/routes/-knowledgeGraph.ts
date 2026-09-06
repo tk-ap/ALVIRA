@@ -49,6 +49,19 @@ export interface Domain {
   kind?: "descriptive" | "locked";
 }
 
+// ── Provenance: where a claim came from and whether it is verbatim or derived ──
+export type ProvenanceSource = "interview" | "document" | "derived";
+export type ProvenanceKind = "statement" | "interpretation";
+export interface ClaimProvenance {
+  source: ProvenanceSource;
+  kind: ProvenanceKind;
+}
+
+/** Default provenance for a user-typed interview answer: a verbatim statement from the interview. */
+export function defaultProvenance(): ClaimProvenance {
+  return { source: "interview", kind: "statement" };
+}
+
 // ── Playbook: tier-specific interview configuration ──
 export interface Playbook {
   tier: Tier;

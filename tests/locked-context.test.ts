@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getKnowledgeGraph, shouldConfirmLockedChange, checkLockedFidelity, type InterviewState } from "../src/routes/-knowledgeGraph";
+import { getKnowledgeGraph, shouldConfirmLockedChange, checkLockedFidelity, defaultProvenance, type InterviewState } from "../src/routes/-knowledgeGraph";
 import { compileKnowledge } from "../src/routes/-knowledgeCompiler";
 
 function makeState(domains: InterviewState["domains"]): InterviewState {
@@ -74,5 +74,21 @@ describe("locked context class", () => {
       },
     );
     expect(issues).toEqual([]);
+  });
+
+  test("defaultProvenance marks an interview answer as a verbatim statement", () => {
+    expect(defaultProvenance()).toEqual({ source: "interview", kind: "statement" });
+  });
+
+  test("compiler renders a Sources section listing provenance", () => {
+    const graph = getKnowledgeGraph("personal");
+    const state = {
+      ...makeState({ identity: { answers: ["I run a studio."], confidence: 1, covered: true } }),
+      contextSources: [{ id: "s1", type: "website", label: "My portfolio", locator: "https://example.com" }],
+    } as InterviewState;
+    const out = compileKnowledge(state, graph);
+    expect(out).toContain("## Sources");
+    expect(out).toContain("My portfolio");
+    expect(out).toContain("https://example.com");
   });
 });

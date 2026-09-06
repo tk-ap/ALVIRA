@@ -40,5 +40,18 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): string
     }
   }
 
+  // Provenance: name the sources this context was built from, so a downstream AI
+  // can tell user statements apart from evidence pulled from an attached source.
+  const sources = (state.contextSources ?? []).filter((s) => s.label?.trim());
+  if (sources.length > 0) {
+    lines.push("## Sources");
+    lines.push("");
+    for (const source of sources) {
+      const locator = source.locator?.trim() ? ` — ${source.locator.trim()}` : "";
+      lines.push(`- ${source.label.trim()} (${source.type})${locator}`);
+    }
+    lines.push("");
+  }
+
   return lines.join("\n").trimEnd() + "\n";
 }

@@ -18,49 +18,155 @@ The onboarding system should treat those sources as **seed context**, not as unq
 
 Every user enters the same ALVIRA Context system through one of two starting states:
 
-### 1. Start fresh
+### 1. Get my context from the AI I already use
 
-For users who do not have useful existing context to import.
+This is the preferred path for users who already have meaningful history with ChatGPT, Claude, Gemini, or another AI assistant.
+
+The primary user question is not “Do you have a file to upload?” It is:
+
+> **Where do you already use AI?**
+
+The product should progressively expose provider choices such as:
+
+- ChatGPT
+- Claude
+- Gemini
+- Another AI
+- Start fresh
+
+Selecting a provider should open a short provider-specific guide that helps the user obtain a useful context profile from that AI and bring the result back to ALVIRA.
+
+The default interaction pattern is:
+
+```text
+CHOOSE AI TOOL
+  ↓
+COPY ALVIRA-GENERATED CONTEXT PROMPT
+  ↓
+PASTE INTO SOURCE AI
+  ↓
+COPY SOURCE AI RESPONSE
+  ↓
+PASTE / UPLOAD INTO ALVIRA
+  ↓
+ALVIRA NORMALIZES + REVIEWS
+  ↓
+ASK ONLY REAL GAPS
+```
+
+Do not require native account connections before this flow is useful. Copy/paste must remain a viable low-friction path even after richer integrations exist.
+
+### 2. Start fresh
+
+For users who do not have useful existing AI context to import.
 
 ALVIRA begins with the normal adaptive interview and progressively builds a durable context model.
 
-### 2. Bring what your AI already knows
-
-For users who already use ChatGPT, Claude, Gemini, another AI assistant, or another context-bearing system.
-
-The user may provide an AI-generated context profile, conversation/export, Markdown/text/JSON file, or another supported import source.
-
-User-facing framing should stay simple:
-
-> **Bring what your AI already knows**
->
-> Start with context you have already built elsewhere. ALVIRA will organize it, show you what it understood, and ask only about what is missing or uncertain.
-
-These are onboarding paths into one context model, not separate products, tiers, or downstream experiences.
+These paths converge on one context model, not separate products, tiers, profiles, or downstream experiences.
 
 ---
 
-## AI context-profile import
+## Provider-specific “Get my context” guidance
 
-ALVIRA should explicitly support a user asking an existing AI assistant to summarize what it understands about them and then importing that result.
+ALVIRA should maintain provider-specific guidance for obtaining context from major AI tools.
 
-ALVIRA may provide a copyable helper prompt that asks the source AI to separate:
+The product language should remain simple:
 
-- explicitly stated facts;
-- current goals;
-- projects and responsibilities;
-- preferences;
-- constraints;
-- working/collaboration style;
-- recurring problems or repeated explanations;
-- important entities and relationships where appropriate;
-- decisions already made;
-- likely inferences;
-- potentially stale information;
-- contradictions or uncertainty;
-- important unknowns.
+> **Get my context from ChatGPT**
+>
+> Copy this prompt into ChatGPT. Then bring the response back here. ALVIRA will organize what it finds and ask only about what is missing or uncertain.
 
-The helper prompt is a convenience. ALVIRA must also accept useful free-form output that does not follow a prescribed template.
+Equivalent guidance should exist for Claude, Gemini, and a generic “Another AI” path.
+
+Provider-specific prompts may differ when a tool has materially different memory/project/context behavior, but they must normalize into the same ALVIRA seed pipeline.
+
+The user should not need to understand memory architecture, exports, schemas, embeddings, MCP, or model internals to use this flow.
+
+---
+
+## Canonical context-extraction prompt requirements
+
+The source-AI prompt is a product-critical component. It must be treated as a versioned onboarding artifact, not casual copy.
+
+At minimum, the prompt should ask the source AI to capture:
+
+- explicitly stated facts about the user;
+- current goals and priorities;
+- active projects, responsibilities, and commitments;
+- preferences and recurring choices;
+- constraints, boundaries, and tradeoff rules;
+- communication style and explanation preferences;
+- working and collaboration style;
+- recurring workflows, habits, or repeated processes;
+- recurring problems, frustrations, or things the user repeatedly explains;
+- important decisions already made and the reasoning when known;
+- important people, organizations, products, projects, and relationships when relevant;
+- relevant history that materially affects current decisions;
+- likely inferences that are useful but not explicitly confirmed;
+- potentially stale or time-sensitive information;
+- contradictions, competing interpretations, or unresolved ambiguity;
+- important unknowns or gaps the source AI cannot establish confidently.
+
+The prompt must explicitly instruct the source AI:
+
+- **do not present inference as fact**;
+- distinguish direct user statements from model inference where possible;
+- distinguish current information from potentially stale information;
+- preserve uncertainty rather than filling gaps with plausible guesses;
+- avoid generic personality filler that would not change future AI behavior;
+- prioritize context that would reduce repeated explanation or materially improve future reasoning, collaboration, personalization, and task execution;
+- avoid unnecessary sensitive detail when it is not relevant to the user’s AI workflow;
+- produce output that is understandable to the user, not only machine-readable.
+
+ALVIRA should accept useful free-form source output even when it does not follow the preferred structure exactly.
+
+---
+
+## Prompt validation and stress-test requirement
+
+No provider-specific context-extraction prompt should be treated as production-ready merely because it returns a plausible profile.
+
+Agents changing these prompts must test whether the resulting seed actually improves the ALVIRA workflow.
+
+### Required test dimensions
+
+For each materially changed prompt, test representative cases including:
+
+1. **Rich long-term AI user** — extensive history, multiple projects, preferences, and decisions.
+2. **Sparse user** — little history; the model must expose unknowns rather than invent context.
+3. **Multi-project user** — context should preserve project separation rather than blending unrelated work.
+4. **Changed-mind user** — newer direction should be distinguishable from stale prior direction.
+5. **Contradictory history** — conflicts should be surfaced rather than silently resolved.
+6. **Mostly inferred context** — the output must label uncertainty rather than overclaim.
+7. **Personal + professional mix** — relevant separation and restraint around sensitive/private material.
+8. **Nontechnical user** — output and instructions must remain understandable without developer terminology.
+9. **Provider variation** — ChatGPT, Claude, Gemini, and generic AI output should remain usable by the same normalization/review pipeline.
+10. **Adversarial verbosity/noise** — the prompt should discourage exhaustive trivia and retain high-value context.
+
+### Required evaluation questions
+
+Agents must explicitly evaluate:
+
+- Did the profile capture the context most likely to affect future AI responses?
+- Did it reduce the number of ALVIRA interview questions that would otherwise be necessary?
+- Did it preserve explicit fact vs inference vs uncertainty?
+- Did it identify stale/time-sensitive claims?
+- Did it preserve material contradictions?
+- Did it avoid generic filler and low-value trivia?
+- Did it avoid making unsupported claims about the user?
+- Could ALVIRA map the result into its existing domains/context model without a source-specific parallel profile?
+- Would a normal user understand what was returned and be able to correct it?
+- Did any important ALVIRA domain remain systematically under-captured?
+
+### Regression expectation
+
+Prompt changes should be compared against the previous prompt version using the same representative cases when possible.
+
+A new prompt should not ship if it improves prose quality while reducing context coverage, uncertainty labeling, provenance usefulness, or downstream interview efficiency.
+
+Where a failure is found, agents should update the prompt, normalization, or review flow according to the actual failure mode rather than adding decorative copy around weak extraction.
+
+The long-term measurable outcome is **Context Lift**: imported context should demonstrably reduce repeated explanation and improve downstream AI usefulness compared with starting without ALVIRA context.
 
 ---
 
@@ -76,6 +182,7 @@ Minimum conceptual fields:
 source:
   type: ai_context_import | conversation_export | document | url | prior_alvira_state | other
   provider: optional
+  prompt_version: optional
   imported_at:
   artifact_reference:
 
@@ -114,7 +221,7 @@ A newer user-confirmed statement may supersede an older confirmed statement. Pre
 The canonical onboarding pipeline is:
 
 ```text
-SOURCE
+SOURCE AI / OTHER SOURCE
   ↓
 INGEST
   ↓
@@ -151,14 +258,9 @@ The user should see the result of import in human language rather than raw schem
 
 A useful interaction model is:
 
-> **We found 32 useful pieces of context.**
+> **Here’s what ALVIRA understood.**
 >
-> 18 look explicit and consistent  
-> 7 appear inferred  
-> 4 may be outdated  
-> 3 conflict with something else
->
-> Review the uncertain parts, or continue and let ALVIRA ask about them naturally.
+> Some of this looks clear. Some may be inferred, outdated, or conflicting. Review the uncertain parts, or continue and let ALVIRA ask about them naturally.
 
 Where an existing claim-review surface already exists, extend it rather than introducing a parallel review system.
 
@@ -174,7 +276,8 @@ Example:
 
 ```text
 ChatGPT context profile ─┐
-Claude conversation export ─┤
+Claude context profile ──┤
+Gemini context profile ──┤
 Resume / portfolio / notes ─┼→ ALVIRA normalization → one durable context model
 Prior ALVIRA context ───────┘
 ```
@@ -189,6 +292,10 @@ The system should deduplicate semantically equivalent claims and surface materia
 
 The product should progressively support:
 
+- Get my context from ChatGPT
+- Get my context from Claude
+- Get my context from Gemini
+- Get my context from another AI
 - Paste an AI context profile
 - Upload a conversation/export
 - Upload Markdown, text, JSON, or supported documents
@@ -261,17 +368,21 @@ New users should simply receive the current canonical flow. In-progress users sh
 
 The onboarding model is working when:
 
-- an experienced AI user can bring prior context without starting over;
+- an experienced AI user can get useful context out of their preferred AI tool without understanding exports or developer tooling;
+- provider-specific prompts reliably capture high-value context rather than generic summaries;
+- prompt changes are stress-tested against representative user histories before production use;
 - imported AI inference is never silently promoted to user-confirmed truth;
 - the interview asks fewer redundant questions after a strong seed;
 - contradictions and stale claims are visible and resolvable;
-- provenance survives normalization;
+- provenance survives normalization, including source provider and prompt version when applicable;
 - multiple source formats converge on one ALVIRA Context model;
 - the user can inspect and correct what ALVIRA believes;
 - downstream tools receive only relevant context rather than the full profile by default;
 - returning users are informed when a live change materially alters the workflow they already learned;
 - a nontechnical user can complete this flow without understanding repository, Markdown, schema, MCP, harness, or context-envelope terminology.
 
-## Product rule
+## Product rules
 
 > **ALVIRA should never make a user rebuild context that can be safely imported, normalized, verified, and maintained — or make a returning user rediscover a materially changed workflow by accident.**
+
+> **A context-extraction prompt is not good because it sounds comprehensive. It is good when its output measurably improves ALVIRA’s understanding, reduces redundant interviewing, preserves uncertainty, and improves downstream AI usefulness.**

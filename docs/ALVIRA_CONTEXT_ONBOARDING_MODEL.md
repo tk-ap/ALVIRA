@@ -238,6 +238,25 @@ Markdown is an export/interoperability format, not the canonical source of truth
 
 ---
 
+## Returning-user continuity after product changes
+
+Onboarding does not end after the first session. A returning user has an established mental model of where context, interviews, Reflect, Bridge, and other controls live.
+
+When a production change materially alters that established workflow, apply `docs/IN_PRODUCT_CHANGE_COMMUNICATION.md`.
+
+Relevant changes must be classified as one of:
+
+- `NO_NOTICE_REQUIRED`
+- `CONTEXTUAL_TIP`
+- `LOGIN_NOTICE`
+- `IMPORTANT_NOTICE`
+
+Returning users should receive concise guidance on what changed, why it matters, what they need to do differently (if anything), and where the moved/new functionality now lives. Do not force returning users through full onboarding again solely because the product changed.
+
+New users should simply receive the current canonical flow. In-progress users should retain saved context/interview state wherever technically possible and receive migration guidance before they encounter a materially changed next step.
+
+---
+
 ## Success criteria
 
 The onboarding model is working when:
@@ -250,8 +269,9 @@ The onboarding model is working when:
 - multiple source formats converge on one ALVIRA Context model;
 - the user can inspect and correct what ALVIRA believes;
 - downstream tools receive only relevant context rather than the full profile by default;
+- returning users are informed when a live change materially alters the workflow they already learned;
 - a nontechnical user can complete this flow without understanding repository, Markdown, schema, MCP, harness, or context-envelope terminology.
 
 ## Product rule
 
-> **ALVIRA should never make a user rebuild context that can be safely imported, normalized, verified, and maintained.**
+> **ALVIRA should never make a user rebuild context that can be safely imported, normalized, verified, and maintained — or make a returning user rediscover a materially changed workflow by accident.**

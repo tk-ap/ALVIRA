@@ -1,4 +1,4 @@
-import { getDb } from "~/db";
+import { getDb, getMeosComp, getUserById } from "~/db";
 
 export interface FoundingBetaAccess {
   user_id: string;
@@ -62,14 +62,22 @@ export function ensureFoundingBetaSchema(): Promise<void> {
     // non-expiring for the life of the account/service.
     const ownerEmail = (process.env.ALVIRA_OWNER_EMAIL ?? FOUNDING_BETA_EXCLUDED_EMAILS[0]).trim().toLowerCase();
     const excluded = Array.from(new Set([ownerEmail, ...FOUNDING_BETA_EXCLUDED_EMAILS]));
+    // Existing eligible users were the initial Founding Beta cohort, plus any
+    // account holding active ALVIRA Reflect compensation (meos_comps) is
+    // enrolled regardless of creation date. The excluded-email filter applies
+    // to both branches.
     await db.query(
       `INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
-       SELECT id,
-              CASE WHEN tier = 'founding_beta' THEN 'free' ELSE tier END,
+       SELECT u.id,
+              CASE WHEN u.tier = 'founding_beta' THEN 'free' ELSE u.tier END,
               $3::timestamptz
-         FROM users
-        WHERE created_at <= $1::timestamptz
-          AND LOWER(TRIM(email)) <> ALL($2::text[])
+         FROM users u
+        WHERE (u.created_at <= $1::timestamptz
+               AND LOWER(TRIM(u.email)) <> ALL($2::text[]))
+           OR (EXISTS (SELECT 1 FROM meos_comps c
+                        WHERE LOWER(TRIM(c.email)) = LOWER(TRIM(u.email))
+                          AND c.expires_at > NOW())
+               AND LOWER(TRIM(u.email)) <> ALL($2::text[]))
        ON CONFLICT (user_id) DO NOTHING`,
       [FOUNDING_BETA_EXISTING_USER_CUTOFF, excluded, FOUNDING_BETA_PERMANENT_EXPIRY],
     );
@@ -109,9 +117,32 @@ export async function hasActiveFoundingBeta(userId: string): Promise<boolean> {
   return !!access && new Date(access.expires_at).getTime() > Date.now();
 }
 
-export async function syncFoundingBetaTier(user: { id: string; tier: string }): Promise<{ active: boolean; expiresAt: string | null }> {
-  const access = await getFoundingBetaAccess(user.id);
-  if (!access) return { active: false, expiresAt: null };
+export async function syncFoundingBetaTier(user: { id: string; tier: string; email?: string }): Promise<{ active: boolean; expiresAt: string | null }> {
+  let access = await getFoundingBetaAccess(user.id);
+  if (!access) {
+    // Accounts holding active ALVIRA Reflect compensation (meos_comps) are
+    // enrolled on first authenticated request, regardless of creation date.
+    let email = user.email;
+    if (!email) {
+      email = (await getUserById(user.id))?.email ?? undefined;
+    }
+    if (email) {
+      const normalized = email.trim().toLowerCase();
+      const ownerEmail = (process.env.ALVIRA_OWNER_EMAIL ?? FOUNDING_BETA_EXCLUDED_EMAILS[0]).trim().toLowerCase();
+      const excluded = new Set([ownerEmail, ...FOUNDING_BETA_EXCLUDED_EMAILS]);
+      const comp = excluded.has(normalized) ? null : await getMeosComp(normalized);
+      if (comp) {
+        await getDb().query(
+          `INSERT INTO founding_beta_access (user_id, previous_tier, expires_at)
+           VALUES ($1, $2, $3::timestamptz)
+           ON CONFLICT (user_id) DO NOTHING`,
+          [user.id, user.tier === "founding_beta" ? "free" : user.tier, FOUNDING_BETA_PERMANENT_EXPIRY],
+        );
+        access = await getFoundingBetaAccess(user.id);
+      }
+    }
+    if (!access) return { active: false, expiresAt: null };
+  }
 
   const active = new Date(access.expires_at).getTime() > Date.now();
   if (active && user.tier === "free") {

@@ -24,7 +24,17 @@ export interface ExtractionResult {
 
 interface ExtractInput {
   text: string;
-  tier: Tier;
+  /**
+   * Knowledge-schema scope for claim extraction. This is deliberately separate
+   * from account/billing tier (free/pro/founder/etc.).
+   */
+  contextScope?: Tier;
+  /**
+   * Backward-compatible alias used by older callers. It is treated only as a
+   * knowledge-schema scope when it is one of personal/team/enterprise. Any
+   * account-tier value falls back to personal rather than blocking the upload.
+   */
+  tier?: unknown;
   topic: string;
   offering?: "context" | "meos";
 }
@@ -33,6 +43,22 @@ interface ExtractInput {
 const MAX_INPUT_CHARS = 60_000;
 const MAX_CLAIMS = 40;
 const MIN_CLAIM_CONFIDENCE = 0.5; // below this the claim is excluded entirely
+const CONTEXT_SCOPES: readonly Tier[] = ["personal", "team", "enterprise"];
+
+function isContextScope(value: unknown): value is Tier {
+  return typeof value === "string" && CONTEXT_SCOPES.includes(value as Tier);
+}
+
+/**
+ * Resolve the knowledge schema independently from account entitlements.
+ * Individual Add Context uploads default to personal unless a caller explicitly
+ * supplies a valid team/enterprise context scope.
+ */
+export function resolveContextScope(input: Pick<ExtractInput, "contextScope" | "tier">): Tier {
+  if (isContextScope(input.contextScope)) return input.contextScope;
+  if (isContextScope(input.tier)) return input.tier;
+  return "personal";
+}
 
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY || "";
@@ -52,12 +78,10 @@ export const extractClaims = createServerFn({ method: "POST" })
     if (d.text.length > MAX_INPUT_CHARS) {
       throw new Error(`Document is too large — please upload a document under ${Math.round(MAX_INPUT_CHARS / 1000)}k characters.`);
     }
-    if (!d.tier || !["personal", "team", "enterprise"].includes(d.tier)) {
-      throw new Error("Invalid tier.");
-    }
+    const contextScope = resolveContextScope(d);
     return {
       text: d.text.slice(0, MAX_INPUT_CHARS),
-      tier: d.tier as Tier,
+      contextScope,
       topic: typeof d.topic === "string" ? d.topic.slice(0, 500) : "",
       offering: d.offering === "meos" ? "meos" : "context",
     };
@@ -69,7 +93,7 @@ export const extractClaims = createServerFn({ method: "POST" })
 
     const openai = getOpenAIClient();
 
-    const graph = data.offering === "meos" ? getMeosGraph() : getKnowledgeGraph(data.tier);
+    const graph = data.offering === "meos" ? getMeosGraph() : getKnowledgeGraph(data.contextScope);
     const domainIds = new Set(graph.map((d) => d.id));
     const catalog = graph.map((d) => `- ${d.id}: ${d.label} — ${d.description}`).join("\n");
 

@@ -134,22 +134,33 @@ export function AppFirstRunClarity() {
     let frameOne = 0;
     let frameTwo = 0;
     let observer: MutationObserver | null = null;
+    let fallback = 0;
 
-    frameOne = window.requestAnimationFrame(() => {
-      frameTwo = window.requestAnimationFrame(() => {
-        if (cancelled) return;
-        applyFirstRunClarity();
+    const reveal = () => {
+      if (cancelled) return;
+      applyFirstRunClarity();
+      if (!observer) {
         observer = new MutationObserver(() => {
           applyFirstRunClarity();
         });
         observer.observe(document.body, { childList: true, subtree: true });
-      });
+      }
+    };
+
+    frameOne = window.requestAnimationFrame(() => {
+      frameTwo = window.requestAnimationFrame(reveal);
     });
+    // Headless/background tabs (cloud browsers, E2E automation) never fire
+    // requestAnimationFrame, so the two-frame reveal above would leave main
+    // permanently hidden (visibility: hidden). A timer fallback guarantees the
+    // reveal even when no frames paint.
+    fallback = window.setTimeout(reveal, 300);
 
     return () => {
       cancelled = true;
       window.cancelAnimationFrame(frameOne);
       window.cancelAnimationFrame(frameTwo);
+      window.clearTimeout(fallback);
       observer?.disconnect();
       const main = document.querySelector<HTMLElement>("main#main-content");
       if (main) {

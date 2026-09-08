@@ -5,6 +5,8 @@ export interface ValidationResult {
   warnings: string[];
   needsClarification: boolean; // true when confidence is too low — the answer isn't usable
   insufficientKnowledge: boolean; // true when user admits they don't know / haven't prepared
+  /** True only for genuinely unusable input (gibberish, contradiction) that must be re-asked. */
+  isUnusable: boolean;
   /**
    * Existing interview routing flag. Normally means the user asked a clarifying
    * question. A strong topical mismatch also uses this non-answer clarification
@@ -294,6 +296,70 @@ export function detectUserQuestion(answer: string): boolean {
   return false;
 }
 
+// ── Move-on / frustration detection ──
+// Explicit requests to leave the current topic. When detected, the interview
+// marks the domain as "unexplored / uninterested in exploration" and advances
+// immediately instead of re-probing — the user is asking to move on, not for a
+// follow-up question.
+
+const MOVE_ON_PHRASES = [
+  "move on", "moving on", "next question", "next topic", "next please",
+  "change topic", "different topic", "let's move", "can we move on",
+  "skip this", "skip it", "let's skip",
+  "not interested", "uninterested", "don't care", "do not care", "no comment",
+  "not relevant", "irrelevant", "doesn't apply", "does not apply", "not applicable",
+  "don't want to talk", "don't want to answer", "don't want to discuss",
+  "don't want to go into", "would rather not", "rather not",
+  "stop asking", "tired of this", "enough about this",
+  "frustrating", "i'm frustrated", "this is annoying",
+];
+
+const MOVE_ON_SHORT_RESPONSES = ["skip", "next", "pass", "boring", "irrelevant", "nah", "n/a"];
+
+export function detectMoveOnRequest(answer: string): boolean {
+  const trimmed = answer.trim();
+  const lower = trimmed.toLowerCase();
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+
+  for (const phrase of MOVE_ON_PHRASES) {
+    if (lower.includes(phrase)) return true;
+  }
+
+  // Short, whole-word deflections — only when the answer is a brief dismissal,
+  // never when a longer answer merely mentions the word.
+  if (wordCount <= 5) {
+    const tokens = lower.replace(/[^a-z0-9/]/g, " ").split(/\s+/).filter(Boolean);
+    if (tokens.some((token) => MOVE_ON_SHORT_RESPONSES.includes(token))) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Pair-wise contradiction check: one statement negates while the other affirms,
+ * and they share at least two meaningful terms. Basic keyword heuristic.
+ */
+export function answersContradict(prior: string, next: string): boolean {
+  const lowerNext = next.toLowerCase();
+  const lowerPrior = prior.toLowerCase();
+  const hasNegInNext = NEGATION_WORDS.some((nw) => lowerNext.includes(nw));
+  const hasNegInPrior = NEGATION_WORDS.some((nw) => lowerPrior.includes(nw));
+  if (hasNegInNext === hasNegInPrior) return false;
+
+  const nextWords = new Set(
+    lowerNext.replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter((w) => w.length > 2),
+  );
+  const priorWords = new Set(
+    lowerPrior.replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter((w) => w.length > 2),
+  );
+
+  let shared = 0;
+  for (const w of nextWords) {
+    if (priorWords.has(w) && w.length > 3 && !NEGATION_WORDS.includes(w)) shared += 1;
+  }
+  return shared >= 2;
+}
+
 /**
  * Pure function: validate an answer against existing answers for the same domain.
  * Returns a confidence score (0–1), any warnings, and a needsClarification flag.
@@ -328,6 +394,7 @@ export function validateAnswer(
       warnings: [],
       needsClarification: false,
       insufficientKnowledge: false,
+      isUnusable: false,
       isUserQuestion: true,
     };
   }
@@ -348,6 +415,7 @@ export function validateAnswer(
       ],
       needsClarification: true,
       insufficientKnowledge: false,
+      isUnusable: true,
       isUserQuestion: true,
       topicMismatch: true,
       suggestedDomainId: topical.suggestedDomainId,
@@ -359,6 +427,7 @@ export function validateAnswer(
   // ═══════════════════════════════════════════
 
   let insufficientKnowledge = false;
+  let isUnusable = false;
 
   // 0a. Insufficient knowledge phrases — user admits they don't know / haven't prepared
   if (wordCount < 20) {
@@ -403,6 +472,7 @@ export function validateAnswer(
         "Your answer repeats the same word multiple times — please provide a more meaningful response.",
       );
       score -= 0.5;
+      isUnusable = true;
     }
   }
 
@@ -423,6 +493,7 @@ export function validateAnswer(
         "Your answer contains mostly unrecognizable words — please try again with clearer language.",
       );
       score -= 0.5;
+      isUnusable = true;
     }
   }
 
@@ -435,6 +506,7 @@ export function validateAnswer(
       "Your answer contains many non-alphabetic characters — please provide a clearer response.",
     );
     score -= 0.5;
+    isUnusable = true;
   }
 
   // ═══════════════════════════════════════════
@@ -469,44 +541,12 @@ export function validateAnswer(
   }
 
   // 5. Contradiction check (basic keyword-based)
-  if (existingAnswers.length > 0) {
-    const answerWords = new Set(
-      lower
-        .replace(/[^a-z0-9\s]/g, "")
-        .split(/\s+/)
-        .filter((w) => w.length > 2),
-    );
-
-    for (const existing of existingAnswers) {
-      const existingLower = existing.toLowerCase();
-      const existingWords = new Set(
-        existingLower
-          .replace(/[^a-z0-9\s]/g, "")
-          .split(/\s+/)
-          .filter((w) => w.length > 2),
-      );
-
-      // Check for negation patterns: if an existing answer says "we use X" and new says "we don't use X"
-      // Look for overlapping significant words with negation in one but not the other
-      const hasNegInNew = NEGATION_WORDS.some((nw) => lower.includes(nw));
-      const hasNegInExisting = NEGATION_WORDS.some((nw) => existingLower.includes(nw));
-
-      if (hasNegInNew !== hasNegInExisting) {
-        // One has negation, the other doesn't — check for shared key terms
-        const sharedWords: string[] = [];
-        for (const w of answerWords) {
-          if (existingWords.has(w) && w.length > 3 && !NEGATION_WORDS.includes(w)) {
-            sharedWords.push(w);
-          }
-        }
-        if (sharedWords.length >= 2) {
-          warnings.push(
-            `Possible contradiction with a previous answer. Shared terms: ${sharedWords.join(", ")}. Please clarify.`,
-          );
-          score -= 0.2;
-          break; // Only flag one contradiction
-        }
-      }
+  for (const existing of existingAnswers) {
+    if (answersContradict(existing, trimmed)) {
+      warnings.push("Possible contradiction with a previous answer. Please clarify.");
+      score -= 0.2;
+      isUnusable = true;
+      break; // Only flag one contradiction
     }
   }
 
@@ -516,5 +556,5 @@ export function validateAnswer(
   // needsClarification: true when confidence is too low for the answer to be usable
   const needsClarification = confidence < 0.4;
 
-  return { confidence, warnings, needsClarification, insufficientKnowledge, isUserQuestion: false };
+  return { confidence, warnings, needsClarification, insufficientKnowledge, isUnusable, isUserQuestion: false };
 }

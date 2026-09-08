@@ -75,11 +75,7 @@ function DashboardPage() {
       const filesPromise = profile.offering === "meos"
         ? Promise.resolve(compileInterviewMarkdown(state, getMeosGraph()).allFiles)
         : Promise.resolve(compileKnowledge(state, getKnowledgeGraph(state.tier))).then((compiled) => ({
-            "overview.md": compiled.overview,
-            "requirements.md": compiled.requirements,
-            "constraints.md": compiled.constraints,
-            "business-rules.md": compiled.businessRules,
-            "workflows.md": compiled.workflows,
+            "context.md": compiled,
           }));
       const files = await Promise.race([
         filesPromise,

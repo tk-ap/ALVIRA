@@ -1,6 +1,8 @@
 // ── Knowledge Graph: defines what domains of knowledge exist per tier ──
 // Based on the Alvira Knowledge Schema
 
+import { answersContradict } from "./-validation";
+
 // ── Shared types ──
 export type Tier = "personal" | "team" | "enterprise";
 export type Role = "user" | "assistant";
@@ -13,6 +15,8 @@ export interface Message {
 export interface InterviewState {
   tier: Tier;
   topic: string;
+  /** Short human title for display/export (falls back to `topic` when absent). */
+  title?: string;
   domains: Record<
     string,
     {
@@ -23,6 +27,8 @@ export interface InterviewState {
   >;
   history: Message[];
   currentDomain: string | null;
+  /** Domain ids the user chose to skip at the start; excluded from gap detection. */
+  skippedDomains?: string[];
   contextSources?: import("~/lib/context-engine").ContextSource[];
   /** Set after knowledge files have been generated so resume UI can offer an update flow. */
   generatedAt?: number;
@@ -39,6 +45,21 @@ export interface Domain {
   priority: number;
   /** Which output file this domain's content belongs to */
   outputFile: "overview" | "requirements" | "constraints" | "businessRules" | "workflows";
+  /** Normative vs descriptive. `locked` = a requirement the AI must satisfy, not mere background. Defaults to descriptive. */
+  kind?: "descriptive" | "locked";
+}
+
+// ── Provenance: where a claim came from and whether it is verbatim or derived ──
+export type ProvenanceSource = "interview" | "document" | "derived";
+export type ProvenanceKind = "statement" | "interpretation";
+export interface ClaimProvenance {
+  source: ProvenanceSource;
+  kind: ProvenanceKind;
+}
+
+/** Default provenance for a user-typed interview answer: a verbatim statement from the interview. */
+export function defaultProvenance(): ClaimProvenance {
+  return { source: "interview", kind: "statement" };
 }
 
 // ── Playbook: tier-specific interview configuration ──
@@ -102,6 +123,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "decisionFrameworks",
+    kind: "locked",
     label: "Decision Frameworks",
     description: "How important decisions are made — approval rules, escalation criteria, prioritization methods, risk tolerance, trade-off preferences",
     promptHint: "Ask how they make important decisions. Who needs to approve? What factors do they weigh? How do they handle trade-offs?",
@@ -112,6 +134,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "constraints",
+    kind: "locked",
     label: "Constraints",
     description: "Limitations — policies, compliance requirements, legal restrictions, budget limits, security requirements, non-negotiables",
     promptHint: "Ask about boundaries and limitations. What rules must be followed? What can't be done? Are there budget, legal, or security constraints?",
@@ -182,6 +205,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "rules",
+    kind: "locked",
     label: "Rules",
     description: "Operational rules — business rules, approval rules, eligibility criteria, calculation rules",
     promptHint: "Ask about rules that govern their work. Are there specific business rules? What conditions trigger different outcomes? How are calculations done?",
@@ -192,6 +216,7 @@ const universalDomains: Domain[] = [
   },
   {
     id: "exceptions",
+    kind: "locked",
     label: "Exceptions",
     description: "Situations where rules change — edge cases, special approvals, overrides, emergency procedures",
     promptHint: "Ask about exceptions to the rules. When do normal processes not apply? What edge cases exist? Who can override standard procedures?",
@@ -339,4 +364,62 @@ export function getKnowledgeGraph(tier: Tier): Domain[] {
   }
 
   return withOrg;
+}
+
+/** True when filing a new answer for a locked domain that already has a prior answer — a change that should be soft-confirmed. */
+export function shouldConfirmLockedChange(graph: Domain[], domainId: string, priorAnswerCount: number): boolean {
+  const domain = graph.find((d) => d.id === domainId);
+  return domain?.kind === "locked" && priorAnswerCount > 0;
+}
+
+export interface FidelityIssue {
+  domainId: string;
+  label: string;
+  message: string;
+}
+
+/**
+ * Post-update fidelity check on locked domains. Returns issues when a locked
+ * requirement was silently dropped, or a new answer contradicts a prior locked
+ * answer. Signal only — the caller decides how to surface; it never blocks.
+ */
+export function checkLockedFidelity(
+  graph: Domain[],
+  before: Record<string, { answers: string[] }>,
+  after: Record<string, { answers: string[] }>,
+): FidelityIssue[] {
+  const issues: FidelityIssue[] = [];
+  for (const domain of graph) {
+    if (domain.kind !== "locked") continue;
+    const beforeAnswers = before[domain.id]?.answers ?? [];
+    const afterAnswers = after[domain.id]?.answers ?? [];
+
+    // Survival: a locked entry that existed must not be silently removed.
+    if (beforeAnswers.length > 0 && afterAnswers.length === 0) {
+      issues.push({
+        domainId: domain.id,
+        label: domain.label,
+        message: `${domain.label} was cleared — a locked requirement must not be silently removed.`,
+      });
+      continue;
+    }
+
+    // Contradiction: a revision that negates a prior locked requirement is flagged.
+    if (beforeAnswers.length > 0 && afterAnswers.length > beforeAnswers.length) {
+      const revisions = afterAnswers.slice(beforeAnswers.length);
+      for (const prior of beforeAnswers) {
+        for (const revision of revisions) {
+          if (answersContradict(prior, revision)) {
+            issues.push({
+              domainId: domain.id,
+              label: domain.label,
+              message: `A new ${domain.label} answer may contradict a previously locked requirement.`,
+            });
+            break;
+          }
+        }
+      }
+    }
+  }
+  return issues;
 }

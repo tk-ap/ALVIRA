@@ -60,6 +60,99 @@ The quiz should feel useful even before the user creates an ALVIRA Context.
 
 This is the closest archetype to the intended ALVIRA behavior, but it should not be framed as the “good” or winning personality type.
 
+## Visual / interaction direction
+
+### Core principle
+
+**High visual clarity, low cognitive load.**
+
+The quiz should teach through visuals and interaction rather than through walls of text. It should feel like an interactive editorial feature, not a dense survey or generic Typeform.
+
+### Desired feel
+
+- playful but premium;
+- visually rich without becoming noisy;
+- light on the eyes;
+- recognizable and human rather than “AI dashboard” heavy;
+- restrained enough to still feel like ALVIRA.
+
+### Visual language
+
+Use illustrated Context Type cards and lightweight scene-based graphics that make each behavior recognizable at a glance.
+
+Suggested visual metaphors:
+
+- **Context Hoarder:** stacked notes, tabs, screenshots, files, saved prompts, overflowing references;
+- **Context Repeater:** looping speech bubbles, repeated instructions, circular handoff/re-explanation visual;
+- **Context Minimalist:** sparse workspace, a few isolated blocks, intentionally empty space;
+- **Context Scatterer:** context fragments distributed across multiple app windows/tools with broken or partial connections;
+- **Context Curator:** organized folders, connected nodes, selectively surfaced context, visible maintenance/update cues.
+
+These should be expressive and memorable, but not cartoonishly loud.
+
+### Question interaction style
+
+Prefer visual and lightweight interactions such as:
+
+- tap an illustrated scenario card;
+- choose between two or more visual situations;
+- select “this looks most like me”;
+- use a simple preference spectrum when useful;
+- show small context fragments or mini-scenes rather than long descriptions.
+
+Avoid a long sequence of plain radio-button lists.
+
+Each screen should communicate one idea at a time.
+
+### Progress and motion
+
+Use soft progress indicators such as:
+
+- progress dots;
+- small pills;
+- a restrained step indicator;
+- subtle transitions between questions and result states.
+
+Motion may be used to reinforce comprehension, but should remain premium and minimal rather than arcade-like.
+
+### Result-page visual structure
+
+The result should be visually led.
+
+Recommended order:
+
+1. **Large Context Type hero visual**
+2. **Your Context Type**
+3. Short behavior summary
+4. **How your context behaves** — simple diagram/graphic
+5. **Where friction shows up** — visual failure point
+6. “What this gets right”
+7. “Where it breaks down”
+8. One memorable insight line
+9. **What better context management looks like** — before/after or transformation visual
+10. CTA: **Build your actual Context**
+
+The page should explain ALVIRA through the transformation, not through a feature dump.
+
+### UI guardrails
+
+- Use generous whitespace.
+- Keep copy short per screen.
+- Avoid card-heavy dashboard composition just because the experience is interactive.
+- Avoid harsh contrast, visual clutter, or too many simultaneous signals.
+- Do not make every question look like a form field.
+- Do not overuse gradients, glass effects, or generic AI imagery.
+- Graphics should support comprehension, not decoration for its own sake.
+- Preserve ALVIRA's restrained, editorial, premium design direction.
+
+### Product lesson encoded in the visuals
+
+The visual system should reinforce this idea:
+
+> People recognize context behaviors before they recognize “Context Intelligence” as a category.
+
+The graphics should help the user see how their context moves, gets lost, piles up, repeats, fragments, or gets maintained.
+
 ## Design principles
 
 - No type is inherently good or bad.
@@ -70,6 +163,7 @@ This is the closest archetype to the intended ALVIRA behavior, but it should not
 - Do not require the user to already know what “Context Intelligence” means.
 - The quiz should be understandable by nontechnical users.
 - Avoid generic productivity/personality-test language.
+- Prefer high recognition and low cognitive load over information density.
 
 ## Data / Context boundary
 
@@ -78,16 +172,6 @@ Quiz answers are **lightweight self-report signals**, not authoritative ALVIRA C
 They may inform onboarding or help choose what to explain next, but should not silently become durable claims about the user.
 
 If quiz-derived signals are ever incorporated into Context, they must follow normal ALVIRA evidence rules: provenance, explicit review/confirmation where appropriate, and separation between direct user statements and ALVIRA interpretation.
-
-## Suggested result structure
-
-1. **Your Context Type**
-2. One-line behavior summary
-3. “What this gets right”
-4. “Where it breaks down”
-5. One memorable insight line
-6. “What better context management looks like”
-7. CTA: **Build your actual Context**
 
 ## Product hypothesis
 
@@ -104,6 +188,7 @@ The hypothesis is not that people want a personality quiz. The hypothesis is tha
 - Whether users can explain ALVIRA's value more clearly after the quiz.
 - Whether a quiz result improves onboarding completion or reduces explanation burden.
 - Whether users share results organically.
+- Whether visually led questions improve completion versus text-heavy questions.
 
 ## Implementation priority
 

@@ -1,6 +1,6 @@
 # ALVIRA Build Brief — Product Direction
 
-**Status:** Agreed direction — 2026-09-05
+**Status:** Agreed direction — 2026-09-05; updated 2026-09-08
 
 ## Decision
 
@@ -23,6 +23,84 @@ The core transformation is:
 **Context → intent → reviewed working brief → adapter prompt / export**
 
 The prompt is an adapter. The durable asset is the user's maintained context plus the canonical reviewed brief.
+
+---
+
+## Embedded ailhat intelligence direction — 2026-09-08
+
+### Product decision
+
+Treat **ailhat as an embedded intelligence capability inside Build Brief first**, not as a required standalone public product experience.
+
+The near-term user flow should be:
+
+**ALVIRA understands the person/project → Build Brief structures the current job → ailhat intelligence identifies what deserves attention across that active work → execution routes outward when needed.**
+
+The intelligence outputs remain:
+
+- **Opportunity** — a useful opening or leverage point the user may not have noticed.
+- **Risk** — a material threat, contradiction, dependency, or unproven assumption.
+- **Drift** — evidence that current activity is moving away from goals, proof milestones, or previously accepted direction.
+- **Work** — a bounded next action worth routing to the user, Agent OS, or the owning system.
+
+The goal is to let users experience Portfolio Intelligence **before** asking them to understand or adopt a separate category.
+
+### Why embed it here
+
+The standalone ailhat question creates category-education burden:
+
+> Why do I need Portfolio Intelligence?
+
+Inside Build Brief, the user-facing question is simpler:
+
+> Given what ALVIRA knows about me, this project, and my active work, what important thing should I notice or do next?
+
+That is easier to understand and easier to validate.
+
+### Architecture boundary
+
+Keep the capability boundaries clear:
+
+- **ALVIRA** owns maintained human/project context and the reviewed working brief.
+- **ailhat** interprets that context across active work and returns Opportunity / Risk / Drift / Work signals.
+- **Agent OS** carries approved work through tasks, workflows, harnesses, hosts, state, and evidence.
+- **LEDGATo** governs execution authority/enforcement where applicable.
+- **Human judgment** remains the acceptance layer.
+
+ailhat should not absorb execution, permissions, generic workflow management, or broad analytics simply because it appears inside Build Brief.
+
+### Standalone-product posture
+
+Do **not** delete the ailhat concept or engine. Preserve it as a distinct internal capability and codebase while testing embedded demand.
+
+Standalone ailhat positioning is **deprioritized until usage proves that people want Portfolio Intelligence independently of ALVIRA**.
+
+Evidence that could justify a standalone surface later includes:
+
+- repeated usage of Opportunity / Risk / Drift / Work outside Build Brief;
+- demand to connect portfolio intelligence across systems without ALVIRA as the primary context source;
+- users asking for persistent portfolio monitoring as its own job;
+- evidence that embedded placement limits rather than improves the capability's usefulness.
+
+Until then, ailhat should earn independent product status through demand rather than architecture alone.
+
+### Design / theme boundary
+
+This is a **product-direction decision only**.
+
+Do not change the live ALVIRA or ailhat sites yet.
+
+Before any implementation, separately decide:
+
+- how Build Brief should visually surface Opportunity / Risk / Drift / Work;
+- whether ailhat appears by name or remains invisible intelligence in the first experience;
+- which ALVIRA design tokens/components should be inherited;
+- which ailhat visual identity, if any, should remain distinct;
+- whether the embedded experience is a panel, progressive disclosure layer, result mode, or another interaction pattern;
+- how desktop/mobile behavior should differ;
+- how an embedded surface avoids turning Build Brief into a kitchen sink.
+
+No live UI/theme/site inheritance decision is authorized by this document.
 
 ---
 
@@ -193,9 +271,9 @@ Working briefs also clarify the roles of adjacent ecosystem components:
 
 ### ailhat — Portfolio Intelligence
 
-**Question:** What deserves attention or work now, and why?
+**Question:** Given this context and active work, what non-obvious opportunity, risk, drift, or work deserves attention now?
 
-**Output:** evidence-backed work brief / opportunity / risk / drift / task candidate.
+**Output:** evidence-backed Opportunity / Risk / Drift / Work signal. Near-term, this should be experienced primarily inside Build Brief rather than requiring a separate ailhat product journey.
 
 ailhat may generate a prompt as an adapter, but it should not be positioned primarily as a prompt-engineering product either.
 
@@ -284,6 +362,9 @@ The goal is to validate the broader Context Intelligence claim, not to maximize 
 - [ ] Determine whether users benefit from named brief presets or whether ALVIRA should choose the structure invisibly.
 - [ ] Explore a general "Use my Context" flow that can produce a reviewed working artifact before handoff to any AI interface.
 - [ ] Measure whether Context reduces re-explanation and corrective iterations across everyday use cases, not only software builds.
+- [ ] Prototype **embedded ailhat intelligence** inside Build Brief using Opportunity / Risk / Drift / Work, without changing the live product until the interaction/theme inheritance is explicitly designed and approved.
+- [ ] Validate whether users understand and value these signals more readily when embedded than when presented as a standalone Portfolio Intelligence product.
+- [ ] Decide whether the first embedded version exposes the `ailhat` name or presents the capability invisibly as ALVIRA intelligence.
 
 ## Product language
 

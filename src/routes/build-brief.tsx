@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { BuildBriefEducation } from "~/components/BuildBriefEducation";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser, listProfiles, loadProfile } from "./-auth";
@@ -165,6 +166,8 @@ function BuildBriefPage() {
           </div>
         </div>
       </section>
+
+      <BuildBriefEducation />
 
       <section className="px-6 py-12 sm:px-8 lg:px-10"><div className="mx-auto max-w-6xl">
         {user === undefined ? <p className="font-mono text-sm text-warm-gray-dark dark:text-warm-gray">Loading Build Brief workspace…</p> : user === null ? <div className="max-w-2xl border border-ink/12 p-8 dark:border-mineral/12"><h2 className="font-display text-3xl">Sign in to build with your Context.</h2><p className="mt-3 text-warm-gray-dark dark:text-warm-gray">Build Brief uses Context saved in your ALVIRA account.</p><a href="/login" className="mt-6 inline-flex bg-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-mineral dark:bg-mineral dark:text-ink">Sign in →</a></div> : profiles.length === 0 ? <div className="max-w-2xl border border-ink/12 p-8 dark:border-mineral/12"><h2 className="font-display text-3xl">Build a Context first.</h2><p className="mt-3 text-warm-gray-dark dark:text-warm-gray">ALVIRA needs maintained Context before it can distinguish what matters to this build.</p><a href="/app" className="mt-6 inline-flex bg-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-mineral dark:bg-mineral dark:text-ink">Build Context →</a></div> : <div className="grid gap-10 lg:grid-cols-[380px_1fr]">

@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://alvira.ctonew.app/sitemap.xml
+Sitemap: https://alviratech.vercel.app/sitemap.xml

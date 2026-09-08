@@ -5,7 +5,7 @@ export function BuildBriefEducation() {
       className="border-b border-ink/10 px-6 py-8 dark:border-mineral/10 sm:px-8 lg:px-10"
     >
       <div className="mx-auto max-w-6xl">
-        <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-start">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">
               Explain this
@@ -16,9 +16,30 @@ export function BuildBriefEducation() {
             <p className="mt-4 max-w-2xl text-sm leading-7 text-warm-gray-dark dark:text-warm-gray">
               A Build Brief tells an AI builder what you want made, why it should exist, what it needs to do, what matters about the experience, and where the first version should stop. ALVIRA uses the relevant parts of your Context so you do not have to remember and re-explain everything from scratch.
             </p>
+            <p className="mt-4 max-w-2xl border-l border-system/50 pl-4 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">
+              You do not need an account to understand Build Briefs. Sign in only when you are ready for ALVIRA to generate one using your maintained Context.
+            </p>
           </div>
 
           <div className="divide-y divide-ink/10 border-y border-ink/10 dark:divide-mineral/10 dark:border-mineral/10">
+            <details className="group py-4">
+              <summary className="cursor-pointer list-none font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-ink dark:text-mineral">
+                See an example
+              </summary>
+              <div className="mt-3 grid gap-4 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray sm:grid-cols-2">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Before</p>
+                  <p className="mt-2">“I want something that tells me what I should work on every morning.”</p>
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Build Brief</p>
+                  <p className="mt-2"><strong>Goal:</strong> help a solo founder decide what deserves attention each morning.</p>
+                  <p className="mt-1"><strong>Must have:</strong> project list, priority recommendation, explanation.</p>
+                  <p className="mt-1"><strong>Not in V1:</strong> billing, team collaboration, autonomous execution.</p>
+                  <p className="mt-1"><strong>Success:</strong> understand the top 1–3 priorities within two minutes.</p>
+                </div>
+              </div>
+            </details>
             <details className="group py-4">
               <summary className="cursor-pointer list-none font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-ink dark:text-mineral">
                 Why you care

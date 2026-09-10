@@ -1,4 +1,4 @@
-version: 0.1.0
+version: 0.2.0
 product_key: alvira-meos
 agent_os_repository: tk-ap/agent-os
 routing_source: registry/product-routing.yaml
@@ -12,25 +12,35 @@ local:
     - reflection
     - alvira-profile-source-of-truth
     - nested-bridge-user-experience
+    - alvira-execution-request-and-review-experience
   produces:
     - approved-context
     - context-reference
     - context-update-candidate
+    - user-approved-execution-intent
   consumes:
     - user-provided-context
     - uploaded-context
     - verified-outcome-evidence-for-review
+    - execution-context-signals-for-reflect-review
   must_not_own:
     - portfolio-prioritization
     - canonical-workforce-routing
     - generic-authorization-intelligence
     - external-execution-harness
+    - agent-os-execution-persistence
   constraints:
     - context-is-not-authorization
+    - commercial-entitlement-is-not-execution-authority
     - alvira-bridge-is-a-gated-secondary-capability-inside-alvira
     - bridge-must-reuse-alvira-identity-and-profile-source-of-truth
     - shared-interview-engine-does-not-imply-one-mega-interview
+    - agent-os-may-power-a-future-paid-execution-capability-inside-alvira
+    - agent-os-remains-shared-host-agnostic-infrastructure-not-an-alvira-sku
+    - native-execution-must-not-remove-portable-export-to-other-harnesses
+    - execution-evidence-must-pass-through-reflect-before-durable-context-promotion
     - app-interviews-context-reflect-uploads-auth-and-data-models-are-regression-sensitive
+    - no-live-site-pricing-entitlement-or-production-execution-change-is-authorized-by-this-direction
 
 rules:
   canonical_product_role_from_routing_source: true

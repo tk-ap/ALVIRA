@@ -1,275 +1,16 @@
 /*
- * Homepage UI rebalance — owner-authorized from the 2026-09-05 Claude audit.
+ * ALVIRA homepage editorial system.
  *
- * Base/mobile styles remain owned by the route markup. These rules begin at the
- * desktop breakpoint so the <=640px layout stays unchanged.
- *
- * Desktop contract:
- * - one 1200px document grid
- * - 12 columns / 24px gutters
- * - major headings begin only on axis 1 or axis 5
- * - standard section rhythm: 96px; hero/closing: 128px
- * - display headings share weight 600
- * - narrow display measures step down to the 40px middle register
+ * The route owns mobile layout. Desktop uses one consistent document grid so
+ * the page reads top-to-bottom instead of zig-zagging between arbitrary axes.
+ * The customer-acquisition hero follows one hierarchy: message -> action -> proof.
  */
 
 @media (min-width: 1024px) {
   body:has(main#main-content > #possibilities) main#main-content {
     --home-section-y: 6rem;
-    --home-section-y-lg: 8rem;
+    --home-section-y-emphasis: 7rem;
     --home-grid-gutter: 1.5rem;
-    --home-grid-columns: 12;
-  }
-
-  /* Every homepage section gets symmetric rhythm. */
-  body:has(main#main-content > #possibilities) main#main-content > section {
-    padding-top: var(--home-section-y) !important;
-    padding-bottom: var(--home-section-y) !important;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type,
-  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type {
-    padding-top: var(--home-section-y-lg) !important;
-    padding-bottom: var(--home-section-y-lg) !important;
-  }
-
-  /* Shared 1200px document measure. Section backgrounds remain full bleed. */
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type,
-  body:has(main#main-content > #possibilities) main#main-content > section:not(:first-of-type) > div {
-    width: min(calc(100% - 5rem), 75rem);
-    max-width: 75rem;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  /* HERO — axis 1; supporting card occupies the right four columns and begins high. */
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-    align-items: start;
-    min-height: 0 !important;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:first-child {
-    grid-column: 1 / span 8;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > aside {
-    grid-column: 9 / -1;
-    align-self: start;
-    justify-self: stretch;
-    padding-top: 3rem;
-  }
-
-  /* Thesis gets full strength; capability statement becomes the supporting phrase. */
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type h1 {
-    color: var(--color-warm-gray-dark) !important;
-  }
-
-  .dark body:has(main#main-content > #possibilities) main#main-content > section:first-of-type h1 {
-    color: var(--color-warm-gray) !important;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type h1 > span {
-    color: var(--color-ink) !important;
-  }
-
-  .dark body:has(main#main-content > #possibilities) main#main-content > section:first-of-type h1 > span {
-    color: var(--color-ink-light) !important;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type aside .font-display {
-    font-size: 2rem !important;
-    line-height: 1.02 !important;
-    font-weight: 600 !important;
-  }
-
-  /* POSSIBILITY SELECTOR — heading begins on axis 5, interaction returns full width. */
-  body:has(main#main-content > #possibilities) #possibilities > div {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-  }
-
-  body:has(main#main-content > #possibilities) #possibilities > div > div:first-child {
-    grid-column: 5 / -1;
-    width: auto;
-    margin: 0;
-  }
-
-  body:has(main#main-content > #possibilities) #possibilities > div > div:nth-child(2) {
-    grid-column: 1 / -1;
-  }
-
-  body:has(main#main-content > #possibilities) #possibilities > div > p:last-child {
-    grid-column: 5 / span 7;
-    margin-left: 0;
-  }
-
-  /* WHY ALVIRA — axis 1, compact display step because the heading shares the row. */
-  body:has(main#main-content > #possibilities) #possibilities + section > div > div {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-  }
-
-  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:first-child {
-    grid-column: 1 / span 6;
-    padding-left: 0;
-  }
-
-  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:last-child {
-    grid-column: 7 / -1;
-  }
-
-  body:has(main#main-content > #possibilities) #possibilities + section h2 {
-    font-size: 2.5rem !important;
-    line-height: .98 !important;
-  }
-
-  /* Make the positive state visually legible before the text is read. */
-  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:last-child > div:last-child {
-    border: 1px solid color-mix(in srgb, var(--color-system) 52%, transparent);
-    border-top-width: 3px;
-    background: color-mix(in srgb, var(--color-system) 9%, transparent);
-    padding: 1.5rem;
-  }
-
-  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:last-child > div:first-child {
-    padding: 1.5rem;
-  }
-
-  /* CONTEXT — axis 1, compact display step; facets occupy the second half. */
-  body:has(main#main-content > #possibilities) #why-context > div {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-  }
-
-  body:has(main#main-content > #possibilities) #why-context > div > div:first-child {
-    grid-column: 1 / span 6;
-    padding-right: 0;
-  }
-
-  body:has(main#main-content > #possibilities) #why-context > div > div:last-child {
-    grid-column: 7 / -1;
-  }
-
-  body:has(main#main-content > #possibilities) #why-context h2 {
-    font-size: 2.5rem !important;
-    line-height: .98 !important;
-  }
-
-  /* HOW IT WORKS — thesis begins at axis 5; steps span the document. */
-  body:has(main#main-content > #possibilities) #why-context + section > div {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section > div > div:first-child {
-    grid-column: 5 / -1;
-    width: auto;
-    margin: 0;
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section > div > div:nth-child(2) {
-    grid-column: 1 / -1;
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section > div > div:last-child {
-    grid-column: 5 / -1;
-    width: auto;
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  /* TECHNICAL CATEGORY — supporting states axis 1; category thesis starts axis 5. */
-  body:has(main#main-content > #possibilities) #why-context + section + section > div > div {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section + section > div > div > div:first-child {
-    grid-column: 5 / -1;
-    grid-row: 1;
-    padding-left: 0;
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section + section > div > div > div:last-child {
-    grid-column: 1 / span 4;
-    grid-row: 1;
-  }
-
-  /* PORTABILITY — axis 1, compact heading; supporting copy begins in the second half. */
-  body:has(main#main-content > #possibilities) #why-context + section + section + section > div {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section + section + section > div > div:first-child {
-    grid-column: 1 / span 6;
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section + section + section > div > div:last-child {
-    grid-column: 7 / -1;
-    padding-top: 0;
-  }
-
-  body:has(main#main-content > #possibilities) #why-context + section + section + section h2 {
-    font-size: 2.5rem !important;
-    line-height: .98 !important;
-  }
-
-  /* CLOSING CTA — axis 1, wide measure. */
-  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > p:first-child {
-    text-align: left;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--home-grid-gutter);
-    text-align: left;
-    justify-items: stretch;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div > div:first-child {
-    grid-column: 1 / span 10;
-    max-width: none;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div > div:last-child {
-    grid-column: 10 / -1;
-    align-self: end;
-    align-items: stretch;
-  }
-
-  /* Display system: one weight, usable measures, and a middle register. */
-  body:has(main#main-content > #possibilities) main#main-content h1,
-  body:has(main#main-content > #possibilities) main#main-content h2 {
-    font-weight: 600 !important;
-  }
-
-  body:has(main#main-content > #possibilities) main#main-content h3.font-display {
-    font-size: 2rem !important;
-    line-height: 1.04 !important;
-  }
-
-  /* Prose rises to the 16px reading register on desktop; mono labels stay labels. */
-  body:has(main#main-content > #possibilities) main#main-content p:not(.font-mono),
-  body:has(main#main-content > #possibilities) main#main-content a:not(.font-mono),
-  body:has(main#main-content > #possibilities) main#main-content button:not(.font-mono) {
-    font-size: 1rem;
-  }
-
-  /* Collapse the page's near-grey visual hierarchy to three existing brand roles. */
-  body:has(main#main-content > #possibilities) main#main-content {
     --home-text-primary: var(--color-ink);
     --home-text-secondary: var(--color-mineral-dark);
     --home-text-muted: var(--color-warm-gray-dark);
@@ -281,6 +22,52 @@
     --home-text-muted: var(--color-warm-gray);
   }
 
+  /* One document measure and one vertical rhythm. */
+  body:has(main#main-content > #possibilities) main#main-content > section {
+    padding-top: var(--home-section-y) !important;
+    padding-bottom: var(--home-section-y) !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type,
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type {
+    padding-top: var(--home-section-y-emphasis) !important;
+    padding-bottom: var(--home-section-y-emphasis) !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type,
+  body:has(main#main-content > #possibilities) main#main-content > section:not(:first-of-type) > div {
+    width: min(calc(100% - 5rem), 75rem);
+    max-width: 75rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Display hierarchy: hero is the only oversized statement. */
+  body:has(main#main-content > #possibilities) main#main-content h1,
+  body:has(main#main-content > #possibilities) main#main-content h2 {
+    font-weight: 600 !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content h2 {
+    font-size: clamp(2.6rem, 4vw, 3.5rem) !important;
+    line-height: .96 !important;
+    max-width: 46rem;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content h3.font-display {
+    font-size: 1.8rem !important;
+    line-height: 1.04 !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content p:not(.font-mono),
+  body:has(main#main-content > #possibilities) main#main-content a:not(.font-mono),
+  body:has(main#main-content > #possibilities) main#main-content button:not(.font-mono) {
+    font-size: 1rem;
+  }
+
+  /* Collapse near-grey variants to a stable three-level text system. */
   body:has(main#main-content > #possibilities) main#main-content .text-\[\#27231f\],
   body:has(main#main-content > #possibilities) main#main-content .text-\[\#2c2824\] {
     color: var(--home-text-primary) !important;
@@ -295,5 +82,220 @@
   body:has(main#main-content > #possibilities) main#main-content .text-\[\#6d6258\],
   body:has(main#main-content > #possibilities) main#main-content .text-\[\#74685e\] {
     color: var(--home-text-muted) !important;
+  }
+
+  /* HERO — one reading axis. Message first, then product proof across the page. */
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--home-grid-gutter);
+    row-gap: 4rem;
+    align-items: start;
+    min-height: 0 !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:first-child {
+    grid-column: 1 / span 10;
+  }
+
+  /* The five-line manifesto duplicated the headline and made the left side too heavy. */
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:first-child > h1 + div {
+    display: none;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type h1 {
+    max-width: 67rem !important;
+    color: var(--home-text-muted) !important;
+  }
+
+  .dark body:has(main#main-content > #possibilities) main#main-content > section:first-of-type h1 {
+    color: var(--home-text-muted) !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type h1 > span {
+    color: var(--home-text-primary) !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:first-child > div:nth-of-type(2) {
+    max-width: 44rem;
+    margin-top: 2rem;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:first-child > div:nth-of-type(2) > p:first-child {
+    font-size: 2rem !important;
+    line-height: 1.02 !important;
+  }
+
+  /* The demo is proof, not a second hero card. */
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--home-grid-gutter);
+    width: 100%;
+    max-width: none !important;
+    border: 0 !important;
+    border-top: 1px solid color-mix(in srgb, var(--home-text-muted) 30%, transparent) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--home-text-muted) 30%, transparent) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 1.5rem 0 !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside > div:first-child {
+    grid-column: 1 / span 2;
+    align-self: start;
+    border-bottom: 0 !important;
+    padding: .15rem 1.25rem 0 0 !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside > div:first-child > span {
+    display: none;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside > div:nth-child(2) {
+    grid-column: 3 / -1;
+    display: grid;
+    grid-template-columns: .85fr 1.35fr 1.25fr;
+    gap: 0;
+    margin-top: 0 !important;
+    align-items: stretch;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside > div:nth-child(2) > div {
+    min-width: 0;
+    margin: 0 !important;
+    padding: .2rem 1.5rem !important;
+    border: 0 !important;
+    border-left: 1px solid color-mix(in srgb, var(--home-text-muted) 24%, transparent) !important;
+    background: transparent !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside > div:nth-child(2) > div:first-child {
+    border-left: 2px solid color-mix(in srgb, var(--color-system) 60%, transparent) !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside > div:nth-child(2) > div:nth-child(2) p:last-child {
+    font-size: .9rem !important;
+    line-height: 1.45 !important;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:first-of-type > div:nth-child(2) > aside > div:last-child {
+    display: none;
+  }
+
+  /* POSSIBILITIES — heading and interaction share the same left edge. */
+  body:has(main#main-content > #possibilities) #possibilities > div {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--home-grid-gutter);
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities > div > div:first-child {
+    grid-column: 1 / span 7;
+    width: auto;
+    margin: 0;
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities > div > div:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities > div > p:last-child {
+    grid-column: 1 / span 7;
+    margin-left: 0;
+  }
+
+  /* Repeated section contract: thesis left, evidence/detail right. */
+  body:has(main#main-content > #possibilities) #possibilities + section > div > div,
+  body:has(main#main-content > #possibilities) #why-context > div,
+  body:has(main#main-content > #possibilities) #why-context + section + section > div > div,
+  body:has(main#main-content > #possibilities) #why-context + section + section + section > div {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--home-grid-gutter);
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:first-child,
+  body:has(main#main-content > #possibilities) #why-context > div > div:first-child,
+  body:has(main#main-content > #possibilities) #why-context + section + section > div > div > div:first-child,
+  body:has(main#main-content > #possibilities) #why-context + section + section + section > div > div:first-child {
+    grid-column: 1 / span 5;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:last-child,
+  body:has(main#main-content > #possibilities) #why-context > div > div:last-child,
+  body:has(main#main-content > #possibilities) #why-context + section + section > div > div > div:last-child,
+  body:has(main#main-content > #possibilities) #why-context + section + section + section > div > div:last-child {
+    grid-column: 6 / -1;
+    padding-top: 0;
+  }
+
+  /* HOW IT WORKS — no axis jump; sequence follows directly under its thesis. */
+  body:has(main#main-content > #possibilities) #why-context + section > div {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--home-grid-gutter);
+  }
+
+  body:has(main#main-content > #possibilities) #why-context + section > div > div:first-child {
+    grid-column: 1 / span 7;
+    width: auto;
+    margin: 0;
+  }
+
+  body:has(main#main-content > #possibilities) #why-context + section > div > div:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  body:has(main#main-content > #possibilities) #why-context + section > div > div:last-child {
+    grid-column: 1 / span 8;
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Why-ALVIRA comparison stays legible without turning the positive state into a card. */
+  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:last-child > div {
+    padding: 0 1.25rem 0 0;
+  }
+
+  body:has(main#main-content > #possibilities) #possibilities + section > div > div > div:last-child > div:last-child {
+    border-top-color: color-mix(in srgb, var(--color-system) 62%, transparent) !important;
+  }
+
+  /* CLOSING CTA — same axes, with action in the final columns. */
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > p:first-child {
+    text-align: left;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--home-grid-gutter);
+    text-align: left;
+    justify-items: stretch;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div > div:first-child {
+    grid-column: 1 / span 9;
+    max-width: none;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type > div > div > div:last-child {
+    grid-column: 10 / -1;
+    align-self: end;
+    align-items: stretch;
+  }
+
+  body:has(main#main-content > #possibilities) main#main-content > section:last-of-type h2 {
+    font-size: clamp(3rem, 4.6vw, 4rem) !important;
   }
 }

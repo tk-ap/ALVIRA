@@ -164,12 +164,16 @@ Requirements:
 
 ## Desktop composition
 
-Preferred composition:
+The homepage should read as **one composition**, not as editorial copy beside an unrelated product card.
 
-- **left / primary:** interview conversation and response;
-- **right / secondary:** compact Context Mirror.
+Preferred sequence:
 
-The Context Mirror should feel like a live consequence of the answer, not a separate dashboard competing for attention.
+1. primary message and CTA establish why the product matters;
+2. the demo spans the shared document width immediately beneath that message;
+3. the demo reads as a restrained proof strip: prompt / answer / Context Mirror / adapted question;
+4. borders and rules organize the sequence, but the demo should not look like a floating dashboard card competing with the headline.
+
+The proof should inherit the same horizontal grid as the rest of the page. Avoid a separate boxed “Live product example” treatment with its own shadow, background weight, or independent alignment.
 
 Keep enough whitespace that the demo remains one visual idea.
 
@@ -177,12 +181,12 @@ Do not surround the hero with multiple product screenshots, feature cards, or co
 
 ## Mobile composition
 
-On mobile, do not shrink the desktop split view until it becomes illegible.
+On mobile, do not shrink the desktop horizontal sequence until it becomes illegible.
 
 Preferred sequence:
 
 1. interview answer occupies the primary viewport;
-2. Context Mirror updates slide or reveal directly beneath it;
+2. Context Mirror updates reveal directly beneath it;
 3. next question becomes visible after the update.
 
 Keep the same causal order even if the layout stacks vertically.
@@ -217,145 +221,3 @@ Recommended pattern:
 
 **Primary CTA:**
 > Build your Context
-
-**Secondary CTA:**
-> What’s your Context Type?
-
-These are directional examples, not authorization to overwrite current ratified homepage copy without review. If the current copy already communicates the same idea more effectively, preserve it.
-
-## Product fidelity requirements
-
-The demo must use behavior the live product can genuinely support.
-
-Before implementation, verify against the current interview engine:
-
-- whether the shown prompt can exist in the real interview flow;
-- whether these three pieces of Context can be represented in the current schema/UI;
-- whether the Context Mirror can update at the demonstrated point in the flow;
-- whether the next-question engine can produce a gap-driven follow-up equivalent to the one shown;
-- whether the processing state matches actual behavior closely enough to avoid deception.
-
-If any part is not currently supported, do not fake it as observed behavior. Either:
-
-1. narrow the demo to the supported behavior; or
-2. label the relevant portion as illustrative until the product catches up.
-
-## Preferred implementation method
-
-Order of preference:
-
-1. **scripted deterministic fixture using actual interview and Context Mirror components**;
-2. real product capture from a stable demo/test account;
-3. carefully mocked marketing-only implementation only if the first two are impractical.
-
-For the homepage hero, deterministic fixtures are likely preferable to a prerecorded video because they can:
-
-- remain crisp across breakpoints;
-- respect reduced-motion preferences;
-- use real product components;
-- avoid video compression and autoplay-policy problems;
-- be instrumented directly;
-- stay easier to update when UI changes.
-
-However, the fixture must not create behavior that the real product cannot perform.
-
-## Component behavior contract
-
-The implementation should conceptually expose a small deterministic sequence rather than embedding timing logic throughout the hero.
-
-Suggested states:
-
-- `idle`
-- `typing`
-- `processing`
-- `context_updated`
-- `next_question`
-- `hold`
-- `reset`
-
-The visual sequence should be data-driven so public demo content can later be swapped without rewriting animation logic.
-
-Suggested fixture fields:
-
-- `question`
-- `response`
-- `context_updates[]`
-- `next_question`
-- `timing`
-- `public_safe`
-
-Do not couple the fixture to billing tier, private user records, or production persistence.
-
-## Visual restraint rules
-
-- no fake terminal/code imagery;
-- no floating AI-brain graphics;
-- no giant animated network just to signal “context”;
-- no particle effects;
-- no more than three primary extracted items in the first hero proof;
-- no dense confidence/provenance metadata in the hero;
-- no long paragraph explaining what just happened;
-- no sound required;
-- no motion that competes with reading the typed response.
-
-The visual should feel like the actual product becoming useful, not an advertisement layered on top of it.
-
-## Accessibility
-
-- preserve keyboard/focus behavior if the demo contains interactive controls;
-- do not use color as the sole distinction between Context labels;
-- maintain readable contrast;
-- respect `prefers-reduced-motion`;
-- ensure the entire proof is understandable without audio;
-- avoid screen-reader noise from repeatedly replaying decorative demo state; animated fixture content should be hidden or summarized appropriately for assistive technology if needed.
-
-## Instrumentation
-
-Track whether the hero is clarifying the product rather than merely attracting attention.
-
-Recommended events:
-
-- `hero_demo_viewed`
-- `hero_demo_completed`
-- `hero_demo_replayed`
-- `hero_primary_cta_clicked`
-- `hero_context_type_cta_clicked`
-
-Useful comparisons:
-
-- hero → Build Context conversion before/after demo;
-- bounce/scroll behavior around the hero;
-- onboarding start rate;
-- comprehension feedback such as “What does ALVIRA do?”;
-- mobile versus desktop completion/engagement.
-
-Do not optimize the sequence primarily for replay count or watch time.
-
-## Acceptance criteria
-
-The hero demo is ready for public use when:
-
-- a new viewer can correctly describe the basic behavior after one loop;
-- the answer → Context → next-question relationship is visually obvious;
-- the full loop lands in roughly 14–16 seconds on default timing;
-- the copy remains legible on representative mobile and desktop sizes;
-- the static/reduced-motion state communicates the same core proof;
-- all visible outputs are plausible results of the current product;
-- no private or sensitive user data appears;
-- the demo does not increase homepage cognitive load;
-- the primary CTA remains obvious;
-- existing `/app`, interview, Context Mirror, Add Context, Reflect, auth, persistence, and Bridge behavior remain untouched unless separately approved.
-
-## Build boundary
-
-This spec defines the hero proof and its implementation behavior. It does **not** authorize a broad homepage redesign.
-
-Build this as a contained visual proof first. Review it in a preview environment against the current homepage, especially for:
-
-- whether the page feels less text-heavy;
-- whether the demo competes with or strengthens the current hero copy;
-- mobile legibility;
-- timing;
-- whether viewers understand that the Context Mirror is maintained understanding, not merely a one-time summary.
-
-Only after the proof works should additional homepage visuals be added.

@@ -48,7 +48,7 @@ For external clients, prefer this order:
 1. a deliberately pre-registered/native adapter when ALVIRA and the destination platform have an explicit integration relationship;
 2. **Client ID Metadata Documents (CIMD)** for normal third-party MCP clients;
 3. Dynamic Client Registration (DCR) only for backward compatibility;
-4. the `BRIDGE_CLIENT_SECRET` flow only for ALVIRA-owned/legacy confidential clients.
+4. the `BRIDGE_CLIENT_SECRET` flow only for ALVIRA-owned/internal confidential clients.
 
 ALVIRA advertises `client_id_metadata_document_supported: true`. A CIMD client uses the HTTPS URL of its metadata document as its `client_id`; ALVIRA fetches and verifies that document in the backend, validates the exact redirect URI, and never gives the client `BRIDGE_CLIENT_SECRET`.
 
@@ -79,7 +79,7 @@ The legacy `initialize` path remains available for clients on `2025-11-25` and e
 
 New Bridge connections are narrowed to one saved ALVIRA Context. The selected profile ID is carried through the short-lived authorization code into the access-token record. MCP and profile API reads must honor that selection.
 
-Existing pre-scope tokens remain compatible but are identified in the Bridge UI as legacy account-wide access and should be replaced.
+The former pre-scope `alvira-bridge` tokens were revoked during standalone Bridge retirement on 2026-09-15. They are not a supported compatibility path. A user who needs Bridge access must reconnect through the current scoped flow.
 
 The future authorization unit should become an **approved Context view/projection** rather than exposing a raw full Context by default. That can allow a user to approve categories such as working style and current goals while withholding unrelated personal history.
 
@@ -92,26 +92,33 @@ The future authorization unit should become an **approved Context view/projectio
 - the one Context the connection can read;
 - read-only permission;
 - expiration/reconnect timing;
-- a direct Revoke control;
-- legacy connections separately with a clear update/removal prompt.
+- a direct Revoke control.
 
 A generic authorization success redirect is not enough to claim a third-party app is connected. External connection success exists only after that client has exchanged its code for an active token.
 
-## Compatibility rule
+## Standalone Bridge retirement
 
-The former `alviratech-bridge` deployment remains a compatibility client during migration. It is not the canonical home for Bridge logic.
+The former `alviratech-bridge.vercel.app` application is no longer an authorization or MCP compatibility surface.
 
-The source needed to understand or reconstruct that legacy client is preserved under `compat/alvira-bridge-client/`. The former standalone `tk-ap/alvira-bridge` repository may therefore be retired without implying that the Vercel compatibility deployment, callback allowlist, or active legacy connections are also retired. Source consolidation and deployment retirement are separate decisions.
+Retirement evidence on 2026-09-15:
 
-The legacy callback derived from `BRIDGE_PUBLIC_URL` remains allowlisted while existing integrations are migrated deliberately. Do not retire it without checking current consumers.
+- no real legacy-deployment traffic was observed in the preceding 30 days; the only observed requests during review were unauthenticated retirement checks;
+- 12 active `client_id = alvira-bridge` access tokens across three users were revoked;
+- zero active `alvira-bridge` tokens/connections remained after revocation;
+- no unexpired `alvira-bridge` authorization codes remained;
+- no registered OAuth client still advertised the old `alviratech-bridge.vercel.app` callback;
+- a separately registered scoped MCP client was left untouched;
+- `/api/bridge/authorize` no longer allowlists the standalone application's callback.
 
-The ALVIRA-owned compatibility flow remains:
+The source needed to understand the retired client remains under `compat/alvira-bridge-client/` as historical reference only. The canonical Bridge implementation and all supported connection surfaces live in ALVIRA.
+
+The ALVIRA-owned internal confidential-client flow remains:
 
 - `GET /api/bridge/auth/start`
 - `GET /api/bridge/auth/callback`
 - `GET|DELETE /api/bridge/context`
 
-The browser token stays HTTP-only and is never exposed for copy/paste.
+That flow resolves only to ALVIRA's own callback. The browser token stays HTTP-only and is never exposed for copy/paste.
 
 ## Security model
 
@@ -132,9 +139,10 @@ The browser token stays HTTP-only and is never exposed for copy/paste.
 ALVIRA production needs:
 
 - `DATABASE_URL`
-- `BRIDGE_PUBLIC_URL=https://alviratech-bridge.vercel.app` while the compatibility callback remains supported
 - `BRIDGE_CLIENT_ID=alvira-bridge`
-- `BRIDGE_CLIENT_SECRET=<shared high-entropy secret>` for the legacy/internal confidential client only
+- `BRIDGE_CLIENT_SECRET=<shared high-entropy secret>` for the ALVIRA-owned internal confidential client only
+
+`BRIDGE_PUBLIC_URL` is retired and is not part of the supported ALVIRA environment contract.
 
 Third-party public MCP clients do not receive or reuse `BRIDGE_CLIENT_SECRET`.
 

@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   BridgeExchangeError,
   bridgeClientId,
-  bridgePublicUrl,
   getBridgeOAuthClient,
   getBridgeUserFromSession,
   isBridgeDestination,
@@ -103,18 +102,19 @@ export const Route = createFileRoute("/api/bridge/authorize")({
           }
         }
 
-        // ALVIRA-owned/legacy Bridge path retained for compatibility.
+        // ALVIRA-owned confidential-client path. The standalone Bridge callback
+        // was retired after all legacy alvira-bridge tokens were revoked.
         const internalCallback = `${url.origin}/api/bridge/auth/callback`;
-        const legacyCallback = `${bridgePublicUrl()}/api/auth/callback`;
         const returnTo = url.searchParams.get("return_to") || internalCallback;
-        const allowed = new Set([internalCallback, legacyCallback]);
-        if (!allowed.has(returnTo)) return Response.json({ error: "Invalid redirect URI." }, { status: 400 });
+        if (returnTo !== internalCallback) {
+          return Response.json({ error: "Invalid redirect URI." }, { status: 400 });
+        }
 
         const selectedProfileId = url.searchParams.get("profile_id");
         const destinationRaw = url.searchParams.get("destination");
         const destination = isBridgeDestination(destinationRaw) ? destinationRaw : null;
 
-        if (returnTo === internalCallback && (!selectedProfileId || !destination)) {
+        if (!selectedProfileId || !destination) {
           return Response.json({ error: "Select a Context and destination before authorizing Bridge." }, { status: 400 });
         }
         if (destinationRaw && !destination) {
@@ -125,7 +125,7 @@ export const Route = createFileRoute("/api/bridge/authorize")({
         if (!user) {
           const loginUrl = new URL("/login", url.origin);
           const connect = new URL("/bridge/connect", url.origin);
-          connect.searchParams.set("return_to", returnTo);
+          connect.searchParams.set("return_to", internalCallback);
           if (selectedProfileId) connect.searchParams.set("profile_id", selectedProfileId);
           if (destination) connect.searchParams.set("destination", destination);
           loginUrl.searchParams.set("returnTo", `${connect.pathname}${connect.search}`);
@@ -133,8 +133,8 @@ export const Route = createFileRoute("/api/bridge/authorize")({
         }
 
         try {
-          const { code } = await issueBridgeAuthorizationCode(user.id, returnTo, selectedProfileId, destination);
-          const callback = new URL(returnTo);
+          const { code } = await issueBridgeAuthorizationCode(user.id, internalCallback, selectedProfileId, destination);
+          const callback = new URL(internalCallback);
           callback.searchParams.set("code", code);
           return new Response(null, { status: 302, headers: { Location: callback.toString() } });
         } catch (error) {

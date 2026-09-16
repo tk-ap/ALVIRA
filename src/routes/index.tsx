@@ -91,8 +91,61 @@ const understandingStates = [
   ["Reusable", "Available to carry into future AI interactions when appropriate."],
 ] as const;
 
+const heroDemoScenarios = [
+  {
+    label: "Career transition",
+    prompt: "What are you trying to make easier right now?",
+    answer:
+      "I’m changing careers and taking night classes. I want AI to help me stay organized, but I still want to make the actual decisions myself.",
+    context: [
+      ["Goal", "Change careers"],
+      ["Current reality", "Taking night classes"],
+      ["AI preference", "Help me organize, not decide for me"],
+    ],
+    nextQuestion: "What kind of work are you hoping to move into?",
+  },
+  {
+    label: "Creative work",
+    prompt: "What are you working on right now?",
+    answer:
+      "I’m trying to finish an album, but I don’t want AI writing lyrics for me. I mostly need help organizing the release and keeping the project moving.",
+    context: [
+      ["Goal", "Finish and release an album"],
+      ["Creative boundary", "Do not write lyrics for me"],
+      ["Useful support", "Organization and release planning"],
+    ],
+    nextQuestion: "What part of the release is hardest to keep moving right now?",
+  },
+  {
+    label: "Decision making",
+    prompt: "What decision are you trying to make?",
+    answer:
+      "I’m deciding whether to move. Keeping my monthly costs low matters more to me than having more space, but I still want to stay close to work.",
+    context: [
+      ["Decision", "Whether to move"],
+      ["Priority", "Keep monthly costs low"],
+      ["Constraint", "Stay close to work"],
+    ],
+    nextQuestion: "What monthly housing cost would still feel comfortable?",
+  },
+  {
+    label: "Learning",
+    prompt: "What would you like help learning?",
+    answer:
+      "I’m learning Spanish for a trip. I remember things better when I practice out loud, and I only have about twenty minutes a day.",
+    context: [
+      ["Goal", "Learn Spanish for a trip"],
+      ["Learning preference", "Practice out loud"],
+      ["Time constraint", "About 20 minutes a day"],
+    ],
+    nextQuestion: "Would you rather spend those twenty minutes mostly speaking, or mix speaking with review?",
+  },
+] as const;
+
 function HeroUnderstandingDemo() {
+  const [scenarioIndex, setScenarioIndex] = useState(0);
   const [step, setStep] = useState(0);
+  const scenario = heroDemoScenarios[scenarioIndex];
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -101,12 +154,17 @@ function HeroUnderstandingDemo() {
       return;
     }
 
-    const durations = [1800, 3600, 1200, 3000, 4800];
+    const durations = [1600, 3200, 1000, 2600, 4200];
     const timer = window.setTimeout(() => {
-      setStep((current) => (current >= 4 ? 0 : current + 1));
+      if (step >= 4) {
+        setScenarioIndex((current) => (current + 1) % heroDemoScenarios.length);
+        setStep(0);
+        return;
+      }
+      setStep((current) => current + 1);
     }, durations[step]);
     return () => window.clearTimeout(timer);
-  }, [step]);
+  }, [step, scenarioIndex]);
 
   const showAnswer = step >= 1;
   const showContext = step >= 3;
@@ -116,11 +174,12 @@ function HeroUnderstandingDemo() {
     <aside
       className="w-full max-w-xl border border-[#191715]/14 bg-[#ebe4d8]/55 p-5 shadow-[0_18px_60px_rgba(25,23,21,0.08)] dark:border-white/14 dark:bg-white/[0.025] sm:p-6"
       aria-label="ALVIRA product demonstration"
+      aria-live="polite"
     >
       <div className="flex items-center justify-between gap-4 border-b border-[#191715]/12 pb-4 dark:border-white/12">
         <div>
-          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-system-dark dark:text-system">Live product example</p>
-          <p className="mt-1 text-sm font-semibold text-[#27231f] dark:text-[#ece4da]">Conversation → maintained Context</p>
+          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-system-dark dark:text-system">Product example {scenarioIndex + 1} / {heroDemoScenarios.length}</p>
+          <p className="mt-1 text-sm font-semibold text-[#27231f] dark:text-[#ece4da]">{scenario.label} · conversation → maintained Context</p>
         </div>
         <span className="h-2 w-2 rounded-full bg-system" aria-hidden="true" />
       </div>
@@ -129,14 +188,14 @@ function HeroUnderstandingDemo() {
         <div className="border-l-2 border-system/55 pl-4">
           <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#74685e] dark:text-[#93877c]">ALVIRA asks</p>
           <p className="mt-2 text-sm leading-6 text-[#342f2a] dark:text-[#e0d7cd]">
-            {showNextQuestion ? "What kind of work are you hoping to move into?" : "What are you trying to make easier right now?"}
+            {showNextQuestion ? scenario.nextQuestion : scenario.prompt}
           </p>
         </div>
 
         <div className={`border border-[#191715]/12 bg-[#f4f0e9] p-4 transition-opacity duration-500 dark:border-white/12 dark:bg-[#0b0e0e] ${showAnswer ? "opacity-100" : "opacity-25"}`}>
           <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#74685e] dark:text-[#93877c]">You answer naturally</p>
           <p className="mt-2 text-sm leading-6 text-[#342f2a] dark:text-[#e0d7cd]">
-            “I’m changing careers and taking night classes. I want AI to help me stay organized, but I still want to make the actual decisions myself.”
+            “{scenario.answer}”
           </p>
         </div>
 
@@ -147,11 +206,7 @@ function HeroUnderstandingDemo() {
           </div>
 
           <div className="mt-3 grid gap-2">
-            {[
-              ["Goal", "Change careers"],
-              ["Current reality", "Taking night classes"],
-              ["AI preference", "Help me organize, not decide for me"],
-            ].map(([label, value], index) => (
+            {scenario.context.map(([label, value], index) => (
               <div
                 key={label}
                 className={`grid grid-cols-[7.5rem_1fr] gap-3 border-b border-[#191715]/10 py-2 text-xs transition-all duration-500 last:border-b-0 dark:border-white/10 ${showContext ? "translate-y-0 opacity-100" : "translate-y-1 opacity-30"}`}

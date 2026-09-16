@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { TrustFooter } from "~/components/TrustFooter";
@@ -91,6 +91,89 @@ const understandingStates = [
   ["Reusable", "Available to carry into future AI interactions when appropriate."],
 ] as const;
 
+function HeroUnderstandingDemo() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStep(4);
+      return;
+    }
+
+    const durations = [1800, 3600, 1200, 3000, 4800];
+    const timer = window.setTimeout(() => {
+      setStep((current) => (current >= 4 ? 0 : current + 1));
+    }, durations[step]);
+    return () => window.clearTimeout(timer);
+  }, [step]);
+
+  const showAnswer = step >= 1;
+  const showContext = step >= 3;
+  const showNextQuestion = step >= 4;
+
+  return (
+    <aside
+      className="w-full max-w-xl border border-[#191715]/14 bg-[#ebe4d8]/55 p-5 shadow-[0_18px_60px_rgba(25,23,21,0.08)] dark:border-white/14 dark:bg-white/[0.025] sm:p-6"
+      aria-label="ALVIRA product demonstration"
+    >
+      <div className="flex items-center justify-between gap-4 border-b border-[#191715]/12 pb-4 dark:border-white/12">
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-system-dark dark:text-system">Live product example</p>
+          <p className="mt-1 text-sm font-semibold text-[#27231f] dark:text-[#ece4da]">Conversation → maintained Context</p>
+        </div>
+        <span className="h-2 w-2 rounded-full bg-system" aria-hidden="true" />
+      </div>
+
+      <div className="mt-5 space-y-4">
+        <div className="border-l-2 border-system/55 pl-4">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#74685e] dark:text-[#93877c]">ALVIRA asks</p>
+          <p className="mt-2 text-sm leading-6 text-[#342f2a] dark:text-[#e0d7cd]">
+            {showNextQuestion ? "What kind of work are you hoping to move into?" : "What are you trying to make easier right now?"}
+          </p>
+        </div>
+
+        <div className={`border border-[#191715]/12 bg-[#f4f0e9] p-4 transition-opacity duration-500 dark:border-white/12 dark:bg-[#0b0e0e] ${showAnswer ? "opacity-100" : "opacity-25"}`}>
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#74685e] dark:text-[#93877c]">You answer naturally</p>
+          <p className="mt-2 text-sm leading-6 text-[#342f2a] dark:text-[#e0d7cd]">
+            “I’m changing careers and taking night classes. I want AI to help me stay organized, but I still want to make the actual decisions myself.”
+          </p>
+        </div>
+
+        <div className="border-t border-[#191715]/14 pt-4 dark:border-white/14">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-system-dark dark:text-system">Context Mirror</p>
+            {step === 2 && <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#74685e] dark:text-[#93877c]">Updating Context…</span>}
+          </div>
+
+          <div className="mt-3 grid gap-2">
+            {[
+              ["Goal", "Change careers"],
+              ["Current reality", "Taking night classes"],
+              ["AI preference", "Help me organize, not decide for me"],
+            ].map(([label, value], index) => (
+              <div
+                key={label}
+                className={`grid grid-cols-[7.5rem_1fr] gap-3 border-b border-[#191715]/10 py-2 text-xs transition-all duration-500 last:border-b-0 dark:border-white/10 ${showContext ? "translate-y-0 opacity-100" : "translate-y-1 opacity-30"}`}
+                style={{ transitionDelay: showContext ? `${index * 140}ms` : "0ms" }}
+              >
+                <span className="font-mono uppercase tracking-[0.08em] text-[#74685e] dark:text-[#93877c]">{label}</span>
+                <span className="font-medium text-[#2c2824] dark:text-[#e0d7cd]">{showContext ? value : "—"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 border-t border-[#191715]/12 pt-4 dark:border-white/12">
+        <p className="text-xs leading-5 text-[#6d6258] dark:text-[#a99f94]">
+          ALVIRA carries what matters forward, then uses the unresolved gap to ask a better next question.
+        </p>
+      </div>
+    </aside>
+  );
+}
+
 function Home() {
   const [activeHelpIndex, setActiveHelpIndex] = useState(0);
   const activeHelp = helpTopics[activeHelpIndex];
@@ -100,7 +183,7 @@ function Home() {
       <Header />
 
       <main id="main-content" className="flex-1">
-        <section className="mx-auto grid max-w-7xl gap-12 px-6 py-14 sm:px-8 sm:py-20 lg:min-h-[78vh] lg:grid-cols-[1.18fr_0.82fr] lg:items-center lg:px-10 lg:py-28">
+        <section className="mx-auto grid max-w-7xl gap-12 px-6 py-14 sm:px-8 sm:py-20 lg:min-h-[78vh] lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:px-10 lg:py-28">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">
               ALVIRA
@@ -137,7 +220,7 @@ function Home() {
                 href="/app"
                 className="inline-flex min-h-13 items-center justify-center bg-[#191715] px-7 text-sm font-semibold text-[#f4f0e9] transition-opacity hover:opacity-85 dark:bg-[#f4f0e9] dark:text-[#191715]"
               >
-                Start with a conversation <span className="ml-3" aria-hidden="true">→</span>
+                Try ALVIRA — no account required <span className="ml-3" aria-hidden="true">→</span>
               </a>
               <a
                 href="#possibilities"
@@ -148,28 +231,13 @@ function Home() {
             </div>
 
             <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-[#74685e] dark:text-[#93877c]">
-              No AI experience required.
+              No signup to start. Create an account when you want to save your Context.
             </p>
           </div>
 
-          <aside className="hidden lg:block lg:justify-self-end">
-            <div className="max-w-md border-t border-[#191715]/20 pt-6 dark:border-white/20">
-              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-system-dark dark:text-system">
-                If you have never used AI this way
-              </p>
-              <p className="mt-5 font-display text-4xl leading-[0.98] tracking-[-0.03em] text-[#2c2824] dark:text-[#e0d7cd]">
-                You do not need to learn the technology before you can ask for help.
-              </p>
-              <div className="mt-7 space-y-4 text-sm leading-7 text-[#6d6258] dark:text-[#a99f94]">
-                <p>Tell it what you are trying to do.</p>
-                <p>Ask questions the way you would ask a person.</p>
-                <p>Keep talking until the answer becomes useful.</p>
-              </div>
-              <p className="mt-7 border-l border-system/50 pl-5 text-sm leading-6 text-[#5f554c] dark:text-[#b8ada1]">
-                ALVIRA makes those conversations more personal over time by keeping the useful background about you.
-              </p>
-            </div>
-          </aside>
+          <div className="lg:justify-self-end">
+            <HeroUnderstandingDemo />
+          </div>
         </section>
 
         <section id="possibilities" className="border-y border-[#191715]/10 bg-[#ebe4d8] dark:border-white/10 dark:bg-[#12100e]">
@@ -219,7 +287,7 @@ function Home() {
                   {activeHelp.explanation}
                 </p>
                 <a href="/app" className="mt-7 inline-flex min-h-11 items-center text-sm font-semibold text-system-dark underline decoration-system/35 underline-offset-4 hover:decoration-system dark:text-system">
-                  Try this with ALVIRA <span className="ml-2" aria-hidden="true">→</span>
+                  Try this with ALVIRA — no account required <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               </div>
             </div>
@@ -389,7 +457,7 @@ function Home() {
 
               <div className="flex flex-col gap-3">
                 <a href="/app" className="inline-flex min-h-14 items-center justify-center bg-[#191715] px-8 text-sm font-semibold text-[#f4f0e9] transition-opacity hover:opacity-85 dark:bg-[#f4f0e9] dark:text-[#191715]">
-                  Start with a conversation <span className="ml-3" aria-hidden="true">→</span>
+                  Try ALVIRA — no account required <span className="ml-3" aria-hidden="true">→</span>
                 </a>
                 <a href="/context" className="inline-flex min-h-11 items-center justify-center text-sm font-semibold text-system-dark underline decoration-system/35 underline-offset-4 hover:decoration-system dark:text-system">
                   Already have context? Bring it with you.

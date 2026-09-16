@@ -7,7 +7,6 @@ import { getDb } from "~/db";
 
 const SESSION_COOKIE = "alvira_session";
 const DEFAULT_BRIDGE_CLIENT_ID = "alvira-bridge";
-const DEFAULT_BRIDGE_URL = "https://alviratech-bridge.vercel.app";
 const CIMD_MAX_BYTES = 64 * 1024;
 const CIMD_TIMEOUT_MS = 4_000;
 
@@ -99,10 +98,6 @@ function ensureBridgeSchema() {
 
 export function bridgeClientId() {
   return process.env.BRIDGE_CLIENT_ID?.trim() || DEFAULT_BRIDGE_CLIENT_ID;
-}
-
-export function bridgePublicUrl() {
-  return process.env.BRIDGE_PUBLIC_URL?.trim() || DEFAULT_BRIDGE_URL;
 }
 
 export function hashBridgeSecret(value: string) {

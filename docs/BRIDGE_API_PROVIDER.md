@@ -101,6 +101,8 @@ A generic authorization success redirect is not enough to claim a third-party ap
 
 The former `alviratech-bridge` deployment remains a compatibility client during migration. It is not the canonical home for Bridge logic.
 
+The source needed to understand or reconstruct that legacy client is preserved under `compat/alvira-bridge-client/`. The former standalone `tk-ap/alvira-bridge` repository may therefore be retired without implying that the Vercel compatibility deployment, callback allowlist, or active legacy connections are also retired. Source consolidation and deployment retirement are separate decisions.
+
 The legacy callback derived from `BRIDGE_PUBLIC_URL` remains allowlisted while existing integrations are migrated deliberately. Do not retire it without checking current consumers.
 
 The ALVIRA-owned compatibility flow remains:

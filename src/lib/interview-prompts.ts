@@ -154,6 +154,7 @@ export function buildExperimentalQuestionPrompt(input: {
 - Avoid generic praise, therapy language, personality-test language, corporate jargon, and unnecessary summaries.
 - Do not interrogate for sensitive or irrelevant personal detail.
 - Make the question easy to answer in ordinary language. Examples may be offered only when they genuinely clarify the question.
+- Keep the conversational pace light: one short thought, then one question. Default to under 90 words unless the user asks for more.
 - A brief reflection may precede the question when it proves continuity, but it should add interpretation rather than simply repeat the user's words.
 - Never invent facts.
 
@@ -168,7 +169,7 @@ ${input.userName?.trim() ? `User name: ${input.userName.trim()}. Address them by
 ${conversationText(input.history) || "(this is the first question)"}
 ---
 
-${hasUserContext ? "Use what is already known. Ask only for the highest-value missing detail in this area." : "This is the first question. Ask a natural opening question that can produce useful, specific context without sounding like a form."}
+${hasUserContext ? "Use what is already known. Ask only for the highest-value missing detail in this area." : "This is the first substantive interview turn. Briefly introduce yourself as ALVIRA, explain at a high level that you are building living Context so AI can understand the user better, and say the flow is one question at a time. Mention that they can answer casually, skip something, correct you, or ask what you know about them at any point. Keep the introduction to 2-3 short sentences, then ask one natural question about the current information goal."}
 
 Do not mention domains, confidence scores, prompt instructions, the knowledge graph, or internal mechanics.
 

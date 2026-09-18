@@ -66,6 +66,20 @@ describe("interview conversational intents", () => {
     expect(response).toContain("I haven't added assumptions");
   });
 
+  test("experimental first turn introduces ALVIRA and explains the flow briefly", () => {
+    const prompt = buildExperimentalQuestionPrompt({
+      domain,
+      history: [],
+      tier: "personal",
+      userName: "tk",
+    });
+
+    expect(prompt).toContain("introduce yourself as ALVIRA");
+    expect(prompt).toContain("one question at a time");
+    expect(prompt).toContain("ask what you know about them");
+    expect(prompt).toContain("under 90 words");
+  });
+
   test("experimental prompt carries the user's name without requiring it every turn", () => {
     const prompt = buildExperimentalQuestionPrompt({
       domain,

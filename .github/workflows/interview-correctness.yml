@@ -5,11 +5,16 @@ on:
     paths:
       - 'src/routes/-validation.ts'
       - 'src/routes/-questionGenerator.ts'
+      - 'src/routes/-answerRouting.ts'
+      - 'src/routes/-interviewConversation.ts'
+      - 'src/routes/-knowledgeGraph.ts'
       - 'src/routes/app.tsx'
       - 'src/components/LiveContextMirror.tsx'
       - 'src/components/MeOSCTA.tsx'
       - 'src/lib/opportunity-candidates.ts'
       - 'src/routes/integrations.tsx'
+      - 'tests/interview-conversation.test.ts'
+      - 'tests/answer-routing.test.ts'
       - 'tests/interview-topical-fit.test.ts'
       - 'tests/opportunity-candidates.test.ts'
       - '.github/workflows/interview-correctness.yml'
@@ -24,5 +29,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun test tests/interview-topical-fit.test.ts tests/opportunity-candidates.test.ts
+      - run: bun test tests/interview-conversation.test.ts tests/answer-routing.test.ts tests/interview-topical-fit.test.ts tests/opportunity-candidates.test.ts
       - run: bun run build

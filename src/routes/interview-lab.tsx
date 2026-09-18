@@ -35,6 +35,7 @@ type Diagnostics = {
 function InterviewLabPage() {
   const [ownerAccess, setOwnerAccess] = useState<boolean | null>(null);
   const [tier, setTier] = useState<Tier>("personal");
+  const [userName, setUserName] = useState("");
   const [promptVersion, setPromptVersion] =
     useState<InterviewLabPromptVersion>("lab-v2");
   const domains = useMemo(
@@ -88,6 +89,7 @@ function InterviewLabPage() {
           domainId,
           history: nextHistory,
           promptVersion,
+          userName,
         },
       });
       setHistory([
@@ -157,7 +159,16 @@ function InterviewLabPage() {
           </p>
         </div>
 
-        <section className="mt-8 grid gap-4 rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900 lg:grid-cols-3">
+        <section className="mt-8 grid gap-4 rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900 md:grid-cols-2 xl:grid-cols-4">
+          <label className="text-sm font-medium">
+            Your name
+            <input
+              value={userName}
+              onChange={(event) => setUserName(event.target.value)}
+              placeholder="Optional"
+              className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-950"
+            />
+          </label>
           <label className="text-sm font-medium">
             Context type
             <select

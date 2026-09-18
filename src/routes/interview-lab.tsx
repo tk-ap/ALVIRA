@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser } from "./-auth";

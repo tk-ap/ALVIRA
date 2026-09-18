@@ -1,4 +1,4 @@
-version: 0.1.0
+version: 0.2.0
 product_key: alvira-meos
 agent_os_repository: tk-ap/agent-os
 routing_source: registry/product-routing.yaml
@@ -11,9 +11,11 @@ local:
     - living-context-maintenance
     - reflection
     - alvira-profile-source-of-truth
+    - connected-context-experience
     - nested-bridge-user-experience
   produces:
     - approved-context
+    - approved-context-view
     - context-reference
     - context-update-candidate
   consumes:
@@ -27,8 +29,14 @@ local:
     - external-execution-harness
   constraints:
     - context-is-not-authorization
-    - alvira-bridge-is-a-gated-secondary-capability-inside-alvira
+    - interview-once-maintain-once-connect-many
+    - alvira-is-canonical-context-source
+    - connect-alvira-is-customer-facing-experience
+    - bridge-is-secure-delivery-infrastructure-not-standalone-product
     - bridge-must-reuse-alvira-identity-and-profile-source-of-truth
+    - connected-tools-receive-only-user-approved-context
+    - prefer-minimum-task-relevant-context-over-full-profile-delivery
+    - named-destination-support-requires-end-to-end-verification
     - shared-interview-engine-does-not-imply-one-mega-interview
     - app-interviews-context-reflect-uploads-auth-and-data-models-are-regression-sensitive
 
@@ -37,3 +45,4 @@ rules:
   local_metadata_may_narrow_or_add_implementation_detail: true
   local_metadata_must_not_redefine_canonical_role: true
   cross_product_writes_require_explicit_task_authorization: true
+  connected_context_direction: docs/ALVIRA_CONNECT_DIRECTION.md

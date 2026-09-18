@@ -124,6 +124,7 @@ export const generateClarification = createServerFn({ method: "POST" })
 
 The area you were asking about: "${data.domainLabel}"
 The user's input: "${data.userQuestion}"
+${data.userName ? `The user's name is ${data.userName}. Use it naturally if it helps orient the response.` : ""}
 
 There are two possible cases:
 1. The user is asking a clarifying question. Briefly explain what you meant, concretely.

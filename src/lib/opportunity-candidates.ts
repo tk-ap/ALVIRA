@@ -44,26 +44,43 @@ function stableId(domainId: string, answer: string): string {
   return `opp-${(hash >>> 0).toString(36)}`;
 }
 
-function suggestedUseFor(domainId: string): string {
+/** Extract a short, specific phrase from the answer so the suggestion names the
+ *  user's actual situation instead of repeating a generic per-domain template. */
+function focusPhrase(answer: string): string {
+  const normalized = normalize(answer);
+  const first = normalized.split(/[.!?]\s+/)[0] ?? normalized;
+  const stripped = first
+    .replace(/^(?:i|we)(?:\s+(?:am|are|'m|'re))?\s+(?:want to|trying to|working on|building|focused on|aiming to|planning to|hoping to|need to)\s+/i, "")
+    .replace(/^(?:i|we)(?:\s+(?:am|are|'m|'re))?\s+/i, "")
+    .replace(/[,\s]+$/, "");
+  return stripped.split(/\s+/).filter(Boolean).slice(0, 7).join(" ");
+}
+
+/** Value-framed: what the AI gains from having this context, not what it could
+ *  "turn this into". References the answer so each candidate is specific rather
+ *  than a repeated per-domain slogan. */
+function suggestedUseFor(domainId: string, answer: string): string {
+  const focus = focusPhrase(answer);
+  const f = focus.length >= 3 ? `“${focus}”` : "this";
   if (domainId === "goals") {
-    return "AI could help turn this goal into a practical plan, comparison, working brief, or next-step checklist.";
+    return `AI that knows you're driving toward ${f} can aim every suggestion at that outcome instead of generic advice.`;
   }
   if (domainId === "currentProjects") {
-    return "AI could help organize this active work, clarify next steps, prepare a brief, or compare options.";
+    return `AI that knows ${f} is already in flight can give next steps tied to this work instead of starting from scratch.`;
   }
   if (domainId === "dailyLife" || domainId === "processes") {
-    return "AI could help organize, simplify, or carry the repeatable parts of this while you keep the judgment calls.";
+    return `AI that knows ${f} is how you actually work can carry the repeatable parts and leave the judgment to you.`;
   }
   if (domainId === "knowledgeGaps") {
-    return "AI could help research this, compare options, or turn the uncertainty into better questions before you decide.";
+    return `AI that knows ${f} is an open question can start from your uncertainty instead of pretending it's already decided.`;
   }
   if (domainId === "customers" || domainId === "productsAndServices") {
-    return "AI could help turn what you already know here into a clearer decision, plan, campaign, or working brief.";
+    return `AI that knows ${f} about your offering can speak to it specifically instead of in marketing generalities.`;
   }
   if (domainId === "updates") {
-    return "AI could help translate this change into a practical next step using the Context ALVIRA already has.";
+    return `AI that knows ${f} just changed can fold that change into its next suggestion instead of giving stale advice.`;
   }
-  return "AI could help turn this into a plan, comparison, draft, checklist, or other useful next step without requiring an agentic workflow.";
+  return `AI that already knows ${f} can start from your situation instead of asking you to repeat it.`;
 }
 
 export function deriveOpportunityCandidates(state: OpportunityState | null | undefined): OpportunityCandidate[] {
@@ -86,7 +103,7 @@ export function deriveOpportunityCandidates(state: OpportunityState | null | und
         domainId,
         sourceAnswer: answer,
         intent: answer,
-        suggestedUse: suggestedUseFor(domainId),
+        suggestedUse: suggestedUseFor(domainId, answer),
         confidence,
       });
     }

@@ -45,4 +45,44 @@ describe("natural AI opportunity candidates", () => {
 
     expect(candidates).toEqual([]);
   });
+
+  test("suggested use conveys the value of the context and names the answer, not a generic plan", () => {
+    const candidates = deriveOpportunityCandidates({
+      topic: "Streetwear brand",
+      domains: {
+        goals: {
+          answers: ["I want to make each clothing drop feel more cohesive and intentional."],
+          confidence: 0.92,
+          covered: true,
+        },
+      },
+    });
+
+    const goal = candidates.find((candidate) => candidate.domainId === "goals");
+    expect(goal).toBeDefined();
+    // Value framing, not the old generic action list.
+    expect(goal!.suggestedUse).not.toMatch(/\b(plan|comparison|checklist|brief|draft|organize)\b/i);
+    // Specific to the answer, not a repeated per-domain slogan.
+    expect(goal!.suggestedUse).toContain("cohesive");
+  });
+
+  test("two answers in the same domain get distinct suggestions", () => {
+    const candidates = deriveOpportunityCandidates({
+      topic: "Personal Context",
+      domains: {
+        goals: {
+          answers: [
+            "I want to grow my newsletter audience this year.",
+            "I want to hire a first engineer this quarter.",
+          ],
+          confidence: 0.95,
+          covered: true,
+        },
+      },
+    });
+
+    const goals = candidates.filter((candidate) => candidate.domainId === "goals");
+    expect(goals.length).toBe(2);
+    expect(goals[0].suggestedUse).not.toEqual(goals[1].suggestedUse);
+  });
 });

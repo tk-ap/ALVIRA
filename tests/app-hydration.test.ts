@@ -35,4 +35,9 @@ describe("/app hydration boundary", () => {
     expect((clarity.match(/window\.requestAnimationFrame/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(clarity.indexOf("applyFirstRunClarity();")).toBeLessThan(clarity.indexOf("observer.observe(document.body"));
   });
+
+  test("reveals content even when requestAnimationFrame never fires (headless/background tabs)", () => {
+    expect(clarity).toContain("window.setTimeout(reveal");
+    expect(clarity).toContain("window.clearTimeout(fallback)");
+  });
 });

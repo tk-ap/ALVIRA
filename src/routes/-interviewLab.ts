@@ -4,7 +4,9 @@ import OpenAI from "openai";
 import { getSessionByToken, getUserById } from "~/db";
 import {
   buildExperimentalQuestionPrompt,
+  buildHistoryRecallResponse,
   buildProductionQuestionPrompt,
+  isInterviewRecallRequest,
 } from "~/lib/interview-prompts";
 import { getKnowledgeGraph, type Message, type Tier } from "./-knowledgeGraph";
 
@@ -60,6 +62,7 @@ export const generateInterviewLabTurn = createServerFn({ method: "POST" })
       domainId?: unknown;
       history?: unknown;
       promptVersion?: unknown;
+      userName?: unknown;
     };
 
     const tier = parseTier(input.tier);
@@ -74,16 +77,33 @@ export const generateInterviewLabTurn = createServerFn({ method: "POST" })
       domainId,
       history: parseHistory(input.history),
       promptVersion,
+      userName: typeof input.userName === "string" ? input.userName.trim().slice(0, 80) : "",
     };
   })
   .handler(async ({ data }) => {
     await requireOwner();
 
-    const apiKey = process.env.OPENAI_API_KEY || "";
-    if (!apiKey) throw new Error("API key not configured.");
-
     const domain = getKnowledgeGraph(data.tier).find((candidate) => candidate.id === data.domainId);
     if (!domain) throw new Error("Interview area not found.");
+
+    const latestUser = [...data.history].reverse().find((message) => message.role === "user");
+    if (latestUser && isInterviewRecallRequest(latestUser.content)) {
+      return {
+        question: buildHistoryRecallResponse(data.history, data.userName),
+        promptVersion: data.promptVersion,
+        domain: { id: domain.id, label: domain.label },
+        diagnostics: data.promptVersion === "lab-v2"
+          ? {
+              carriedForward: "Grounded recall from the user's own interview answers.",
+              targetGap: "No new gap — user requested a recap.",
+              questionPurpose: "Return captured context without filing the request as an interview answer.",
+            }
+          : null,
+      };
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY || "";
+    if (!apiKey) throw new Error("API key not configured.");
 
     const systemPrompt =
       data.promptVersion === "production"
@@ -91,11 +111,13 @@ export const generateInterviewLabTurn = createServerFn({ method: "POST" })
             domain,
             history: data.history,
             tier: data.tier,
+            userName: data.userName,
           })
         : buildExperimentalQuestionPrompt({
             domain,
             history: data.history,
             tier: data.tier,
+            userName: data.userName,
           });
 
     const openai = new OpenAI({ apiKey });

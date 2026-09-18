@@ -10,6 +10,48 @@ export interface InterviewPromptDomain {
   promptHint: string;
 }
 
+export function isInterviewRecallRequest(text: string): boolean {
+  const normalized = text.trim().toLowerCase().replace(/[?.!]+$/g, "");
+  return [
+    /\bwhat do you know about me\b/,
+    /\bwhat have you (?:learned|captured|got|recorded) about me\b/,
+    /\bwhat do you (?:remember|have) (?:about me|so far)\b/,
+    /\bwhat have you (?:got|captured|recorded) so far\b/,
+    /\bsummar(?:y|ize|ise) what you know about me\b/,
+    /\btell me what you know about me\b/,
+    /\bwhat information (?:do you have|have you captured)\b/,
+  ].some((pattern) => pattern.test(normalized));
+}
+
+function compact(text: string, max = 180): string {
+  const singleLine = text.replace(/\s+/g, " ").trim();
+  return singleLine.length <= max ? singleLine : `${singleLine.slice(0, max - 1).trimEnd()}…`;
+}
+
+export function buildHistoryRecallResponse(
+  history: InterviewPromptMessage[],
+  userName?: string,
+): string {
+  const answers = history
+    .filter((message) => message.role === "user" && !isInterviewRecallRequest(message.content))
+    .map((message) => compact(message.content))
+    .filter(Boolean);
+
+  const greeting = userName?.trim() ? `${userName.trim()}, ` : "";
+  if (answers.length === 0) {
+    return `${greeting}I don't have any substantive information captured from you yet. Once you answer a few interview questions, you can ask me this again and I'll reflect back only what you've actually told me.`;
+  }
+
+  const visible = answers.slice(-8);
+  const omitted = answers.length - visible.length;
+  const bullets = visible.map((answer) => `• ${answer}`).join("\n");
+  const tail = omitted > 0
+    ? `\n\nI also have ${omitted} earlier answer${omitted === 1 ? "" : "s"} in this session.`
+    : "";
+
+  return `${greeting}here's what I have actually captured from you so far:\n\n${bullets}${tail}\n\nThat's based only on what you've told me in this interview; I haven't added assumptions to it.`;
+}
+
 function tierLabel(tier: InterviewPromptTier): string {
   return tier === "personal"
     ? "an individual capturing their personal knowledge and preferences"
@@ -29,6 +71,7 @@ export function buildProductionQuestionPrompt(input: {
   history: InterviewPromptMessage[];
   tier: InterviewPromptTier;
   isClarification?: boolean;
+  userName?: string;
 }): string {
   const hasUserContext = input.history.some(
     (message) => message.role === "user" && message.content.trim().length > 0,
@@ -52,6 +95,7 @@ export function buildProductionQuestionPrompt(input: {
 ## Current task
 The unresolved area you are probing: "${input.domain.label}" — ${input.domain.promptHint}
 The user is ${tierLabel(input.tier)}.
+${input.userName?.trim() ? `Their name is ${input.userName.trim()}. Use their name naturally when it improves warmth or orientation, especially at the beginning or after a return, but do not repeat it every turn.` : ""}
 
 Conversation so far:
 ---
@@ -88,6 +132,7 @@ export function buildExperimentalQuestionPrompt(input: {
   domain: InterviewPromptDomain;
   history: InterviewPromptMessage[];
   tier: InterviewPromptTier;
+  userName?: string;
 }): string {
   const hasUserContext = input.history.some(
     (message) => message.role === "user" && message.content.trim().length > 0,
@@ -116,6 +161,7 @@ export function buildExperimentalQuestionPrompt(input: {
 Area: "${input.domain.label}"
 Why it matters / prompt hint: ${input.domain.promptHint}
 User type: ${tierLabel(input.tier)}
+${input.userName?.trim() ? `User name: ${input.userName.trim()}. Address them by name naturally when useful, especially at the start or after resuming, but not mechanically on every turn.` : ""}
 
 ## Conversation
 ---

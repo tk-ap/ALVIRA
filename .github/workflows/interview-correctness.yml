@@ -18,6 +18,7 @@ on:
       - 'src/routes/integrations.tsx'
       - 'tests/interview-prompts.test.ts'
       - 'tests/interview-lab-machine.test.ts'
+      - 'docs/INTERVIEW_LAB_MACHINE_ACCESS.md'
       - 'tests/interview-topical-fit.test.ts'
       - 'tests/opportunity-candidates.test.ts'
       - '.github/workflows/interview-correctness.yml'

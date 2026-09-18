@@ -9,6 +9,7 @@ interface GenerateInput {
   history: Message[];
   tier: Tier;
   isClarification?: boolean;
+  userName?: string;
 }
 
 interface GenerateResult { question: string; }
@@ -32,6 +33,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
       history: d.history as Message[],
       tier: d.tier as Tier,
       isClarification: (d.isClarification as boolean) ?? false,
+      userName: typeof d.userName === "string" ? d.userName.trim().slice(0, 80) : "",
     };
   })
   .handler(async ({ data }) => {
@@ -68,6 +70,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
 ## Current task
 The unresolved area you are probing: "${data.domain.label}" — ${data.domain.promptHint}
 The user is ${tierLabel}.
+${data.userName ? `Their name is ${data.userName}. Use their name naturally when it improves warmth or orientation, especially after a return, but do not repeat it every turn.` : ""}
 
 Conversation so far:
 ---
@@ -103,7 +106,7 @@ Respond ONLY with a JSON object: {"question": "the complete ALVIRA response, inc
 
 export const generateClarification = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier };
+    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier; userName?: string };
     if (!d.userQuestion || !d.domainLabel) throw new Error("User input and domain label are required.");
     if (!Array.isArray(d.history)) throw new Error("History is required.");
     return {
@@ -111,6 +114,7 @@ export const generateClarification = createServerFn({ method: "POST" })
       domainLabel: d.domainLabel as string,
       history: d.history as Message[],
       tier: d.tier as Tier,
+      userName: typeof d.userName === "string" ? d.userName.trim().slice(0, 80) : "",
     };
   })
   .handler(async ({ data }) => {

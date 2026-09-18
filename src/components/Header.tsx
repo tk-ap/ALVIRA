@@ -74,6 +74,7 @@ export function Header() {
               <nav aria-label="Primary navigation" className="flex items-center gap-5">
                 <a href="/#possibilities" className={desktopLinkClass}>How it helps</a>
                 <a href="/context" className={desktopLinkClass}>Context</a>
+                <a href="/partners" className={desktopLinkClass}>For organizations</a>
                 <a href="/pricing" className={desktopLinkClass}>Pricing</a>
               </nav>
 
@@ -123,6 +124,7 @@ export function Header() {
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
             <a href="/app?offering=meos&preview=false" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
             <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Use elsewhere</a>
+            <a href="/partners" onClick={closeMenu} className={mobileLinkClass}>For organizations</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
             {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Bridge</a> : null}

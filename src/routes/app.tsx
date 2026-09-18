@@ -828,6 +828,8 @@ function AppPage() {
     if (authUser) await clearInterviewDraft().catch(() => {});
     setResumeDraft(null);
     setState(null);
+    setUserName("");
+    setNameDraft("");
     setTopic("");
     setSelectedTopics([]);
     setCustomTopic("");

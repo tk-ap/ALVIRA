@@ -18,6 +18,15 @@ describe("answer routing (nextAction)", () => {
     expect(nextAction(makeState({}, null), graph, threshold, "hello")).toBeNull();
   });
 
+
+  test("a basic Context recall request routes to recall before domain validation", () => {
+    const state = makeState(
+      { constraints: { answers: ["Never ship without review."], confidence: 1, covered: true } },
+      "constraints",
+    );
+    expect(nextAction(state, graph, threshold, "What do you know about me so far?")?.type).toBe("recall");
+  });
+
   test("a change to a locked domain with a prior answer soft-confirms", () => {
     const state = makeState(
       { constraints: { answers: ["Never ship without review."], confidence: 1, covered: true } },

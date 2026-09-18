@@ -28,6 +28,7 @@ import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer, detectMoveOnRequest } from "./-validation";
 import { nextAction } from "./-answerRouting";
+import { buildCapturedContextResponse, buildWelcomeBackMessage } from "./-interviewConversation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
@@ -104,7 +105,7 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
       domains[d.id] = { answers: [...existingAnswers], confidence: 1, covered: true };
     }
   }
-  return { ...initialState, domains };
+  return { ...initialState, title: existing.title, userName: existing.userName, domains };
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
@@ -715,7 +716,15 @@ function AppPage() {
               setPreviewMode(profileOffering === "meos" && !reflectAuthorized);
               setTopic(profile.topic);
               setTier(profile.tier as Tier);
-              setState(profile.state as InterviewState);
+              const loadedState = profile.state as InterviewState;
+              setUserName(loadedState.userName ?? "");
+              setState({
+                ...loadedState,
+                history: [
+                  ...loadedState.history,
+                  { role: "assistant", content: buildWelcomeBackMessage(loadedState, "resume") },
+                ],
+              });
               setScreen("interview");
             }
           } catch { /* dashboard remains the fallback */ }
@@ -764,10 +773,18 @@ function AppPage() {
 
   const handleResumeDraft = () => {
     if (!resumeDraft) return;
+    const resumedState: InterviewState = {
+      ...resumeDraft.state,
+      history: [
+        ...resumeDraft.state.history,
+        { role: "assistant", content: buildWelcomeBackMessage(resumeDraft.state, "resume") },
+      ],
+    };
     setOffering(resumeDraft.offering);
     setTopic(resumeDraft.topic);
     setTier(resumeDraft.state.tier);
-    setState(resumeDraft.state);
+    setUserName(resumeDraft.state.userName ?? "");
+    setState(resumedState);
     setResumeDraft(null);
     setScreen("interview");
   };
@@ -780,10 +797,15 @@ function AppPage() {
     setPreviewMode(draftPreview);
     setTopic(resumeDraft.topic);
     setTier(resumeDraft.state.tier);
-    const seeded = seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview);
+    const seededBase = seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview);
+    const seeded: InterviewState = {
+      ...seededBase,
+      history: [{ role: "assistant", content: buildWelcomeBackMessage(seededBase, "update") }],
+    };
+    setUserName(seeded.userName ?? "");
     setState(seeded);
     setResumeDraft(null);
-    setSeededInfo("Your Context has already been generated. What has changed, or what would you like ALVIRA to know now?");
+    setSeededInfo("Your existing Context is loaded. Add what changed, correct anything outdated, or tell ALVIRA something new.");
     setScreen("interview");
     setWaiting(true);
     try {
@@ -806,6 +828,8 @@ function AppPage() {
     if (authUser) await clearInterviewDraft().catch(() => {});
     setResumeDraft(null);
     setState(null);
+    setUserName("");
+    setNameDraft("");
     setTopic("");
     setSelectedTopics([]);
     setCustomTopic("");
@@ -833,13 +857,18 @@ function AppPage() {
     setPreviewMode(profilePreview);
     setTopic(profile.topic);
     setTier(profile.tier as Tier);
-    const seeded = seedStateFromExisting(profile.state, activeOffering, profilePreview);
+    const seededBase = seedStateFromExisting(profile.state, activeOffering, profilePreview);
+    const seeded: InterviewState = {
+      ...seededBase,
+      history: [{ role: "assistant", content: buildWelcomeBackMessage(seededBase, "update") }],
+    };
     const carried = Object.values(seeded.domains).filter((d) => d.covered).length;
+    setUserName(seeded.userName ?? "");
     setState(seeded);
     setSeededInfo(
       carried > 0
-        ? `Continuing from your saved profile — ${carried} ${carried === 1 ? "area was" : "areas were"} carried over. Answer the remaining questions to update and expand your knowledge.`
-        : "Continuing from your saved profile. Tell me anything new you want to add.",
+        ? `${seeded.userName ? `Welcome back, ${seeded.userName}. ` : ""}${carried} ${carried === 1 ? "area was" : "areas were"} carried over from your saved Context. We’ll focus on what is new or still missing.`
+        : `${seeded.userName ? `Welcome back, ${seeded.userName}. ` : ""}Your saved Context is loaded. Tell me anything new you want to add.`,
     );
     setScreen("interview");
     setWaiting(true);
@@ -923,6 +952,7 @@ function AppPage() {
           history: currentState.history,
           tier: currentState.tier,
           isClarification,
+          userName: currentState.userName,
         },
       });
 
@@ -1046,14 +1076,15 @@ function AppPage() {
     const greeting: Message[] = [{
       role: "assistant",
       content: name
-        ? `Nice to meet you, ${name}. I'm ALVIRA — I'll ask a few questions about how you think, work, and decide. Take your time, and remember you can stop and save at any point.`
-        : "I'm ALVIRA — I'll ask a few questions about how you think, work, and decide. Take your time, and remember you can stop and save at any point.",
+        ? `Alright, ${name}. We'll take this one question at a time. Answer casually, skip anything, correct me, or ask what I know about you whenever you want.`
+        : "I'm ALVIRA. We'll take this one question at a time. Answer casually, skip anything, correct me, or ask what I know about you whenever you want.",
     }];
     const seededState: InterviewState = {
       ...initialState,
       title,
       skippedDomains: skipped.length > 0 ? skipped : undefined,
       history: greeting,
+      userName: name || undefined,
     };
 
     try {
@@ -1215,6 +1246,18 @@ function AppPage() {
     const currentDomain = action.domainId;
     const newHistory: Message[] = [...state.history, { role: "user", content: trimmed }];
 
+    if (action.type === "recall") {
+      const recallResponse = buildCapturedContextResponse(state, graph);
+      setState({
+        ...state,
+        history: [...newHistory, { role: "assistant", content: recallResponse }],
+        currentDomain: state.currentDomain,
+      });
+      setAnswer("");
+      setInterviewError("");
+      return;
+    }
+
     let updatedDomains = { ...state.domains };
     let needsClarify = false;
     let meaningfulAnswer = false;
@@ -1265,6 +1308,7 @@ function AppPage() {
             domainLabel,
             history: newHistory,
             tier: state.tier,
+            userName: state.userName,
           },
         });
 
@@ -1902,13 +1946,13 @@ function AppPage() {
           <div className="mx-auto w-full max-w-2xl space-y-8">
             <div>
               <span className="font-mono text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Before we begin</span>
-              <h1 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">A quick hello first</h1>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">The interview works best when it feels like a conversation — so let's start there.</p>
+              <h1 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Hi, I&apos;m ALVIRA.</h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">I build living Context so the AI tools you use can understand how you think, work, decide, and what matters to you.</p>
             </div>
 
             {/* Name */}
             <div>
-              <label htmlFor="interview-name" className="block font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">What should I call you?</label>
+              <label htmlFor="interview-name" className="block font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">First, what should I call you?</label>
               <input
                 id="interview-name"
                 type="text"
@@ -1918,16 +1962,16 @@ function AppPage() {
                 autoFocus
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-emerald-500 dark:focus:border-emerald-400 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:focus-visible:ring-emerald-400/40"
               />
-              {trimmedName && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">Nice to meet you, {trimmedName}. Here's how this works.</p>}
+              {trimmedName && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">{trimmedName} it is.</p>}
             </div>
 
             {/* Briefing */}
             <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-5">
-              <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">How this works</p>
+              <p className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">What happens next</p>
               <ul className="space-y-2.5 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                <li><strong className="text-gray-900 dark:text-gray-100">I ask the questions.</strong> I'll ask how you think, work, and decide. There are no wrong answers, and you can skip anything.</li>
-                <li><strong className="text-gray-900 dark:text-gray-100">Specific beats short.</strong> A sentence or two with real detail is far more useful than a one-word answer. Answer like you're explaining yourself to a thoughtful colleague.</li>
-                <li><strong className="text-gray-900 dark:text-gray-100">Stop and save anytime.</strong> Your progress is saved as you go — leave whenever you like and pick it back up later.</li>
+                <li><strong className="text-gray-900 dark:text-gray-100">One question at a time.</strong> I'll keep the pace conversational and focus on one useful thing at a time.</li>
+                <li><strong className="text-gray-900 dark:text-gray-100">Answer naturally.</strong> Short is fine when it's clear. Examples, exceptions, and real situations help me understand you better.</li>
+                <li><strong className="text-gray-900 dark:text-gray-100">You stay in control.</strong> Skip something, correct me, or ask what I know about you at any point. You can leave and come back later.</li>
               </ul>
             </div>
 

@@ -17,6 +17,8 @@ export interface InterviewState {
   topic: string;
   /** Short human title for display/export (falls back to `topic` when absent). */
   title?: string;
+  /** User-provided name for natural address across resume/update flows. */
+  userName?: string;
   domains: Record<
     string,
     {

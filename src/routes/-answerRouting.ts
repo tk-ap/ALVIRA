@@ -5,8 +5,10 @@
 import type { Domain, InterviewState } from "./-knowledgeGraph";
 import { shouldConfirmLockedChange } from "./-knowledgeGraph";
 import { validateAnswer, detectMoveOnRequest } from "./-validation";
+import { isInterviewRecallRequest } from "./-interviewConversation";
 
 export type NextAction =
+  | { type: "recall"; domainId: string }
   | { type: "soft-confirm"; domainId: string; text: string }
   | { type: "move-on"; domainId: string }
   | { type: "clarify"; domainId: string }
@@ -43,29 +45,35 @@ export function nextAction(
 
   const prior = state.domains[domainId]?.answers ?? [];
 
-  // 1. A change to a locked domain is gated before it is filed.
+  // 1. A request to reflect what ALVIRA already knows is conversational,
+  // not an answer to the current interview domain.
+  if (isInterviewRecallRequest(trimmed)) {
+    return { type: "recall", domainId };
+  }
+
+  // 2. A change to a locked domain is gated before it is filed.
   if (!options.bypassConfirm && shouldConfirmLockedChange(graph, domainId, prior.length)) {
     return { type: "soft-confirm", domainId, text: trimmed };
   }
 
-  // 2. An explicit request to leave the topic.
+  // 3. An explicit request to leave the topic.
   if (detectMoveOnRequest(trimmed)) {
     return { type: "move-on", domainId };
   }
 
   const validation = validateAnswer(domainId, trimmed, prior);
 
-  // 3. The user asked a clarifying question (or strong topical mismatch).
+  // 4. The user asked a clarifying question (or strong topical mismatch).
   if (validation.isUserQuestion) {
     return { type: "clarify", domainId };
   }
 
-  // 4. Genuinely unusable input (gibberish, contradiction) — re-ask, don't file.
+  // 5. Genuinely unusable input (gibberish, contradiction) — re-ask, don't file.
   if (validation.isUnusable) {
     return { type: "re-ask", domainId, warning: validation.warnings[0] ?? "" };
   }
 
-  // 5. Accept — weak-but-real is deferred, otherwise it's a meaningful answer.
+  // 6. Accept — weak-but-real is deferred, otherwise it's a meaningful answer.
   const minAnswers = graph.find((d) => d.id === domainId)?.minAnswers ?? 1;
   const covered = validation.confidence >= confThreshold && prior.length + 1 >= minAnswers;
   if (validation.needsClarification) {

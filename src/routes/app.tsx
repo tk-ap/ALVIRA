@@ -28,6 +28,7 @@ import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer, detectMoveOnRequest } from "./-validation";
 import { nextAction } from "./-answerRouting";
+import { buildCapturedContextResponse, buildWelcomeBackMessage } from "./-interviewConversation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
@@ -104,7 +105,7 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
       domains[d.id] = { answers: [...existingAnswers], confidence: 1, covered: true };
     }
   }
-  return { ...initialState, domains };
+  return { ...initialState, title: existing.title, userName: existing.userName, domains };
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
@@ -715,7 +716,15 @@ function AppPage() {
               setPreviewMode(profileOffering === "meos" && !reflectAuthorized);
               setTopic(profile.topic);
               setTier(profile.tier as Tier);
-              setState(profile.state as InterviewState);
+              const loadedState = profile.state as InterviewState;
+              setUserName(loadedState.userName ?? "");
+              setState({
+                ...loadedState,
+                history: [
+                  ...loadedState.history,
+                  { role: "assistant", content: buildWelcomeBackMessage(loadedState, "resume") },
+                ],
+              });
               setScreen("interview");
             }
           } catch { /* dashboard remains the fallback */ }
@@ -764,10 +773,18 @@ function AppPage() {
 
   const handleResumeDraft = () => {
     if (!resumeDraft) return;
+    const resumedState: InterviewState = {
+      ...resumeDraft.state,
+      history: [
+        ...resumeDraft.state.history,
+        { role: "assistant", content: buildWelcomeBackMessage(resumeDraft.state, "resume") },
+      ],
+    };
     setOffering(resumeDraft.offering);
     setTopic(resumeDraft.topic);
     setTier(resumeDraft.state.tier);
-    setState(resumeDraft.state);
+    setUserName(resumeDraft.state.userName ?? "");
+    setState(resumedState);
     setResumeDraft(null);
     setScreen("interview");
   };
@@ -780,10 +797,15 @@ function AppPage() {
     setPreviewMode(draftPreview);
     setTopic(resumeDraft.topic);
     setTier(resumeDraft.state.tier);
-    const seeded = seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview);
+    const seededBase = seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview);
+    const seeded: InterviewState = {
+      ...seededBase,
+      history: [{ role: "assistant", content: buildWelcomeBackMessage(seededBase, "update") }],
+    };
+    setUserName(seeded.userName ?? "");
     setState(seeded);
     setResumeDraft(null);
-    setSeededInfo("Your Context has already been generated. What has changed, or what would you like ALVIRA to know now?");
+    setSeededInfo("Your existing Context is loaded. Add what changed, correct anything outdated, or tell ALVIRA something new.");
     setScreen("interview");
     setWaiting(true);
     try {
@@ -833,13 +855,18 @@ function AppPage() {
     setPreviewMode(profilePreview);
     setTopic(profile.topic);
     setTier(profile.tier as Tier);
-    const seeded = seedStateFromExisting(profile.state, activeOffering, profilePreview);
+    const seededBase = seedStateFromExisting(profile.state, activeOffering, profilePreview);
+    const seeded: InterviewState = {
+      ...seededBase,
+      history: [{ role: "assistant", content: buildWelcomeBackMessage(seededBase, "update") }],
+    };
     const carried = Object.values(seeded.domains).filter((d) => d.covered).length;
+    setUserName(seeded.userName ?? "");
     setState(seeded);
     setSeededInfo(
       carried > 0
-        ? `Continuing from your saved profile — ${carried} ${carried === 1 ? "area was" : "areas were"} carried over. Answer the remaining questions to update and expand your knowledge.`
-        : "Continuing from your saved profile. Tell me anything new you want to add.",
+        ? `${seeded.userName ? `Welcome back, ${seeded.userName}. ` : ""}${carried} ${carried === 1 ? "area was" : "areas were"} carried over from your saved Context. We’ll focus on what is new or still missing.`
+        : `${seeded.userName ? `Welcome back, ${seeded.userName}. ` : ""}Your saved Context is loaded. Tell me anything new you want to add.`,
     );
     setScreen("interview");
     setWaiting(true);
@@ -923,6 +950,7 @@ function AppPage() {
           history: currentState.history,
           tier: currentState.tier,
           isClarification,
+          userName: currentState.userName,
         },
       });
 
@@ -1054,6 +1082,7 @@ function AppPage() {
       title,
       skippedDomains: skipped.length > 0 ? skipped : undefined,
       history: greeting,
+      userName: name || undefined,
     };
 
     try {
@@ -1215,6 +1244,18 @@ function AppPage() {
     const currentDomain = action.domainId;
     const newHistory: Message[] = [...state.history, { role: "user", content: trimmed }];
 
+    if (action.type === "recall") {
+      const recallResponse = buildCapturedContextResponse(state, graph);
+      setState({
+        ...state,
+        history: [...newHistory, { role: "assistant", content: recallResponse }],
+        currentDomain: state.currentDomain,
+      });
+      setAnswer("");
+      setInterviewError("");
+      return;
+    }
+
     let updatedDomains = { ...state.domains };
     let needsClarify = false;
     let meaningfulAnswer = false;
@@ -1265,6 +1306,7 @@ function AppPage() {
             domainLabel,
             history: newHistory,
             tier: state.tier,
+            userName: state.userName,
           },
         });
 

@@ -22,6 +22,7 @@ const expected = [
   "bridge_authorization_codes",
   "bridge_access_tokens",
   "bridge_oauth_clients",
+  "bridge_context_proposals",
   "founding_beta_access",
   "beta_feedback",
   "context_versions",

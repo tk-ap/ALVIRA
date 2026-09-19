@@ -71,6 +71,34 @@ function mapProposal(row: any): BridgeContextProposal {
   };
 }
 
+export function applyApprovedProposalToState(
+  currentState: unknown,
+  proposal: { id: string; clientId: string; statement: string; supersedes?: string[]; createdAt: string },
+) {
+  let state: any = currentState && typeof currentState === "object" && !Array.isArray(currentState)
+    ? JSON.parse(JSON.stringify(currentState))
+    : {};
+  if (!state.domains || typeof state.domains !== "object" || Array.isArray(state.domains)) state.domains = {};
+
+  const existing = state.domains.updates && typeof state.domains.updates === "object" ? state.domains.updates : {};
+  const answers = Array.isArray(existing.answers) ? existing.answers.filter((item: unknown) => typeof item === "string") : [];
+  const supersedes = (proposal.supersedes || []).map((value) => value.trim()).filter(Boolean);
+  const provenance = `Bridge proposal ${proposal.id} from ${proposal.clientId} on ${new Date(proposal.createdAt).toISOString().slice(0, 10)}`;
+  const answer = [
+    proposal.statement.trim(),
+    supersedes.length ? `Supersedes or materially changes: ${supersedes.join("; ")}` : "",
+    `Source: ${provenance}`,
+  ].filter(Boolean).join("\n");
+
+  state.domains.updates = {
+    ...existing,
+    answers: [...answers, answer],
+    confidence: Math.max(Number(existing.confidence || 0), 1),
+    covered: true,
+  };
+  return state;
+}
+
 export async function createBridgeContextProposal(input: {
   userId: string;
   profileId: string;
@@ -144,27 +172,15 @@ export async function reviewBridgeContextProposal(input: {
   ))[0] as { id: string; state_json: string } | undefined;
   if (!profile) throw new Error("Context not found.");
 
-  let state: any = {};
-  try { state = JSON.parse(profile.state_json); } catch { state = {}; }
-  if (!state || typeof state !== "object" || Array.isArray(state)) state = {};
-  if (!state.domains || typeof state.domains !== "object" || Array.isArray(state.domains)) state.domains = {};
-
-  const existing = state.domains.updates && typeof state.domains.updates === "object" ? state.domains.updates : {};
-  const answers = Array.isArray(existing.answers) ? existing.answers.filter((item: unknown) => typeof item === "string") : [];
-  const supersedes = parseSupersedes(proposalRow.supersedes_json || "[]");
-  const provenance = `Bridge proposal ${proposalRow.id} from ${proposalRow.client_id} on ${new Date(proposalRow.created_at).toISOString().slice(0, 10)}`;
-  const answer = [
-    proposalRow.statement,
-    supersedes.length ? `Supersedes or materially changes: ${supersedes.join("; ")}` : "",
-    `Source: ${provenance}`,
-  ].filter(Boolean).join("\n");
-
-  state.domains.updates = {
-    ...existing,
-    answers: [...answers, answer],
-    confidence: Math.max(Number(existing.confidence || 0), 1),
-    covered: true,
-  };
+  let parsedState: unknown = {};
+  try { parsedState = JSON.parse(profile.state_json); } catch { parsedState = {}; }
+  const state = applyApprovedProposalToState(parsedState, {
+    id: proposalRow.id,
+    clientId: proposalRow.client_id,
+    statement: proposalRow.statement,
+    supersedes: parseSupersedes(proposalRow.supersedes_json || "[]"),
+    createdAt: proposalRow.created_at,
+  });
 
   await db.query(
     "UPDATE profiles SET state_json = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3",

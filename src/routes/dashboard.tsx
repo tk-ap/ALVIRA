@@ -143,7 +143,8 @@ function ContextChoiceDialog({ profiles, onClose }: { profiles: Profile[]; onClo
 function OwnerDashboard({ metrics }: { metrics: OwnerMetrics }) {
   const stats = [
     ["Total users", metrics.userCounts.total], ["Free users", metrics.userCounts.free], ["Pro users", metrics.userCounts.pro],
-    ["Lifetime users", metrics.userCounts.lifetime], ["Saved Contexts", metrics.profileCount], ["Pending interviews", metrics.pendingInterviews],
+    ["Lifetime users", metrics.userCounts.lifetime], ["Smoke testing", metrics.userCounts.smokeTesting],
+    ["Saved Contexts", metrics.profileCount], ["Pending interviews", metrics.pendingInterviews],
   ];
   const date = (value: string) => new Date(value).toLocaleDateString();
   return <div className="mb-10 space-y-8">

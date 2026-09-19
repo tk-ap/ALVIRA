@@ -7,8 +7,8 @@
   --proto-dim:#756d66;
   --proto-line:rgba(244,240,233,.14);
   --proto-line-strong:rgba(244,240,233,.24);
-  --proto-acid:#d6c24a;
-  --proto-red:#8b3345;
+  --proto-system:var(--color-system);
+  --proto-human:var(--color-human);
 }
 
 /* Branch-only cohesion layer for the immersive prototype. */

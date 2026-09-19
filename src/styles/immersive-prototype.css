@@ -1,0 +1,372 @@
+:root{
+  --proto-bg:#0b0e0e;
+  --proto-panel:#101413;
+  --proto-panel-2:#141816;
+  --proto-paper:#f4f0e9;
+  --proto-muted:#a99f94;
+  --proto-dim:#756d66;
+  --proto-line:rgba(244,240,233,.14);
+  --proto-line-strong:rgba(244,240,233,.24);
+  --proto-acid:#d6c24a;
+  --proto-red:#8b3345;
+}
+
+/* Branch-only cohesion layer for the immersive prototype. */
+body.immersive-prototype{
+  margin:0;
+  min-height:100dvh;
+  background:
+    radial-gradient(circle at 82% 8%,rgba(214,194,74,.055),transparent 24%),
+    radial-gradient(circle at 8% 58%,rgba(139,51,69,.055),transparent 28%),
+    var(--proto-bg);
+  color:var(--proto-paper);
+}
+
+body.immersive-prototype::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  opacity:.22;
+  background-image:
+    linear-gradient(rgba(244,240,233,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(244,240,233,.018) 1px,transparent 1px);
+  background-size:64px 64px;
+}
+
+body.immersive-prototype header{
+  border-color:var(--proto-line)!important;
+  background:rgba(11,14,14,.9)!important;
+  color:var(--proto-paper)!important;
+  backdrop-filter:blur(18px)!important;
+}
+
+body.immersive-prototype header a,
+body.immersive-prototype header button{
+  color:#c7beb5!important;
+}
+
+body.immersive-prototype header a:hover,
+body.immersive-prototype header button:hover{
+  color:var(--proto-paper)!important;
+}
+
+body.immersive-prototype header nav{
+  border-color:var(--proto-line)!important;
+}
+
+body.immersive-prototype .immersive-header-mark{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-left:10px;
+  padding:6px 8px;
+  border:1px solid rgba(214,194,74,.34);
+  color:var(--proto-acid);
+  font:600 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+body.immersive-prototype main#main-content:not(.immersive-page){
+  min-height:70vh;
+  background:
+    radial-gradient(circle at 84% 12%,rgba(214,194,74,.035),transparent 24%),
+    transparent;
+  color:var(--proto-paper);
+}
+
+body.immersive-prototype main#main-content:not(.immersive-page) > section{
+  position:relative;
+  border-color:var(--proto-line)!important;
+}
+
+body.immersive-prototype main#main-content:not(.immersive-page) > section::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:max(24px,calc((100% - 80rem)/2));
+  right:max(24px,calc((100% - 80rem)/2));
+  height:1px;
+  background:linear-gradient(90deg,rgba(214,194,74,.55),transparent 34%);
+  opacity:.55;
+  pointer-events:none;
+}
+
+body.immersive-prototype main#main-content:not(.immersive-page) > section:first-child::before{
+  display:none;
+}
+
+/* Reconcile legacy light route surfaces with the immersive canvas. */
+body.immersive-prototype .bg-white,
+body.immersive-prototype .bg-gray-50,
+body.immersive-prototype .bg-gray-100,
+body.immersive-prototype .bg-mineral,
+body.immersive-prototype .bg-ink-light{
+  background-color:var(--proto-bg)!important;
+}
+
+body.immersive-prototype .bg-gray-800,
+body.immersive-prototype .bg-gray-900,
+body.immersive-prototype .bg-gray-950{
+  background-color:var(--proto-panel)!important;
+}
+
+body.immersive-prototype .text-gray-900,
+body.immersive-prototype .text-gray-100,
+body.immersive-prototype .text-ink,
+body.immersive-prototype .text-mineral-dark{
+  color:var(--proto-paper)!important;
+}
+
+body.immersive-prototype .text-gray-500,
+body.immersive-prototype .text-gray-600,
+body.immersive-prototype .text-gray-400,
+body.immersive-prototype .text-warm-gray,
+body.immersive-prototype .text-warm-gray-dark{
+  color:var(--proto-muted)!important;
+}
+
+body.immersive-prototype .border-gray-200,
+body.immersive-prototype .border-gray-300,
+body.immersive-prototype .border-gray-700,
+body.immersive-prototype .border-gray-800,
+body.immersive-prototype .border-warm-gray\/12,
+body.immersive-prototype .border-warm-gray\/18{
+  border-color:var(--proto-line)!important;
+}
+
+body.immersive-prototype input,
+body.immersive-prototype textarea,
+body.immersive-prototype select{
+  border-radius:0!important;
+  border-color:var(--proto-line-strong)!important;
+  background:rgba(255,255,255,.025)!important;
+  color:var(--proto-paper)!important;
+  box-shadow:none!important;
+}
+
+body.immersive-prototype input:focus,
+body.immersive-prototype textarea:focus,
+body.immersive-prototype select:focus{
+  border-color:rgba(214,194,74,.7)!important;
+  box-shadow:0 0 0 1px rgba(214,194,74,.18)!important;
+}
+
+body.immersive-prototype input::placeholder,
+body.immersive-prototype textarea::placeholder{
+  color:#655e58!important;
+}
+
+body.immersive-prototype option{
+  background:var(--proto-panel);
+  color:var(--proto-paper);
+}
+
+body.immersive-prototype button,
+body.immersive-prototype a{
+  border-radius:0!important;
+}
+
+body.immersive-prototype main h1,
+body.immersive-prototype main h2{
+  letter-spacing:-.04em;
+}
+
+body.immersive-prototype main h1{
+  text-wrap:balance;
+}
+
+body.immersive-prototype main p{
+  text-wrap:pretty;
+}
+
+body.immersive-prototype main a:not([class*="bg-"]){
+  text-underline-offset:4px;
+}
+
+/* Cards and panels across public + app routes inherit one material language. */
+body.immersive-prototype main [class*="rounded-lg"],
+body.immersive-prototype main [class*="rounded-xl"],
+body.immersive-prototype main [class*="rounded-2xl"]{
+  border-radius:0!important;
+}
+
+body.immersive-prototype main [class*="shadow"]{
+  box-shadow:0 24px 70px rgba(0,0,0,.24)!important;
+}
+
+body.immersive-prototype main [class*="border"]{
+  border-color:var(--proto-line)!important;
+}
+
+/* Keep success / warning / error semantics readable. */
+body.immersive-prototype [class*="red-"]{--tw-text-opacity:1}
+body.immersive-prototype [class*="amber-"]{--tw-text-opacity:1}
+body.immersive-prototype [class*="green-"]{--tw-text-opacity:1}
+
+/* Trust + policy documents should feel editorial, not like a default docs page. */
+body.immersive-prototype main#main-content > div.max-w-3xl,
+body.immersive-prototype main#main-content.max-w-3xl{
+  max-width:68rem!important;
+}
+
+body.immersive-prototype main#main-content h1.text-4xl,
+body.immersive-prototype main#main-content h1.text-2xl{
+  font-size:clamp(3rem,7vw,6.5rem)!important;
+  line-height:.9!important;
+  font-weight:550!important;
+}
+
+body.immersive-prototype main#main-content .space-y-6 h2,
+body.immersive-prototype main#main-content .prose h2{
+  margin-top:3.25rem!important;
+  padding-top:1rem;
+  border-top:1px solid var(--proto-line);
+  color:var(--proto-paper)!important;
+  font-size:clamp(1.5rem,3vw,2.2rem)!important;
+  font-weight:500!important;
+}
+
+body.immersive-prototype main#main-content .space-y-6 p,
+body.immersive-prototype main#main-content .prose p{
+  max-width:64ch;
+  color:var(--proto-muted)!important;
+}
+
+/* Auth pages become one deliberate context-preservation threshold. */
+body.immersive-prototype main#main-content.flex.items-center{
+  position:relative;
+  min-height:calc(100dvh - 69px);
+}
+
+body.immersive-prototype main#main-content.flex.items-center::before{
+  content:"KEEP THE CONTEXT CONNECTED";
+  position:absolute;
+  top:48px;
+  left:max(24px,calc((100% - 80rem)/2));
+  color:var(--proto-acid);
+  font:600 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.16em;
+}
+
+body.immersive-prototype main#main-content.flex.items-center > div{
+  position:relative;
+  padding:clamp(28px,5vw,54px);
+  border:1px solid var(--proto-line);
+  background:linear-gradient(145deg,rgba(214,194,74,.025),rgba(255,255,255,.012));
+}
+
+body.immersive-prototype main#main-content.flex.items-center > div::after{
+  content:"";
+  position:absolute;
+  top:-1px;
+  left:-1px;
+  width:72px;
+  height:1px;
+  background:var(--proto-acid);
+}
+
+/* Pricing + organization grids should read like evidence/choice surfaces, not generic SaaS cards. */
+body.immersive-prototype main [class*="grid"] > [class*="border"]{
+  background:rgba(255,255,255,.012);
+}
+
+body.immersive-prototype main [class*="grid"] > [class*="border"]:hover{
+  background:rgba(214,194,74,.025);
+}
+
+/* Product/app surfaces keep their behavior but share the new visual material. */
+body.immersive-prototype [data-app-shell],
+body.immersive-prototype .app-shell,
+body.immersive-prototype .dashboard-shell{
+  background:var(--proto-bg)!important;
+}
+
+body.immersive-prototype aside{
+  border-color:var(--proto-line)!important;
+}
+
+/* Footer becomes part of the narrative rather than an afterthought. */
+body.immersive-prototype .immersive-footer{
+  border-top:1px solid var(--proto-line);
+  background:#090c0b;
+}
+
+body.immersive-prototype .immersive-footer a{
+  color:#a99f94;
+  text-decoration:none;
+}
+
+body.immersive-prototype .immersive-footer a:hover{
+  color:var(--proto-paper);
+}
+
+body.immersive-prototype .immersive-footer__grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(130px,.6fr));
+  gap:40px;
+  padding:54px 0 42px;
+}
+
+body.immersive-prototype .immersive-footer__statement{
+  max-width:17ch;
+  font-size:clamp(28px,3.3vw,46px);
+  line-height:.96;
+  letter-spacing:-.035em;
+}
+
+body.immersive-prototype .immersive-footer__label{
+  margin-bottom:16px;
+  color:#756d66;
+  font:600 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+
+body.immersive-prototype .immersive-footer__links{
+  display:grid;
+  gap:11px;
+  font-size:13px;
+}
+
+body.immersive-prototype .immersive-footer__bottom{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:18px 0 28px;
+  border-top:1px solid var(--proto-line);
+  color:#655e58;
+  font:600 9px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+
+body.immersive-prototype .prototype-404{
+  min-height:72vh;
+  display:grid;
+  place-items:center;
+  padding:50px 24px;
+  text-align:center;
+}
+
+body.immersive-prototype .prototype-404 h1{
+  margin:14px 0 0;
+  font-size:clamp(58px,10vw,130px);
+  line-height:.82;
+}
+
+@media(max-width:900px){
+  body.immersive-prototype .immersive-footer__grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:620px){
+  body.immersive-prototype::before{background-size:42px 42px}
+  body.immersive-prototype .immersive-footer__grid{grid-template-columns:1fr}
+  body.immersive-prototype .immersive-footer__bottom{align-items:flex-start;flex-direction:column}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.immersive-prototype *{scroll-behavior:auto!important}
+}

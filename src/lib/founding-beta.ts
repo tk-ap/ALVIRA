@@ -21,6 +21,7 @@ export const FOUNDING_BETA_PERMANENT_EXPIRY = "9999-12-31T23:59:59Z";
 export const FOUNDING_BETA_EXCLUDED_EMAILS = [
   "tahlia.ashwood@gmail.com",
   "codex-smoke-1786676512909@example.com",
+  "codex-e2e-1788235310@example.com",
   "alvira@agentmail.to",
 ];
 

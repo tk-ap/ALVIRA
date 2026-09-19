@@ -26,7 +26,8 @@ import appShellCss from "~/styles/app-shell.css?url";
 import appInterviewCss from "~/styles/app-interview.css?url";
 import appSeedReviewCss from "~/styles/app-seed-review.css?url";
 import appOutputCss from "~/styles/app-output.css?url";
-import appSecondaryCss from "~/styles/app-secondary.css?url";\nimport immersivePrototypeCss from "~/styles/immersive-prototype.css?url";
+import appSecondaryCss from "~/styles/app-secondary.css?url";
+import immersivePrototypeCss from "~/styles/immersive-prototype.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -48,7 +49,8 @@ export const Route = createRootRoute({
       { rel: "stylesheet", href: appInterviewCss },
       { rel: "stylesheet", href: appSeedReviewCss },
       { rel: "stylesheet", href: appOutputCss },
-      { rel: "stylesheet", href: appSecondaryCss },\n      { rel: "stylesheet", href: immersivePrototypeCss },
+      { rel: "stylesheet", href: appSecondaryCss },
+      { rel: "stylesheet", href: immersivePrototypeCss },
       { rel: "icon", type: "image/svg+xml", href: "/brand/alvira-context-frame.svg?v=2" },
       { rel: "shortcut icon", href: "/brand/alvira-context-frame.svg?v=2" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },

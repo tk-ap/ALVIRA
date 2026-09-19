@@ -74,7 +74,8 @@ export function Header() {
             <div className={desktopNavClass}>
               <nav aria-label="Primary navigation" className="flex items-center gap-5">
                 <a href="/" className={desktopLinkClass}>Experience</a>
-                <a href="/context" className={desktopLinkClass}>Context</a>\n                <a href="/integrations" className={desktopLinkClass}>Bridge</a>
+                <a href="/context" className={desktopLinkClass}>Context</a>
+                <a href="/integrations" className={desktopLinkClass}>Bridge</a>
                 <a href="/partners" className={desktopLinkClass}>For organizations</a>
                 <a href="/pricing" className={desktopLinkClass}>Pricing</a>
               </nav>

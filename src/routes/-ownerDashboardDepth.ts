@@ -5,7 +5,7 @@ import { sendEmail } from "~/email";
 import { ensureFoundingBetaSchema } from "~/lib/founding-beta";
 
 const SESSION_COOKIE = "alvira_session";
-const TEST_EMAILS = ["codex-smoke-1786676512909@example.com", "alvira@agentmail.to"];
+const TEST_EMAILS = ["codex-smoke-1786676512909@example.com", "codex-e2e-1788235310@example.com", "alvira@agentmail.to"];
 
 type InterviewFollowUpKind = "interview_not_started" | "interview_incomplete";
 

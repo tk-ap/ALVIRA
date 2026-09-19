@@ -281,7 +281,7 @@ function MeosPage() {
         const entitlements: string[] = await getEntitlements().catch(() => [] as string[]);
         const reflectAuthorized = Boolean(
           user.isOwner ||
-          ["free", "pro", "lifetime", "founding_beta"].includes(user.tier) ||
+          ["free", "pro", "lifetime", "founding_beta", "smoke_testing"].includes(user.tier) ||
           entitlements.includes("meos_build"),
         );
         if (reflectAuthorized) {

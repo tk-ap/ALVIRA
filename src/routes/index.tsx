@@ -53,7 +53,12 @@ const understandingStates = [
   ["Reusable", "Available to carry into future AI interactions when appropriate.", "route"],
 ] as const;
 
-const modelNodes = ["ChatGPT", "Claude", "Gemini", "Cursor"] as const;
+const modelNodes = [
+  { label: "ChatGPT", position: "north" },
+  { label: "Claude", position: "east" },
+  { label: "Gemini", position: "south" },
+  { label: "Cursor", position: "west" },
+] as const;
 
 function Home() {
   const [activeFlow, setActiveFlow] = useState<(typeof flow)[number]["id"]>("context");
@@ -89,8 +94,10 @@ function Home() {
         .context-core:before{content:"";position:absolute;inset:-16%;border:1px solid rgba(214,194,74,.18);border-radius:50%;animation:alvPulse 4s ease-in-out infinite}
         .model-node{position:absolute;z-index:4;padding:10px 12px;background:#0b0e0e;border:1px solid var(--alv-line);
           font:600 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}
-        .model-node:nth-of-type(2){top:5%;left:50%;transform:translateX(-50%)}.model-node:nth-of-type(3){right:-4%;top:46%}
-        .model-node:nth-of-type(4){bottom:5%;left:50%;transform:translateX(-50%)}.model-node:nth-of-type(5){left:-4%;top:46%}
+        .model-node--north{top:5%;left:50%;transform:translateX(-50%)}
+        .model-node--east{right:-4%;top:46%;transform:translateY(-50%)}
+        .model-node--south{bottom:5%;left:50%;transform:translateX(-50%)}
+        .model-node--west{left:-4%;top:46%;transform:translateY(-50%)}
         .model-node i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:7px;background:#756d66}
         .context-thread{position:absolute;left:50%;top:50%;width:42%;height:1px;background:linear-gradient(90deg,rgba(214,194,74,.15),rgba(214,194,74,.7));transform-origin:left center;z-index:2}
         .context-thread.t1{transform:rotate(-90deg)}.context-thread.t2{transform:rotate(0)}.context-thread.t3{transform:rotate(90deg)}.context-thread.t4{transform:rotate(180deg)}
@@ -196,7 +203,7 @@ function Home() {
                 <span className="context-thread t3" />
                 <span className="context-thread t4" />
                 <div className="context-core">YOUR<br />CONTEXT</div>
-                {modelNodes.map((node) => <span className="model-node" key={node}><i />{node}</span>)}
+                {modelNodes.map((node) => <span className={`model-node model-node--${node.position}`} key={node.label}><i />{node.label}</span>)}
               </div>
               <p className="field-caption">One maintained layer · selectively routed · provider-independent</p>
             </div>

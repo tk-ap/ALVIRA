@@ -245,7 +245,7 @@ function BridgePage() {
             </div>
           </section>
 
-          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Bridge is read-only: connected tools cannot change ALVIRA's source Context.</p>
+          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Connected tools cannot silently change ALVIRA's source Context. Authorized AI tools may propose updates for you to review.</p>
         </div>
       </main>
       <TrustFooter />

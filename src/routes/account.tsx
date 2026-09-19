@@ -28,6 +28,7 @@ const tierBadgeClass: Record<string, string> = {
   pro: "border-system dark:border-system text-system dark:text-system",
   lifetime: "border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-400",
   founder: "border-iridescent dark:border-iridescent-dark text-iridescent dark:text-iridescent-dark",
+  smoke_testing: "border-violet-500 dark:border-violet-400 text-violet-700 dark:text-violet-300",
 };
 
 function AccountPage() {
@@ -162,6 +163,13 @@ function AccountPage() {
               {limits.accessMode === "founder" ? (
                 <div className="rounded-lg border border-iridescent dark:border-iridescent-dark bg-iridescent-soft/30 overflow-hidden">
                   <div className="px-5 py-4"><h2 className="font-semibold text-gray-900 dark:text-gray-100">Founder access</h2><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Full product access for owner and controlled acceptance testing.</p></div>
+                </div>
+              ) : limits.tier === "smoke_testing" ? (
+                <div className="rounded-lg border border-violet-300 dark:border-violet-700 bg-violet-50/60 dark:bg-violet-950/20 overflow-hidden">
+                  <div className="px-5 py-4">
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">Smoke testing access</h2>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Internal end-to-end test account with full customer-facing product access. It is not a paid, Founding Beta, or owner/admin account.</p>
+                  </div>
                 </div>
               ) : limits.tier === "free" ? (
                 <div className="rounded-lg border border-system dark:border-system-dark bg-system-soft/50 dark:bg-ink/30 overflow-hidden">

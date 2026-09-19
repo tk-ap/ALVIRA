@@ -47,7 +47,11 @@ JSON
 # session. Publish it as static Build Output metadata rather than relying on a
 # framework rewrite: this project deploys prebuilt output, so repo-level
 # vercel.json rewrites are not authoritative for these requests.
-BRIDGE_ORIGIN="https://${VERCEL_PROJECT_PRODUCTION_URL:-alviratech.vercel.app}"
+if [[ "${VERCEL_ENV:-}" == "preview" && -n "${VERCEL_URL:-}" ]]; then
+  BRIDGE_ORIGIN="https://${VERCEL_URL}"
+else
+  BRIDGE_ORIGIN="https://${VERCEL_PROJECT_PRODUCTION_URL:-alviratech.vercel.app}"
+fi
 cat > .vercel/output/static/bridge-oauth-resource.json <<JSON
 {
   "resource": "${BRIDGE_ORIGIN}/api/bridge/mcp",

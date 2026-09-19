@@ -127,7 +127,7 @@ function ImmersiveInterviewPrototype() {
       <main className="mx-auto max-w-7xl px-6 pb-24 pt-8 sm:px-8 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4 border-y border-white/10 py-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[#b8ada1]">
           <span>
-            <strong className="text-[#d6c24a]">Prototype V1</strong> · owner-only · no saves ·
+            <strong className="text-system">Prototype V1</strong> · owner-only · no saves ·
             latest Interview Engine Lab
           </span>
           <span>branch: prototype/immersive-interview-v1</span>
@@ -135,7 +135,7 @@ function ImmersiveInterviewPrototype() {
 
         <section className="grid gap-10 py-14 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,.92fr)] lg:items-start">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#d6c24a]">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-system">
               Context should become visible while the conversation is happening.
             </p>
             <h1 className="mt-5 max-w-4xl text-[clamp(3.2rem,7vw,7rem)] font-semibold leading-[0.88] tracking-[-0.055em]">
@@ -171,7 +171,7 @@ function ImmersiveInterviewPrototype() {
               type="button"
               onClick={start}
               disabled={busy || !domainId}
-              className="mt-4 w-full border border-[#d6c24a]/65 px-4 py-3 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#d6c24a] disabled:opacity-40"
+              className="mt-4 w-full border border-system/65 px-4 py-3 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-system disabled:opacity-40"
             >
               {history.length ? "Restart with real lab engine" : "Begin with real lab engine"}
             </button>
@@ -199,7 +199,7 @@ function ImmersiveInterviewPrototype() {
                     <span
                       className={
                         active
-                          ? "h-2 w-2 rounded-full bg-[#d6c24a]"
+                          ? "h-2 w-2 rounded-full bg-system"
                           : "h-2 w-2 rounded-full border border-white/30"
                       }
                     />
@@ -246,7 +246,7 @@ function ImmersiveInterviewPrototype() {
                     key={`${message.role}-${index}`}
                     className={
                       message.role === "assistant"
-                        ? "mr-[8%] border-l border-[#d6c24a]/55 pl-5"
+                        ? "mr-[8%] border-l border-system/55 pl-5"
                         : "ml-[12%] border-l border-white/15 pl-5"
                     }
                   >
@@ -260,7 +260,7 @@ function ImmersiveInterviewPrototype() {
                 ))
               )}
               {busy ? (
-                <div className="border-l border-[#d6c24a]/35 pl-5 text-sm text-[#8f857c]">
+                <div className="border-l border-system/35 pl-5 text-sm text-[#8f857c]">
                   ALVIRA is finding the next useful gap…
                 </div>
               ) : null}
@@ -273,7 +273,7 @@ function ImmersiveInterviewPrototype() {
                 disabled={busy || history.length === 0}
                 rows={4}
                 placeholder="Answer naturally…"
-                className="w-full resize-y border-0 border-b border-white/20 bg-transparent px-0 py-3 text-base leading-7 text-[#f4f0e9] outline-none placeholder:text-[#655e58] focus:border-[#d6c24a]/70 disabled:opacity-45"
+                className="w-full resize-y border-0 border-b border-white/20 bg-transparent px-0 py-3 text-base leading-7 text-[#f4f0e9] outline-none placeholder:text-[#655e58] focus:border-system/70 disabled:opacity-45"
               />
               <div className="mt-4 flex justify-end">
                 <button
@@ -289,7 +289,7 @@ function ImmersiveInterviewPrototype() {
 
           <aside className="space-y-4">
             <div className="border border-white/10 p-6">
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#d6c24a]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system">
                 What ALVIRA is carrying forward
               </p>
               <p className="mt-5 text-xl leading-8 tracking-[-0.02em] text-[#ded6cc]">
@@ -316,7 +316,7 @@ function ImmersiveInterviewPrototype() {
               </p>
             </div>
 
-            <div className="border border-[#8b3345]/45 bg-[#8b3345]/10 p-5 text-sm leading-6 text-[#d8c8cc]">
+            <div className="border border-human/45 bg-human/10 p-5 text-sm leading-6 text-[#d8c8cc]">
               Design rule: these panels visualize only fields returned by the isolated Lab. They
               must not imply saved Context, confidence, memory, or completion state that the engine
               has not actually produced.

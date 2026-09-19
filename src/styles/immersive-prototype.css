@@ -16,8 +16,8 @@ body.immersive-prototype{
   margin:0;
   min-height:100dvh;
   background:
-    radial-gradient(circle at 82% 8%,rgba(214,194,74,.055),transparent 24%),
-    radial-gradient(circle at 8% 58%,rgba(139,51,69,.055),transparent 28%),
+    radial-gradient(circle at 82% 8%,rgba(43,183,159,.055),transparent 24%),
+    radial-gradient(circle at 8% 58%,rgba(140,128,178,.055),transparent 28%),
     var(--proto-bg);
   color:var(--proto-paper);
 }
@@ -62,8 +62,8 @@ body.immersive-prototype .immersive-header-mark{
   gap:8px;
   margin-left:10px;
   padding:6px 8px;
-  border:1px solid rgba(214,194,74,.34);
-  color:var(--proto-acid);
+  border:1px solid rgba(43,183,159,.34);
+  color:var(--proto-system);
   font:600 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
   letter-spacing:.12em;
   text-transform:uppercase;
@@ -72,7 +72,7 @@ body.immersive-prototype .immersive-header-mark{
 body.immersive-prototype main#main-content:not(.immersive-page){
   min-height:70vh;
   background:
-    radial-gradient(circle at 84% 12%,rgba(214,194,74,.035),transparent 24%),
+    radial-gradient(circle at 84% 12%,rgba(43,183,159,.035),transparent 24%),
     transparent;
   color:var(--proto-paper);
 }
@@ -89,7 +89,7 @@ body.immersive-prototype main#main-content:not(.immersive-page) > section::befor
   left:max(24px,calc((100% - 80rem)/2));
   right:max(24px,calc((100% - 80rem)/2));
   height:1px;
-  background:linear-gradient(90deg,rgba(214,194,74,.55),transparent 34%);
+  background:linear-gradient(90deg,rgba(43,183,159,.55),transparent 34%);
   opacity:.55;
   pointer-events:none;
 }
@@ -150,8 +150,8 @@ body.immersive-prototype select{
 body.immersive-prototype input:focus,
 body.immersive-prototype textarea:focus,
 body.immersive-prototype select:focus{
-  border-color:rgba(214,194,74,.7)!important;
-  box-shadow:0 0 0 1px rgba(214,194,74,.18)!important;
+  border-color:rgba(43,183,159,.7)!important;
+  box-shadow:0 0 0 1px rgba(43,183,159,.18)!important;
 }
 
 body.immersive-prototype input::placeholder,
@@ -246,7 +246,7 @@ body.immersive-prototype main#main-content.flex.items-center::before{
   position:absolute;
   top:48px;
   left:max(24px,calc((100% - 80rem)/2));
-  color:var(--proto-acid);
+  color:var(--proto-system);
   font:600 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
   letter-spacing:.16em;
 }
@@ -255,7 +255,7 @@ body.immersive-prototype main#main-content.flex.items-center > div{
   position:relative;
   padding:clamp(28px,5vw,54px);
   border:1px solid var(--proto-line);
-  background:linear-gradient(145deg,rgba(214,194,74,.025),rgba(255,255,255,.012));
+  background:linear-gradient(145deg,rgba(43,183,159,.025),rgba(255,255,255,.012));
 }
 
 body.immersive-prototype main#main-content.flex.items-center > div::after{
@@ -265,7 +265,7 @@ body.immersive-prototype main#main-content.flex.items-center > div::after{
   left:-1px;
   width:72px;
   height:1px;
-  background:var(--proto-acid);
+  background:var(--proto-system);
 }
 
 /* Pricing + organization grids should read like evidence/choice surfaces, not generic SaaS cards. */
@@ -274,7 +274,7 @@ body.immersive-prototype main [class*="grid"] > [class*="border"]{
 }
 
 body.immersive-prototype main [class*="grid"] > [class*="border"]:hover{
-  background:rgba(214,194,74,.025);
+  background:rgba(43,183,159,.025);
 }
 
 /* Product/app surfaces keep their behavior but share the new visual material. */

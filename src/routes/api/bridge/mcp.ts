@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getBridgePrincipal, getBridgeProfiles } from "~/lib/bridge";
+import { createBridgeContextProposal } from "~/lib/bridge-proposals";
 
 const MODERN_PROTOCOL_VERSION = "2026-07-28";
 const LEGACY_PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
@@ -40,7 +41,7 @@ function unauthorized(request: Request) {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
-      "WWW-Authenticate": `Bearer resource_metadata="${metadata}", scope="context:read profile:read"`,
+      "WWW-Authenticate": `Bearer resource_metadata="${metadata}", scope="context:read profile:read context:propose"`,
     },
   });
 }
@@ -160,18 +161,20 @@ function validateProtocolRequest(request: Request, message: JsonRpcRequest): Req
   return { modern: true };
 }
 
-async function authorizedProfiles(request: Request) {
+async function authorizedBridge(request: Request) {
   const token = bearer(request);
   if (!token) return null;
   const principal = await getBridgePrincipal(token);
   if (!principal) return null;
   if (principal.destination && principal.destination !== "mcp") return null;
-  return getBridgeProfiles(principal.user_id, principal.selected_profile_id);
+  const profiles = await getBridgeProfiles(principal.user_id, principal.selected_profile_id);
+  return { principal, profiles };
 }
 
 async function handlePost(request: Request) {
-  const profiles = await authorizedProfiles(request);
-  if (!profiles) return unauthorized(request);
+  const authorized = await authorizedBridge(request);
+  if (!authorized) return unauthorized(request);
+  const { principal, profiles } = authorized;
 
   let message: JsonRpcRequest;
   try {
@@ -193,7 +196,7 @@ async function handlePost(request: Request) {
     return json(rpcCacheResult(id, {
       supportedVersions: [MODERN_PROTOCOL_VERSION],
       capabilities: { resources: {}, tools: {} },
-      instructions: "Use ALVIRA Bridge to read only the Context this person explicitly approved for this connection.",
+      instructions: "Use ALVIRA Bridge to read approved Context and, when authorized, propose updates for the person to review. Never treat a proposal as approved Context.",
     }, true, DISCOVERY_CACHE_MS, "private"));
   }
 
@@ -248,6 +251,22 @@ async function handlePost(request: Request) {
             description: "List the ALVIRA Context available through this Bridge connection.",
             inputSchema: { type: "object", properties: {}, additionalProperties: false },
           },
+          ...(principal.scope.split(/\s+/).includes("context:propose") ? [{
+            name: "propose_alvira_context_update",
+            title: "Propose ALVIRA Context Update",
+            description: "Propose a new or changed fact for the user's approved ALVIRA Context. This never edits Context silently; the user must review and approve it in ALVIRA.",
+            inputSchema: {
+              type: "object",
+              required: ["statement"],
+              properties: {
+                profileId: { type: "string", description: "Optional authorized ALVIRA profile ID." },
+                statement: { type: "string", description: "Concise statement of what changed or should be added to Context." },
+                rationale: { type: "string", description: "Optional explanation of why this update matters." },
+                supersedes: { type: "array", items: { type: "string" }, description: "Optional prior assumptions or facts this update supersedes or materially changes." },
+              },
+              additionalProperties: false,
+            },
+          }] : []),
         ],
       }, modern));
     case "tools/call": {
@@ -258,6 +277,35 @@ async function handlePost(request: Request) {
         return json(rpcResult(id, {
           content: [{ type: "text", text: JSON.stringify(summaries) }],
           structuredContent: { profiles: summaries },
+        }, modern));
+      }
+      if (name === "propose_alvira_context_update") {
+        if (!principal.scope.split(/\s+/).includes("context:propose")) {
+          return json(rpcError(id, -32603, "This connection is not allowed to propose Context updates."), 403);
+        }
+        const profileId = typeof args.profileId === "string" ? args.profileId : (principal.selected_profile_id || profiles[0]?.id || null);
+        const profile = profileId ? profiles.find((item) => item.id === profileId) : null;
+        if (!profile) {
+          return json(rpcResult(id, {
+            content: [{ type: "text", text: "No authorized ALVIRA Context is available for this proposal." }],
+            isError: true,
+          }, modern));
+        }
+        const statement = typeof args.statement === "string" ? args.statement.trim() : "";
+        if (!statement) return json(rpcError(id, -32602, "statement is required"), 400);
+        const supersedes = Array.isArray(args.supersedes) ? args.supersedes.filter((item): item is string => typeof item === "string") : [];
+        const proposal = await createBridgeContextProposal({
+          userId: principal.user_id,
+          profileId: profile.id,
+          connectionId: principal.connection_id,
+          clientId: principal.client_id,
+          statement,
+          rationale: typeof args.rationale === "string" ? args.rationale : null,
+          supersedes,
+        });
+        return json(rpcResult(id, {
+          content: [{ type: "text", text: `Proposed ALVIRA Context update ${proposal.id}. The user must review and approve it in ALVIRA before it changes their Context.` }],
+          structuredContent: { proposalId: proposal.id, status: proposal.status, reviewUrl: "https://alviratech.vercel.app/bridge/updates" },
         }, modern));
       }
       if (name === "get_alvira_context") {
@@ -288,8 +336,9 @@ export const Route = createFileRoute("/api/bridge/mcp")({
       // Retained as a human/debug compatibility surface. Modern MCP clients use
       // POST only; they never depend on GET or DELETE protocol sessions.
       GET: async ({ request }) => {
-        const profiles = await authorizedProfiles(request);
-        if (!profiles) return unauthorized(request);
+        const authorized = await authorizedBridge(request);
+        if (!authorized) return unauthorized(request);
+        const { principal, profiles } = authorized;
         return json({
           name: "alvira-bridge",
           version: SERVER_INFO.version,
@@ -297,12 +346,12 @@ export const Route = createFileRoute("/api/bridge/mcp")({
           transport: "stateless-streamable-http",
           endpoint: "/api/bridge/mcp",
           resources: ["alvira://profiles"],
-          tools: ["get_alvira_context", "list_alvira_profiles"],
+          tools: ["get_alvira_context", "list_alvira_profiles", ...(principal.scope.split(/\s+/).includes("context:propose") ? ["propose_alvira_context_update"] : [])],
         });
       },
       DELETE: async ({ request }) => {
-        const profiles = await authorizedProfiles(request);
-        if (!profiles) return unauthorized(request);
+        const authorized = await authorizedBridge(request);
+        if (!authorized) return unauthorized(request);
         return new Response(null, { status: 204 });
       },
       OPTIONS: async () => new Response(null, {

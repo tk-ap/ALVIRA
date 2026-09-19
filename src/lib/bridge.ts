@@ -410,9 +410,12 @@ export async function exchangeBridgeAuthorizationCode(
   const accessToken = createBridgeSecret();
   const connectionId = `conn_${randomBytes(16).toString("base64url")}`;
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const grantedScope = row.destination === "mcp"
+    ? "context:read profile:read context:propose"
+    : "context:read profile:read";
   await db.query(
     "INSERT INTO bridge_access_tokens (token_hash, user_id, client_id, scope, selected_profile_id, destination, connection_id, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    [hashBridgeSecret(accessToken), row.user_id, clientId, "context:read profile:read", row.selected_profile_id, row.destination, connectionId, expiresAt],
+    [hashBridgeSecret(accessToken), row.user_id, clientId, grantedScope, row.selected_profile_id, row.destination, connectionId, expiresAt],
   );
   if (clientId !== bridgeClientId()) {
     await db.query("UPDATE bridge_oauth_clients SET last_seen_at = NOW() WHERE client_id = $1", [clientId]);
@@ -420,7 +423,7 @@ export async function exchangeBridgeAuthorizationCode(
   return {
     accessToken,
     expiresAt,
-    scope: "context:read profile:read",
+    scope: grantedScope,
     selectedProfileId: row.selected_profile_id,
     destination: row.destination,
     connectionId,

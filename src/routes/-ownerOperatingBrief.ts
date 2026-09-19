@@ -88,13 +88,14 @@ export const getOwnerOperatingBrief = createServerFn({ method: "GET" }).handler(
          FROM users
         WHERE created_at > $1
           AND LOWER(email) <> LOWER($2)
+          AND tier <> 'smoke_testing'
         ORDER BY created_at DESC
         LIMIT 8`,
       [since, owner.email],
     ) as Promise<NewSignup[]>,
     db.query(
       `SELECT
-         (SELECT COUNT(*)::int FROM users WHERE created_at > $1 AND LOWER(email) <> LOWER($2)) AS new_signups,
+         (SELECT COUNT(*)::int FROM users WHERE created_at > $1 AND LOWER(email) <> LOWER($2) AND tier <> 'smoke_testing') AS new_signups,
          (SELECT COUNT(*)::int FROM founding_beta_access WHERE granted_at > $1) AS new_beta,
          (SELECT COUNT(*)::int FROM beta_feedback WHERE created_at > $1) AS new_feedback,
          (SELECT COUNT(DISTINCT user_id)::int FROM (
@@ -125,12 +126,12 @@ export const getOwnerOperatingBrief = createServerFn({ method: "GET" }).handler(
          GROUP BY f.user_id, f.granted_at
       )
       SELECT
-        (SELECT COUNT(*)::int FROM users WHERE created_at >= NOW() - INTERVAL '7 days') AS signups_7d,
-        (SELECT COUNT(DISTINCT user_id)::int FROM meaningful WHERE activity_at >= NOW() - INTERVAL '7 days') AS meaningful_7d,
-        (SELECT COUNT(DISTINCT user_id)::int FROM meaningful WHERE activity_at >= NOW() - INTERVAL '30 days') AS meaningful_30d,
-        (SELECT COUNT(*)::int FROM profiles WHERE updated_at >= NOW() - INTERVAL '7 days') AS contexts_updated_7d,
-        (SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id))::int FROM events WHERE name = 'interview_started' AND created_at >= NOW() - INTERVAL '7 days') AS interviews_started_7d,
-        (SELECT COUNT(DISTINCT COALESCE(user_id, anonymous_id))::int FROM events WHERE name = 'interview_completed' AND created_at >= NOW() - INTERVAL '7 days') AS interviews_completed_7d,
+        (SELECT COUNT(*)::int FROM users WHERE created_at >= NOW() - INTERVAL '7 days' AND tier <> 'smoke_testing') AS signups_7d,
+        (SELECT COUNT(DISTINCT m.user_id)::int FROM meaningful m JOIN users u ON u.id=m.user_id WHERE m.activity_at >= NOW() - INTERVAL '7 days' AND u.tier <> 'smoke_testing') AS meaningful_7d,
+        (SELECT COUNT(DISTINCT m.user_id)::int FROM meaningful m JOIN users u ON u.id=m.user_id WHERE m.activity_at >= NOW() - INTERVAL '30 days' AND u.tier <> 'smoke_testing') AS meaningful_30d,
+        (SELECT COUNT(*)::int FROM profiles p JOIN users u ON u.id=p.user_id WHERE p.updated_at >= NOW() - INTERVAL '7 days' AND u.tier <> 'smoke_testing') AS contexts_updated_7d,
+        (SELECT COUNT(DISTINCT COALESCE(e.user_id, e.anonymous_id))::int FROM events e LEFT JOIN users u ON u.id=e.user_id WHERE e.name = 'interview_started' AND e.created_at >= NOW() - INTERVAL '7 days' AND (u.id IS NULL OR u.tier <> 'smoke_testing')) AS interviews_started_7d,
+        (SELECT COUNT(DISTINCT COALESCE(e.user_id, e.anonymous_id))::int FROM events e LEFT JOIN users u ON u.id=e.user_id WHERE e.name = 'interview_completed' AND e.created_at >= NOW() - INTERVAL '7 days' AND (u.id IS NULL OR u.tier <> 'smoke_testing')) AS interviews_completed_7d,
         (SELECT COUNT(*)::int FROM founding_beta_access) AS beta_total,
         (SELECT COUNT(*)::int FROM beta_activity WHERE last_meaningful_at >= NOW() - INTERVAL '7 days') AS beta_active_7d,
         (SELECT COUNT(*)::int FROM beta_activity WHERE granted_at <= NOW() - INTERVAL '14 days' AND (last_meaningful_at IS NULL OR last_meaningful_at < NOW() - INTERVAL '14 days')) AS beta_dormant_14d,

@@ -98,7 +98,7 @@ export const getOwnerOperatingBrief = createServerFn({ method: "GET" }).handler(
          (SELECT COUNT(*)::int FROM users WHERE created_at > $1 AND LOWER(email) <> LOWER($2) AND tier <> 'smoke_testing') AS new_signups,
          (SELECT COUNT(*)::int FROM founding_beta_access WHERE granted_at > $1) AS new_beta,
          (SELECT COUNT(*)::int FROM beta_feedback WHERE created_at > $1) AS new_feedback,
-         (SELECT COUNT(DISTINCT user_id)::int FROM (
+         (SELECT COUNT(DISTINCT x.user_id)::int FROM (
             SELECT user_id FROM profiles WHERE updated_at > $1
             UNION ALL SELECT user_id FROM interview_drafts WHERE updated_at > $1
             UNION ALL SELECT user_id FROM bridge_access_tokens WHERE created_at > $1
@@ -106,7 +106,7 @@ export const getOwnerOperatingBrief = createServerFn({ method: "GET" }).handler(
               'interview_started','interview_completed','export_performed','context_updated',
               'reflect_completed','reuse_performed','dossier_built','bridge_connected'
             )
-          ) x) AS meaningful_users`,
+          ) x JOIN users u ON u.id=x.user_id WHERE u.tier <> 'smoke_testing') AS meaningful_users`,
       [since, owner.email],
     ) as Promise<Array<{ new_signups: number; new_beta: number; new_feedback: number; meaningful_users: number }>>,
     db.query(`

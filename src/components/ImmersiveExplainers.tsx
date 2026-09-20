@@ -220,3 +220,104 @@ export function LiveContextMirrorGraphic({
     </aside>
   );
 }
+
+
+export function ContextHistoryGraphic({
+  versions,
+}: {
+  versions: Array<{ version: number; current: boolean; source: string; createdAt: string; changedDomains: string[] }>;
+}) {
+  const ordered = [...versions].reverse();
+  return (
+    <div className="ivx-history" aria-label="Context history timeline">
+      {ordered.length === 0 ? (
+        <div className="ivx-history__empty">No versioned changes yet.</div>
+      ) : ordered.map((version, index) => (
+        <article className={`ivx-history__event ${version.current ? "ivx-history__event--current" : ""}`} key={`${version.version}-${version.current}`}>
+          <div className="ivx-history__rail" aria-hidden="true"><span />{index < ordered.length - 1 ? <i /> : null}</div>
+          <div className="ivx-history__body">
+            <div className="ivx-history__meta">
+              <strong>V{version.version}</strong>
+              <small>{version.current ? "CURRENT" : new Date(version.createdAt).toLocaleDateString()}</small>
+            </div>
+            <p>{version.changedDomains.length ? version.changedDomains.map((value) => value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[-_]/g, " ")).join(" · ") : "Snapshot captured"}</p>
+            <span>{version.source || "maintained Context"}</span>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+export function ContextPortfolioGraphic({
+  profiles,
+  draft,
+}: {
+  profiles: Array<{ id: string; topic: string; offering: "context" | "meos"; updated_at: string }>;
+  draft: { offering: string; topic: string; updated_at: string } | null;
+}) {
+  return (
+    <section className="ivx-portfolio" aria-label="Your maintained Context surfaces">
+      <div className="ivx-portfolio__core">
+        <small>ALVIRA</small>
+        <strong>YOUR CONTEXT</strong>
+        <span>{profiles.length} saved · {draft ? "1 active draft" : "no active draft"}</span>
+      </div>
+      <div className="ivx-portfolio__list">
+        {draft ? (
+          <a href={`/app?offering=${draft.offering}`} className="ivx-portfolio__node ivx-portfolio__node--draft">
+            <small>IN PROGRESS</small><strong>{draft.topic}</strong><span>continue interview →</span>
+          </a>
+        ) : null}
+        {profiles.map((profile) => (
+          <a href={`/app?continue=${profile.id}`} className="ivx-portfolio__node" key={profile.id}>
+            <small>{profile.offering === "meos" ? "REFLECT" : "CONTEXT"}</small>
+            <strong>{profile.topic}</strong>
+            <span>updated {new Date(profile.updated_at).toLocaleDateString()} →</span>
+          </a>
+        ))}
+      </div>
+      <div className="ivx-portfolio__actions">
+        <a href="/history">SEE WHAT CHANGED</a>
+        <a href="/bridge">CONNECT ALVIRA</a>
+      </div>
+    </section>
+  );
+}
+
+export function ReflectLoopGraphic({
+  topic,
+  updatedAt,
+  hasPortrait,
+}: {
+  topic: string;
+  updatedAt: string;
+  hasPortrait: boolean;
+}) {
+  return (
+    <figure className="ivx-reflect" aria-label="Reflect keeps a saved Context under review rather than treating it as static">
+      <div className="ivx-reflect__context"><small>SAVED CONTEXT</small><strong>{topic}</strong><span>updated {new Date(updatedAt).toLocaleDateString()}</span></div>
+      <i>→</i>
+      <div className="ivx-reflect__lens"><small>REFLECT</small><strong>REVISIT</strong><span>notice · challenge · deepen</span></div>
+      <i>→</i>
+      <div className={`ivx-reflect__state ${hasPortrait ? "ivx-reflect__state--ready" : ""}`}><small>CURRENT STATE</small><strong>{hasPortrait ? "PORTRAIT READY" : "COMPILING"}</strong><span>{hasPortrait ? "inspect what ALVIRA formed" : "saved interview, output pending"}</span></div>
+      <i>↺</i>
+      <figcaption>Reflect is a maintenance loop: what changed should flow back into Context rather than becoming a second disconnected profile.</figcaption>
+    </figure>
+  );
+}
+
+export function ProposalReviewGraphic({ activeConnections }: { activeConnections: number }) {
+  return (
+    <figure className="ivx-proposal" aria-label="Governed Context write-back proposal flow">
+      <div><small>CONNECTED TOOL</small><strong>{activeConnections} ACTIVE</strong><span>may read approved Context</span></div>
+      <i>→</i>
+      <div><small>PROPOSE</small><strong>PENDING UPDATE</strong><span>cannot mutate Context directly</span></div>
+      <i>→</i>
+      <div className="ivx-proposal__gate"><small>HUMAN REVIEW</small><strong>APPROVE / REJECT</strong><span>decision stays with you</span></div>
+      <i>→</i>
+      <div><small>CONTEXT</small><strong>VERSIONED CHANGE</strong><span>only after approval</span></div>
+      <figcaption>Direction from the governed write-back prototype: connected tools propose; ALVIRA queues; the user decides. This prototype surface does not claim the proposal backend is active here.</figcaption>
+    </figure>
+  );
+}

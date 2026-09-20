@@ -59,6 +59,17 @@ describe("Bridge governed Context proposals", () => {
     expect(JSON.stringify(before)).toBe(snapshot);
   });
 
+  test("OAuth preserves explicit read-only scope and defaults MCP consent to propose", () => {
+    const bridge = readFileSync("src/lib/bridge.ts", "utf8");
+    const authorize = readFileSync("src/routes/api/bridge/authorize.ts", "utf8");
+    const connect = readFileSync("src/routes/bridge/connect.tsx", "utf8");
+    expect(bridge).toContain('return destination === "mcp" ? BRIDGE_MCP_DEFAULT_SCOPE : BRIDGE_READ_SCOPE');
+    expect(bridge).toContain('scopes.includes("context:propose") ? BRIDGE_MCP_DEFAULT_SCOPE : BRIDGE_READ_SCOPE');
+    expect(authorize).toContain('const requestedScope = url.searchParams.get("scope")');
+    expect(authorize).toContain("requestedScope },");
+    expect(connect).toContain("const canProposeUpdates = !requestedScope");
+  });
+
   test("MCP write-back is proposal-only and scope-gated", () => {
     const mcp = readFileSync("src/routes/api/bridge/mcp.ts", "utf8");
     expect(mcp).toContain('name: "propose_alvira_context_update"');

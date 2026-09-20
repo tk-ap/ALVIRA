@@ -52,6 +52,25 @@ describe("Bridge governed Context proposals", () => {
     expect(review).toContain('action: "approve" | "reject"');
   });
 
+  test("approval is atomic and refuses stale Context writes", () => {
+    const proposals = readFileSync("src/lib/bridge-proposals.ts", "utf8");
+    expect(proposals).toContain("await db.transaction([");
+    expect(proposals).toContain("AND state_json = $4");
+    expect(proposals).toContain("status = 'pending'");
+    expect(proposals).toContain("1 / 0");
+  });
+
+  test("rejection changes proposal state only", () => {
+    const proposals = readFileSync("src/lib/bridge-proposals.ts", "utf8");
+    const rejectStart = proposals.indexOf('if (input.action === "reject")');
+    const approveRead = proposals.indexOf("SELECT p.*, pr.state_json");
+    expect(rejectStart).toBeGreaterThan(-1);
+    expect(approveRead).toBeGreaterThan(rejectStart);
+    const rejectBlock = proposals.slice(rejectStart, approveRead);
+    expect(rejectBlock).toContain("status = 'rejected'");
+    expect(rejectBlock).not.toContain("UPDATE profiles");
+  });
+
   test("preview OAuth metadata stays on the preview host and advertises proposal scope", () => {
     const build = readFileSync("build-vercel.sh", "utf8");
     expect(build).toContain('VERCEL_ENV:-');

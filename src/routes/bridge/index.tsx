@@ -2,13 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ProductJourneyRail } from "~/components/ImmersiveExplainers";
 import { getCurrentUser, listProfiles } from "../-auth";
 
 export const Route = createFileRoute("/bridge/")({
   head: () => ({
     meta: [
-      { title: "Bridge — ALVIRA" },
-      { name: "description", content: "Use selected ALVIRA Context in other AI tools without rebuilding it." },
+      { title: "Connect ALVIRA — governed Context access" },
+      { name: "description", content: "Connect another AI tool to an approved ALVIRA Context view with revocable access." },
     ],
   }),
   component: BridgePage,
@@ -146,9 +147,9 @@ function BridgePage() {
       <Header />
       <main id="main-content" className="flex-1 px-6 py-14">
         <div className="mx-auto max-w-5xl">
-          <p className="font-mono text-xs uppercase tracking-[0.22em] text-system">&lt; alvira / bridge &gt;</p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">Use your ALVIRA Context in another AI tool.</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">Bridge carries only the Context you approve. You do not need to move files, copy a profile, or manage security keys yourself.</p>
+          <p className="font-mono text-xs uppercase tracking-[0.22em] text-system">Connect ALVIRA / governed access</p>
+          <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">Connect ALVIRA to another AI tool.</h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">Choose the saved Context another tool may use. ALVIRA handles the governed connection underneath, and you can revoke it later.</p>
 
           {(justConnected || connections.length > 0) && (
             <div className="mt-6 rounded-xl border border-system/40 bg-system-soft/60 px-5 py-4 dark:bg-ink/40" role="status">
@@ -167,11 +168,13 @@ function BridgePage() {
             </div>
           )}
 
+          <ProductJourneyRail active="connect" />
+
           <section className="mt-10" aria-labelledby="connected-heading">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="font-mono text-xs uppercase tracking-wider text-gray-500">Your connections</p>
-                <h2 id="connected-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">What can use ALVIRA right now</h2>
+                <h2 id="connected-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">Who currently has approved access</h2>
               </div>
               <span className="font-mono text-xs uppercase tracking-wide text-system">{connections.length} active</span>
             </div>
@@ -218,7 +221,7 @@ function BridgePage() {
 
           <section className="mt-12" aria-labelledby="available-heading">
             <p className="font-mono text-xs uppercase tracking-wider text-gray-500">Available connections</p>
-            <h2 id="available-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">Where do you want to use your Context?</h2>
+            <h2 id="available-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">What do you want to connect?</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <a href="/bridge/connect" className="group rounded-2xl border border-system/40 bg-system-soft/30 p-6 transition hover:border-system dark:bg-ink/20">
                 <p className="font-mono text-xs uppercase tracking-wider text-system">Recommended</p>
@@ -245,7 +248,7 @@ function BridgePage() {
             </div>
           </section>
 
-          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Bridge is read-only: connected tools cannot change ALVIRA's source Context.</p>
+          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Connected access is governed by ALVIRA. The current production Bridge remains read-only; write-back proposals are being developed as a separate reviewed flow.</p>
         </div>
       </main>
       <TrustFooter />

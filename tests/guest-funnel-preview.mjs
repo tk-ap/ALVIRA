@@ -36,9 +36,12 @@ try {
   assert.equal(await page.getByText("Sign In", { exact: true }).count() > 0, true, "expected signed-out navigation");
 
   // Give the real Context interview a concrete starting area.
-  const topic = page.getByLabel("My communication style and decision-making process");
+  const topic = page
+    .locator("label")
+    .filter({ hasText: "Write or communicate in a way that sounds like me" })
+    .locator('input[type="checkbox"]');
   await topic.check();
-  await page.getByRole("button", { name: "Start interview" }).click();
+  await page.getByRole("button", { name: "Start the conversation" }).click();
 
   // The preview deployment has the real OpenAI-backed interview engine configured.
   const answer = page.getByLabel("Your answer");

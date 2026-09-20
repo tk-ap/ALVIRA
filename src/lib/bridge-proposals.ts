@@ -80,9 +80,25 @@ export function applyApprovedProposalToState(
     : {};
   if (!state.domains || typeof state.domains !== "object" || Array.isArray(state.domains)) state.domains = {};
 
+  const supersedes = (proposal.supersedes || []).map((value) => value.trim()).filter(Boolean);
+  const normalizedSupersedes = new Set(supersedes.map((value) => value.replace(/\\s+/g, " ").trim().toLowerCase()));
+
+  // Supersession is intentionally conservative: remove a prior answer only
+  // when the connected tool supplies that prior Context statement exactly
+  // (ignoring case/whitespace). Paraphrases are retained and merely annotated
+  // below so an external model cannot erase unrelated Context by implication.
+  if (normalizedSupersedes.size > 0) {
+    for (const domain of Object.values(state.domains) as any[]) {
+      if (!domain || typeof domain !== "object" || !Array.isArray(domain.answers)) continue;
+      domain.answers = domain.answers.filter((item: unknown) => {
+        if (typeof item !== "string") return true;
+        return !normalizedSupersedes.has(item.replace(/\\s+/g, " ").trim().toLowerCase());
+      });
+    }
+  }
+
   const existing = state.domains.updates && typeof state.domains.updates === "object" ? state.domains.updates : {};
   const answers = Array.isArray(existing.answers) ? existing.answers.filter((item: unknown) => typeof item === "string") : [];
-  const supersedes = (proposal.supersedes || []).map((value) => value.trim()).filter(Boolean);
   const provenance = `Bridge proposal ${proposal.id} from ${proposal.clientId} on ${new Date(proposal.createdAt).toISOString().slice(0, 10)}`;
   const answer = [
     proposal.statement.trim(),

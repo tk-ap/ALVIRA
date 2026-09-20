@@ -19,11 +19,32 @@ describe("Bridge governed Context proposals", () => {
       createdAt: "2026-09-19T22:00:00.000Z",
     }) as any;
 
-    expect(after.domains.goals).toEqual(before.domains.goals);
+    expect(after.domains.goals.answers).toEqual(["Find a full-time role."]);
     expect(after.domains.updates.answers).toHaveLength(2);
     expect(after.domains.updates.answers[1]).toContain("accepted a full-time position at X Company");
     expect(after.domains.updates.answers[1]).toContain("Supersedes or materially changes: Actively seeking full-time employment");
     expect(after.domains.updates.answers[1]).toContain("Source: Bridge proposal bcp_test from chatgpt-test-client");
+  });
+
+  test("retires only exact superseded Context statements", () => {
+    const before = {
+      domains: {
+        goals: { answers: ["Actively seeking full-time employment", "Build ALVIRA"] },
+        constraints: { answers: ["No car"] },
+      },
+    };
+
+    const after = applyApprovedProposalToState(before, {
+      id: "bcp_supersede",
+      clientId: "chatgpt-test-client",
+      statement: "I accepted a full-time position at X Company and am no longer on the job market.",
+      supersedes: ["actively seeking full-time employment", "Something only vaguely related"],
+      createdAt: "2026-09-19T22:00:00.000Z",
+    }) as any;
+
+    expect(after.domains.goals.answers).toEqual(["Build ALVIRA"]);
+    expect(after.domains.constraints.answers).toEqual(["No car"]);
+    expect(after.domains.updates.answers[0]).toContain("Something only vaguely related");
   });
 
   test("does not mutate the input state while preparing the approved state", () => {
@@ -43,6 +64,7 @@ describe("Bridge governed Context proposals", () => {
     expect(mcp).toContain('name: "propose_alvira_context_update"');
     expect(mcp).toContain('includes("context:propose")');
     expect(mcp).toContain("The user must review and approve it in ALVIRA before it changes their Context.");
+    expect(mcp).toContain('new URL("/bridge/updates", request.url).toString()');
     expect(mcp).not.toContain('name: "update_alvira_context"');
   });
 

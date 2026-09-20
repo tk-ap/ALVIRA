@@ -648,31 +648,58 @@ function AppPage() {
           }
         } catch { /* ignore */ }
 
-        // An authenticated account draft takes precedence over a browser-local
-        // anonymous draft, which may otherwise mask a saved interview after login.
+        // Account/server state wins, but a signed-out interview must survive the
+        // authentication boundary. If no account draft exists yet, migrate the
+        // browser's anonymous draft into the authenticated account instead of
+        // changing storage scope and making the user's work appear to vanish.
         if (!draftRestoredRef.current) {
           try {
-            const localRaw = window.localStorage.getItem(
-              getInterviewDraftKey(
-                u.id,
-                offeringSearch === "meos" ? "meos" : "context",
-              ),
-            );
+            const draftOffering = offeringSearch === "meos" ? "meos" : "context";
+            const userDraftKey = getInterviewDraftKey(u.id, draftOffering);
+            const anonymousDraftKey = getInterviewDraftKey(null, draftOffering);
+            const localRaw = window.localStorage.getItem(userDraftKey);
+            const anonymousRaw = window.localStorage.getItem(anonymousDraftKey);
             const serverDraft = await getInterviewDraft().catch(() => null);
             const localDraft = localRaw ? JSON.parse(localRaw) : null;
-            const draft = serverDraft ?? localDraft;
+            const anonymousDraft = anonymousRaw ? JSON.parse(anonymousRaw) : null;
+            const draft = serverDraft ?? localDraft ?? anonymousDraft;
             if (draft?.state && !cancelled) {
               const draftState = draft.state as InterviewState;
               if (hasMeaningfulDraftInput(draftState)) {
+                const migratedOffering = draft.offering === "meos" ? "meos" : "context";
+                const migratedTopic = draft.topic ?? draft.state.topic;
                 setResumeDraft({
-                  offering: draft.offering === "meos" ? "meos" : "context",
-                  topic: draft.topic ?? draft.state.topic,
+                  offering: migratedOffering,
+                  topic: migratedTopic,
                   state: draftState,
                   savedAt: draft.savedAt,
                   source: serverDraft ? "account" : "browser",
                 });
+
+                if (!serverDraft && !localDraft && anonymousDraft) {
+                  try {
+                    window.localStorage.setItem(
+                      getInterviewDraftKey(u.id, migratedOffering),
+                      JSON.stringify({ ...anonymousDraft, offering: migratedOffering, topic: migratedTopic }),
+                    );
+                  } catch { /* local persistence may be unavailable */ }
+
+                  try {
+                    await autosaveInterview({
+                      data: {
+                        offering: migratedOffering,
+                        topic: migratedTopic,
+                        state: draftState,
+                      },
+                    });
+                    try { window.localStorage.removeItem(anonymousDraftKey); } catch {}
+                  } catch {
+                    // Keep the anonymous copy if the account migration cannot be
+                    // persisted yet; the resume UI still preserves this session.
+                  }
+                }
               } else {
-                try { window.localStorage.removeItem(getInterviewDraftKey(u.id, draft.offering === "meos" ? "meos" : "context")); } catch {}
+                try { window.localStorage.removeItem(userDraftKey); } catch {}
                 if (serverDraft) await clearInterviewDraft().catch(() => {});
               }
               draftRestoredRef.current = true;

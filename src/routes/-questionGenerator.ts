@@ -3,8 +3,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import OpenAI from "openai";
 import {
+  buildExperimentalQuestionPrompt,
   buildProductionClarificationPrompt,
-  buildProductionQuestionPrompt,
 } from "~/lib/interview-prompts";
 import type { Domain, Message, Tier } from "./-knowledgeGraph";
 
@@ -42,11 +42,13 @@ export const generateQuestion = createServerFn({ method: "POST" })
     if (!hasApiKey()) throw new Error("API key not configured");
 
     const openai = getOpenAIClient();
-    const systemPrompt = buildProductionQuestionPrompt({
+    // Prototype branch only: run the actual customer interview through the
+    // latest Interview Lab v2 prompt so the immersive product journey is
+    // testing the same interview behavior rather than a separate marketing shell.
+    const systemPrompt = buildExperimentalQuestionPrompt({
       domain: data.domain,
       history: data.history,
       tier: data.tier,
-      isClarification: data.isClarification,
     });
 
     const response = await openai.chat.completions.create({

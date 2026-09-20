@@ -150,30 +150,27 @@ export async function reviewBridgeContextProposal(input: {
 }) {
   await ensureBridgeProposalSchema();
   const db = getDb();
+
+  if (input.action === "reject") {
+    const rejected = await db.query(
+      "UPDATE bridge_context_proposals SET status = 'rejected', reviewed_at = NOW() WHERE id = $1 AND user_id = $2 AND status = 'pending' RETURNING id",
+      [input.proposalId, input.userId],
+    ) as Array<{ id: string }>;
+    if (rejected.length === 0) throw new Error("Pending proposal not found.");
+    return { status: "rejected" as const };
+  }
+
   const proposalRow = (await db.query(
-    `SELECT * FROM bridge_context_proposals
-      WHERE id = $1 AND user_id = $2 AND status = 'pending'
-      FOR UPDATE`,
+    `SELECT p.*, pr.state_json
+       FROM bridge_context_proposals p
+       JOIN profiles pr ON pr.id = p.profile_id AND pr.user_id = p.user_id
+      WHERE p.id = $1 AND p.user_id = $2 AND p.status = 'pending'`,
     [input.proposalId, input.userId],
   ))[0] as any | undefined;
   if (!proposalRow) throw new Error("Pending proposal not found.");
 
-  if (input.action === "reject") {
-    await db.query(
-      "UPDATE bridge_context_proposals SET status = 'rejected', reviewed_at = NOW() WHERE id = $1 AND user_id = $2",
-      [input.proposalId, input.userId],
-    );
-    return { status: "rejected" as const };
-  }
-
-  const profile = (await db.query(
-    "SELECT id, state_json FROM profiles WHERE id = $1 AND user_id = $2 FOR UPDATE",
-    [proposalRow.profile_id, input.userId],
-  ))[0] as { id: string; state_json: string } | undefined;
-  if (!profile) throw new Error("Context not found.");
-
   let parsedState: unknown = {};
-  try { parsedState = JSON.parse(profile.state_json); } catch { parsedState = {}; }
+  try { parsedState = JSON.parse(proposalRow.state_json); } catch { parsedState = {}; }
   const state = applyApprovedProposalToState(parsedState, {
     id: proposalRow.id,
     clientId: proposalRow.client_id,
@@ -182,13 +179,31 @@ export async function reviewBridgeContextProposal(input: {
     createdAt: proposalRow.created_at,
   });
 
-  await db.query(
-    "UPDATE profiles SET state_json = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3",
-    [JSON.stringify(state), proposalRow.profile_id, input.userId],
-  );
-  await db.query(
-    "UPDATE bridge_context_proposals SET status = 'approved', reviewed_at = NOW() WHERE id = $1 AND user_id = $2",
-    [input.proposalId, input.userId],
-  );
+  // The profile state and proposal status must advance together. The guarded
+  // queries deliberately fail the transaction when either row changed after
+  // our read, preventing a stale approval from overwriting newer Context.
+  await db.transaction([
+    db.query(
+      `WITH updated AS (
+         UPDATE profiles
+            SET state_json = $1, updated_at = NOW()
+          WHERE id = $2 AND user_id = $3 AND state_json = $4
+          RETURNING id
+       )
+       SELECT CASE WHEN EXISTS (SELECT 1 FROM updated) THEN 1 ELSE 1 / 0 END AS applied`,
+      [JSON.stringify(state), proposalRow.profile_id, input.userId, proposalRow.state_json],
+    ),
+    db.query(
+      `WITH updated AS (
+         UPDATE bridge_context_proposals
+            SET status = 'approved', reviewed_at = NOW()
+          WHERE id = $1 AND user_id = $2 AND status = 'pending'
+          RETURNING id
+       )
+       SELECT CASE WHEN EXISTS (SELECT 1 FROM updated) THEN 1 ELSE 1 / 0 END AS applied`,
+      [input.proposalId, input.userId],
+    ),
+  ]);
+
   return { status: "approved" as const, profileId: proposalRow.profile_id };
 }

@@ -1,12 +1,13 @@
 const explore = [
   ["Context", "/context"],
   ["Context example", "/context-example"],
-  ["Use elsewhere", "/integrations"],
+  ["Manual reuse", "/integrations"],
   ["For organizations", "/partners"],
 ] as const;
 
 const product = [
   ["Start with ALVIRA", "/app"],
+  ["Connect ALVIRA", "/bridge"],
   ["Pricing", "/pricing"],
   ["Founding Beta", "/founding-beta"],
   ["Sign in", "/login"],

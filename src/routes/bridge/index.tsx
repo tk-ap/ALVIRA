@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
-import { ProductJourneyRail } from "~/components/ImmersiveExplainers";
+import { ProductJourneyRail, ProposalReviewGraphic } from "~/components/ImmersiveExplainers";
 import { getCurrentUser, listProfiles } from "../-auth";
 
 export const Route = createFileRoute("/bridge/")({
@@ -169,6 +169,7 @@ function BridgePage() {
           )}
 
           <ProductJourneyRail active="connect" />
+          <ProposalReviewGraphic activeConnections={connections.length} />
 
           <section className="mt-10" aria-labelledby="connected-heading">
             <div className="flex flex-wrap items-end justify-between gap-3">

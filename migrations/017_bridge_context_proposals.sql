@@ -1,3 +1,6 @@
+ALTER TABLE bridge_authorization_codes
+  ADD COLUMN IF NOT EXISTS scope TEXT NOT NULL DEFAULT 'context:read profile:read';
+
 CREATE TABLE IF NOT EXISTS bridge_context_proposals (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

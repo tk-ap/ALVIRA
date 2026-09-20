@@ -153,3 +153,70 @@ export function BetaExchangeGraphic() {
     </figure>
   );
 }
+
+
+export type ProductJourneyStage = "talk" | "understand" | "inspect" | "connect";
+
+export function ProductJourneyRail({ active }: { active: ProductJourneyStage }) {
+  const steps: Array<[ProductJourneyStage, string, string]> = [
+    ["talk", "Talk", "say what matters"],
+    ["understand", "Understand", "watch Context form"],
+    ["inspect", "Inspect", "review + correct"],
+    ["connect", "Connect", "approve what moves"],
+  ];
+  const activeIndex = Math.max(0, steps.findIndex(([id]) => id === active));
+
+  return (
+    <nav className="ivx-journey" aria-label="ALVIRA Context journey">
+      {steps.map(([id, label, note], index) => {
+        const state = index < activeIndex ? "done" : index === activeIndex ? "active" : "next";
+        return (
+          <div className={`ivx-journey__step ivx-journey__step--${state}`} key={id} aria-current={state === "active" ? "step" : undefined}>
+            <small>0{index + 1}</small>
+            <strong>{label}</strong>
+            <span>{note}</span>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function LiveContextMirrorGraphic({
+  items,
+  currentLabel,
+}: {
+  items: Array<{ label: string; value: string; status: "captured" | "developing" }>;
+  currentLabel?: string;
+}) {
+  return (
+    <aside className="ivx-live-mirror" aria-label="Live Context Mirror">
+      <div className="ivx-live-mirror__head">
+        <div>
+          <small>Live Context Mirror</small>
+          <strong>What ALVIRA can point to right now</strong>
+        </div>
+        {currentLabel ? <span>asking about · {currentLabel}</span> : null}
+      </div>
+      {items.length ? (
+        <div className="ivx-live-mirror__items">
+          {items.map((item) => (
+            <div className="ivx-live-mirror__item" key={item.label}>
+              <div>
+                <small>{item.label}</small>
+                <p>{item.value}</p>
+              </div>
+              <span className={`ivx-live-mirror__status ivx-live-mirror__status--${item.status}`}>{item.status}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="ivx-live-mirror__empty">
+          <span />
+          <p>Nothing is shown as known yet. The mirror fills only from Context the interview has actually captured.</p>
+        </div>
+      )}
+      <p className="ivx-live-mirror__rule">Visible state only · no invented confidence · correct the source conversation when something is wrong.</p>
+    </aside>
+  );
+}

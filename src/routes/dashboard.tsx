@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ContextPortfolioGraphic } from "~/components/ImmersiveExplainers";
 import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft, getOwnerMetrics, loadProfile, finalizeInterviewDraft } from "./-auth";
 import { compileInterviewMarkdown } from "./-meosCompiler";
 import { getMeosGraph } from "./-meosGraph";
@@ -109,6 +110,7 @@ function DashboardPage() {
   return <div className="min-h-dvh flex flex-col"><Header /><main id="main-content" className="flex-1 px-6 py-10"><div className="mx-auto max-w-4xl">
     <div className="flex items-center justify-between mb-8"><div><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{owner ? "Owner dashboard" : "Dashboard"}</h1><p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">{owner ? "ALVIRA business overview" : "Your saved Context"}</p></div><div className="flex items-center gap-3"><a href="/account" className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 font-mono text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Account</a><button type="button" onClick={() => profiles.length > 0 ? setShowContextChoice(true) : navigate({ to: "/app" })} className="rounded-lg bg-system-dark dark:bg-system px-4 py-2.5 font-mono text-sm text-white hover:bg-system-dark dark:hover:bg-system">+ Add Context</button></div></div>
     {loading ? <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Loading...</p> : error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : <>
+      <ContextPortfolioGraphic profiles={profiles} draft={draft} />
       {owner && metrics && <OwnerDashboard metrics={metrics} />}
       <ProfileSection profiles={profiles} draft={draft} remove={remove} owner={owner} onFinalizeDraft={finalizeDraft} onGenerateKnowledgeFiles={exportProfileKnowledge} exportStatus={exportStatus} />
     </>}
@@ -179,7 +181,7 @@ function ProfileSection({ profiles, draft, remove, owner, onFinalizeDraft, onGen
       })}
     </div>}
 
-    {profiles.length > 0 && <div className="mt-8 flex flex-col gap-4 rounded-lg border border-system/30 bg-system-soft/40 px-5 py-4 dark:bg-ink/30 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-mono text-xs font-semibold uppercase tracking-wide text-system-dark dark:text-system">Unlocked with your first Context</p><h3 className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Use your ALVIRA Context in other AI tools</h3><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Bridge gives approved tools controlled, read-only access to the Context you choose.</p></div><a href="/bridge" className="shrink-0 font-mono text-sm font-semibold text-system-dark dark:text-system">Connect an AI tool →</a></div>}
+    {profiles.length > 0 && <div className="mt-8 flex flex-col gap-4 rounded-lg border border-system/30 bg-system-soft/40 px-5 py-4 dark:bg-ink/30 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-mono text-xs font-semibold uppercase tracking-wide text-system-dark dark:text-system">Unlocked with your first Context</p><h3 className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Use your ALVIRA Context in other AI tools</h3><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Connect ALVIRA gives approved tools controlled access to the Context you choose.</p></div><a href="/bridge" className="shrink-0 font-mono text-sm font-semibold text-system-dark dark:text-system">Connect an AI tool →</a></div>}
     <div className="mt-4"><MeOSCTA placement="dashboard" variant="compact" /></div>
   </section>;
 }

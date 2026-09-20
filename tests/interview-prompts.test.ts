@@ -50,6 +50,23 @@ describe("interview conversational intents", () => {
     expect(isInterviewRecallRequest("I make decisions quickly when they are reversible.")).toBe(false);
   });
 
+  test("experimental prompt tells ALVIRA to honor user direction instead of forcing the next probe", () => {
+    const prompt = buildExperimentalQuestionPrompt({
+      domain,
+      history: [
+        { role: "assistant", content: "How do you make a difficult decision?" },
+        { role: "user", content: "Do you know who you are?" },
+      ],
+      tier: "personal",
+    });
+
+    expect(prompt).toContain("When the user directs the conversation instead of answering");
+    expect(prompt).toContain("Never silently convert direction into an answer");
+    expect(prompt).toContain("Do not file it as interview context");
+    expect(prompt).toContain("end with a short invitation instead of a new probe");
+    expect(prompt).toContain("none — user directing");
+  });
+
   test("recall response is grounded in user answers and can use the user's name", () => {
     const response = buildHistoryRecallResponse([
       { role: "assistant", content: "What are you working on?" },

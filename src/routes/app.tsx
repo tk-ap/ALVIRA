@@ -662,7 +662,15 @@ function AppPage() {
             const serverDraft = await getInterviewDraft().catch(() => null);
             const localDraft = localRaw ? JSON.parse(localRaw) : null;
             const anonymousDraft = anonymousRaw ? JSON.parse(anonymousRaw) : null;
-            const draft = serverDraft ?? localDraft ?? anonymousDraft;
+
+            const candidates = [
+              serverDraft ? { draft: serverDraft, source: "account" as const, updatedAt: Date.parse((serverDraft as any).updated_at ?? "") || 0 } : null,
+              localDraft ? { draft: localDraft, source: "browser" as const, updatedAt: Number(localDraft.savedAt) || 0 } : null,
+              anonymousDraft ? { draft: anonymousDraft, source: "anonymous" as const, updatedAt: Number(anonymousDraft.savedAt) || 0 } : null,
+            ].filter(Boolean) as Array<{ draft: any; source: "account" | "browser" | "anonymous"; updatedAt: number }>;
+            candidates.sort((a, b) => b.updatedAt - a.updatedAt);
+            const selectedDraft = candidates[0] ?? null;
+            const draft = selectedDraft?.draft ?? null;
             if (draft?.state && !cancelled) {
               const draftState = draft.state as InterviewState;
               if (hasMeaningfulDraftInput(draftState)) {
@@ -673,10 +681,10 @@ function AppPage() {
                   topic: migratedTopic,
                   state: draftState,
                   savedAt: draft.savedAt,
-                  source: serverDraft ? "account" : "browser",
+                  source: selectedDraft?.source === "account" ? "account" : "browser",
                 });
 
-                if (!serverDraft && !localDraft && anonymousDraft) {
+                if (selectedDraft?.source === "anonymous") {
                   try {
                     window.localStorage.setItem(
                       getInterviewDraftKey(u.id, migratedOffering),

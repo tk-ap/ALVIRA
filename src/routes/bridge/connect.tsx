@@ -54,6 +54,8 @@ function BridgeConnectPage() {
   }, [params]);
 
   const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId);
+  const requestedScope = params.get("scope");
+  const canProposeUpdates = !requestedScope || requestedScope.split(/\s+/).includes("context:propose");
 
   const allowUrl = useMemo(() => {
     if (!oauthMode) return "";
@@ -107,7 +109,9 @@ function BridgeConnectPage() {
               </select>
 
               <div className="mt-6 rounded-xl border border-gray-200 p-4 text-sm leading-6 dark:border-gray-700">
-                <p><strong>It can read:</strong> {selectedProfile?.topic || "the Context you selected"}</p>\n                <p><strong>It can propose:</strong> new or changed Context for your review</p>
+                <p><strong>It can read:</strong> {selectedProfile?.topic || "the Context you selected"}</p>\n                {canProposeUpdates
+                  ? <p><strong>It can propose:</strong> new or changed Context for your review</p>
+                  : <p><strong>It cannot propose:</strong> Context updates on this connection</p>}
                 <p><strong>It cannot:</strong> silently edit your Context, see your password, or access your other saved Contexts</p>
                 <p><strong>You stay in control:</strong> revoke the connection from Bridge at any time</p>
               </div>

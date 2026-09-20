@@ -21,16 +21,16 @@ jobs:
           p = Path('src/routes/app.tsx')
           s = p.read_text()
           s = s.replace(
-              'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );',
+              'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "dossier" ? "dossier" : "context",   isPreview );',
               'const initialState = createInitialState(existing.tier, existing.topic, offering, preview);',
               1,
           )
           s = s.replace(
-              'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );',
-              'const initialState = createInitialState(tier, trimmed || "My current chapter", offering === "meos" ? "meos" : "context", isPreview);',
+              'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "dossier" ? "dossier" : "context",   isPreview );',
+              'const initialState = createInitialState(tier, trimmed || "My current chapter", offering === "dossier" ? "dossier" : "context", isPreview);',
               1,
           )
-          s = s.replace('disabled={!topic.trim()}', 'disabled={offering !== "meos" && !topic.trim()}', 1)
+          s = s.replace('disabled={!topic.trim()}', 'disabled={offering !== "dossier" && !topic.trim()}', 1)
           p.write_text(s)
           PY
       - name: Commit repair

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/build-brief")({
   component: BuildBriefPage,
 });
 
-type Profile = { id: string; topic: string; offering: "context" | "meos"; tier: string; updated_at: string };
+type Profile = { id: string; topic: string; offering: "context" | "dossier"; tier: string; updated_at: string };
 type User = { id: string; email: string; tier: string };
 
 type Builder = { id: "generic" | "cto" | "base44"; label: string; url?: string };
@@ -60,7 +60,7 @@ function buildBriefMarkdown(brief: BuildBrief): string {
 
 function serializeSavedContext(topic: string, offering: string, state: any): string {
   const lines = [
-    `# Saved ALVIRA ${offering === "meos" ? "Reflect" : "Context"}: ${topic}`,
+    `# Saved ALVIRA ${offering === "dossier" ? "Reflect" : "Context"}: ${topic}`,
     "",
     "Use only details that materially change the requested build. Do not infer unstated requirements from unrelated personal information.",
   ];
@@ -169,7 +169,7 @@ function BuildBriefPage() {
       <section className="px-6 py-12 sm:px-8 lg:px-10"><div className="mx-auto max-w-6xl">
         {user === undefined ? <p className="font-mono text-sm text-warm-gray-dark dark:text-warm-gray">Loading Build Brief workspace…</p> : user === null ? <div className="max-w-2xl border border-ink/12 p-8 dark:border-mineral/12"><h2 className="font-display text-3xl">Sign in to build with your Context.</h2><p className="mt-3 text-warm-gray-dark dark:text-warm-gray">Build Brief uses Context saved in your ALVIRA account.</p><a href="/login" className="mt-6 inline-flex bg-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-mineral dark:bg-mineral dark:text-ink">Sign in →</a></div> : profiles.length === 0 ? <div className="max-w-2xl border border-ink/12 p-8 dark:border-mineral/12"><h2 className="font-display text-3xl">Build a Context first.</h2><p className="mt-3 text-warm-gray-dark dark:text-warm-gray">ALVIRA needs maintained Context before it can distinguish what matters to this build.</p><a href="/app" className="mt-6 inline-flex bg-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-mineral dark:bg-mineral dark:text-ink">Build Context →</a></div> : <div className="grid gap-10 lg:grid-cols-[380px_1fr]">
           <aside className="space-y-7 lg:sticky lg:top-24 lg:self-start">
-            <div><label className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">Saved Context<select value={profileId} onChange={(event) => setProfileId(event.target.value)} className="mt-2 block w-full border border-ink/15 bg-transparent px-3 py-3 font-sans text-sm normal-case tracking-normal dark:border-mineral/15">{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic} · {profile.offering === "meos" ? "Reflect" : "Context"}</option>)}</select></label><p className="mt-2 text-xs leading-5 text-warm-gray-dark dark:text-warm-gray">ALVIRA uses this as background and should pull only details that materially change the build.</p></div>
+            <div><label className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">Saved Context<select value={profileId} onChange={(event) => setProfileId(event.target.value)} className="mt-2 block w-full border border-ink/15 bg-transparent px-3 py-3 font-sans text-sm normal-case tracking-normal dark:border-mineral/15">{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic} · {profile.offering === "dossier" ? "Reflect" : "Context"}</option>)}</select></label><p className="mt-2 text-xs leading-5 text-warm-gray-dark dark:text-warm-gray">ALVIRA uses this as background and should pull only details that materially change the build.</p></div>
             <div><label htmlFor="build-intent" className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">What do you want to build?</label><textarea id="build-intent" value={intent} onChange={(event) => setIntent(event.target.value)} rows={10} placeholder="Example: I want to build a portfolio site for my modeling work. It should feel editorial rather than like a SaaS dashboard…" className="mt-2 w-full resize-y border border-ink/15 bg-white/45 p-4 text-sm leading-6 outline-none focus:border-system dark:border-mineral/15 dark:bg-black/20" /></div>
             <button type="button" onClick={generate} disabled={generating} className="min-h-12 w-full bg-ink px-5 py-3 font-mono text-xs font-semibold uppercase tracking-[0.1em] text-mineral disabled:opacity-50 dark:bg-mineral dark:text-ink">{generating ? "Compiling…" : brief ? "Regenerate Build Brief" : "Generate Build Brief →"}</button>
             <div className="border-t border-ink/10 pt-5 dark:border-mineral/10"><a href="/integrations" className="font-mono text-[10px] uppercase tracking-[0.12em] text-system-dark underline underline-offset-4 dark:text-system">← Reuse Context</a></div>

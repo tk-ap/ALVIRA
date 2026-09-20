@@ -9,7 +9,7 @@ import {
 
 export function AilhatPortfolioHandoff() {
   const location = useLocation();
-  const relevant = location.pathname === "/context" || location.pathname === "/meos" || location.pathname === "/integrations";
+  const relevant = location.pathname === "/context" || location.pathname === "/dossier" || location.pathname === "/integrations";
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [opportunity, setOpportunity] = useState<AilhatHandoffOpportunity | null>(null);
   const [profileId, setProfileId] = useState("");

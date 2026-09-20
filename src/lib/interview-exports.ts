@@ -1,6 +1,6 @@
 import type { Domain, InterviewState } from "~/routes/-knowledgeGraph";
 
-type Offering = "context" | "meos";
+type Offering = "context" | "dossier";
 
 export interface StructuredInterviewExport {
   schemaVersion: 1;

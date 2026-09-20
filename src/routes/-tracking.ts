@@ -30,16 +30,16 @@ const PROP_VALUE_MAX = 200;
 const PROP_COUNT_MAX = 12;
 
 // ── Strict allowlist ──
-// Core funnel events requested by the owner plus the MeOS CTA events that used to
+// Core funnel events requested by the owner plus the Dossier CTA events that used to
 // console.log-only. Anything else is rejected server-side.
 export const ALLOWED_EVENTS = [
   "signup_completed",
   "interview_started",
   "interview_completed",
   "export_performed",
-  "meos_cta_impression",
-  "meos_cta_click",
-  "meos_cta_dismiss",
+  "dossier_cta_impression",
+  "dossier_cta_click",
+  "dossier_cta_dismiss",
   "opportunity_cue_impression",
   "opportunity_cue_open",
   "opportunity_cue_not_for_me",

@@ -167,7 +167,7 @@ Beta question: **Do users notice and trust cross-session continuity when ALVIRA 
 
 ### Private ongoing Reflect companion
 
-Older launch exploration included a private hosted Reflect/MeOS companion with Today, Portrait, Purpose, Compass, and Cycles. The concept remains strong because Reflect should become an ongoing place to revisit change rather than only an interview output.
+Older launch exploration included a private hosted Reflect/Dossier companion with Today, Portrait, Purpose, Compass, and Cycles. The concept remains strong because Reflect should become an ongoing place to revisit change rather than only an interview output.
 
 Do not restore the old route wholesale. Revisit after Founding Beta evidence shows that people return to Reflect between major Context updates. If built, it should use current ALVIRA Context/Reflect state, current brand system, explicit local-vs-cloud persistence choices, and the new history model.
 

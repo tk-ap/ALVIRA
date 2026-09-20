@@ -1,7 +1,7 @@
 import type { Domain, InterviewState } from "./-knowledgeGraph";
 
-export type MeosPlaybook = {
-  tier: "meos";
+export type DossierPlaybook = {
+  tier: "dossier";
   phases: string[];
   knowledgePriorities: string[];
   completion: { minimumConfidence: number; unresolvedGaps: number };
@@ -26,16 +26,16 @@ const definitions: Array<[string, string, string, boolean, number]> = [
 function toDomain([id, label, description, required, priority]: Array<string | boolean | number>): Domain {
   return { id: id as string, label: label as string, description: description as string, promptHint: description as string, required: required as boolean, minAnswers: 1, priority: priority as number, outputFile: "overview" };
 }
-export function getMeosGraph(): Domain[] { return definitions.map(toDomain); }
+export function getDossierGraph(): Domain[] { return definitions.map(toDomain); }
 
 /**
  * Free Reflect uses the same complete domain model as every other ALVIRA plan.
  * Monetization is based on Context capacity and ongoing usage, not reduced
  * quality of understanding. Keep this alias while old preview links retire.
  */
-export function getMeosPreviewGraph(): Domain[] { return getMeosGraph(); }
+export function getDossierPreviewGraph(): Domain[] { return getDossierGraph(); }
 
-export function getMeosPlaybook(): MeosPlaybook {
-  return { tier: "meos", phases: definitions.map(([id]) => id), knowledgePriorities: ["values", "boundaries", "definitionOfSuccess"], completion: { minimumConfidence: 0.85, unresolvedGaps: 0 }, outputs: ["markdown", "integratedPortrait", "meosSite"] };
+export function getDossierPlaybook(): DossierPlaybook {
+  return { tier: "dossier", phases: definitions.map(([id]) => id), knowledgePriorities: ["values", "boundaries", "definitionOfSuccess"], completion: { minimumConfidence: 0.85, unresolvedGaps: 0 }, outputs: ["markdown", "integratedPortrait", "dossierSite"] };
 }
-export type MeosInterviewState = Omit<InterviewState, "tier"> & { tier: "meos" };
+export type DossierInterviewState = Omit<InterviewState, "tier"> & { tier: "dossier" };

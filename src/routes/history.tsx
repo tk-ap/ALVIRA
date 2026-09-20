@@ -10,7 +10,7 @@ export const Route = createFileRoute("/history")({
   component: HistoryPage,
 });
 
-type Profile = { id: string; topic: string; offering: "context" | "meos"; tier: string; updated_at: string };
+type Profile = { id: string; topic: string; offering: "context" | "dossier"; tier: string; updated_at: string };
 type Version = { version: number; current: boolean; source: string; createdAt: string; topic: string; offering: string; changedDomains: string[] };
 
 const domainLabel = (value: string) => value
@@ -59,7 +59,7 @@ function HistoryPage() {
           </div>
           {profiles.length > 0 && <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">Context
             <select value={profileId} onChange={(event) => setProfileId(event.target.value)} className="mt-2 block w-full border border-ink/15 bg-transparent px-3 py-3 font-sans text-sm normal-case tracking-normal dark:border-mineral/15">
-              {profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic} · {profile.offering === "meos" ? "Reflect" : "Context"}</option>)}
+              {profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic} · {profile.offering === "dossier" ? "Reflect" : "Context"}</option>)}
             </select>
           </label>}
         </div>

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/bridge/")({
 type ProfileSummary = {
   id: string;
   topic: string;
-  offering: "context" | "meos";
+  offering: "context" | "dossier";
   updated_at: string;
 };
 

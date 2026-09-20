@@ -157,7 +157,7 @@ export const getOwnerCohortMetrics = createServerFn({ method: "GET" }).handler(a
         SELECT activity_at AS last_meaningful_at, action AS last_meaningful_action
         FROM (
           SELECT p.updated_at AS activity_at,
-                 CASE WHEN p.offering = 'meos' THEN 'Reflect updated' ELSE 'Context saved / updated' END AS action
+                 CASE WHEN p.offering = 'dossier' THEN 'Reflect updated' ELSE 'Context saved / updated' END AS action
             FROM profiles p
            WHERE p.user_id = u.id
           UNION ALL

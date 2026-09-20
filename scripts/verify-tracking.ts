@@ -70,7 +70,7 @@ try {
   createUser("u1", "u1@example.com", "hash");
   insertEvent("signup_completed", { userId: "u1", anonymousId: "anon-abc", props: { tier: "free" } });
   insertEvent("interview_started", { userId: "u1", props: { offering: "context", seeded: false } });
-  insertEvent("interview_started", { anonymousId: "anon-abc", props: { offering: "meos", seeded: true } });
+  insertEvent("interview_started", { anonymousId: "anon-abc", props: { offering: "dossier", seeded: true } });
   insertEvent("interview_completed", { userId: "u1", props: { covered: 5, total: 19 } });
   insertEvent("export_performed", { userId: "u1", props: { kind: "zip", output: "context" } });
   check("countEvent signup_completed d30 = 1", countEvent("signup_completed", 30) === 1);
@@ -111,10 +111,10 @@ try {
   // Rate limit: fresh identity starts unlimited; floods over the cap are dropped.
   check("isEventRateLimited false for fresh identity", isEventRateLimited(null, "anon-rl") === false);
   for (let i = 0; i < EVENT_RATE_LIMIT_MAX - 1; i++) {
-    insertEvent("meos_cta_impression", { anonymousId: "anon-rl" });
+    insertEvent("dossier_cta_impression", { anonymousId: "anon-rl" });
   }
   check("not rate-limited at cap-1 events in window", isEventRateLimited(null, "anon-rl") === false);
-  insertEvent("meos_cta_impression", { anonymousId: "anon-rl" });
+  insertEvent("dossier_cta_impression", { anonymousId: "anon-rl" });
   check("rate-limited at cap events in window", isEventRateLimited(null, "anon-rl") === true);
   const rlDropped = recordEvent("interview_started", { anonymousId: "anon-rl", props: {} });
   check("recordEvent drops rate-limited write (returns false)", rlDropped === false);

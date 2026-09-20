@@ -1,6 +1,6 @@
 import type { InterviewState } from "~/routes/-knowledgeGraph";
 
-export type ProfileOffering = "context" | "meos";
+export type ProfileOffering = "context" | "dossier";
 
 export type CarryOverClaim = {
   domainId: string;
@@ -32,11 +32,11 @@ const REFLECT_TO_CONTEXT: DomainMapping[] = [
 ];
 
 export function oppositeOffering(offering: ProfileOffering): ProfileOffering {
-  return offering === "meos" ? "context" : "meos";
+  return offering === "dossier" ? "context" : "dossier";
 }
 
 export function handoffTopic(topic: string, target: ProfileOffering): string {
-  const suffix = target === "meos" ? "ALVIRA Reflect" : "AI Context Profile";
+  const suffix = target === "dossier" ? "ALVIRA Reflect" : "AI Context Profile";
   return `${topic.replace(/\s+[—-]\s+(ALVIRA Reflect|AI Context Profile)$/i, "").trim()} — ${suffix}`;
 }
 
@@ -57,7 +57,7 @@ export function buildCarryOverClaims(
         domainId: mapping.target,
         text,
         confidence: mapping.exact ? 1 : 0.75,
-        evidence: `Carried from ${mapping.sourceLabel} in your ${source === "meos" ? "ALVIRA Reflect" : "AI Context Profile"}.`,
+        evidence: `Carried from ${mapping.sourceLabel} in your ${source === "dossier" ? "ALVIRA Reflect" : "AI Context Profile"}.`,
       }));
   });
 }

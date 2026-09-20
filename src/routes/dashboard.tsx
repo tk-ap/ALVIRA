@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import JSZip from "jszip";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
-import { MeOSCTA } from "~/components/MeOSCTA";
+import { DossierCTA } from "~/components/DossierCTA";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft, getOwnerMetrics, loadProfile, finalizeInterviewDraft } from "./-auth";
-import { compileInterviewMarkdown } from "./-meosCompiler";
-import { getMeosGraph } from "./-meosGraph";
+import { compileInterviewMarkdown } from "./-dossierCompiler";
+import { getDossierGraph } from "./-dossierGraph";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getKnowledgeGraph } from "./-knowledgeGraph";
 
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type Profile = { id: string; topic: string; offering: "context" | "meos"; tier: string; updated_at: string };
+type Profile = { id: string; topic: string; offering: "context" | "dossier"; tier: string; updated_at: string };
 type OwnerMetrics = Awaited<ReturnType<typeof getOwnerMetrics>>;
 
 function DashboardPage() {
@@ -72,8 +72,8 @@ function DashboardPage() {
         throw new Error("This saved Context has no interview data to export yet.");
       }
       const timeoutMs = 30_000;
-      const filesPromise = profile.offering === "meos"
-        ? Promise.resolve(compileInterviewMarkdown(state, getMeosGraph()).allFiles)
+      const filesPromise = profile.offering === "dossier"
+        ? Promise.resolve(compileInterviewMarkdown(state, getDossierGraph()).allFiles)
         : Promise.resolve(compileKnowledge(state, getKnowledgeGraph(state.tier))).then((compiled) => ({
             "overview.md": compiled.overview,
             "requirements.md": compiled.requirements,
@@ -130,7 +130,7 @@ function ContextChoiceDialog({ profiles, onClose }: { profiles: Profile[]; onClo
       </div>
       <div className="mt-7">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">Choose an existing Context to update</p>
-        <div className="mt-3 space-y-2">{profiles.map((profile) => <a key={profile.id} href={`/app?continue=${profile.id}`} className="flex min-h-14 items-center justify-between gap-4 border border-ink/12 px-4 py-3 transition-colors hover:border-system/60 hover:bg-system-soft/20 dark:border-mineral/12"><span><span className="block text-sm font-semibold text-ink dark:text-mineral">{profile.topic}</span><span className="mt-1 block font-mono text-[10px] text-warm-gray-dark dark:text-warm-gray">{profile.offering === "meos" ? "ALVIRA Reflect" : "ALVIRA Context"} · updated {new Date(profile.updated_at).toLocaleDateString()}</span></span><span className="shrink-0 font-mono text-xs text-system-dark dark:text-system">Update →</span></a>)}</div>
+        <div className="mt-3 space-y-2">{profiles.map((profile) => <a key={profile.id} href={`/app?continue=${profile.id}`} className="flex min-h-14 items-center justify-between gap-4 border border-ink/12 px-4 py-3 transition-colors hover:border-system/60 hover:bg-system-soft/20 dark:border-mineral/12"><span><span className="block text-sm font-semibold text-ink dark:text-mineral">{profile.topic}</span><span className="mt-1 block font-mono text-[10px] text-warm-gray-dark dark:text-warm-gray">{profile.offering === "dossier" ? "ALVIRA Reflect" : "ALVIRA Context"} · updated {new Date(profile.updated_at).toLocaleDateString()}</span></span><span className="shrink-0 font-mono text-xs text-system-dark dark:text-system">Update →</span></a>)}</div>
       </div>
       <div className="mt-6 border-t border-ink/12 pt-6 dark:border-mineral/12">
         <p className="text-sm text-warm-gray-dark dark:text-warm-gray"><strong className="text-ink dark:text-mineral">Rule of thumb:</strong> same thing, new understanding → update. Different thing, separate understanding → new Context.</p>
@@ -175,11 +175,11 @@ function ProfileSection({ profiles, draft, remove, owner, onFinalizeDraft, onGen
 
       {profiles.map((p) => {
         const activeDraft = draft?.topic === p.topic && draft.offering === p.offering ? draft : null;
-        return <div key={p.id} className={`border px-5 py-5 ${activeDraft ? "border-system/70 bg-system-soft/20 dark:border-system-dark dark:bg-ink/20" : "border-gray-200 dark:border-gray-700"}`}><div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0"><div className="mb-2 flex flex-wrap items-center gap-2">{activeDraft && <span className="rounded-full border border-system/60 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-system-dark dark:text-system">Interview in progress</span>}<span className="border border-system px-2 py-0.5 font-mono text-[10px] text-system-dark dark:border-system dark:text-system">{p.offering === "meos" ? "ALVIRA Reflect" : "ALVIRA Context"}</span><span className="border border-gray-300 px-2 py-0.5 font-mono text-[10px] text-gray-500 dark:border-gray-700 dark:text-gray-400">{p.tier}</span></div><h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">{p.topic}</h2><p className="mt-1 font-mono text-[11px] text-gray-500 dark:text-gray-400">{activeDraft ? `Draft updated ${new Date(activeDraft.updated_at).toLocaleDateString()} · Saved Context updated ${new Date(p.updated_at).toLocaleDateString()}` : `Updated ${new Date(p.updated_at).toLocaleDateString()}`}</p></div><div className="flex flex-wrap items-center gap-2 lg:justify-end"><a href={activeDraft ? `/app?offering=${activeDraft.offering}` : `/app?continue=${p.id}`} className={primaryActionClass}>{activeDraft ? "Continue interview →" : "Update / add context →"}</a>{activeDraft && <button type="button" onClick={() => void onFinalizeDraft()} className={secondaryActionClass}>Save update</button>}<button type="button" onClick={() => void onGenerateKnowledgeFiles(p)} className={secondaryActionClass}>Export files</button><a href={`/app?handoff=${p.id}`} className={secondaryActionClass}>{p.offering === "meos" ? "Carry into Context" : "Carry into Reflect"}</a><button type="button" onClick={() => void remove(p.id)} className={`${quietActionClass} hover:text-red-600 dark:hover:text-red-400`}>Delete</button></div></div></div>;
+        return <div key={p.id} className={`border px-5 py-5 ${activeDraft ? "border-system/70 bg-system-soft/20 dark:border-system-dark dark:bg-ink/20" : "border-gray-200 dark:border-gray-700"}`}><div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0"><div className="mb-2 flex flex-wrap items-center gap-2">{activeDraft && <span className="rounded-full border border-system/60 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-system-dark dark:text-system">Interview in progress</span>}<span className="border border-system px-2 py-0.5 font-mono text-[10px] text-system-dark dark:border-system dark:text-system">{p.offering === "dossier" ? "ALVIRA Reflect" : "ALVIRA Context"}</span><span className="border border-gray-300 px-2 py-0.5 font-mono text-[10px] text-gray-500 dark:border-gray-700 dark:text-gray-400">{p.tier}</span></div><h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">{p.topic}</h2><p className="mt-1 font-mono text-[11px] text-gray-500 dark:text-gray-400">{activeDraft ? `Draft updated ${new Date(activeDraft.updated_at).toLocaleDateString()} · Saved Context updated ${new Date(p.updated_at).toLocaleDateString()}` : `Updated ${new Date(p.updated_at).toLocaleDateString()}`}</p></div><div className="flex flex-wrap items-center gap-2 lg:justify-end"><a href={activeDraft ? `/app?offering=${activeDraft.offering}` : `/app?continue=${p.id}`} className={primaryActionClass}>{activeDraft ? "Continue interview →" : "Update / add context →"}</a>{activeDraft && <button type="button" onClick={() => void onFinalizeDraft()} className={secondaryActionClass}>Save update</button>}<button type="button" onClick={() => void onGenerateKnowledgeFiles(p)} className={secondaryActionClass}>Export files</button><a href={`/app?handoff=${p.id}`} className={secondaryActionClass}>{p.offering === "dossier" ? "Carry into Context" : "Carry into Reflect"}</a><button type="button" onClick={() => void remove(p.id)} className={`${quietActionClass} hover:text-red-600 dark:hover:text-red-400`}>Delete</button></div></div></div>;
       })}
     </div>}
 
     {profiles.length > 0 && <div className="mt-8 flex flex-col gap-4 rounded-lg border border-system/30 bg-system-soft/40 px-5 py-4 dark:bg-ink/30 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-mono text-xs font-semibold uppercase tracking-wide text-system-dark dark:text-system">Unlocked with your first Context</p><h3 className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Use your ALVIRA Context in other AI tools</h3><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Bridge gives approved tools controlled, read-only access to the Context you choose.</p></div><a href="/bridge" className="shrink-0 font-mono text-sm font-semibold text-system-dark dark:text-system">Connect an AI tool →</a></div>}
-    <div className="mt-4"><MeOSCTA placement="dashboard" variant="compact" /></div>
+    <div className="mt-4"><DossierCTA placement="dashboard" variant="compact" /></div>
   </section>;
 }

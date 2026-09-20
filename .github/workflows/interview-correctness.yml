@@ -7,7 +7,7 @@ on:
       - 'src/routes/-questionGenerator.ts'
       - 'src/routes/app.tsx'
       - 'src/components/LiveContextMirror.tsx'
-      - 'src/components/MeOSCTA.tsx'
+      - 'src/components/DossierCTA.tsx'
       - 'src/lib/opportunity-candidates.ts'
       - 'src/routes/integrations.tsx'
       - 'tests/interview-topical-fit.test.ts'

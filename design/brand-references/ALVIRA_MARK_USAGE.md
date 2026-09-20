@@ -19,9 +19,9 @@ ALVIRA/>
 Shared requirements:
 
 - Do not add an opening `<` character.
-- `ALVIRA` uses the existing soft MeOS brown.
+- `ALVIRA` uses the existing soft Dossier brown.
 - `/` uses the existing ALVIRA teal.
-- `>` uses the same soft MeOS brown as `ALVIRA`.
+- `>` uses the same soft Dossier brown as `ALVIRA`.
 - Preserve the wide, geometric, editorial letterforms and established character spacing.
 - Do not add gradients, glow, shadows, bevels, textures, outlines, or decorative animation to the core marks.
 - Production assets must have transparent backgrounds. The black backgrounds in the PNG references are presentation surfaces only.

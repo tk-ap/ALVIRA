@@ -1,5 +1,5 @@
 version: 0.1.0
-product_key: alvira-meos
+product_key: alvira-dossier
 agent_os_repository: tk-ap/agent-os
 routing_source: registry/product-routing.yaml
 

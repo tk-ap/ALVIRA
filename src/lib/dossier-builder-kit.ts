@@ -1,11 +1,11 @@
-export type MeosBuilderKitInput = {
+export type DossierBuilderKitInput = {
   topic: string;
   portrait?: unknown;
   interviewState?: unknown;
   content: Record<string, string>;
 };
 
-export function createMeosBuilderKit(input: MeosBuilderKitInput): Record<string, string> {
+export function createDossierBuilderKit(input: DossierBuilderKitInput): Record<string, string> {
   const generatedAt = new Date().toISOString();
   const contentFiles = Object.keys(input.content).sort();
   const profile = {

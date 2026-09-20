@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "../routes/-tracking";
 
 // ── Props ──
-export interface MeOSCTAProps {
+export interface DossierCTAProps {
   /** Where the CTA is shown — used for tracking (e.g., "post-interview", "dashboard", "post-insight", "profile-milestone") */
   placement: string;
   /** Visual density. "default" = full card, "compact" = headline + one-liner, "inline" = single text link */
@@ -12,7 +12,7 @@ export interface MeOSCTAProps {
 }
 
 // ── Component ──
-export function MeOSCTA({ placement, variant = "default", dismissible = true }: MeOSCTAProps) {
+export function DossierCTA({ placement, variant = "default", dismissible = true }: DossierCTAProps) {
   const [dismissed, setDismissed] = useState(false);
   const [suppressedByOpportunity, setSuppressedByOpportunity] = useState(false);
   const trackedImpressionRef = useRef(false);
@@ -31,15 +31,15 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
   useEffect(() => {
     if (suppressedByOpportunity || trackedImpressionRef.current) return;
     trackedImpressionRef.current = true;
-    trackEvent("meos_cta_impression", { placement });
+    trackEvent("dossier_cta_impression", { placement });
   }, [placement, suppressedByOpportunity]);
 
   const handlePrimaryClick = () => {
-    trackEvent("meos_cta_click", { placement, action: "primary" });
+    trackEvent("dossier_cta_click", { placement, action: "primary" });
   };
 
   const handleDismiss = () => {
-    trackEvent("meos_cta_dismiss", { placement });
+    trackEvent("dossier_cta_dismiss", { placement });
     setDismissed(true);
   };
 
@@ -48,7 +48,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
   if (variant === "inline") {
     return (
       <a
-        href="/app?offering=meos&preview=false"
+        href="/app?offering=dossier&preview=false"
         onClick={handlePrimaryClick}
         className="inline-flex items-center gap-1.5 font-mono text-sm text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
       >
@@ -69,7 +69,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
           </p>
         </div>
         <a
-          href="/app?offering=meos&preview=false"
+          href="/app?offering=dossier&preview=false"
           onClick={handlePrimaryClick}
           className="shrink-0 inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-system-dark hover:text-system-dark dark:text-system dark:hover:text-system transition-colors"
         >
@@ -101,7 +101,7 @@ export function MeOSCTA({ placement, variant = "default", dismissible = true }: 
         ALVIRA Context makes what AI should know portable. ALVIRA Reflect helps you revisit, validate, and evolve that understanding across decisions, direction, work, and daily life.
       </p>
       <a
-        href="/app?offering=meos&preview=false"
+        href="/app?offering=dossier&preview=false"
         onClick={handlePrimaryClick}
         className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white hover:bg-system-dark dark:hover:bg-system focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system transition-colors duration-200"
       >

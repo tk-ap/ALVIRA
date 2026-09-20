@@ -275,7 +275,7 @@ Verify:
 
 ## Constraints
 
-- Do not redesign the homepage, pricing, MeOS, or onboarding experience as part of this task.
+- Do not redesign the homepage, pricing, Dossier, or onboarding experience as part of this task.
 - Do not change approved product copy.
 - Do not reuse the previous layered-`A` or arch concepts.
 - Do not reinterpret the frame as a camera, scanner, target, or surveillance icon.

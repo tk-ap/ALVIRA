@@ -122,7 +122,7 @@ export function Header() {
             </div>
             <a href="/#possibilities" onClick={closeMenu} className={mobileLinkClass}>What AI can help with</a>
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
-            <a href="/app?offering=meos&preview=false" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
+            <a href="/app?offering=dossier&preview=false" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
             <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Use elsewhere</a>
             <a href="/partners" onClick={closeMenu} className={mobileLinkClass}>For organizations</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>

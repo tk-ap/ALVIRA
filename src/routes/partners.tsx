@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { PilotProofGraphic } from "~/components/ImmersiveExplainers";
 
 export const Route = createFileRoute("/partners")({
   head: () => ({
@@ -41,12 +42,9 @@ function Partners() {
 
         <section className="border-y border-ink/15 dark:border-mineral/15">
           <div className="mx-auto max-w-6xl px-6 py-16">
-            <p className="max-w-4xl font-display text-3xl leading-tight sm:text-5xl">
-              Your useful context should not have to start over every time you change models, tools, or workflows.
-            </p>
-            <div className="mt-12 grid gap-px overflow-hidden border border-ink/15 bg-ink/15 dark:border-mineral/15 dark:bg-mineral/15 sm:grid-cols-4 lg:grid-cols-8">
-              {flow.map((item, i) => <div key={item} className="bg-mineral p-4 dark:bg-ink"><span className="font-mono text-[10px] opacity-50">0{i + 1}</span><p className="mt-5 text-sm">{item}</p></div>)}
-            </div>
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-system-dark dark:text-system">The experiment</p>
+            <h2 className="mt-5 max-w-4xl font-display text-3xl leading-tight sm:text-5xl">Run the same work. Add maintained Context. Measure the difference.</h2>
+            <PilotProofGraphic />
           </div>
         </section>
 
@@ -55,9 +53,8 @@ function Partners() {
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-system-dark dark:text-system">What exists now</p>
             <h2 className="mt-5 font-display text-4xl tracking-tight">A working loop, not a finished claim.</h2>
           </div>
-          <div className="space-y-6 text-base leading-7 text-warm-gray-dark dark:text-warm-gray">
-            <p>ALVIRA can interview a person, turn that conversation into structured Context, let them review and correct it, and selectively carry useful context into another AI workflow through Bridge.</p>
-            <p>The next question is measurable: does that Context produce better work, less repetition, greater continuity, or enough economic value to become infrastructure a person or organization will keep using?</p>
+          <div className="border-l border-system/45 pl-6 text-base leading-7 text-warm-gray-dark dark:text-warm-gray">
+            <p>Interview → structured Context → review → selective reuse already exists. The open question is whether the resulting work improves enough to matter.</p>
           </div>
         </section>
 

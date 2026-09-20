@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Header } from "~/components/Header";
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { TrustFooter } from "~/components/TrustFooter";
+import { PlanChoiceGraphic } from "~/components/ImmersiveExplainers";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 
 export const Route = createFileRoute("/pricing")({
@@ -255,44 +256,9 @@ function Pricing() {
 
         <section className="px-6 py-20 sm:px-8 sm:py-24 lg:px-10">
           <div className="mx-auto max-w-7xl">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">
-              The simple distinction
-            </p>
-            <h2 className="mt-5 font-display text-4xl font-semibold leading-[0.96] tracking-[-0.035em] text-[#191715] dark:text-[#f4f0e9] sm:text-5xl">
-              Which path fits?
-            </h2>
-
-            <div className="mt-12 grid gap-px border-y border-[#191715]/12 bg-[#191715]/12 dark:border-white/12 dark:bg-white/12 md:grid-cols-3">
-              {[
-                [
-                  "01",
-                  "Free",
-                  "I want to experience Context + Reflect and find out whether maintained Context is useful to me.",
-                ],
-                [
-                  "02",
-                  "Pro / Lifetime",
-                  "I already know I want the full ALVIRA loop as an ongoing tool; I’m choosing recurring vs. one-time payment.",
-                ],
-                [
-                  "03",
-                  "Founding Beta",
-                  "I genuinely want to test the full product closely and help determine what makes it viable for more users.",
-                ],
-              ].map(([index, title, copy]) => (
-                <article key={title} className="bg-[#f4f0e9] px-1 py-6 dark:bg-[#0b0e0e] md:px-6">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">
-                    {index}
-                  </p>
-                  <h3 className="mt-3 font-display text-2xl font-medium tracking-[-0.02em] text-[#27231f] dark:text-[#ece4da]">
-                    {title}
-                  </h3>
-                  <p className="mt-3 max-w-sm text-sm leading-6 text-[#5f554c] dark:text-[#b8ada1]">
-                    {copy}
-                  </p>
-                </article>
-              ))}
-            </div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-system-dark dark:text-system">Choose by intent</p>
+            <h2 className="mt-5 font-display text-4xl font-semibold leading-[0.96] tracking-[-0.035em] text-[#191715] dark:text-[#f4f0e9] sm:text-5xl">One product loop. Three reasons to enter.</h2>
+            <PlanChoiceGraphic />
           </div>
         </section>
       </main>

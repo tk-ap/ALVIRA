@@ -75,7 +75,7 @@ export function Header() {
               <nav aria-label="Primary navigation" className="flex items-center gap-5">
                 <a href="/" className={desktopLinkClass}>Experience</a>
                 <a href="/context" className={desktopLinkClass}>Context</a>
-                <a href="/integrations" className={desktopLinkClass}>Bridge</a>
+                <a href="/integrations" className={desktopLinkClass}>Manual reuse</a>
                 <a href="/partners" className={desktopLinkClass}>For organizations</a>
                 <a href="/pricing" className={desktopLinkClass}>Pricing</a>
               </nav>
@@ -86,7 +86,7 @@ export function Header() {
                 ) : user ? (
                   <div className="flex items-center gap-4">
                     <a href="/dashboard" className={desktopLinkClass}>Dashboard</a>
-                    <a href="/bridge" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Bridge</a>
+                    <a href="/bridge" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Connect</a>
                     <a href="/build-brief" className={desktopLinkClass}>Build Brief</a>
                     <a href="/history" className={desktopLinkClass}>History</a>
                     <a href="/account" className={desktopLinkClass}>Account</a>
@@ -125,11 +125,11 @@ export function Header() {
             <a href="/" onClick={closeMenu} className={mobileLinkClass}>Experience</a>
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
             <a href="/app?offering=meos&preview=false" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
-            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Bridge / reuse</a>
+            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Manual reuse</a>
             <a href="/partners" onClick={closeMenu} className={mobileLinkClass}>For organizations</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
-            {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Bridge</a> : null}
+            {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Connect ALVIRA</a> : null}
             {user ? <a href="/build-brief" onClick={closeMenu} className={mobileLinkClass}>Build Brief</a> : null}
             {user ? <a href="/history" onClick={closeMenu} className={mobileLinkClass}>History</a> : null}
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ProductJourneyRail } from "~/components/ImmersiveExplainers";
 import { getCurrentUser, listProfiles } from "../-auth";
 
 const MCP_ENDPOINT = "https://alviratech.vercel.app/api/bridge/mcp";
@@ -15,7 +16,7 @@ type ProfileSummary = {
 };
 
 export const Route = createFileRoute("/bridge/connect")({
-  head: () => ({ meta: [{ title: "Connect Bridge — ALVIRA" }, { name: "description", content: "Choose the ALVIRA Context an AI app may use." }] }),
+  head: () => ({ meta: [{ title: "Connect ALVIRA — approve Context access" }, { name: "description", content: "Choose the ALVIRA Context an AI app may use." }] }),
   component: BridgeConnectPage,
 });
 
@@ -79,7 +80,7 @@ function BridgeConnectPage() {
       <div className="min-h-dvh flex flex-col">
         <Header />
         <main id="main-content" className="flex flex-1 items-center justify-center px-6">
-          <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Getting Bridge ready…</p>
+          <p className="font-mono text-sm text-gray-500 dark:text-gray-400">Getting Connect ALVIRA ready…</p>
         </main>
       </div>
     );
@@ -91,9 +92,10 @@ function BridgeConnectPage() {
         <Header />
         <main id="main-content" className="flex-1 px-6 py-14">
           <section className="mx-auto w-full max-w-xl">
-            <p className="font-mono text-xs uppercase tracking-widest text-system">&lt; bridge / approve &gt;</p>
-            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">An AI app wants to use your ALVIRA Context.</h1>
-            <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">Choose exactly what it may read. ALVIRA handles the secure connection in the background.</p>
+            <ProductJourneyRail active="connect" />
+            <p className="font-mono text-xs uppercase tracking-widest text-system">Connect ALVIRA / approve access</p>
+            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">Approve exactly what this AI app may use.</h1>
+            <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">Select one Context. The connection receives that approved view—not every Context you have.</p>
 
             <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
               <label htmlFor="bridge-context" className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Context this app may use</label>
@@ -109,7 +111,7 @@ function BridgeConnectPage() {
               <div className="mt-6 rounded-xl border border-gray-200 p-4 text-sm leading-6 dark:border-gray-700">
                 <p><strong>It can read:</strong> {selectedProfile?.topic || "the Context you selected"}</p>
                 <p><strong>It cannot:</strong> edit your Context, see your password, or access your other saved Contexts</p>
-                <p><strong>You stay in control:</strong> revoke the connection from Bridge at any time</p>
+                <p><strong>You stay in control:</strong> revoke the connection from Connect ALVIRA at any time</p>
               </div>
 
               <a href={allowUrl} className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-system-dark px-5 py-3.5 font-semibold text-white transition hover:opacity-90 dark:bg-system">

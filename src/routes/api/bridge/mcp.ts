@@ -262,7 +262,7 @@ async function handlePost(request: Request) {
                 profileId: { type: "string", description: "Optional authorized ALVIRA profile ID." },
                 statement: { type: "string", description: "Concise statement of what changed or should be added to Context." },
                 rationale: { type: "string", description: "Optional explanation of why this update matters." },
-                supersedes: { type: "array", items: { type: "string" }, description: "Optional prior assumptions or facts this update supersedes or materially changes." },
+                supersedes: { type: "array", items: { type: "string" }, description: "Optional exact prior ALVIRA Context statements this update supersedes. Exact matches can be retired after user approval; paraphrases remain and are only annotated." },
               },
               additionalProperties: false,
             },
@@ -305,7 +305,7 @@ async function handlePost(request: Request) {
         });
         return json(rpcResult(id, {
           content: [{ type: "text", text: `Proposed ALVIRA Context update ${proposal.id}. The user must review and approve it in ALVIRA before it changes their Context.` }],
-          structuredContent: { proposalId: proposal.id, status: proposal.status, reviewUrl: "https://alviratech.vercel.app/bridge/updates" },
+          structuredContent: { proposalId: proposal.id, status: proposal.status, reviewUrl: new URL("/bridge/updates", request.url).toString() },
         }, modern));
       }
       if (name === "get_alvira_context") {

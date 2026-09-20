@@ -11,6 +11,7 @@ import { ingestUrlSource } from "./-sourceIngestor";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
+import { LiveContextMirrorGraphic, ProductJourneyRail } from "~/components/ImmersiveExplainers";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { extractClaims, type ExtractionResult } from "./-extractor";
@@ -547,6 +548,19 @@ function AppPage() {
   const gaps = state ? detectGaps(graph, state, confThreshold) : [];
   const hasGaps = gaps.length > 0;
   const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
+  const mirrorItems = state
+    ? graph.flatMap((domain) => {
+        const domainState = state.domains[domain.id];
+        const answers = domainState?.answers?.map((item) => item.trim()).filter(Boolean) ?? [];
+        if (answers.length === 0) return [];
+        const latest = answers[answers.length - 1];
+        return [{
+          label: domain.label,
+          value: latest.length > 180 ? `${latest.slice(0, 177)}…` : latest,
+          status: domainState.covered ? "captured" as const : "developing" as const,
+        }];
+      }).slice(0, 6)
+    : [];
 
   // ── Knowledge quality check ──
   // Warns when compiled files would be too thin to be useful.
@@ -1572,6 +1586,7 @@ function AppPage() {
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
+            <ProductJourneyRail active="inspect" />
             {offering && contextSourcePanel}
             
             {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
@@ -1678,6 +1693,8 @@ function AppPage() {
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
+            <ProductJourneyRail active="understand" />
+            <LiveContextMirrorGraphic items={mirrorItems} currentLabel={domainLabel || undefined} />
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
@@ -1953,6 +1970,7 @@ function AppPage() {
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main id="main-content" className="flex-1 px-6 py-10">
           <div className="mx-auto w-full max-w-3xl">
+            <ProductJourneyRail active="inspect" />
             <button
               type="button"
               onClick={abandonUpload}
@@ -2096,6 +2114,7 @@ function AppPage() {
       {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="mx-auto w-full max-w-5xl">
+          <ProductJourneyRail active="talk" />
           
           {resumeDraft && (
             <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">

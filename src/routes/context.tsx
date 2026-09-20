@@ -3,6 +3,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Header } from "~/components/Header";
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ContextAssemblyGraphic, TrustStateGraphic } from "~/components/ImmersiveExplainers";
 import { CONTEXT_SOURCE_OPTIONS, makeSource, type ContextSource, type ContextSourceType } from "~/lib/context-engine";
 
 export const Route = createFileRoute("/context")({
@@ -47,13 +48,11 @@ function ContextEnginePage() {
           <div className="mx-auto max-w-5xl">
             <span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Your Context</span>
             <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">The information ALVIRA knows about you.</h1>
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Context is the destination. Documents, websites, profiles, and interviews are different sources ALVIRA can observe together.</p>
-            <div className="mt-7 flex flex-col gap-4 border-l-2 border-system pl-4 sm:flex-row sm:items-center sm:justify-between sm:pl-5">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Concrete example</p>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">See a clearly fictional Context to understand the kinds of preferences, rules, constraints, and working instructions that maintained context can contain.</p>
-              </div>
-              <a href="/context-example" className="shrink-0 font-mono text-xs font-semibold text-system-dark underline decoration-system/35 underline-offset-4 dark:text-system">Inspect example →</a>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">Many sources. One maintained Context. Visible uncertainty.</p>
+            <ContextAssemblyGraphic />
+            <div className="mt-7 flex items-center justify-between gap-5 border-t border-white/10 pt-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Want to see the shape of a Context?</p>
+              <a href="/context-example" className="shrink-0 font-mono text-xs font-semibold text-system-dark underline decoration-system/35 underline-offset-4 dark:text-system">Inspect a fictional example →</a>
             </div>
           </div>
         </section>
@@ -106,7 +105,7 @@ function ContextEnginePage() {
 
         <section className="px-6 py-14 sm:px-8 sm:py-16"><div className="mx-auto max-w-5xl"><div className="flex flex-wrap items-end justify-between gap-4"><div><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Context Queue</span><h2 className="mt-3 text-2xl font-bold">One session, traceable sources.</h2></div><span className="font-mono text-xs text-gray-500 dark:text-gray-400">{sources.length} source{sources.length === 1 ? "" : "s"} · {queuedCount} queued</span></div>{sources.length === 0 ? <div className="mt-8 border border-dashed border-gray-300 p-8 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">No sources added yet. Select sources above to begin building context.</div> : <div className="mt-8 space-y-3">{sources.map((source) => <div key={source.id} className="flex flex-col gap-3 border border-gray-200 p-5 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-semibold">{source.label}</h3><p className="mt-1 break-all font-mono text-xs text-gray-500 dark:text-gray-400">{source.locator}</p></div><span className="border border-gray-200 px-2 py-1 font-mono text-[10px] uppercase text-gray-500 dark:border-gray-700">{source.status === "ready" ? "Ready" : "Queued"}</span></div>)}</div>}</div></section>
 
-        <section className="border-t border-gray-200 bg-gray-50 px-6 py-14 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-16"><div className="mx-auto max-w-5xl"><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Trust model</span><h2 className="mt-3 text-2xl font-bold">Observed · Inferred · Confirmed · Outdated</h2><p className="mt-4 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400">Every useful signal should remain traceable to its source and separated from inference. Your confirmation is what turns an observation into trusted context.</p></div></section>
+        <section className="border-t border-gray-200 bg-gray-50 px-6 py-14 dark:border-gray-800 dark:bg-gray-900 sm:px-8 sm:py-16"><div className="mx-auto max-w-5xl"><span className="font-mono text-xs uppercase tracking-wide text-system-dark dark:text-system">Trust model</span><h2 className="mt-3 text-2xl font-bold">Context should show what kind of truth it is.</h2><TrustStateGraphic /></div></section>
       </main>
       <DossierOwnershipPositioning />
       <TrustFooter />

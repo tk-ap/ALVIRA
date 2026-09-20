@@ -39,10 +39,10 @@ const flow = [
   {
     id: "bridge",
     number: "03",
-    title: "Bridge",
-    eyebrow: "Carry it selectively",
-    body: "Take approved context into the AI tool that fits the work.",
-    detail: "Portability is deliberate: the context layer stays on your side, and you decide what another tool gets to know.",
+    title: "Connect",
+    eyebrow: "Approve what moves",
+    body: "Choose an approved Context view, then connect ALVIRA to the AI tool that fits the work.",
+    detail: "Bridge is the governed infrastructure underneath. The user-facing action is simple: choose the Context, approve access, connect.",
   },
 ] as const;
 

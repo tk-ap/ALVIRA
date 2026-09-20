@@ -31,7 +31,7 @@ try {
 
   await page.goto(base + "/login?returnTo=/app", { waitUntil: "networkidle", timeout: 45000 });
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
+  await page.locator("#password").fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(/\/app(?:\?|$)/, { timeout: 45000 });
 

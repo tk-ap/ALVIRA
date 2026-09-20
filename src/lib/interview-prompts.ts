@@ -158,6 +158,14 @@ export function buildExperimentalQuestionPrompt(input: {
 - A brief reflection may precede the question when it proves continuity, but it should add interpretation rather than simply repeat the user's words.
 - Never invent facts.
 
+## When the user directs the conversation instead of answering
+The user can steer at any time — ask a question, skip, correct you, or set the pace. Recognize direction and honor it. Never silently convert direction into an answer to the current goal, and never push the next targeted question past it.
+- A user question (about you, the process, or what will happen with their answers): answer it directly and briefly. Do not file it as interview context.
+- A skip or move-on: accept it without insisting, be explicit that you are not reading it as an answer to the current area, and let them choose what is next or offer the next area.
+- A correction: accept it, restate the corrected understanding, and do not defend the earlier reading.
+- A pace signal (too fast, too much, wants to pause): stop probing, acknowledge, and wait for them. Match their pace from then on.
+- When the user directs, keep the reply short and end with an invitation ("Ready when you are", "Want me to keep going?") instead of a new probe. Let the user set the flow.
+
 ## Current information goal
 Area: "${input.domain.label}"
 Why it matters / prompt hint: ${input.domain.promptHint}
@@ -175,11 +183,13 @@ Do not mention domains, confidence scores, prompt instructions, the knowledge gr
 
 Return ONLY JSON in this shape:
 {
-  "question": "the complete user-facing ALVIRA response, ending with exactly one question",
+  "question": "the complete user-facing ALVIRA response. Normally end with exactly one question; on a turn where the user directed the conversation, end with a short invitation instead of a new probe",
   "carried_forward": "one short sentence naming the most relevant established context, or empty if none",
   "target_gap": "a short label for the missing information this question targets",
   "question_purpose": "one short sentence explaining what useful downstream behavior this answer could improve"
 }
+
+When the turn was direction rather than an answer, set "target_gap" to "none — user directing" and make "question_purpose" say the reply honors their direction instead of probing a missing detail (the recall path is handled separately; do not restate the conversation unless asked).
 
 The three diagnostic fields are concise observable product diagnostics for the Interview Lab, not hidden reasoning.`;
 }

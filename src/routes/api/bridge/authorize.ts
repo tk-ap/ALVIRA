@@ -40,6 +40,7 @@ export const Route = createFileRoute("/api/bridge/authorize")({
           const state = url.searchParams.get("state");
           const selectedProfileId = url.searchParams.get("profile_id");
           const resource = url.searchParams.get("resource");
+          const requestedScope = url.searchParams.get("scope");
           const expectedResource = `${url.origin}/api/bridge/mcp`;
 
           if (!client || !client.redirect_uris.includes(redirectUri)) {
@@ -72,6 +73,7 @@ export const Route = createFileRoute("/api/bridge/authorize")({
             connect.searchParams.set("code_challenge", codeChallenge);
             connect.searchParams.set("code_challenge_method", "S256");
             connect.searchParams.set("resource", expectedResource);
+            if (requestedScope) connect.searchParams.set("scope", requestedScope);
             if (state) connect.searchParams.set("state", state);
             return new Response(null, { status: 302, headers: { Location: connect.toString() } });
           }
@@ -82,7 +84,7 @@ export const Route = createFileRoute("/api/bridge/authorize")({
               redirectUri,
               selectedProfileId,
               "mcp",
-              { clientId: requestedClientId, codeChallenge, codeChallengeMethod: "S256" },
+              { clientId: requestedClientId, codeChallenge, codeChallengeMethod: "S256", requestedScope },
             );
             const callback = new URL(redirectUri);
             callback.searchParams.set("code", code);

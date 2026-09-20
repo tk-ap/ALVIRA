@@ -13,7 +13,6 @@ export const Route = createFileRoute("/partners")({
   component: Partners,
 });
 
-const flow = ["Interview", "Context", "Review + correct", "Select", "Bridge", "AI tool", "Measure", "Context evolves"];
 const proof = [
   ["Context Lift", "Compare equivalent work with and without ALVIRA-supplied context."],
   ["Re-explanation", "Measure how often people have to repeat useful background."],

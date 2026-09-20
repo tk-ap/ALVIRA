@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { PortabilityGraphic } from "~/components/ImmersiveExplainers";
 import { deriveOpportunityCandidates, opportunityFeedbackKey, type OpportunityCandidate } from "~/lib/opportunity-candidates";
 import { getCurrentUser, listProfiles, loadProfile } from "./-auth";
 import { trackEvent } from "./-tracking";
@@ -219,10 +220,11 @@ function ReuseContextPage() {
       <section className="border-b border-ink/10 px-6 py-16 dark:border-mineral/10 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-6xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-system-dark dark:text-system">Reuse / Context portability</p>
-          <div className="mt-5 grid gap-10 lg:grid-cols-[1fr_360px] lg:items-end">
-            <div><h1 className="max-w-4xl font-display text-5xl leading-[0.92] tracking-[-0.04em] sm:text-7xl">Maintain once. Carry forward where appropriate.</h1><p className="mt-6 max-w-2xl text-base leading-7 text-warm-gray-dark dark:text-warm-gray">ALVIRA does not need to own every AI interaction. Reuse lets you take selected, maintained Context into the tools you already use.</p></div>
-            <div className="border-l border-system/50 pl-5"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Consent boundary</p><p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Nothing is silently synced. You preview and copy what will leave ALVIRA. Live authorization is reserved for Bridge and other explicitly connected surfaces.</p></div>
+          <div className="mt-5 max-w-4xl">
+            <h1 className="font-display text-5xl leading-[0.92] tracking-[-0.04em] sm:text-7xl">Maintain once. Carry forward where appropriate.</h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-warm-gray-dark dark:text-warm-gray">Choose what leaves ALVIRA. Bring only that Context into the tool that fits the work.</p>
           </div>
+          <PortabilityGraphic />
         </div>
       </section>
 

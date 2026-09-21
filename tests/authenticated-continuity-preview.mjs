@@ -68,7 +68,12 @@ try {
   await page.waitForURL((url) => url.pathname === "/app", { timeout: 45000 });
 
   await page.getByRole("heading", { name: "Update your existing Context?" }).waitFor({ state: "visible", timeout: 30000 });
-  await page.waitForFunction((expectedTopic) => document.body.innerText.includes(expectedTopic), topic, { timeout: 30000 });
+  try {
+    await page.waitForFunction((expectedTopic) => document.body.innerText.includes(expectedTopic), topic, { timeout: 30000 });
+  } catch (error) {
+    console.log("CHECK restored state", JSON.stringify({ body: (await page.locator("body").innerText()).slice(0, 1200), drafts: await draftSnapshot() }));
+    throw error;
+  }
   await page.waitForFunction((expectedTopic) => !Object.entries(window.localStorage).some(([key, value]) => {
     if (!key.includes(":anonymous:")) return false;
     try {

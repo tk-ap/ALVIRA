@@ -49,6 +49,12 @@ try {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL((url) => url.pathname === "/app", { timeout: 45000 });
 
+  await page.waitForFunction(
+    (expectedTopic) => document.body.innerText.includes(expectedTopic),
+    topic,
+    { timeout: 20000 },
+  ).catch(() => {});
+
   const afterAuthDrafts = await page.evaluate(() =>
     Object.entries(window.localStorage)
       .filter(([key]) => key.startsWith("alvira:interview-draft:"))

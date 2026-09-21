@@ -29,13 +29,42 @@ try {
   await page.getByRole("button", { name: /Generate knowledge files/ }).click();
   await page.getByRole("heading", { name: "Compiled ALVIRA Context" }).waitFor({ state: "visible", timeout: 90000 });
 
+  const beforeAuthDrafts = await page.evaluate(() =>
+    Object.entries(window.localStorage)
+      .filter(([key]) => key.startsWith("alvira:interview-draft:"))
+      .map(([key, value]) => {
+        try {
+          const parsed = JSON.parse(value);
+          return { key, topic: parsed?.topic ?? parsed?.state?.topic ?? null, savedAt: parsed?.savedAt ?? null, generatedAt: parsed?.state?.generatedAt ?? null };
+        } catch {
+          return { key, topic: null, savedAt: null, generatedAt: null };
+        }
+      }),
+  );
+  console.log("DRAFTS before auth", JSON.stringify(beforeAuthDrafts));
+
   await page.goto(base + "/login?returnTo=/app", { waitUntil: "networkidle", timeout: 45000 });
   await page.getByLabel("Email").fill(email);
   await page.locator("#password").fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(/\/app(?:\?|$)/, { timeout: 45000 });
 
+  const afterAuthDrafts = await page.evaluate(() =>
+    Object.entries(window.localStorage)
+      .filter(([key]) => key.startsWith("alvira:interview-draft:"))
+      .map(([key, value]) => {
+        try {
+          const parsed = JSON.parse(value);
+          return { key, topic: parsed?.topic ?? parsed?.state?.topic ?? null, savedAt: parsed?.savedAt ?? null, generatedAt: parsed?.state?.generatedAt ?? null };
+        } catch {
+          return { key, topic: null, savedAt: null, generatedAt: null };
+        }
+      }),
+  );
+  console.log("DRAFTS after auth", JSON.stringify(afterAuthDrafts));
+
   const body = await page.locator("body").innerText();
+  console.log("APP body after auth", JSON.stringify(body.slice(0, 1800)));
   assert(body.includes(topic), "anonymous Context was not restored after login");
 
   console.log("PASS authenticated continuity checkpoint: anonymous Context survived login in the same browser session");

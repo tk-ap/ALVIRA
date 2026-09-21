@@ -28,7 +28,7 @@ try {
   const page = await context.newPage();
   const pageErrors = [];
   const consoleErrors = [];
-  page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("pageerror", (error) => pageErrors.push(`${page.url()} :: ${error.message}`));
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });

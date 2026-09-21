@@ -12,7 +12,7 @@ export const Route = createFileRoute("/team")({
       {
         name: "description",
         content:
-          "Join the ALVIRA Team early access waitlist. Capture your team's operational knowledge so every AI tool works with the same context.",
+          "Join the ALVIRA Team early access waitlist. Build maintained operational Context your team can review and reuse across supported AI workflows.",
       },
     ],
   }),
@@ -22,10 +22,10 @@ export const Route = createFileRoute("/team")({
 const TEAM_SIZES = ["5–10", "11–25", "26–50", "51–100", "100+"];
 
 const TEAM_OFFERS = [
-  "Shared operational knowledge — processes, decisions, and context every AI tool can rely on",
+  "Shared operational knowledge — processes, decisions, and Context your team can review and reuse",
   "Adaptive knowledge interviews for teams of 5–100 employees",
   "A living knowledge base that stays current as your team evolves",
-  "Consistent context across ChatGPT, Claude, Gemini, and Cursor",
+  "Guided Context reuse across ChatGPT, Claude, Gemini, Cursor, and supported workflows",
 ];
 
 const inputClass =
@@ -103,12 +103,12 @@ function TeamPage() {
               ALVIRA for Teams
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-gray-600 dark:text-gray-400">
-              Capture your team's operational knowledge so every AI tool works with the same context.
+              Build maintained operational Context your team can review and reuse across supported AI workflows.
             </p>
             <p className="mt-5 max-w-xl text-base leading-7 text-gray-600 dark:text-gray-400">
               ALVIRA Team is an early access pilot for companies of 5–100 employees. Your team's
-              processes, decisions, and domain knowledge get captured once — then every AI tool your
-              team uses answers from the same, always-current source of truth.
+              processes, decisions, and domain knowledge can be maintained in one reviewable source,
+              then reused in supported AI workflows. Automatic cross-tool incorporation is still being validated.
             </p>
             <ul className="mt-8 space-y-3">
               {TEAM_OFFERS.map((offer) => (

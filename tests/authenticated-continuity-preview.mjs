@@ -47,7 +47,7 @@ try {
   await page.getByLabel("Email").fill(email);
   await page.locator("#password").fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL(/\/app(?:\?|$)/, { timeout: 45000 });
+  await page.waitForURL((url) => url.pathname === "/app", { timeout: 45000 });
 
   const afterAuthDrafts = await page.evaluate(() =>
     Object.entries(window.localStorage)

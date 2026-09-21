@@ -69,6 +69,15 @@ try {
 
   await page.getByRole("heading", { name: "Update your existing Context?" }).waitFor({ state: "visible", timeout: 30000 });
   assert.equal((await page.locator("body").innerText()).includes(topic), true, "exact guest Context was not restored after login");
+  await page.waitForFunction((expectedTopic) => !Object.entries(window.localStorage).some(([key, value]) => {
+    if (!key.includes(":anonymous:")) return false;
+    try {
+      const parsed = JSON.parse(value);
+      return (parsed?.topic ?? parsed?.state?.topic) === expectedTopic;
+    } catch {
+      return false;
+    }
+  }), topic, { timeout: 30000 });
 
   const afterAuthDrafts = await draftSnapshot();
   const authenticatedDraft = afterAuthDrafts.find((draft) => draft.key.includes(":user:") && draft.key.endsWith(":context"));

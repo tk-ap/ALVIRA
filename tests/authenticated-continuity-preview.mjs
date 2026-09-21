@@ -95,6 +95,8 @@ try {
   await page.waitForFunction(() => Array.from(document.querySelectorAll("button")).some((button) => button.textContent?.trim().toLowerCase() === "pro" && button.className.includes("bg-iridescent-soft")), null, { timeout: 30000 });
 
   await page.goto(base + "/dashboard", { waitUntil: "networkidle", timeout: 45000 });
+  const dashboardBody = await page.locator("body").innerText();
+  console.log("CHECK Dashboard state", JSON.stringify({ topicVisible: dashboardBody.includes(topic), saveButtonVisible: await page.getByRole("button", { name: "Save to Context", exact: true }).count() > 0, hasLoadError: dashboardBody.includes("Unable to load saved Context") }));
   await page.getByRole("heading", { name: topic, exact: true }).waitFor({ state: "visible", timeout: 30000 });
   const saveDraft = page.getByRole("button", { name: "Save to Context", exact: true });
   await saveDraft.waitFor({ state: "visible", timeout: 30000 });

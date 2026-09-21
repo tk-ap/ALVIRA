@@ -10,8 +10,17 @@ export interface InterviewPromptDomain {
   promptHint: string;
 }
 
+export interface InterviewBaselineFocus {
+  label: string;
+  classification: string;
+  rationale: string;
+}
+
 export function isInterviewRecallRequest(text: string): boolean {
-  const normalized = text.trim().toLowerCase().replace(/[?.!]+$/g, "");
+  const normalized = text
+    .trim()
+    .toLowerCase()
+    .replace(/[?.!]+$/g, "");
   return [
     /\bwhat do you know about me\b/,
     /\bwhat have you (?:learned|captured|got|recorded) about me\b/,
@@ -25,7 +34,9 @@ export function isInterviewRecallRequest(text: string): boolean {
 
 function compact(text: string, max = 180): string {
   const singleLine = text.replace(/\s+/g, " ").trim();
-  return singleLine.length <= max ? singleLine : `${singleLine.slice(0, max - 1).trimEnd()}…`;
+  return singleLine.length <= max
+    ? singleLine
+    : `${singleLine.slice(0, max - 1).trimEnd()}…`;
 }
 
 export function buildHistoryRecallResponse(
@@ -33,7 +44,10 @@ export function buildHistoryRecallResponse(
   userName?: string,
 ): string {
   const answers = history
-    .filter((message) => message.role === "user" && !isInterviewRecallRequest(message.content))
+    .filter(
+      (message) =>
+        message.role === "user" && !isInterviewRecallRequest(message.content),
+    )
     .map((message) => compact(message.content))
     .filter(Boolean);
 
@@ -45,9 +59,10 @@ export function buildHistoryRecallResponse(
   const visible = answers.slice(-8);
   const omitted = answers.length - visible.length;
   const bullets = visible.map((answer) => `• ${answer}`).join("\n");
-  const tail = omitted > 0
-    ? `\n\nI also have ${omitted} earlier answer${omitted === 1 ? "" : "s"} in this session.`
-    : "";
+  const tail =
+    omitted > 0
+      ? `\n\nI also have ${omitted} earlier answer${omitted === 1 ? "" : "s"} in this session.`
+      : "";
 
   return `${greeting}here's what I have actually captured from you so far:\n\n${bullets}${tail}\n\nThat's based only on what you've told me in this interview; I haven't added assumptions to it.`;
 }
@@ -62,7 +77,10 @@ function tierLabel(tier: InterviewPromptTier): string {
 
 function conversationText(history: InterviewPromptMessage[]): string {
   return history
-    .map((message) => `${message.role === "assistant" ? "ALVIRA" : "User"}: ${message.content}`)
+    .map(
+      (message) =>
+        `${message.role === "assistant" ? "ALVIRA" : "User"}: ${message.content}`,
+    )
     .join("\n\n");
 }
 
@@ -133,6 +151,7 @@ export function buildExperimentalQuestionPrompt(input: {
   history: InterviewPromptMessage[];
   tier: InterviewPromptTier;
   userName?: string;
+  baselineFocus?: InterviewBaselineFocus[];
 }): string {
   const hasUserContext = input.history.some(
     (message) => message.role === "user" && message.content.trim().length > 0,
@@ -171,6 +190,15 @@ Area: "${input.domain.label}"
 Why it matters / prompt hint: ${input.domain.promptHint}
 User type: ${tierLabel(input.tier)}
 ${input.userName?.trim() ? `User name: ${input.userName.trim()}. Address them by name naturally when useful, especially at the start or after resuming, but not mechanically on every turn.` : ""}
+
+${
+  input.baselineFocus?.length
+    ? `## Context Baseline gap map
+The user optionally supplied evidence from their current AI tools before this interview. This is evidence about what those tools appeared to know, not fact about the user. Use it to prioritize the genuine gaps below without repeating context that appears consistently established.
+${input.baselineFocus.map((focus) => `- ${focus.label}: ${focus.classification.replaceAll("_", " ")} — ${focus.rationale}`).join("\n")}
+Never state that an external tool's output is a confirmed user fact. Ask the user to verify important, stale, conflicting, or missing context.`
+    : "No pre-interview baseline was supplied. Use the normal adaptive interview path."
+}
 
 ## Conversation
 ---

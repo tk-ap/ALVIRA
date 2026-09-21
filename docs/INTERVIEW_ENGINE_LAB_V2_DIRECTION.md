@@ -1,10 +1,12 @@
 # Interview Engine Lab v2 — Context Baseline and Portability Proof
 
-**Status:** working product direction recorded 2026-09-20; not a production implementation authorization.
+**Status:** Lab behavior implemented on the isolated `codex/interview-lab` branch; not a production implementation authorization.
 
 The Interview Engine Lab is being treated as the working **Interview Engine v2** direction. v2 extends the adaptive interview from “build a useful Context” to “help the user prove that the Context is useful, portable, and still under their control in the AI tools they actually use.”
 
 This is both product behavior and a formal portability-proof loop. The Lab should let a user determine viability in their own environment without turning an external AI's response into unquestioned truth or implying that ALVIRA has a native integration where none exists.
+
+The current Lab implementation keeps the entire run in browser/session state. It provides manual tool-response capture, deterministic first-pass classification with user override, baseline-aware Lab v2 prompting, an editable Context Mirror, an approved local Context receipt, manual same-question reruns, and separately recorded update, withholding, and revocation checks. It does not create a production profile, draft, Bridge authorization, or durable Context version.
 
 ## User journey
 

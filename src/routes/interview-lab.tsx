@@ -1,17 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Header } from "~/components/Header";
+import { InterviewLabV2 } from "~/components/InterviewLabV2";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser } from "./-auth";
 import {
   generateInterviewLabTurn,
   type InterviewLabPromptVersion,
 } from "./-interviewLab";
-import {
-  getKnowledgeGraph,
-  type Message,
-  type Tier,
-} from "./-knowledgeGraph";
+import { getKnowledgeGraph, type Message, type Tier } from "./-knowledgeGraph";
 
 export const Route = createFileRoute("/interview-lab")({
   head: () => ({
@@ -23,7 +20,7 @@ export const Route = createFileRoute("/interview-lab")({
       },
     ],
   }),
-  component: InterviewLabPage,
+  component: InterviewLabV2,
 });
 
 type Diagnostics = {
@@ -90,6 +87,7 @@ function InterviewLabPage() {
           history: nextHistory,
           promptVersion,
           userName,
+          baselineFocus: [],
         },
       });
       setHistory([
@@ -98,7 +96,11 @@ function InterviewLabPage() {
       ]);
       setDiagnostics(result.diagnostics);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The Interview Lab could not continue.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The Interview Lab could not continue.",
+      );
     } finally {
       setBusy(false);
     }
@@ -135,7 +137,9 @@ function InterviewLabPage() {
         <Header />
         <main className="mx-auto max-w-4xl px-6 py-20">
           <h1 className="text-3xl font-bold">Interview Lab</h1>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Owner access is required.</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Owner access is required.
+          </p>
         </main>
       </div>
     );
@@ -144,7 +148,10 @@ function InterviewLabPage() {
   return (
     <div className="min-h-dvh bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <Header />
-      <main id="main-content" className="mx-auto max-w-6xl px-6 py-10 sm:px-8 sm:py-14">
+      <main
+        id="main-content"
+        className="mx-auto max-w-6xl px-6 py-10 sm:px-8 sm:py-14"
+      >
         <div className="border-b border-gray-200 pb-8 dark:border-gray-800">
           <p className="font-mono text-xs uppercase tracking-[0.18em] text-system-dark dark:text-system">
             Owner sandbox / Interview Engine
@@ -153,9 +160,9 @@ function InterviewLabPage() {
             Interview Lab
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-400">
-            Test the live interview prompt against an experimental version without saving
-            answers to ALVIRA Context. Nothing in this lab updates profiles, drafts, or
-            production interview state.
+            Test the live interview prompt against an experimental version
+            without saving answers to ALVIRA Context. Nothing in this lab
+            updates profiles, drafts, or production interview state.
           </p>
         </div>
 
@@ -205,7 +212,9 @@ function InterviewLabPage() {
             <select
               value={promptVersion}
               onChange={(event) => {
-                setPromptVersion(event.target.value as InterviewLabPromptVersion);
+                setPromptVersion(
+                  event.target.value as InterviewLabPromptVersion,
+                );
                 resetSession();
               }}
               className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-950"
@@ -226,7 +235,8 @@ function InterviewLabPage() {
             {history.length > 0 ? "Restart interview" : "Start interview"}
           </button>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            To compare versions, use the same answers, switch the Interview brain, and restart.
+            To compare versions, use the same answers, switch the Interview
+            brain, and restart.
           </p>
         </div>
 
@@ -262,14 +272,21 @@ function InterviewLabPage() {
                     <p className="font-mono text-[10px] uppercase tracking-wide text-gray-500">
                       {message.role === "assistant" ? "ALVIRA" : "You"}
                     </p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{message.content}</p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
+                      {message.content}
+                    </p>
                   </div>
                 ))
               )}
-              {busy ? <p className="text-sm text-gray-500">ALVIRA is thinking…</p> : null}
+              {busy ? (
+                <p className="text-sm text-gray-500">ALVIRA is thinking…</p>
+              ) : null}
             </div>
 
-            <form onSubmit={submitAnswer} className="border-t border-gray-200 p-5 dark:border-gray-800">
+            <form
+              onSubmit={submitAnswer}
+              className="border-t border-gray-200 p-5 dark:border-gray-800"
+            >
               <textarea
                 value={answer}
                 onChange={(event) => setAnswer(event.target.value)}
@@ -295,8 +312,8 @@ function InterviewLabPage() {
               </p>
               {promptVersion === "production" ? (
                 <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                  Production mode intentionally shows no diagnostic fields. It runs the same
-                  prompt used by the live question generator.
+                  Production mode intentionally shows no diagnostic fields. It
+                  runs the same prompt used by the live question generator.
                 </p>
               ) : diagnostics ? (
                 <dl className="mt-4 space-y-4 text-sm">
@@ -320,14 +337,16 @@ function InterviewLabPage() {
                   </div>
                 </dl>
               ) : (
-                <p className="mt-4 text-sm text-gray-500">Diagnostics appear after a Lab v2 turn.</p>
+                <p className="mt-4 text-sm text-gray-500">
+                  Diagnostics appear after a Lab v2 turn.
+                </p>
               )}
             </div>
 
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100">
-              This is deliberately disconnected from profile saving, autosave, completion
-              scoring, and Build Brief generation. We can change the interview brain here
-              without changing what customers use.
+              This is deliberately disconnected from profile saving, autosave,
+              completion scoring, and Build Brief generation. We can change the
+              interview brain here without changing what customers use.
             </div>
           </aside>
         </section>
@@ -336,3 +355,6 @@ function InterviewLabPage() {
     </div>
   );
 }
+
+// Retained as a local fallback reference while the v2 Lab component owns this route.
+void InterviewLabPage;

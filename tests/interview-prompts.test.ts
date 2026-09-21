@@ -19,7 +19,9 @@ describe("interview prompt extraction", () => {
       tier: "personal",
     });
 
-    expect(prompt).toContain("You are ALVIRA, a Context Intelligence interviewer.");
+    expect(prompt).toContain(
+      "You are ALVIRA, a Context Intelligence interviewer.",
+    );
     expect(prompt).toContain("Ask one question at a time");
     expect(prompt).toContain('"Decision Frameworks"');
     expect(prompt).toContain('Respond ONLY with a JSON object: {"question":');
@@ -40,14 +42,41 @@ describe("interview prompt extraction", () => {
     expect(prompt).toContain('"target_gap"');
     expect(prompt).toContain("If it is reversible I move quickly.");
   });
-});
 
+  test("experimental prompt uses baseline evidence as a gap map, not as fact", () => {
+    const prompt = buildExperimentalQuestionPrompt({
+      domain,
+      history: [],
+      tier: "personal",
+      baselineFocus: [
+        {
+          label: "Constraints & boundaries",
+          classification: "conflicting",
+          rationale: "The tested tools disagree.",
+        },
+      ],
+    });
+
+    expect(prompt).toContain("Context Baseline gap map");
+    expect(prompt).toContain("Constraints & boundaries: conflicting");
+    expect(prompt).toContain("not fact about the user");
+    expect(prompt).toContain("Ask the user to verify");
+  });
+});
 
 describe("interview conversational intents", () => {
   test("recognizes a request to reflect captured context", () => {
-    expect(isInterviewRecallRequest("What do you know about me so far?")).toBe(true);
-    expect(isInterviewRecallRequest("Can you tell me what you know about me?")).toBe(true);
-    expect(isInterviewRecallRequest("I make decisions quickly when they are reversible.")).toBe(false);
+    expect(isInterviewRecallRequest("What do you know about me so far?")).toBe(
+      true,
+    );
+    expect(
+      isInterviewRecallRequest("Can you tell me what you know about me?"),
+    ).toBe(true);
+    expect(
+      isInterviewRecallRequest(
+        "I make decisions quickly when they are reversible.",
+      ),
+    ).toBe(false);
   });
 
   test("experimental prompt tells ALVIRA to honor user direction instead of forcing the next probe", () => {
@@ -60,21 +89,32 @@ describe("interview conversational intents", () => {
       tier: "personal",
     });
 
-    expect(prompt).toContain("When the user directs the conversation instead of answering");
+    expect(prompt).toContain(
+      "When the user directs the conversation instead of answering",
+    );
     expect(prompt).toContain("Never silently convert direction into an answer");
     expect(prompt).toContain("Do not file it as interview context");
-    expect(prompt).toContain("end with a short invitation instead of a new probe");
+    expect(prompt).toContain(
+      "end with a short invitation instead of a new probe",
+    );
     expect(prompt).toContain("none — user directing");
   });
 
   test("recall response is grounded in user answers and can use the user's name", () => {
-    const response = buildHistoryRecallResponse([
-      { role: "assistant", content: "What are you working on?" },
-      { role: "user", content: "I am building ALVIRA and want it to become a portable context layer." },
-      { role: "assistant", content: "How do you make decisions?" },
-      { role: "user", content: "I move quickly on reversible decisions." },
-      { role: "user", content: "What do you know about me so far?" },
-    ], "Tahlia");
+    const response = buildHistoryRecallResponse(
+      [
+        { role: "assistant", content: "What are you working on?" },
+        {
+          role: "user",
+          content:
+            "I am building ALVIRA and want it to become a portable context layer.",
+        },
+        { role: "assistant", content: "How do you make decisions?" },
+        { role: "user", content: "I move quickly on reversible decisions." },
+        { role: "user", content: "What do you know about me so far?" },
+      ],
+      "Tahlia",
+    );
 
     expect(response).toContain("Tahlia");
     expect(response).toContain("I am building ALVIRA");

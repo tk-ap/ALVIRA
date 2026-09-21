@@ -40,9 +40,19 @@ The caller owns the test conversation state and sends it on every turn.
   "domainId": "background",
   "promptVersion": "lab-v2",
   "userName": "tk",
-  "history": []
+  "history": [],
+  "baselineFocus": [
+    {
+      "label": "Constraints & boundaries",
+      "classification": "conflicting",
+      "rationale": "The tested tools returned different answers."
+    }
+  ]
 }
 ```
+
+`baselineFocus` is optional. When present, it is only an evidence-backed gap map for the
+experimental Lab prompt; it is not approved Context and must not be treated as user fact.
 
 A successful response returns the exact ALVIRA message plus Lab diagnostics.
 

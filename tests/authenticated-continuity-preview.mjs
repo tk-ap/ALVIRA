@@ -86,6 +86,14 @@ try {
   assert.equal(afterAuthDrafts.some((draft) => draft.key.includes(":anonymous:") && draft.topic === topic), false, "anonymous draft remained after successful account persistence");
   console.log("PASS login restoration", JSON.stringify({ topic: authenticatedDraft.topic, scope: "authenticated" }));
 
+  // The dedicated smoke user may already contain prior saved Contexts. Use its
+  // session-only acceptance tier so this run can save a new unique profile
+  // without changing stored billing state or deleting unrelated data.
+  await page.goto(base + "/account", { waitUntil: "networkidle", timeout: 45000 });
+  await page.getByRole("heading", { name: "Test access tier" }).waitFor({ state: "visible", timeout: 30000 });
+  await page.getByRole("button", { name: "pro", exact: true }).click();
+  await page.waitForFunction(() => Array.from(document.querySelectorAll("button")).some((button) => button.textContent?.trim().toLowerCase() === "pro" && button.className.includes("bg-iridescent-soft")), null, { timeout: 30000 });
+
   await page.goto(base + "/dashboard", { waitUntil: "networkidle", timeout: 45000 });
   await page.getByRole("heading", { name: topic, exact: true }).waitFor({ state: "visible", timeout: 30000 });
   const saveDraft = page.getByRole("button", { name: "Save to Context", exact: true });

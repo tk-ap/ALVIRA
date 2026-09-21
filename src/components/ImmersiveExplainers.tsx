@@ -1,3 +1,5 @@
+import { formatStableDate } from "~/lib/stable-date";
+
 export function ContextAssemblyGraphic() {
   return (
     <figure className="ivx ivx--assembly" aria-label="Sources combine into one maintained ALVIRA Context with visible states">
@@ -238,7 +240,7 @@ export function ContextHistoryGraphic({
           <div className="ivx-history__body">
             <div className="ivx-history__meta">
               <strong>V{version.version}</strong>
-              <small>{version.current ? "CURRENT" : new Date(version.createdAt).toLocaleDateString()}</small>
+              <small>{version.current ? "CURRENT" : formatStableDate(version.createdAt)}</small>
             </div>
             <p>{version.changedDomains.length ? version.changedDomains.map((value) => value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[-_]/g, " ")).join(" · ") : "Snapshot captured"}</p>
             <span>{version.source || "maintained Context"}</span>
@@ -273,7 +275,7 @@ export function ContextPortfolioGraphic({
           <a href={`/app?continue=${profile.id}`} className="ivx-portfolio__node" key={profile.id}>
             <small>{profile.offering === "meos" ? "REFLECT" : "CONTEXT"}</small>
             <strong>{profile.topic}</strong>
-            <span>updated {new Date(profile.updated_at).toLocaleDateString()} →</span>
+            <span>updated {formatStableDate(profile.updated_at)} →</span>
           </a>
         ))}
       </div>
@@ -296,7 +298,7 @@ export function ReflectLoopGraphic({
 }) {
   return (
     <figure className="ivx-reflect" aria-label="Reflect keeps a saved Context under review rather than treating it as static">
-      <div className="ivx-reflect__context"><small>SAVED CONTEXT</small><strong>{topic}</strong><span>updated {new Date(updatedAt).toLocaleDateString()}</span></div>
+      <div className="ivx-reflect__context"><small>SAVED CONTEXT</small><strong>{topic}</strong><span>updated {formatStableDate(updatedAt)}</span></div>
       <i>→</i>
       <div className="ivx-reflect__lens"><small>REFLECT</small><strong>REVISIT</strong><span>notice · challenge · deepen</span></div>
       <i>→</i>

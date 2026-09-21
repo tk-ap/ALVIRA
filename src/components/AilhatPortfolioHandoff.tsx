@@ -6,6 +6,7 @@ import {
   getAilhatHandoffOpportunity,
   type AilhatHandoffOpportunity,
 } from "~/routes/-ailhatHandoff";
+import { formatStableDate } from "~/lib/stable-date";
 
 export function AilhatPortfolioHandoff() {
   const location = useLocation();
@@ -68,7 +69,7 @@ export function AilhatPortfolioHandoff() {
               {opportunity.profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic || "Saved Context"}</option>)}
             </select>
           </label>
-          {selected && <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.1em] text-warm-gray-dark dark:text-warm-gray">Updated {new Date(selected.updated_at).toLocaleDateString()}</p>}
+          {selected && <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.1em] text-warm-gray-dark dark:text-warm-gray">Updated {formatStableDate(selected.updated_at)}</p>}
           <button type="button" onClick={() => void handoff()} disabled={busy} className="mt-5 w-full bg-ink px-4 py-3 font-mono text-xs font-semibold uppercase tracking-[0.08em] text-mineral transition hover:opacity-90 disabled:opacity-50 dark:bg-mineral dark:text-ink">
             {busy ? "Preparing handoff…" : "Carry this Context into ailhat →"}
           </button>

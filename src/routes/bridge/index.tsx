@@ -4,6 +4,7 @@ import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
 import { ProductJourneyRail, ProposalReviewGraphic } from "~/components/ImmersiveExplainers";
 import { getCurrentUser, listProfiles } from "../-auth";
+import { formatStableDate } from "~/lib/stable-date";
 
 export const Route = createFileRoute("/bridge/")({
   head: () => ({
@@ -198,7 +199,7 @@ function BridgePage() {
                     <dl className="mt-5 space-y-3 text-sm">
                       <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Can read</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{connection.profile_topic || "Approved ALVIRA Context"}</dd></div>
                       <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Permission</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Read only</dd></div>
-                      <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Renews access</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Reconnect after {new Date(connection.expires_at).toLocaleDateString()}</dd></div>
+                      <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Renews access</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Reconnect after {formatStableDate(connection.expires_at)}</dd></div>
                     </dl>
                     <button type="button" onClick={() => revokeConnection(connection.connection_id)} disabled={busyId === connection.connection_id} className="mt-5 rounded-lg border border-red-300 px-4 py-2.5 font-mono text-xs font-semibold text-red-700 disabled:opacity-60 dark:border-red-800 dark:text-red-300">
                       {busyId === connection.connection_id ? "Removing…" : "Revoke connection"}

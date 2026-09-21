@@ -2,6 +2,7 @@ import { useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { getOwnerDashboardDepth, sendInterviewFollowUp, type OwnerDashboardDepth as Depth } from "~/routes/-ownerDashboardDepth";
+import { formatStableDate } from "~/lib/stable-date";
 
 function percent(part: number, total: number) {
   return total > 0 ? `${Math.round((part / total) * 100)}%` : "—";
@@ -137,7 +138,7 @@ export function OwnerDashboardDepth() {
                         {sendingTo === item.email ? "Sending…" : followUpLabel(item.followUpKind)}
                       </button>
                       {item.lastFollowUpAt ? (
-                        <span className="font-mono text-[9px] text-warm-gray-dark dark:text-warm-gray">Last sent {new Date(item.lastFollowUpAt).toLocaleDateString()} · {item.followUpCount} total</span>
+                        <span className="font-mono text-[9px] text-warm-gray-dark dark:text-warm-gray">Last sent {formatStableDate(item.lastFollowUpAt)} · {item.followUpCount} total</span>
                       ) : (
                         <span className="font-mono text-[9px] text-warm-gray-dark dark:text-warm-gray">No follow-up sent</span>
                       )}

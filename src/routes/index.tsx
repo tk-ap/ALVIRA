@@ -316,7 +316,7 @@ function Home() {
 
             <div className="mt-12 border-l border-system/55 pl-5 sm:pl-6">
               <p className="max-w-3xl text-sm leading-7 text-[#5f554c] dark:text-[#b8ada1]">
-                Inside ALVIRA, <strong className="font-semibold text-[#27231f] dark:text-[#ece4da]">Context</strong> builds the understanding, <strong className="font-semibold text-[#27231f] dark:text-[#ece4da]">Reflect</strong> helps you review and evolve it, and <strong className="font-semibold text-[#27231f] dark:text-[#ece4da]">Bridge</strong> can carry selected, approved context into other AI tools. You do not need to learn those parts before you begin.
+                Inside ALVIRA, <strong className="font-semibold text-[#27231f] dark:text-[#ece4da]">Context</strong> builds the understanding, <strong className="font-semibold text-[#27231f] dark:text-[#ece4da]">Reflect</strong> helps you review and evolve it, and <strong className="font-semibold text-[#27231f] dark:text-[#ece4da]">Bridge</strong> can authorize compatible external clients to read selected, approved Context. Whether a destination actually incorporates that Context into a model response depends on the client and is still being validated. You do not need to learn those parts before you begin.
               </p>
             </div>
           </div>

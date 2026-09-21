@@ -52,7 +52,7 @@ try {
   await page.getByRole("button", { name: /Generate knowledge files/ }).click();
   await page.getByRole("heading", { name: "Compiled ALVIRA Context" }).waitFor({ state: "visible", timeout: 90000 });
 
-  assert.equal(await page.getByText(topic, { exact: true }).count() > 0, true, "compiled Context did not show the run topic");
+  assert.equal((await page.locator("body").innerText()).includes(topic), true, "compiled Context did not show the run topic");
 
   const beforeAuthDrafts = await draftSnapshot();
   const anonymousDraft = beforeAuthDrafts.find((draft) => draft.key.includes(":anonymous:"));

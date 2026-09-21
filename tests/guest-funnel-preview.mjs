@@ -27,7 +27,11 @@ try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
   const pageErrors = [];
+  const consoleErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
 
   await waitForPreview(page);
 
@@ -70,7 +74,11 @@ try {
   assert.equal(await page.getByText(/Sign in to save your interview progress/i).count() > 0, true, "save/sign-in handoff is missing");
   assert.equal(await page.getByRole("link", { name: /Create one/i }).count() > 0, true, "signup handoff is missing");
 
+  if (pageErrors.length || consoleErrors.length) {
+    console.error("BROWSER ERRORS", JSON.stringify({ pageErrors, consoleErrors }));
+  }
   assert.equal(pageErrors.length, 0, pageErrors.join(" | "));
+  assert.equal(consoleErrors.length, 0, consoleErrors.join(" | "));
   console.log("PASS signed-out ALVIRA funnel: start → real interview → live Context Mirror → compiled Context → signup/save handoff");
   await context.close();
 } finally {

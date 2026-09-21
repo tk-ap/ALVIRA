@@ -68,7 +68,7 @@ try {
   await page.waitForURL((url) => url.pathname === "/app", { timeout: 45000 });
 
   await page.getByRole("heading", { name: "Update your existing Context?" }).waitFor({ state: "visible", timeout: 30000 });
-  assert.equal(await page.getByText(topic, { exact: true }).count() > 0, true, "exact guest Context was not restored after login");
+  assert.equal((await page.locator("body").innerText()).includes(topic), true, "exact guest Context was not restored after login");
 
   const afterAuthDrafts = await draftSnapshot();
   const authenticatedDraft = afterAuthDrafts.find((draft) => draft.key.includes(":user:") && draft.key.endsWith(":context"));

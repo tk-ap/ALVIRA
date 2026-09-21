@@ -628,7 +628,6 @@ function AppPage() {
     getCurrentUser().then(async (u) => {
       if (cancelled) return;
       if (u) {
-        setAuthUser({ id: u.id, email: u.email, tier: u.tier, isOwner: u.isOwner });
         // MeOS Build entitlement is always computed (not only for the meos URL) so the
         // free onboarding "what do you want to build?" choice can route free users to the
         // experience-first preview and entitled users to the full MeOS path.
@@ -714,6 +713,10 @@ function AppPage() {
             }
           } catch { /* malformed or unavailable draft */ }
         }
+        // Publish authenticated state only after the migration above. This prevents
+        // the normal autosave effect from creating a newer browser copy and causing
+        // the signed-out draft to be skipped as the migration source.
+        setAuthUser({ id: u.id, email: u.email, tier: u.tier, isOwner: u.isOwner });
         const profileId = new URLSearchParams(window.location.search).get("profile");
         if (profileId) {
           try {

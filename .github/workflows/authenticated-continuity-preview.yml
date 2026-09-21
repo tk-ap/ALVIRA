@@ -7,6 +7,11 @@ on:
       - 'src/routes/app.tsx'
       - 'src/routes/login.tsx'
       - 'src/routes/-auth.ts'
+      - 'src/routes/dashboard.tsx'
+      - 'src/routes/history.tsx'
+      - 'src/routes/bridge/**'
+      - 'src/routes/-contextVersions.ts'
+      - 'src/components/ImmersiveExplainers.tsx'
       - 'tests/authenticated-continuity-preview.mjs'
       - '.github/workflows/authenticated-continuity-preview.yml'
 

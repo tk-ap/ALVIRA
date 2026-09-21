@@ -78,7 +78,7 @@ try {
   console.log("PASS login restoration", JSON.stringify({ topic: authenticatedDraft.topic, scope: "authenticated" }));
 
   await page.goto(base + "/dashboard", { waitUntil: "networkidle", timeout: 45000 });
-  await page.getByText(topic, { exact: true }).waitFor({ state: "visible", timeout: 30000 });
+  await page.getByRole("heading", { name: topic, exact: true }).waitFor({ state: "visible", timeout: 30000 });
   const saveDraft = page.getByRole("button", { name: "Save to Context", exact: true });
   await saveDraft.waitFor({ state: "visible", timeout: 30000 });
   await saveDraft.click();

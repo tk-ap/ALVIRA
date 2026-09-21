@@ -8,7 +8,7 @@ export const Route = createFileRoute("/bridge/")({
   head: () => ({
     meta: [
       { title: "Bridge — ALVIRA" },
-      { name: "description", content: "Use selected ALVIRA Context in other AI tools without rebuilding it." },
+      { name: "description", content: "Authorize compatible external clients to read selected ALVIRA Context without rebuilding it." },
     ],
   }),
   component: BridgePage,
@@ -147,8 +147,8 @@ function BridgePage() {
       <main id="main-content" className="flex-1 px-6 py-14">
         <div className="mx-auto max-w-5xl">
           <p className="font-mono text-xs uppercase tracking-[0.22em] text-system">&lt; alvira / bridge &gt;</p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">Use your ALVIRA Context in another AI tool.</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">Bridge carries only the Context you approve. You do not need to move files, copy a profile, or manage security keys yourself.</p>
+          <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">Authorize another AI client to read your ALVIRA Context.</h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">Bridge exposes only the Context you approve through a read-only authorization. Whether a destination incorporates that Context into a model response depends on the client and is still being validated.</p>
 
           {(justConnected || connections.length > 0) && (
             <div className="mt-6 rounded-xl border border-system/40 bg-system-soft/60 px-5 py-4 dark:bg-ink/40" role="status">
@@ -171,7 +171,7 @@ function BridgePage() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="font-mono text-xs uppercase tracking-wider text-gray-500">Your connections</p>
-                <h2 id="connected-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">What can use ALVIRA right now</h2>
+                <h2 id="connected-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">Who is authorized to read ALVIRA right now</h2>
               </div>
               <span className="font-mono text-xs uppercase tracking-wide text-system">{connections.length} active</span>
             </div>
@@ -179,7 +179,7 @@ function BridgePage() {
             {connections.length === 0 && !legacyConnection ? (
               <div className="mt-5 rounded-2xl border border-dashed border-gray-300 p-6 dark:border-gray-700">
                 <p className="font-medium text-gray-900 dark:text-gray-100">No active connections yet.</p>
-                <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">That is normal. Pick an option below when you want another AI tool to use your ALVIRA Context.</p>
+                <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">That is normal. Pick an option below when you want to authorize a compatible client to read your ALVIRA Context.</p>
               </div>
             ) : (
               <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -241,7 +241,7 @@ function BridgePage() {
             <div className="mt-5 grid gap-5 sm:grid-cols-3">
               <div><span className="font-mono text-xs text-system">01</span><h3 className="mt-2 font-semibold text-gray-900 dark:text-gray-100">The other app asks</h3><p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">Your AI app opens ALVIRA when it needs permission.</p></div>
               <div><span className="font-mono text-xs text-system">02</span><h3 className="mt-2 font-semibold text-gray-900 dark:text-gray-100">You choose</h3><p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">You select one saved Context. Nothing else is shared.</p></div>
-              <div><span className="font-mono text-xs text-system">03</span><h3 className="mt-2 font-semibold text-gray-900 dark:text-gray-100">ALVIRA handles the rest</h3><p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">Secure credentials stay in the background. A successful connection appears above as Connected.</p></div>
+              <div><span className="font-mono text-xs text-system">03</span><h3 className="mt-2 font-semibold text-gray-900 dark:text-gray-100">ALVIRA verifies authorization</h3><p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">Secure credentials stay in the background. Connected confirms an active authorization token; it does not by itself prove that the destination incorporated your Context into a model response.</p></div>
             </div>
           </section>
 

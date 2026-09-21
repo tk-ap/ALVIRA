@@ -68,7 +68,7 @@ try {
   await page.waitForURL((url) => url.pathname === "/app", { timeout: 45000 });
 
   await page.getByRole("heading", { name: "Update your existing Context?" }).waitFor({ state: "visible", timeout: 30000 });
-  assert.equal((await page.locator("body").innerText()).includes(topic), true, "exact guest Context was not restored after login");
+  await page.waitForFunction((expectedTopic) => document.body.innerText.includes(expectedTopic), topic, { timeout: 30000 });
   await page.waitForFunction((expectedTopic) => !Object.entries(window.localStorage).some(([key, value]) => {
     if (!key.includes(":anonymous:")) return false;
     try {

@@ -8,7 +8,9 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
+// SANDBOX_BASE lets a variant be published under a sub-path, e.g. /variants/dossier/.
 export default defineConfig({
+  base: process.env.SANDBOX_BASE || "/",
   plugins: [
     tailwindcss(),
     tsConfigPaths({ projects: ["./tsconfig.json"] }),

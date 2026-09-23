@@ -54,6 +54,8 @@ function BridgeConnectPage() {
   }, [params]);
 
   const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId);
+  const requestedScope = params.get("scope");
+  const canProposeUpdates = !requestedScope || requestedScope.split(/\s+/).includes("context:propose");
 
   const allowUrl = useMemo(() => {
     if (!oauthMode) return "";
@@ -92,8 +94,8 @@ function BridgeConnectPage() {
         <main id="main-content" className="flex-1 px-6 py-14">
           <section className="mx-auto w-full max-w-xl">
             <p className="font-mono text-xs uppercase tracking-widest text-system">&lt; bridge / approve &gt;</p>
-            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">An AI app is requesting access to your ALVIRA Context.</h1>
-            <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">Choose exactly what it may read. ALVIRA handles the authorization in the background; the destination still has to retrieve and incorporate the Context.</p>
+            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">An AI app wants to use your ALVIRA Context.</h1>
+            <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">Choose which ALVIRA Context this app may use. Connected AI tools may also propose updates for you to review; they cannot silently rewrite your Context. The destination still has to retrieve and incorporate the Context.</p>
 
             <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
               <label htmlFor="bridge-context" className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Context this app may read</label>
@@ -107,8 +109,10 @@ function BridgeConnectPage() {
               </select>
 
               <div className="mt-6 rounded-xl border border-gray-200 p-4 text-sm leading-6 dark:border-gray-700">
-                <p><strong>It can read:</strong> {selectedProfile?.topic || "the Context you selected"}</p>
-                <p><strong>It cannot:</strong> edit your Context, see your password, or access your other saved Contexts</p>
+                <p><strong>It can read:</strong> {selectedProfile?.topic || "the Context you selected"}</p>\n                {canProposeUpdates
+                  ? <p><strong>It can propose:</strong> new or changed Context for your review</p>
+                  : <p><strong>It cannot propose:</strong> Context updates on this connection</p>}
+                <p><strong>It cannot:</strong> silently edit your Context, see your password, or access your other saved Contexts</p>
                 <p><strong>You stay in control:</strong> revoke the connection from Bridge at any time</p>
               </div>
 
@@ -161,7 +165,7 @@ function BridgeConnectPage() {
               </div>
               <details className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                 <summary className="cursor-pointer font-medium text-gray-900 dark:text-gray-100">Developer details</summary>
-                <p className="mt-2 leading-6">Use ALVIRA's authorization endpoint, token endpoint, and read-only profile endpoint. MCP clients should use the recommended connection address instead because discovery is automatic there.</p>
+                <p className="mt-2 leading-6">Use ALVIRA's authorization endpoint, token endpoint, and profile endpoint and proposal-based Context update flow. MCP clients should use the recommended connection address instead because discovery is automatic there.</p>
               </details>
             </div>
           </div>

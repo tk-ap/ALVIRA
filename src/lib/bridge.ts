@@ -9,6 +9,9 @@ const SESSION_COOKIE = "alvira_session";
 const DEFAULT_BRIDGE_CLIENT_ID = "alvira-bridge";
 const CIMD_MAX_BYTES = 64 * 1024;
 const CIMD_TIMEOUT_MS = 4_000;
+const BRIDGE_READ_SCOPE = "context:read profile:read";
+const BRIDGE_MCP_DEFAULT_SCOPE = `${BRIDGE_READ_SCOPE} context:propose`;
+const BRIDGE_SUPPORTED_SCOPES = new Set(["context:read", "profile:read", "context:propose"]);
 
 export type BridgeDestination = "mcp" | "api";
 
@@ -50,6 +53,7 @@ function ensureBridgeSchema() {
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         client_id TEXT NOT NULL,
         redirect_uri TEXT NOT NULL,
+        scope TEXT NOT NULL DEFAULT 'context:read profile:read',
         expires_at TIMESTAMPTZ NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
@@ -76,6 +80,7 @@ function ensureBridgeSchema() {
         last_seen_at TIMESTAMPTZ
       )
     `);
+    await db.query("ALTER TABLE bridge_authorization_codes ADD COLUMN IF NOT EXISTS scope TEXT NOT NULL DEFAULT 'context:read profile:read'");
     await db.query("ALTER TABLE bridge_authorization_codes ADD COLUMN IF NOT EXISTS selected_profile_id TEXT REFERENCES profiles(id) ON DELETE SET NULL");
     await db.query("ALTER TABLE bridge_authorization_codes ADD COLUMN IF NOT EXISTS destination TEXT");
     await db.query("ALTER TABLE bridge_authorization_codes ADD COLUMN IF NOT EXISTS code_challenge TEXT");
@@ -98,6 +103,16 @@ function ensureBridgeSchema() {
 
 export function bridgeClientId() {
   return process.env.BRIDGE_CLIENT_ID?.trim() || DEFAULT_BRIDGE_CLIENT_ID;
+}
+
+export function resolveBridgeScope(requestedScope: string | null | undefined, destination: BridgeDestination | null) {
+  const requested = requestedScope?.trim();
+  if (!requested) return destination === "mcp" ? BRIDGE_MCP_DEFAULT_SCOPE : BRIDGE_READ_SCOPE;
+  const scopes = Array.from(new Set(requested.split(/\s+/).filter(Boolean)));
+  if (scopes.some((scope) => !BRIDGE_SUPPORTED_SCOPES.has(scope))) {
+    throw new BridgeExchangeError("Unsupported Bridge scope.", "invalid_scope");
+  }
+  return scopes.includes("context:propose") ? BRIDGE_MCP_DEFAULT_SCOPE : BRIDGE_READ_SCOPE;
 }
 
 export function hashBridgeSecret(value: string) {
@@ -347,7 +362,7 @@ export async function issueBridgeAuthorizationCode(
   redirectUri: string,
   selectedProfileId: string | null = null,
   destination: BridgeDestination | null = null,
-  options: { clientId?: string; codeChallenge?: string | null; codeChallengeMethod?: string | null } = {},
+  options: { clientId?: string; codeChallenge?: string | null; codeChallengeMethod?: string | null; requestedScope?: string | null } = {},
 ) {
   await ensureBridgeSchema();
 
@@ -363,8 +378,8 @@ export async function issueBridgeAuthorizationCode(
   const code = createBridgeSecret();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
   await getDb().query(
-    "INSERT INTO bridge_authorization_codes (code_hash, user_id, client_id, redirect_uri, selected_profile_id, destination, code_challenge, code_challenge_method, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-    [hashBridgeSecret(code), userId, clientId, redirectUri, selectedProfileId, destination, options.codeChallenge || null, options.codeChallengeMethod || null, expiresAt],
+    "INSERT INTO bridge_authorization_codes (code_hash, user_id, client_id, redirect_uri, selected_profile_id, destination, code_challenge, code_challenge_method, scope, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+    [hashBridgeSecret(code), userId, clientId, redirectUri, selectedProfileId, destination, options.codeChallenge || null, options.codeChallengeMethod || null, resolveBridgeScope(options.requestedScope, destination), expiresAt],
   );
   return { code, expiresAt };
 }
@@ -388,7 +403,7 @@ export async function exchangeBridgeAuthorizationCode(
 
   const db = getDb();
   const row = (await db.query(
-    "DELETE FROM bridge_authorization_codes WHERE code_hash = $1 AND client_id = $2 AND redirect_uri = $3 AND expires_at > NOW() RETURNING user_id, selected_profile_id, destination, code_challenge, code_challenge_method",
+    "DELETE FROM bridge_authorization_codes WHERE code_hash = $1 AND client_id = $2 AND redirect_uri = $3 AND expires_at > NOW() RETURNING user_id, selected_profile_id, destination, code_challenge, code_challenge_method, scope",
     [hashBridgeSecret(code), clientId, redirectUri],
   ))[0] as {
     user_id: string;
@@ -396,6 +411,7 @@ export async function exchangeBridgeAuthorizationCode(
     destination: BridgeDestination | null;
     code_challenge: string | null;
     code_challenge_method: string | null;
+    scope: string | null;
   } | undefined;
   if (!row) throw new BridgeExchangeError("Authorization code is invalid or expired.", "invalid_grant");
 
@@ -410,9 +426,10 @@ export async function exchangeBridgeAuthorizationCode(
   const accessToken = createBridgeSecret();
   const connectionId = `conn_${randomBytes(16).toString("base64url")}`;
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const grantedScope = row.scope || resolveBridgeScope(null, row.destination);
   await db.query(
     "INSERT INTO bridge_access_tokens (token_hash, user_id, client_id, scope, selected_profile_id, destination, connection_id, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    [hashBridgeSecret(accessToken), row.user_id, clientId, "context:read profile:read", row.selected_profile_id, row.destination, connectionId, expiresAt],
+    [hashBridgeSecret(accessToken), row.user_id, clientId, grantedScope, row.selected_profile_id, row.destination, connectionId, expiresAt],
   );
   if (clientId !== bridgeClientId()) {
     await db.query("UPDATE bridge_oauth_clients SET last_seen_at = NOW() WHERE client_id = $1", [clientId]);
@@ -420,7 +437,7 @@ export async function exchangeBridgeAuthorizationCode(
   return {
     accessToken,
     expiresAt,
-    scope: "context:read profile:read",
+    scope: grantedScope,
     selectedProfileId: row.selected_profile_id,
     destination: row.destination,
     connectionId,

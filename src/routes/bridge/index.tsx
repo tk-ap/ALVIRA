@@ -193,7 +193,7 @@ function BridgePage() {
                     </div>
                     <dl className="mt-5 space-y-3 text-sm">
                       <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Can read</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{connection.profile_topic || "Approved ALVIRA Context"}</dd></div>
-                      <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Permission</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Read only</dd></div>
+                      <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Permission</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{connection.scope.includes("context:propose") ? "Read + propose updates for review" : "Read only"}</dd></div>
                       <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Renews access</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Reconnect after {new Date(connection.expires_at).toLocaleDateString()}</dd></div>
                     </dl>
                     <button type="button" onClick={() => revokeConnection(connection.connection_id)} disabled={busyId === connection.connection_id} className="mt-5 rounded-lg border border-red-300 px-4 py-2.5 font-mono text-xs font-semibold text-red-700 disabled:opacity-60 dark:border-red-800 dark:text-red-300">
@@ -214,6 +214,13 @@ function BridgePage() {
                 )}
               </div>
             )}
+          </section>
+
+          <section className="mt-10 border border-system/30 bg-system-soft/20 p-6 dark:bg-ink/20">
+            <p className="font-mono text-xs uppercase tracking-wider text-system">Proposed updates</p>
+            <h2 className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">Connected AI can suggest what changed. You decide what becomes Context.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">Review pending Bridge proposals before they enter ALVIRA. Approved changes are recorded as Living Updates and preserve prior Context in History.</p>
+            <a href="/bridge/updates" className="mt-4 inline-flex font-mono text-sm font-semibold text-system-dark underline dark:text-system">Review proposed updates →</a>
           </section>
 
           <section className="mt-12" aria-labelledby="available-heading">
@@ -245,7 +252,7 @@ function BridgePage() {
             </div>
           </section>
 
-          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Bridge is read-only: connected tools cannot change ALVIRA's source Context.</p>
+          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Connected tools cannot silently change ALVIRA's source Context. Authorized AI tools may propose updates for you to review.</p>
         </div>
       </main>
       <TrustFooter />

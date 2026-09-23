@@ -15,11 +15,18 @@ if (!dir || (base && (!base.startsWith("/") || !base.endsWith("/")))) {
   console.error("usage: sandbox-postbuild.mjs <dir> [/base/]");
   process.exit(1);
 }
-const guard = `(function(f){window.fetch=function(u,o){var s=typeof u==="string"?u:(u&&u.url)||"";if(/\/_serverFn\/|\/api\//.test(s))return Promise.resolve(new Response(JSON.stringify({error:"Backend unavailable in the static sandbox"}),{status:503,headers:{"content-type":"application/json"}}));return f.apply(this,arguments);};})(window.fetch);`;
+const guard = `(function(f){window.fetch=function(u,o){var s=typeof u==="string"?u:(u&&u.url)||"";if(s.indexOf("/_serverFn/")>-1||s.indexOf("/api/")>-1)return Promise.resolve(new Response(JSON.stringify({error:"Backend unavailable in the static sandbox"}),{status:503,headers:{"content-type":"application/json"}}));return f.apply(this,arguments);};})(window.fetch);`;
 const rewriter = base && base !== "/"
   ? `(function(b){document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest("a[href^='/']");if(!a)return;var h=a.getAttribute("href");if(h.indexOf("//")===0||h.indexOf(b)===0)return;a.setAttribute("href",b+h.slice(1));},true);})(${JSON.stringify(base)});`
   : "";
-const tag = `<script>${guard}${rewriter}</script>`;
+const body = guard + rewriter;
+try {
+  new Function(body); // refuse to write a snippet that does not parse
+} catch (error) {
+  console.error("sandbox-postbuild: generated script does not parse:", error.message);
+  process.exit(1);
+}
+const tag = `<script>${body}</script>`;
 
 let count = 0;
 (function walk(d) {

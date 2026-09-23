@@ -27,6 +27,7 @@ import appInterviewCss from "~/styles/app-interview.css?url";
 import appSeedReviewCss from "~/styles/app-seed-review.css?url";
 import appOutputCss from "~/styles/app-output.css?url";
 import appSecondaryCss from "~/styles/app-secondary.css?url";
+import immersivePrototypeCss from "~/styles/immersive-prototype.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -49,6 +50,7 @@ export const Route = createRootRoute({
       { rel: "stylesheet", href: appSeedReviewCss },
       { rel: "stylesheet", href: appOutputCss },
       { rel: "stylesheet", href: appSecondaryCss },
+      { rel: "stylesheet", href: immersivePrototypeCss },
       { rel: "icon", type: "image/svg+xml", href: "/brand/alvira-context-frame.svg?v=2" },
       { rel: "shortcut icon", href: "/brand/alvira-context-frame.svg?v=2" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
@@ -58,7 +60,7 @@ export const Route = createRootRoute({
     // React effects so the DOM React receives still matches the server output.
     scripts: [{ children: `(function(){var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark")}})()` }],
   }),
-  notFoundComponent: () => <div>Page not found</div>,
+  notFoundComponent: () => <div className="prototype-404"><div><p className="font-mono text-xs uppercase tracking-[0.18em] text-system">ALVIRA / route not found</p><h1>404</h1><p className="mt-6 text-warm-gray">This thread does not exist yet.</p><a href="/" className="mt-8 inline-flex border border-system/60 px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-system">Return to the ecosystem →</a></div></div>,
   component: RootComponent,
 });
 
@@ -107,7 +109,7 @@ function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head><HeadContent /></head>
-      <body>
+      <body className="immersive-prototype">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-5 focus:py-3 focus:font-mono focus:text-sm focus:font-semibold focus:text-mineral focus:shadow-xl dark:focus:bg-ink-light dark:focus:text-mineral-dark">Skip to main content</a>
         {children}
         <Scripts />

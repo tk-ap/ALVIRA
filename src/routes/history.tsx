@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ContextHistoryGraphic } from "~/components/ImmersiveExplainers";
 import { getCurrentUser, listProfiles } from "./-auth";
 import { listContextHistory } from "./-contextVersions";
 
@@ -72,16 +73,7 @@ function HistoryPage() {
               <a href="/integrations" className="font-mono text-xs text-system-dark underline decoration-system/35 underline-offset-4 dark:text-system">Reuse this Context →</a>
             </div>
           </div>
-          <div className="space-y-4">
-            {[...versions].reverse().map((version, index) => <article key={`${version.version}-${version.current}`} className={`border p-5 sm:p-6 ${version.current ? "border-system/55 bg-system-soft/25" : "border-ink/12 dark:border-mineral/12"}`}>
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex items-center gap-3"><span className="font-mono text-xs text-system-dark dark:text-system">V{version.version}</span>{version.current && <span className="border border-system/50 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-system-dark dark:text-system">Current</span>}{index === 0 && !version.current ? <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-warm-gray-dark dark:text-warm-gray">Latest snapshot</span> : null}</div>
-                <time className="font-mono text-[10px] text-warm-gray-dark dark:text-warm-gray">{new Date(version.createdAt).toLocaleString()}</time>
-              </div>
-              <h3 className="mt-4 text-lg font-semibold">{version.changedDomains.length ? `${version.changedDomains.length} Context ${version.changedDomains.length === 1 ? "area" : "areas"} changed` : version.current ? "Current maintained state" : "Snapshot captured"}</h3>
-              {version.changedDomains.length > 0 ? <div className="mt-4 flex flex-wrap gap-2">{version.changedDomains.map((domain) => <span key={domain} className="border border-ink/12 px-2.5 py-1.5 font-mono text-[10px] text-warm-gray-dark dark:border-mineral/12 dark:text-warm-gray">{domainLabel(domain)}</span>)}</div> : <p className="mt-3 text-sm text-warm-gray-dark dark:text-warm-gray">No domain-level difference was detected from the prior stored state.</p>}
-            </article>)}
-          </div>
+          <ContextHistoryGraphic versions={versions} />
         </section>}
       </div>
     </main>

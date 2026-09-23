@@ -12,6 +12,29 @@ ALVIRA must not assume that a new account means a blank-slate user. A person may
 
 The onboarding system should treat those sources as **seed context**, not as unquestioned truth.
 
+## Interview Engine v2 direction: Context Baseline + Portability Proof
+
+The Interview Engine Lab is being treated as a v2 direction for the onboarding engine. In addition to building Context, v2 should help users test whether their existing AI stack appears to know relevant context, use that evidence to focus the interview, and then verify what changes when approved ALVIRA Context is made portable.
+
+The optional product loop is:
+
+```text
+OPTIONAL PRE-INTERVIEW BASELINE
+  → GAP MAP
+  → ADAPTIVE INTERVIEW
+  → CONTEXT MIRROR
+  → APPROVE / CORRECT
+  → PORTABLE CONTEXT
+  → CONNECT TOOLS
+  → RERUN THE SAME BASELINE
+  → CONTEXT LIFT REPORT
+  → MAINTAIN / UPDATE / REVOKE
+```
+
+Users may skip the baseline and proceed directly to the interview. When supplied, baseline outputs are evidence of what each tested tool appears to know—not facts about the user. ALVIRA classifies the evidence as known consistently, known unevenly, conflicting, missing, potentially stale, or needs verification, then uses that map to prioritize interview gaps without silently accepting imported claims.
+
+After Context creation and user review, ALVIRA reruns the same standardized questions against the same tools and reports observed Context Lift. The proof must also verify an update, a withheld category or item, and revocation, while distinguishing verified control behavior from a target tool simply failing to answer. See [Interview Engine Lab v2 — Context Baseline and Portability Proof](./INTERVIEW_ENGINE_LAB_V2_DIRECTION.md) for the full Lab direction and boundary.
+
 ---
 
 ## Canonical entry paths

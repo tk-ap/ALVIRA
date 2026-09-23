@@ -2,13 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ProductJourneyRail, ProposalReviewGraphic } from "~/components/ImmersiveExplainers";
 import { getCurrentUser, listProfiles } from "../-auth";
+import { formatStableDate } from "~/lib/stable-date";
 
 export const Route = createFileRoute("/bridge/")({
   head: () => ({
     meta: [
-      { title: "Bridge — ALVIRA" },
-      { name: "description", content: "Authorize compatible external clients to read selected ALVIRA Context without rebuilding it." },
+      { title: "Connect ALVIRA — governed Context access" },
+      { name: "description", content: "Connect another AI tool to an approved ALVIRA Context view with revocable access." },
     ],
   }),
   component: BridgePage,
@@ -146,9 +148,9 @@ function BridgePage() {
       <Header />
       <main id="main-content" className="flex-1 px-6 py-14">
         <div className="mx-auto max-w-5xl">
-          <p className="font-mono text-xs uppercase tracking-[0.22em] text-system">&lt; alvira / bridge &gt;</p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">Authorize another AI client to read your ALVIRA Context.</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">Bridge exposes only the Context you approve through a read-only authorization. Whether a destination incorporates that Context into a model response depends on the client and is still being validated.</p>
+          <p className="font-mono text-xs uppercase tracking-[0.22em] text-system">Connect ALVIRA / governed access</p>
+          <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">Connect ALVIRA to another AI tool.</h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">Choose the saved Context another tool may use. ALVIRA handles the governed connection underneath, and you can revoke it later.</p>
 
           {(justConnected || connections.length > 0) && (
             <div className="mt-6 rounded-xl border border-system/40 bg-system-soft/60 px-5 py-4 dark:bg-ink/40" role="status">
@@ -167,11 +169,14 @@ function BridgePage() {
             </div>
           )}
 
+          <ProductJourneyRail active="connect" />
+          <ProposalReviewGraphic activeConnections={connections.length} />
+
           <section className="mt-10" aria-labelledby="connected-heading">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="font-mono text-xs uppercase tracking-wider text-gray-500">Your connections</p>
-                <h2 id="connected-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">Who is authorized to read ALVIRA right now</h2>
+                <h2 id="connected-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">Who currently has approved access</h2>
               </div>
               <span className="font-mono text-xs uppercase tracking-wide text-system">{connections.length} active</span>
             </div>
@@ -194,7 +199,7 @@ function BridgePage() {
                     <dl className="mt-5 space-y-3 text-sm">
                       <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Can read</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{connection.profile_topic || "Approved ALVIRA Context"}</dd></div>
                       <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Permission</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Read only</dd></div>
-                      <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Renews access</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Reconnect after {new Date(connection.expires_at).toLocaleDateString()}</dd></div>
+                      <div><dt className="font-mono text-[10px] uppercase tracking-wider text-gray-500">Renews access</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">Reconnect after {formatStableDate(connection.expires_at)}</dd></div>
                     </dl>
                     <button type="button" onClick={() => revokeConnection(connection.connection_id)} disabled={busyId === connection.connection_id} className="mt-5 rounded-lg border border-red-300 px-4 py-2.5 font-mono text-xs font-semibold text-red-700 disabled:opacity-60 dark:border-red-800 dark:text-red-300">
                       {busyId === connection.connection_id ? "Removing…" : "Revoke connection"}
@@ -218,7 +223,7 @@ function BridgePage() {
 
           <section className="mt-12" aria-labelledby="available-heading">
             <p className="font-mono text-xs uppercase tracking-wider text-gray-500">Available connections</p>
-            <h2 id="available-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">Where do you want to use your Context?</h2>
+            <h2 id="available-heading" className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">What do you want to connect?</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <a href="/bridge/connect" className="group rounded-2xl border border-system/40 bg-system-soft/30 p-6 transition hover:border-system dark:bg-ink/20">
                 <p className="font-mono text-xs uppercase tracking-wider text-system">Recommended</p>
@@ -245,7 +250,7 @@ function BridgePage() {
             </div>
           </section>
 
-          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Bridge is read-only: connected tools cannot change ALVIRA's source Context.</p>
+          <p className="mt-8 text-xs leading-5 text-gray-500 dark:text-gray-400">{profiles.length} saved {profiles.length === 1 ? "Context is" : "Contexts are"} available for Bridge. Connected access is governed by ALVIRA. The current production Bridge remains read-only; write-back proposals are being developed as a separate reviewed flow.</p>
         </div>
       </main>
       <TrustFooter />

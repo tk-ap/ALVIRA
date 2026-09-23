@@ -1,4 +1,19 @@
-const links = [
+const explore = [
+  ["Context", "/context"],
+  ["Context example", "/context-example"],
+  ["Manual reuse", "/integrations"],
+  ["For organizations", "/partners"],
+] as const;
+
+const product = [
+  ["Start with ALVIRA", "/app"],
+  ["Connect ALVIRA", "/bridge"],
+  ["Pricing", "/pricing"],
+  ["Founding Beta", "/founding-beta"],
+  ["Sign in", "/login"],
+] as const;
+
+const trust = [
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],
   ["Refunds", "/refunds"],
@@ -8,15 +23,40 @@ const links = [
 
 export function TrustFooter() {
   return (
-    <footer className="border-t border-gray-200 dark:border-gray-800" aria-label="Trust and legal links">
-      <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-3 gap-y-2 px-6 py-6 font-mono text-xs text-gray-500 dark:text-gray-400">
-        <span>© 2026 ALVIRA</span>
-        {links.map(([label, href]) => (
-          <span key={href} className="flex items-center gap-x-3">
-            <span aria-hidden="true">·</span>
-            <a href={href} className="underline-offset-4 transition-colors hover:text-gray-900 hover:underline dark:hover:text-gray-100">{label}</a>
-          </span>
-        ))}
+    <footer className="immersive-footer" aria-label="ALVIRA site footer">
+      <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+        <div className="immersive-footer__grid">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-system">Context Intelligence</p>
+            <p className="immersive-footer__statement mt-4">Keep the understanding on your side.</p>
+          </div>
+
+          <div>
+            <p className="immersive-footer__label">Explore</p>
+            <nav className="immersive-footer__links" aria-label="Explore ALVIRA">
+              {explore.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+            </nav>
+          </div>
+
+          <div>
+            <p className="immersive-footer__label">Product</p>
+            <nav className="immersive-footer__links" aria-label="ALVIRA product links">
+              {product.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+            </nav>
+          </div>
+
+          <div>
+            <p className="immersive-footer__label">Trust</p>
+            <nav className="immersive-footer__links" aria-label="Trust and legal links">
+              {trust.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+            </nav>
+          </div>
+        </div>
+
+        <div className="immersive-footer__bottom">
+          <span>© 2026 ALVIRA</span>
+          <span>Immersive prototype · production untouched</span>
+        </div>
       </div>
     </footer>
   );

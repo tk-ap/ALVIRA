@@ -1,0 +1,34 @@
+name: Guest funnel preview E2E
+
+on:
+  pull_request:
+    paths:
+      - 'src/routes/app.tsx'
+      - 'src/routes/-questionGenerator.ts'
+      - 'src/lib/interview-prompts.ts'
+      - 'src/components/ImmersiveExplainers.tsx'
+      - 'src/styles/immersive-prototype.css'
+      - 'tests/guest-funnel-preview.mjs'
+      - '.github/workflows/guest-funnel-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guest-funnel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run signed-out prototype funnel against Vercel preview
+        env:
+          E2E_BASE_URL: https://alvira-git-prototype-immersive-interview-v1-alvira2.vercel.app
+        run: node tests/guest-funnel-preview.mjs

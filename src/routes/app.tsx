@@ -11,6 +11,7 @@ import { ingestUrlSource } from "./-sourceIngestor";
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
 import { TrustFooter } from "~/components/TrustFooter";
+import { LiveContextMirrorGraphic, ProductJourneyRail } from "~/components/ImmersiveExplainers";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
 import { extractClaims, type ExtractionResult } from "./-extractor";
@@ -547,6 +548,19 @@ function AppPage() {
   const gaps = state ? detectGaps(graph, state, confThreshold) : [];
   const hasGaps = gaps.length > 0;
   const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
+  const mirrorItems = state
+    ? graph.flatMap((domain) => {
+        const domainState = state.domains[domain.id];
+        const answers = domainState?.answers?.map((item) => item.trim()).filter(Boolean) ?? [];
+        if (answers.length === 0) return [];
+        const latest = answers[answers.length - 1];
+        return [{
+          label: domain.label,
+          value: latest.length > 180 ? `${latest.slice(0, 177)}…` : latest,
+          status: domainState.covered ? "captured" as const : "developing" as const,
+        }];
+      }).slice(0, 6)
+    : [];
 
   // ── Knowledge quality check ──
   // Warns when compiled files would be too thin to be useful.
@@ -614,7 +628,6 @@ function AppPage() {
     getCurrentUser().then(async (u) => {
       if (cancelled) return;
       if (u) {
-        setAuthUser({ id: u.id, email: u.email, tier: u.tier, isOwner: u.isOwner });
         // MeOS Build entitlement is always computed (not only for the meos URL) so the
         // free onboarding "what do you want to build?" choice can route free users to the
         // experience-first preview and entitled users to the full MeOS path.
@@ -634,37 +647,76 @@ function AppPage() {
           }
         } catch { /* ignore */ }
 
-        // An authenticated account draft takes precedence over a browser-local
-        // anonymous draft, which may otherwise mask a saved interview after login.
+        // Account/server state wins, but a signed-out interview must survive the
+        // authentication boundary. If no account draft exists yet, migrate the
+        // browser's anonymous draft into the authenticated account instead of
+        // changing storage scope and making the user's work appear to vanish.
         if (!draftRestoredRef.current) {
           try {
-            const localRaw = window.localStorage.getItem(
-              getInterviewDraftKey(
-                u.id,
-                offeringSearch === "meos" ? "meos" : "context",
-              ),
-            );
+            const draftOffering = offeringSearch === "meos" ? "meos" : "context";
+            const userDraftKey = getInterviewDraftKey(u.id, draftOffering);
+            const anonymousDraftKey = getInterviewDraftKey(null, draftOffering);
+            const localRaw = window.localStorage.getItem(userDraftKey);
+            const anonymousRaw = window.localStorage.getItem(anonymousDraftKey);
             const serverDraft = await getInterviewDraft().catch(() => null);
             const localDraft = localRaw ? JSON.parse(localRaw) : null;
-            const draft = serverDraft ?? localDraft;
+            const anonymousDraft = anonymousRaw ? JSON.parse(anonymousRaw) : null;
+
+            const candidates = [
+              serverDraft ? { draft: serverDraft, source: "account" as const, updatedAt: Date.parse((serverDraft as any).updated_at ?? "") || 0 } : null,
+              localDraft ? { draft: localDraft, source: "browser" as const, updatedAt: Number(localDraft.savedAt) || 0 } : null,
+              anonymousDraft ? { draft: anonymousDraft, source: "anonymous" as const, updatedAt: Number(anonymousDraft.savedAt) || 0 } : null,
+            ].filter(Boolean) as Array<{ draft: any; source: "account" | "browser" | "anonymous"; updatedAt: number }>;
+            candidates.sort((a, b) => b.updatedAt - a.updatedAt);
+            const selectedDraft = candidates[0] ?? null;
+            const draft = selectedDraft?.draft ?? null;
             if (draft?.state && !cancelled) {
               const draftState = draft.state as InterviewState;
               if (hasMeaningfulDraftInput(draftState)) {
+                const migratedOffering = draft.offering === "meos" ? "meos" : "context";
+                const migratedTopic = draft.topic ?? draft.state.topic;
                 setResumeDraft({
-                  offering: draft.offering === "meos" ? "meos" : "context",
-                  topic: draft.topic ?? draft.state.topic,
+                  offering: migratedOffering,
+                  topic: migratedTopic,
                   state: draftState,
                   savedAt: draft.savedAt,
-                  source: serverDraft ? "account" : "browser",
+                  source: selectedDraft?.source === "account" ? "account" : "browser",
                 });
+
+                if (selectedDraft?.source === "anonymous") {
+                  try {
+                    window.localStorage.setItem(
+                      getInterviewDraftKey(u.id, migratedOffering),
+                      JSON.stringify({ ...anonymousDraft, offering: migratedOffering, topic: migratedTopic }),
+                    );
+                  } catch { /* local persistence may be unavailable */ }
+
+                  try {
+                    await autosaveInterview({
+                      data: {
+                        offering: migratedOffering,
+                        topic: migratedTopic,
+                        state: draftState,
+                      },
+                    });
+                    try { window.localStorage.removeItem(anonymousDraftKey); } catch {}
+                  } catch {
+                    // Keep the anonymous copy if the account migration cannot be
+                    // persisted yet; the resume UI still preserves this session.
+                  }
+                }
               } else {
-                try { window.localStorage.removeItem(getInterviewDraftKey(u.id, draft.offering === "meos" ? "meos" : "context")); } catch {}
+                try { window.localStorage.removeItem(userDraftKey); } catch {}
                 if (serverDraft) await clearInterviewDraft().catch(() => {});
               }
               draftRestoredRef.current = true;
             }
           } catch { /* malformed or unavailable draft */ }
         }
+        // Publish authenticated state only after the migration above. This prevents
+        // the normal autosave effect from creating a newer browser copy and causing
+        // the signed-out draft to be skipped as the migration source.
+        setAuthUser({ id: u.id, email: u.email, tier: u.tier, isOwner: u.isOwner });
         const profileId = new URLSearchParams(window.location.search).get("profile");
         if (profileId) {
           try {
@@ -1572,6 +1624,7 @@ function AppPage() {
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
+            <ProductJourneyRail active="inspect" />
             {offering && contextSourcePanel}
             
             {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
@@ -1678,6 +1731,8 @@ function AppPage() {
             {state?.topic ? ` — ${state.topic}` : ""}
           </h1>
           <div className="relative mx-auto w-full max-w-3xl flex-1 flex flex-col py-6">
+            <ProductJourneyRail active="understand" />
+            <LiveContextMirrorGraphic items={mirrorItems} currentLabel={domainLabel || undefined} />
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4" aria-live="polite" aria-label="Interview conversation">
               {seededInfo && (
@@ -1953,6 +2008,7 @@ function AppPage() {
         {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
         <main id="main-content" className="flex-1 px-6 py-10">
           <div className="mx-auto w-full max-w-3xl">
+            <ProductJourneyRail active="inspect" />
             <button
               type="button"
               onClick={abandonUpload}
@@ -2096,6 +2152,7 @@ function AppPage() {
       {limitModal && <UpgradeModal onClose={() => setLimitModal(null)} reason={limitModal} email={authUser?.email} />}
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="mx-auto w-full max-w-5xl">
+          <ProductJourneyRail active="talk" />
           
           {resumeDraft && (
             <section aria-labelledby="resume-heading" className="mb-8 rounded-xl border border-emerald-300 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-6">

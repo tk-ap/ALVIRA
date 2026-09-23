@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { BetaExchangeGraphic } from "~/components/ImmersiveExplainers";
 import { submitFoundingBetaApplication } from "~/routes/-beta";
 
 export const Route = createFileRoute("/founding-beta")({
@@ -59,27 +60,12 @@ function FoundingBetaPage() {
             <div>
               <span className="inline-block rounded-md border border-system px-3 py-1.5 font-mono text-xs tracking-wide text-system-dark dark:border-system-dark dark:text-system">&lt;founding-beta /&gt;</span>
               <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl">Help make ALVIRA useful for more people.</h1>
-              <p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
-                We’re opening a small number of Founding Beta accounts to people who genuinely want to use ALVIRA and tell us where the workflow works, where it breaks, and whether maintained Context actually makes AI more useful to them.
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+                Use the full product in real work. Show us what helps, what confuses you, and what breaks.
               </p>
-
-              <div className="mt-9 space-y-6 border-l border-system pl-5">
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">What you get</p>
-                  <p className="mt-2 leading-relaxed text-gray-700 dark:text-gray-300">Complimentary unlimited access to ALVIRA’s customer-facing product capabilities under the account that receives the Founding Beta entitlement. That access stays with the account for the life of the ALVIRA service.</p>
-                </div>
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">What we ask</p>
-                  <p className="mt-2 leading-relaxed text-gray-700 dark:text-gray-300">Actually use the product during the beta and give candid feedback on the workflow, UI, relevance, effectiveness, confusion, and failures you encounter.</p>
-                </div>
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-wider text-system-dark dark:text-system">Why spots are limited</p>
-                  <p className="mt-2 leading-relaxed text-gray-700 dark:text-gray-300">The point is not to collect the largest waitlist. It is to learn from a small cohort closely enough that the product becomes more viable for the people who come next.</p>
-                </div>
-              </div>
-
-              <p className="mt-8 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                Founding Beta is not “free Pro forever.” It is a separate founding entitlement for early testers who help shape the product. Applications are reviewed; access is not granted automatically.
+              <BetaExchangeGraphic />
+              <p className="mt-6 font-mono text-[10px] uppercase leading-5 tracking-[0.1em] text-gray-500 dark:text-gray-400">
+                Limited cohort · reviewed individually · separate founding entitlement · access is never automatic
               </p>
             </div>
 

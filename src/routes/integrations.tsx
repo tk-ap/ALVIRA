@@ -2,12 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { PortabilityGraphic } from "~/components/ImmersiveExplainers";
 import { deriveOpportunityCandidates, opportunityFeedbackKey, type OpportunityCandidate } from "~/lib/opportunity-candidates";
 import { getCurrentUser, listProfiles, loadProfile } from "./-auth";
 import { trackEvent } from "./-tracking";
 
 export const Route = createFileRoute("/integrations")({
-  head: () => ({ meta: [{ title: "Reuse your Context — ALVIRA" }, { name: "description", content: "Carry your ALVIRA Context into the AI tools and agents you choose." }] }),
+  head: () => ({ meta: [{ title: "Manual Context reuse — ALVIRA" }, { name: "description", content: "Manually prepare and copy selected ALVIRA Context into another AI tool." }] }),
   component: ReuseContextPage,
 });
 
@@ -218,11 +219,12 @@ function ReuseContextPage() {
     <main id="main-content" className="flex-1">
       <section className="border-b border-ink/10 px-6 py-16 dark:border-mineral/10 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-system-dark dark:text-system">Reuse / Context portability</p>
-          <div className="mt-5 grid gap-10 lg:grid-cols-[1fr_360px] lg:items-end">
-            <div><h1 className="max-w-4xl font-display text-5xl leading-[0.92] tracking-[-0.04em] sm:text-7xl">Maintain once. Carry forward where appropriate.</h1><p className="mt-6 max-w-2xl text-base leading-7 text-warm-gray-dark dark:text-warm-gray">ALVIRA does not need to own every AI interaction. Reuse lets you take selected, maintained Context into the tools you already use.</p></div>
-            <div className="border-l border-system/50 pl-5"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Consent boundary</p><p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Nothing is silently synced. You preview and copy what will leave ALVIRA. Live authorization is reserved for Bridge and other explicitly connected surfaces.</p></div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-system-dark dark:text-system">Manual reuse / portable Context</p>
+          <div className="mt-5 max-w-4xl">
+            <h1 className="font-display text-5xl leading-[0.92] tracking-[-0.04em] sm:text-7xl">Need a copy? Prepare only the Context you want to carry.</h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-warm-gray-dark dark:text-warm-gray">Manual reuse is the fallback: preview, copy, and paste selected Context yourself. For governed connected access, use Connect ALVIRA.</p>
           </div>
+          <PortabilityGraphic />
         </div>
       </section>
 
@@ -238,7 +240,7 @@ function ReuseContextPage() {
 
           <div className="grid gap-4 md:grid-cols-2">{providers.map((item) => <article key={item.name} className="flex min-h-64 flex-col border border-ink/12 p-6 dark:border-mineral/12"><div className="flex items-start justify-between gap-4"><span className="flex h-11 w-11 items-center justify-center rounded-full border border-ink/15 font-mono text-[10px] dark:border-mineral/15">{item.mark}</span><span className="border border-system/35 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-system-dark dark:text-system">{item.status}</span></div><h3 className="mt-5 text-xl font-semibold">{item.name}</h3><p className="mt-3 flex-1 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">{item.description}</p><button type="button" onClick={() => prepare(item)} className="mt-6 min-h-11 border border-system/50 px-4 py-2.5 font-mono text-xs font-semibold text-system-dark hover:bg-system-soft/40 dark:text-system">Prepare for {item.name} →</button></article>)}</div>
 
-          {!localDraftMode && <div className="mt-8 grid gap-4 lg:grid-cols-2"><a href="/bridge" className="border border-iridescent/40 p-6 transition-colors hover:bg-iridescent-soft/25"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-iridescent-dark dark:text-iridescent">Bridge / authorization beta</p><h3 className="mt-3 text-xl font-semibold">Let an authorized agent request Context.</h3><p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Bridge is the governed path for connected access. It is different from manual reuse and should remain consent-scoped.</p></a><a href="/history" className="border border-human/35 p-6 transition-colors hover:bg-human-soft/20"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-human-dark dark:text-human">History / what changed</p><h3 className="mt-3 text-xl font-semibold">Inspect how this Context has evolved.</h3><p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Version history makes change visible instead of treating the latest state as if it had always been true.</p></a></div>}
+          {!localDraftMode && <div className="mt-8 grid gap-4 lg:grid-cols-2"><a href="/bridge" className="border border-iridescent/40 p-6 transition-colors hover:bg-iridescent-soft/25"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-iridescent-dark dark:text-iridescent">Connect ALVIRA / governed access</p><h3 className="mt-3 text-xl font-semibold">Let an authorized agent request Context.</h3><p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Bridge is the governed path for connected access. It is different from manual reuse and should remain consent-scoped.</p></a><a href="/history" className="border border-human/35 p-6 transition-colors hover:bg-human-soft/20"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-human-dark dark:text-human">History / what changed</p><h3 className="mt-3 text-xl font-semibold">Inspect how this Context has evolved.</h3><p className="mt-3 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">Version history makes change visible instead of treating the latest state as if it had always been true.</p></a></div>}
           {message && <p className="mt-5 font-mono text-xs text-system-dark dark:text-system" role="status">{message}</p>}
         </>}
       </div></section>

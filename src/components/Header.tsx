@@ -60,20 +60,22 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-warm-gray/12 bg-ink-light/94 backdrop-blur-md dark:bg-ink/94">
+      <header className="immersive-site-header sticky top-0 z-50 w-full border-b border-warm-gray/12 bg-ink-light/94 backdrop-blur-md dark:bg-ink/94">
         <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
           <div className="flex min-h-[68px] items-center justify-between gap-6">
             <a href="/" className="flex min-h-11 items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:focus-visible:outline-system">
               <span className="flex items-center gap-3">
                 <img src="/brand/alvira-wordmark-primary-dark.svg" alt="ALVIRA wordmark" className="hidden h-7 w-auto dark:block" />
                 <img src="/brand/alvira-wordmark-primary-light.svg" alt="ALVIRA wordmark" className="h-7 w-auto dark:hidden" />
+                <span className="immersive-header-mark">Prototype</span>
               </span>
             </a>
 
             <div className={desktopNavClass}>
               <nav aria-label="Primary navigation" className="flex items-center gap-5">
-                <a href="/#possibilities" className={desktopLinkClass}>How it helps</a>
+                <a href="/" className={desktopLinkClass}>Experience</a>
                 <a href="/context" className={desktopLinkClass}>Context</a>
+                <a href="/integrations" className={desktopLinkClass}>Manual reuse</a>
                 <a href="/partners" className={desktopLinkClass}>For organizations</a>
                 <a href="/pricing" className={desktopLinkClass}>Pricing</a>
               </nav>
@@ -84,7 +86,7 @@ export function Header() {
                 ) : user ? (
                   <div className="flex items-center gap-4">
                     <a href="/dashboard" className={desktopLinkClass}>Dashboard</a>
-                    <a href="/bridge" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Bridge</a>
+                    <a href="/bridge" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Connect</a>
                     <a href="/build-brief" className={desktopLinkClass}>Build Brief</a>
                     <a href="/history" className={desktopLinkClass}>History</a>
                     <a href="/account" className={desktopLinkClass}>Account</a>
@@ -120,14 +122,14 @@ export function Header() {
               <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5" aria-hidden="true" />
               AI that starts with your context
             </div>
-            <a href="/#possibilities" onClick={closeMenu} className={mobileLinkClass}>What AI can help with</a>
+            <a href="/" onClick={closeMenu} className={mobileLinkClass}>Experience</a>
             <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
             <a href="/app?offering=meos&preview=false" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
-            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Use elsewhere</a>
+            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Manual reuse</a>
             <a href="/partners" onClick={closeMenu} className={mobileLinkClass}>For organizations</a>
             <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
             {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
-            {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Bridge</a> : null}
+            {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Connect ALVIRA</a> : null}
             {user ? <a href="/build-brief" onClick={closeMenu} className={mobileLinkClass}>Build Brief</a> : null}
             {user ? <a href="/history" onClick={closeMenu} className={mobileLinkClass}>History</a> : null}
             {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}

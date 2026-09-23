@@ -1,0 +1,45 @@
+name: Authenticated continuity preview E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/routes/app.tsx'
+      - 'src/routes/login.tsx'
+      - 'src/routes/-auth.ts'
+      - 'src/routes/dashboard.tsx'
+      - 'src/routes/history.tsx'
+      - 'src/routes/bridge/**'
+      - 'src/routes/-contextVersions.ts'
+      - 'src/components/ImmersiveExplainers.tsx'
+      - 'tests/authenticated-continuity-preview.mjs'
+      - '.github/workflows/authenticated-continuity-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  authenticated-continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      E2E_BASE_URL: https://alvira-git-prototype-immersive-interview-v1-alvira2.vercel.app
+      ALVIRA_TEST_EMAIL: codex-smoke-1786676512909@example.com
+      ALVIRA_TEST_PASSWORD: ${{ secrets.ALVIRA_TEST_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require smoke credential
+        run: |
+          if [ -z "$ALVIRA_TEST_PASSWORD" ]; then
+            echo "ALVIRA_TEST_PASSWORD repository secret is not configured."
+            exit 1
+          fi
+      - name: Install Chromium runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify authenticated Context continuity
+        run: node tests/authenticated-continuity-preview.mjs

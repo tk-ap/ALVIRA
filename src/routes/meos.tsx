@@ -3,6 +3,7 @@ import JSZip from "jszip";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
+import { ReflectLoopGraphic } from "~/components/ImmersiveExplainers";
 import { getMeosProfiles, getCurrentUser, getEntitlements } from "./-auth";
 import { trackEvent } from "./-tracking";
 import { compileMeosKnowledge, type MeosPortrait } from "./-meosCompiler";
@@ -389,6 +390,7 @@ function MeosPage() {
             </select>
           )}
         </div>
+        {profile ? <ReflectLoopGraphic topic={profile.topic} updatedAt={profile.updated_at} hasPortrait={Boolean(portrait)} /> : null}
         {isPreviewUser && (
           <div className="mb-8 rounded-lg border border-system/40 bg-system-soft p-5 text-sm leading-6 text-gray-800 dark:bg-ink/30 dark:text-gray-200">
             <strong>This is your ALVIRA Reflect Preview.</strong>{" "}

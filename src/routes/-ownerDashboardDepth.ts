@@ -169,7 +169,7 @@ export const getOwnerDashboardDepth = createServerFn({ method: "GET" }).handler(
       SELECT
         (SELECT COUNT(DISTINCT m.user_id)::int FROM meaningful m JOIN users u ON u.id=m.user_id WHERE m.at>=NOW()-INTERVAL '30 days' AND LOWER(u.email)<>ALL($1::text[])) AS active_users_30d,
         (SELECT COUNT(DISTINCT p.user_id)::int FROM profiles p JOIN users u ON u.id=p.user_id WHERE p.updated_at>=NOW()-INTERVAL '30 days' AND LOWER(u.email)<>ALL($1::text[])) AS context_users_30d,
-        (SELECT COUNT(DISTINCT p.user_id)::int FROM profiles p JOIN users u ON u.id=p.user_id WHERE p.offering='meos' AND p.updated_at>=NOW()-INTERVAL '30 days' AND LOWER(u.email)<>ALL($1::text[])) AS reflect_users_30d,
+        (SELECT COUNT(DISTINCT p.user_id)::int FROM profiles p JOIN users u ON u.id=p.user_id WHERE p.offering='dossier' AND p.updated_at>=NOW()-INTERVAL '30 days' AND LOWER(u.email)<>ALL($1::text[])) AS reflect_users_30d,
         (SELECT COUNT(DISTINCT b.user_id)::int FROM bridge_access_tokens b JOIN users u ON u.id=b.user_id WHERE b.created_at>=NOW()-INTERVAL '30 days' AND LOWER(u.email)<>ALL($1::text[])) AS bridge_users_30d,
         (SELECT COUNT(DISTINCT e.user_id)::int FROM events e JOIN users u ON u.id=e.user_id WHERE e.name='export_performed' AND e.created_at>=NOW()-INTERVAL '30 days' AND LOWER(u.email)<>ALL($1::text[])) AS export_users_30d`, [excluded]),
     db.query(`

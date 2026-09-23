@@ -7,7 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import OpenAI from "openai";
 import { getKnowledgeGraph, type Tier } from "./-knowledgeGraph";
-import { getMeosGraph } from "./-meosGraph";
+import { getDossierGraph } from "./-dossierGraph";
 
 export interface ExtractionClaim {
   domainId: string;
@@ -36,7 +36,7 @@ interface ExtractInput {
    */
   tier?: unknown;
   topic: string;
-  offering?: "context" | "meos";
+  offering?: "context" | "dossier";
 }
 
 // 60k chars ≈ well under the 5MB file cap, but a reasonable LLM context budget.
@@ -83,7 +83,7 @@ export const extractClaims = createServerFn({ method: "POST" })
       text: d.text.slice(0, MAX_INPUT_CHARS),
       contextScope,
       topic: typeof d.topic === "string" ? d.topic.slice(0, 500) : "",
-      offering: d.offering === "meos" ? "meos" : "context",
+      offering: d.offering === "dossier" ? "dossier" : "context",
     };
   })
   .handler(async ({ data }) => {
@@ -93,7 +93,7 @@ export const extractClaims = createServerFn({ method: "POST" })
 
     const openai = getOpenAIClient();
 
-    const graph = data.offering === "meos" ? getMeosGraph() : getKnowledgeGraph(data.contextScope);
+    const graph = data.offering === "dossier" ? getDossierGraph() : getKnowledgeGraph(data.contextScope);
     const domainIds = new Set(graph.map((d) => d.id));
     const catalog = graph.map((d) => `- ${d.id}: ${d.label} — ${d.description}`).join("\n");
 

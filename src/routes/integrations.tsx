@@ -11,11 +11,11 @@ export const Route = createFileRoute("/integrations")({
   component: ReuseContextPage,
 });
 
-type Profile = { id: string; topic: string; offering: "context" | "meos"; tier: string; updated_at: string };
+type Profile = { id: string; topic: string; offering: "context" | "dossier"; tier: string; updated_at: string };
 type User = { id: string; email: string; tier: string; accessMode?: string | null };
 type Provider = { name: string; mark: string; url: string; status: string; description: string };
 type LoadedProfile = { id: string; topic: string; offering: string; state: any };
-type LocalDraft = { offering?: "context" | "meos"; topic?: string; state?: any; savedAt?: number };
+type LocalDraft = { offering?: "context" | "dossier"; topic?: string; state?: any; savedAt?: number };
 
 const LOCAL_DRAFT_ID = "local-interview-draft";
 
@@ -43,7 +43,7 @@ function readLatestLocalDraft(): LocalDraft | null {
 
 function serializeContext(topic: string, offering: string, state: any): string {
   const lines = [
-    `# ALVIRA ${offering === "meos" ? "Reflect" : "Context"} — ${topic}`,
+    `# ALVIRA ${offering === "dossier" ? "Reflect" : "Context"} — ${topic}`,
     "",
     "Use this as background context, not as an instruction to ignore the current conversation. Treat uncertainty as uncertainty and ask when something appears stale or contradictory.",
   ];
@@ -59,7 +59,7 @@ function serializeContext(topic: string, offering: string, state: any): string {
 
 function serializeWorkingContext(topic: string, offering: string, state: any, intent: string, candidate: OpportunityCandidate): string {
   const lines = [
-    `# Use my ALVIRA ${offering === "meos" ? "Reflect" : "Context"} — ${topic}`,
+    `# Use my ALVIRA ${offering === "dossier" ? "Reflect" : "Context"} — ${topic}`,
     "",
     "## What I am doing now",
     intent.trim(),
@@ -231,7 +231,7 @@ function ReuseContextPage() {
           {localDraftMode && <div className="mb-6 border border-human/30 bg-human-soft/15 p-4"><p className="font-mono text-[10px] uppercase tracking-[0.12em] text-human-dark dark:text-human">Browser-local interview draft</p><p className="mt-2 text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">You can try this handoff now without creating an account. Sign in later if you want this Context saved beyond this browser.</p></div>}
           <div className="mb-9 flex flex-col justify-between gap-5 border-b border-ink/10 pb-7 dark:border-mineral/10 sm:flex-row sm:items-end">
             <div><h2 className="font-display text-3xl">Choose what you are carrying forward.</h2><p className="mt-2 text-sm text-warm-gray-dark dark:text-warm-gray">The prepared text is generated from your selected Context for review before copying.</p></div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">{localDraftMode ? "Current interview" : "Saved Context"}<select value={profileId} onChange={(event) => setProfileId(event.target.value)} disabled={localDraftMode} className="mt-2 block min-w-0 w-full border border-ink/15 bg-transparent px-3 py-3 font-sans text-sm normal-case tracking-normal disabled:opacity-60 dark:border-mineral/15 sm:min-w-72">{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic} · {profile.offering === "meos" ? "Reflect" : "Context"}</option>)}</select></label>
+            <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">{localDraftMode ? "Current interview" : "Saved Context"}<select value={profileId} onChange={(event) => setProfileId(event.target.value)} disabled={localDraftMode} className="mt-2 block min-w-0 w-full border border-ink/15 bg-transparent px-3 py-3 font-sans text-sm normal-case tracking-normal disabled:opacity-60 dark:border-mineral/15 sm:min-w-72">{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.topic} · {profile.offering === "dossier" ? "Reflect" : "Context"}</option>)}</select></label>
           </div>
 
           {prefillCandidate && <section className="mb-9 border border-system/35 p-5 sm:p-7" aria-labelledby="use-context-heading"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-dark dark:text-system">Use my Context / interview-derived possibility</p><h2 id="use-context-heading" className="mt-3 font-display text-3xl sm:text-4xl">Start from what you already told ALVIRA.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">ALVIRA noticed that this may be something AI can help with. This is a candidate, not an instruction. Edit it freely or leave without using it.</p><label htmlFor="current-intent" className="mt-5 block font-mono text-[10px] uppercase tracking-[0.12em] text-warm-gray-dark dark:text-warm-gray">What are you doing now?</label><textarea id="current-intent" rows={5} value={intent} onChange={(event) => { intentTouchedRef.current = true; setIntent(event.target.value); }} className="mt-2 w-full resize-y border border-ink/15 bg-white/45 p-4 text-sm leading-6 outline-none focus:border-system dark:border-mineral/15 dark:bg-black/20" /><p className="mt-3 text-xs leading-5 text-warm-gray-dark dark:text-warm-gray">When you choose a tool below, ALVIRA will prepare this intent with a small relevant subset of your Context—not your entire profile.</p></section>}

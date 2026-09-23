@@ -56,14 +56,14 @@ Do not create a separate Dossier pricing card unless future evidence shows a gen
 
 As of this positioning update, the public product already supports Context export/reuse patterns, but the complete encrypted Dossier, restore/import, and selective-disclosure system is **forthcoming**. Public copy must mark these advanced Dossier capabilities as being built/shipped in stages rather than implying they are already complete.
 
-## MeOS origin
+## Dossier origin
 
 Preserve this origin story:
 
-> MeOS began with the question of whether a person could hold a durable, private representation of themselves that intelligence could work from. The encrypted dossier was the original object. ALVIRA became the Context Intelligence system required to keep that object accurate, alive, inspectable, and useful over time.
+> Dossier began with the question of whether a person could hold a durable, private representation of themselves that intelligence could work from. The encrypted dossier was the original object. ALVIRA became the Context Intelligence system required to keep that object accurate, alive, inspectable, and useful over time.
 
 Short internal shorthand:
 
-**MeOS began as the dossier. ALVIRA became the system that keeps the dossier alive.**
+**Dossier began as the dossier. ALVIRA became the system that keeps the dossier alive.**
 
-This history belongs in the Build Journal/product archive even though MeOS is no longer a separate public product.
+This history belongs in the Build Journal/product archive even though Dossier is no longer a separate public product.

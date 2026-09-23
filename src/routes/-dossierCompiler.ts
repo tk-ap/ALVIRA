@@ -1,7 +1,7 @@
 import type { Domain, InterviewState } from "./-knowledgeGraph";
 import OpenAI from "openai";
 
-export interface MeosPortrait {
+export interface DossierPortrait {
   portrait: string;
   purposeStatements: { personal: string; professional: string };
   decisionCompass: string;
@@ -10,7 +10,7 @@ export interface MeosPortrait {
   sourceConfidence: { userSupplied: string[]; inferred: string[]; selfValidated: string[] };
 }
 
-const emptyPortrait = (): MeosPortrait => ({
+const emptyPortrait = (): DossierPortrait => ({
   portrait: "Your portrait will take shape as you share more about your current chapter, values, and direction.",
   purposeStatements: { personal: "", professional: "" }, decisionCompass: "When facing a decision, ask yourself what aligns with your values and boundaries.",
   dailyAlignment: "Take a moment to notice what matters today and choose one action that supports it.", cycles: "Your current chapter is still unfolding.",
@@ -18,7 +18,7 @@ const emptyPortrait = (): MeosPortrait => ({
 });
 
 /** Generate a reflective portrait strictly from interview evidence. */
-export async function generatePortrait(state: InterviewState): Promise<MeosPortrait | { error: string }> {
+export async function generatePortrait(state: InterviewState): Promise<DossierPortrait | { error: string }> {
   const a = (id: string) => state.domains[id]?.answers ?? [];
   const source = Object.fromEntries(["currentChapter", "desiredOutcomes", "values", "boundaries", "goals", "decisionPatterns", "workHistory", "definitionOfSuccess", "frameworks", "birthData", "review", "validation"].map(id => [id, a(id)]));
   try {
@@ -30,12 +30,12 @@ export async function generatePortrait(state: InterviewState): Promise<MeosPortr
     const parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
     return { ...emptyPortrait(), ...parsed, purposeStatements: { ...emptyPortrait().purposeStatements, ...(parsed.purposeStatements || {}) }, sourceConfidence: { ...emptyPortrait().sourceConfidence, ...(parsed.sourceConfidence || {}) } };
   } catch (error) {
-    console.error("MeOS portrait generation failed", error);
+    console.error("Dossier portrait generation failed", error);
     return { error: "Portrait generation failed" };
   }
 }
 
-export interface MeosOutput {
+export interface DossierOutput {
   portrait: string;
   purposeStatements: string;
   boundaries: string;
@@ -52,12 +52,12 @@ function section(title: string, answers: string[], empty = "_No information gath
   return `## ${title}\n\n${answers.length ? answers.map(tag).join("\n\n") : empty}\n`;
 }
 
-export function compileInterviewMarkdown(state: InterviewState, graph: Domain[] = []): MeosOutput {
-  return compileMeosKnowledge(state, graph);
+export function compileInterviewMarkdown(state: InterviewState, graph: Domain[] = []): DossierOutput {
+  return compileDossierKnowledge(state, graph);
 }
 
-/** Deterministic MeOS compiler. It never calls an LLM. */
-export function compileMeosKnowledge(state: InterviewState, graph: Domain[] = []): MeosOutput {
+/** Deterministic Dossier compiler. It never calls an LLM. */
+export function compileDossierKnowledge(state: InterviewState, graph: Domain[] = []): DossierOutput {
   const domains = state?.domains ?? {};
   const answers = (id: string) => domains[id]?.answers ?? [];
   const frameworkValues = answers("frameworks");

@@ -9,15 +9,15 @@
 
 ## Executive Summary
 
-The site is materially more coherent and credible than the previous audited version. The homepage, pricing presentation, MeOS explanation, mobile navigation, selected states, legal pages, and adaptive interview behavior are all strong enough for a small cohort.
+The site is materially more coherent and credible than the previous audited version. The homepage, pricing presentation, Dossier explanation, mobile navigation, selected states, legal pages, and adaptive interview behavior are all strong enough for a small cohort.
 
 The product is not yet ready for a self-serve first-10 launch because the core promised outcome fails in the tested guest flow: after the interface explicitly allowed knowledge-file generation, compilation threw a client-side exception and remained permanently stuck on `Compiling...` without an error message, retry, or recovery path.
 
-There are also two separate MeOS launch failures: the public `Try MeOS Preview — free` CTA resolves to `preview=false` and is then blocked by the paid-access gate, and selecting a theme overwrites the user's current-chapter answer. At checkout, the Pro description claims JSON export and version history without the site's `coming soon` qualifiers, and MeOS Build does not disclose its required base plan. Those discrepancies should be corrected before accepting payment.
+There are also two separate Dossier launch failures: the public `Try Dossier Preview — free` CTA resolves to `preview=false` and is then blocked by the paid-access gate, and selecting a theme overwrites the user's current-chapter answer. At checkout, the Pro description claims JSON export and version history without the site's `coming soon` qualifiers, and Dossier Build does not disclose its required base plan. Those discrepancies should be corrected before accepting payment.
 
 A market-positioning addendum also finds that Littlebird is a useful adjacent comparison, but not a direct product-mechanism comparison. Both products address the broader problem of AI lacking durable context, while Littlebird primarily builds context by observing digital activity and ALVIRA builds it through intentional elicitation, validation, and compilation into a user-controlled artifact. This finding does not change the launch recommendation or add a new P0 blocker. It does strengthen the need to make ALVIRA's distinct mechanism, ownership model, and recurring value understandable to a layperson.
 
-A subsequent direct-competitor review identifies Creed as the closest current competitor to ALVIRA Personal: it offers onboarding-generated personal context, owned Markdown, cross-agent access, user-approved updates, and hosted, self-hosted, company, and Lifetime options. Purpose is the clearest current outcome competitor for MeOS because it combines an initial personal assessment, persistent context, and ongoing guidance around values, goals, patterns, and decisions. These findings validate demand for the problem ALVIRA addresses, but they also mean that portability, persistent context, and “AI that knows you” are no longer sufficient differentiators on their own.
+A subsequent direct-competitor review identifies Creed as the closest current competitor to ALVIRA Personal: it offers onboarding-generated personal context, owned Markdown, cross-agent access, user-approved updates, and hosted, self-hosted, company, and Lifetime options. Purpose is the clearest current outcome competitor for Dossier because it combines an initial personal assessment, persistent context, and ongoing guidance around values, goals, patterns, and decisions. These findings validate demand for the problem ALVIRA addresses, but they also mean that portability, persistent context, and “AI that knows you” are no longer sufficient differentiators on their own.
 
 ### Recommended launch decision
 
@@ -59,19 +59,19 @@ Knowledge compilation is the product's central promise. A user can complete the 
 
 ![Compilation stuck after the permitted action](./10-knowledge-files-result.png)
 
-### P0.2 — The advertised free MeOS preview is not available
+### P0.2 — The advertised free Dossier preview is not available
 
 **Observed behavior**
 
-- The MeOS landing-page CTA advertises `Try MeOS Preview — free` and points to `/app?offering=meos&preview=true`.
-- After navigation, the URL became `/app?offering=meos&preview=false`.
-- Starting the flow produced a paid-access message requiring a Pro or Lifetime plan plus MeOS Build.
+- The Dossier landing-page CTA advertises `Try Dossier Preview — free` and points to `/app?offering=dossier&preview=true`.
+- After navigation, the URL became `/app?offering=dossier&preview=false`.
+- Starting the flow produced a paid-access message requiring a Pro or Lifetime plan plus Dossier Build.
 
 **Required decision**
 
 Choose one behavior and make every surface consistent:
 
-1. **Recommended:** restore a genuinely free, bounded MeOS preview and preserve `preview=true`; or
+1. **Recommended:** restore a genuinely free, bounded Dossier preview and preserve `preview=true`; or
 2. remove the free-preview CTA and replace it with an accurate preview/demo description.
 
 **Acceptance criteria**
@@ -80,9 +80,9 @@ Choose one behavior and make every surface consistent:
 - An unauthenticated user can complete the advertised preview without purchasing, if the CTA continues to say `free`.
 - The preview clearly states what is and is not saved or generated.
 
-![MeOS preview resolves to a paid-access gate](./14-meos-preview-access-gate.png)
+![Dossier preview resolves to a paid-access gate](./14-dossier-preview-access-gate.png)
 
-### P0.3 — MeOS onboarding corrupts user input
+### P0.3 — Dossier onboarding corrupts user input
 
 **Observed behavior**
 
@@ -111,21 +111,21 @@ The onboarding step silently discards the user's primary free-form context befor
 
 - Monthly and annual Pro checkout descriptions advertise `Markdown/JSON exports` and `version history` as current capabilities.
 - The site pricing page labels JSON export and version history as `coming soon`.
-- MeOS Build checkout does not state that an eligible ALVIRA base plan is required.
-- The live site and legal pages disagree on whether Lifetime qualifies: the access gate says `Pro or Lifetime`, while Terms and the MeOS purchase explanation specify active Pro.
+- Dossier Build checkout does not state that an eligible ALVIRA base plan is required.
+- The live site and legal pages disagree on whether Lifetime qualifies: the access gate says `Pro or Lifetime`, while Terms and the Dossier purchase explanation specify active Pro.
 
 **Required change**
 
 - Change Stripe product descriptions to list only currently delivered features.
 - Add `coming soon` only where appropriate, or omit unreleased features from the checkout entirely.
-- State the MeOS Build prerequisite on the checkout page itself and enforce it in entitlement logic.
-- Decide whether Lifetime qualifies for MeOS, then make the landing page, pricing, Terms, access gate, checkout, and provisioning logic identical.
+- State the Dossier Build prerequisite on the checkout page itself and enforce it in entitlement logic.
+- Decide whether Lifetime qualifies for Dossier, then make the landing page, pricing, Terms, access gate, checkout, and provisioning logic identical.
 - Configure the checkout's public merchant identity so users understand they are paying ALVIRA. The tested checkout showed `cto.new` branding and a page title of `Tahlia Ash` rather than ALVIRA.
 
 **Acceptance criteria**
 
 - Checkout descriptions match the production feature set word-for-word.
-- A user cannot accidentally purchase MeOS Build or Care without the required prerequisite.
+- A user cannot accidentally purchase Dossier Build or Care without the required prerequisite.
 - The merchant name and support identity are recognizable as ALVIRA or clearly disclosed as its legal operator.
 - A complete Stripe test transaction provisions the correct plan and returns the user to a working ALVIRA account.
 
@@ -141,7 +141,7 @@ The public signup, login, validation, and password-reset entry pages were presen
 - password reset delivery and completion;
 - Stripe success/cancel return routes;
 - webhook processing and plan entitlement;
-- Pro, Lifetime, MeOS Build, and MeOS Care access boundaries;
+- Pro, Lifetime, Dossier Build, and Dossier Care access boundaries;
 - cancellation, refund, export, and deletion operations.
 
 **Required test**
@@ -179,19 +179,19 @@ The onboarding prominently advertises document upload. The control is disabled b
 
 ### P1.3 — Align purchase and legal language
 
-The legal pages are present and readable, but base-plan eligibility for MeOS is inconsistent. The signup form also does not place an agreement statement next to `Create account`; Terms and Privacy are available only in the page footer.
+The legal pages are present and readable, but base-plan eligibility for Dossier is inconsistent. The signup form also does not place an agreement statement next to `Create account`; Terms and Privacy are available only in the page footer.
 
 **Recommendation**
 
 - Add a concise agreement line beside account creation.
-- Align all MeOS eligibility and refund language.
+- Align all Dossier eligibility and refund language.
 - Have counsel review the final Terms, Privacy, refunds, AI-processing disclosure, age eligibility, and Lifetime language before scaling beyond a small alpha.
 
 ### P1.4 — Remove checkout and header trust friction
 
 - Brand the Stripe checkout as ALVIRA or disclose the operating entity before handoff.
 - Replace header authentication placeholders with a stable skeleton that does not look like a broken blank control.
-- Replace `Loading your MeOS...` on the public landing page with a neutral page skeleton if authenticated state must be checked first.
+- Replace `Loading your Dossier...` on the public landing page with a neutral page skeleton if authenticated state must be checked first.
 
 ### P1.5 — Correct smaller copy and positioning inconsistencies
 
@@ -209,7 +209,7 @@ The market now includes both direct context-profile products and adjacent memory
 - **Creed is a direct competitor to ALVIRA Personal.** It creates an owned Markdown context profile from onboarding answers, connects that profile to multiple agents, and lets agents propose updates for user approval. Its hosted Personal plan is publicly listed below ALVIRA Pro's current monthly price.
 - **PersonalOS by OwnContext is a direct premium-service competitor.** It creates owned plain-file profiles, decision rules, workflows, and AI adapters for professionals through a high-touch engagement.
 - **CoreMem, Pecan, and MultiPass are emerging direct substitutes** for customers primarily seeking portable, permissioned context across multiple AI tools, although their collection mechanisms differ from ALVIRA's adaptive interview.
-- **Purpose is a direct outcome competitor for MeOS.** It uses personal assessment and persistent context to support reflection, goals, decisions, and ongoing personal guidance, but does not center an owned, portable knowledge repository.
+- **Purpose is a direct outcome competitor for Dossier.** It uses personal assessment and persistent context to support reflection, goals, decisions, and ongoing personal guidance, but does not center an owned, portable knowledge repository.
 - **Littlebird is an adjacent, problem-level competitor rather than a direct product-mechanism competitor.** It primarily learns from screen activity, meetings, email, calendar, and integrations, then uses that memory inside its own assistant and workflows.
 
 The shared market thesis is that AI performs better when it has persistent personal context. ALVIRA should differentiate through how it discovers, validates, structures, and returns that knowledge:
@@ -228,7 +228,7 @@ The positioning risk is that statements such as “AI is missing your context,�
 - Demonstrate the ongoing maintenance loop so the subscription is understood as continued knowledge upkeep, not payment for a one-time interview.
 - Make directly stated, user-confirmed, inferred, conflicting, outdated, and unresolved knowledge visibly distinguishable where supported by the product.
 - Compare against categories—vendor memory, ambient memory, manual instructions, and ALVIRA—rather than naming or attacking competitors on the homepage.
-- Position MeOS as a structured, inspectable personal operating system built from validated self-knowledge, not merely an AI coach or companion.
+- Position Dossier as a structured, inspectable personal operating system built from validated self-knowledge, not merely an AI coach or companion.
 - Support privacy and ownership language with specific, verifiable product behavior.
 - Do not add screen capture, meeting transcription, broad assistant features, or integration volume merely to imitate an adjacent competitor.
 - Do not reduce the current $20 Pro price solely in response to lower-priced competitors; first test whether users understand and value ALVIRA's deeper elicitation and validation.
@@ -256,13 +256,13 @@ An alternative core line that also addresses direct context-profile competitors 
 - The current homepage clearly explains the problem, action, output, supported AI tools, time commitment, and free entry point.
 - Monthly and annual price switching works; annual Pro displays `$192/year` and the 20% savings correctly.
 - Lifetime limitations are substantially clearer on the pricing page.
-- AI Context Profile and MeOS are differentiated at offering selection.
+- AI Context Profile and Dossier are differentiated at offering selection.
 - Selected cards expose a pressed/selected state.
 - Team/enterprise is clearly labeled as coming soon rather than appearing available.
 - The adaptive interview generated a relevant first question and a relevant follow-up.
 - Thin-output warnings are honest and specific.
 - Guest interview state persisted across navigation and the desktop-to-mobile viewport change during this session.
-- MeOS Build, MeOS Care, first-year total, and managed-hosting explanation are much clearer on the MeOS landing page.
+- Dossier Build, Dossier Care, first-year total, and managed-hosting explanation are much clearer on the Dossier landing page.
 - Mobile navigation works and exposes an expanded state.
 - Privacy, Terms, Refunds, Support, and Data routes all returned readable content.
 - Signup, login, empty-field validation, and password-reset entry routes are present.
@@ -280,12 +280,12 @@ An alternative core line that also addresses direct context-profile competitors 
 | [CoreMem](https://coremem.app/) | **Near-direct context-management competitor** | Reusable context across AI tools, MCP distribution, user-approved agent updates | Centers user-created collections and documents rather than deep elicitation |
 | [Pecan](https://pecan.chat/) | **Emerging near-direct competitor** | Personal context, selective permissions, MCP access, user-confirmed changes | Earlier-stage and more focused on permissioned context infrastructure |
 | [MultiPass](https://multipass.host/) | **Near-direct portability competitor** | Portable profiles, granular consent, export, open protocol | More focused on memory and context infrastructure than adaptive interviewing |
-| [Purpose](https://apps.apple.com/us/app/purpose-ai-mentor-coach/id6749098156) | **Direct outcome competitor for MeOS** | Personal assessment, persistent context, values, patterns, goals, decisions, ongoing guidance | Centers an in-product mentor rather than an owned and portable knowledge artifact |
+| [Purpose](https://apps.apple.com/us/app/purpose-ai-mentor-coach/id6749098156) | **Direct outcome competitor for Dossier** | Personal assessment, persistent context, values, patterns, goals, decisions, ongoing guidance | Centers an in-product mentor rather than an owned and portable knowledge artifact |
 | [Littlebird](https://littlebird.ai/) | **Adjacent problem-level competitor** | Persistent context intended to improve AI usefulness | Builds context primarily through observed digital activity rather than intentional elicitation |
 
 Creed is materially more direct than Littlebird. Its public product language, Markdown ownership model, onboarding flow, agent-update loop, integrations, and pricing overlap with important elements of ALVIRA's current proposition. The competitive response should therefore emphasize ALVIRA's interview intelligence, depth, validation, knowledge quality, and consumer accessibility—not just its output format.
 
-Purpose presents the more relevant comparison for MeOS. MeOS needs to demonstrate that it creates an inspectable, correctable personal knowledge system and durable portrait, rather than simply offering an AI conversation with personal memory.
+Purpose presents the more relevant comparison for Dossier. Dossier needs to demonstrate that it creates an inspectable, correctable personal knowledge system and durable portrait, rather than simply offering an AI conversation with personal memory.
 
 ### Littlebird mechanism comparison
 
@@ -360,13 +360,13 @@ Compare four approaches without naming competitors on the homepage:
 | Manual instructions | User writes and maintains a prompt | Usually shallow, inconsistent, and quickly outdated |
 | **ALVIRA** | Asks, follows up, validates, and compiles | Requires intentional user participation |
 
-#### A.5 Differentiate MeOS from generic AI coaching
+#### A.5 Differentiate Dossier from generic AI coaching
 
 **Recommended positioning line**
 
 > Build a private operating system for understanding your life—not another chatbot that gives advice.
 
-Emphasize the inspectable portrait, decision principles, boundaries, professional evidence, user validation, durable artifact, and optional status of symbolic frameworks. Add an explicit statement that MeOS is not therapy, medical care, diagnosis, or crisis support.
+Emphasize the inspectable portrait, decision principles, boundaries, professional evidence, user validation, durable artifact, and optional status of symbolic frameworks. Add an explicit statement that Dossier is not therapy, medical care, diagnosis, or crisis support.
 
 ### Phase B — Product differentiation after launch-critical reliability is established
 
@@ -421,7 +421,7 @@ Keep the current $20 Pro price as a hypothesis during the first cohort. Do not r
 - Users can identify a concrete reason to return after the first compilation.
 - No participant incorrectly believes ALVIRA passively monitors their activity.
 - The homepage demonstrates the interview mechanism and real output before requiring a pricing decision.
-- MeOS is understood as an applied knowledge system with a companion, not only as an AI coach.
+- Dossier is understood as an applied knowledge system with a companion, not only as an AI coach.
 
 ## End-to-End Walkthrough Results
 
@@ -429,20 +429,20 @@ Keep the current $20 Pro price as a hypothesis during the first cohort. Do not r
 |---:|---|---|---|
 | 1 | Desktop homepage and value proposition | **Pass with concerns** | Clear hero and CTA. Homepage remains long; comparison claims need maintenance. |
 | 2 | Mobile homepage | **Pass** | Responsive hero and CTA are readable at 390×844. Header is dense but usable. |
-| 3 | Mobile navigation | **Pass** | Menu opens, closes, exposes semantic expanded state, and contains Interview, Pricing, MeOS, and Sign In. |
+| 3 | Mobile navigation | **Pass** | Menu opens, closes, exposes semantic expanded state, and contains Interview, Pricing, Dossier, and Sign In. |
 | 4 | Monthly/annual pricing selection | **Pass with concerns** | `$20/mo` and `$192/year` work. Several paid features remain labeled `coming soon`. |
-| 5 | Free CTA to offering selection | **Pass** | AI Context Profile and MeOS selection is understandable; sign-in-to-save message is visible. |
+| 5 | Free CTA to offering selection | **Pass** | AI Context Profile and Dossier selection is understandable; sign-in-to-save message is visible. |
 | 6 | AI profile scope selection | **Pass with concerns** | Topic selection and start gating work. Upload prerequisite is unexplained while disabled. |
 | 7 | First AI-generated question | **Needs fix** | Eventually succeeds, but a roughly six-second blank `0 of 0` state looks broken. |
 | 8 | Answer submission and adaptive follow-up | **Pass** | Relevant follow-up generated; progress moved to 1 of 19 and 5%. |
 | 9 | Knowledge-file compilation | **FAIL — blocker** | Client exception reading `identity`; interface stuck on `Compiling...`. |
 | 10 | Guest progress continuity | **Pass in this session** | Interview state survived navigation and viewport changes. Cross-browser/restart persistence was not tested. |
 | 11 | Signup, login, and reset entry | **Partial** | Pages and local validation work. Account creation, email delivery, and reset completion were not executed. |
-| 12 | MeOS landing page and offer explanation | **Pass with concerns** | Offer and total cost are clearer. Base-plan eligibility still conflicts across surfaces. |
-| 13 | Free MeOS preview CTA | **FAIL — blocker** | `preview=true` became `preview=false`, then the paid-access gate appeared. |
-| 14 | MeOS onboarding data entry | **FAIL — blocker** | Selecting a theme overwrote the free-form current-chapter answer. |
-| 15 | Pro, Lifetime, MeOS Build, and Care checkout handoff | **Needs fix before payment** | Correct prices load, but checkout branding and feature/prerequisite copy are inconsistent. |
-| 16 | Legal, refund, support, and data pages | **Pass with concerns** | All routes load. MeOS base-plan rule is inconsistent; legal review was outside this UX audit. |
+| 12 | Dossier landing page and offer explanation | **Pass with concerns** | Offer and total cost are clearer. Base-plan eligibility still conflicts across surfaces. |
+| 13 | Free Dossier preview CTA | **FAIL — blocker** | `preview=true` became `preview=false`, then the paid-access gate appeared. |
+| 14 | Dossier onboarding data entry | **FAIL — blocker** | Selecting a theme overwrote the free-form current-chapter answer. |
+| 15 | Pro, Lifetime, Dossier Build, and Care checkout handoff | **Needs fix before payment** | Correct prices load, but checkout branding and feature/prerequisite copy are inconsistent. |
+| 16 | Legal, refund, support, and data pages | **Pass with concerns** | All routes load. Dossier base-plan rule is inconsistent; legal review was outside this UX audit. |
 | 17 | Mobile pricing and interview | **Pass with concerns** | Core controls remain usable. Interview footer and action region are dense on small screens. |
 | 18 | Paid entitlement, cancellation, export, and deletion | **Not verified** | Requires a controlled account and Stripe test transaction. |
 
@@ -471,15 +471,15 @@ Run this exact test after the P0 fixes and record the result.
 5. Cancel or fail a second checkout and confirm access is not granted.
 6. Test cancellation, refund handling, export, and deletion.
 
-### MeOS
+### Dossier
 
 1. Open the public free-preview CTA while signed out.
 2. Confirm `preview=true` remains active and the advertised preview is usable without payment.
 3. Enter a unique current-chapter sentence and select multiple themes.
 4. Confirm the sentence remains unchanged.
 5. Complete the bounded preview and verify the promised output.
-6. Purchase or provision the required base plan and MeOS Build in the intended order.
-7. Confirm MeOS access is granted only when the documented prerequisites are met.
+6. Purchase or provision the required base plan and Dossier Build in the intended order.
+7. Confirm Dossier access is granted only when the documented prerequisites are met.
 
 ## First-10 Operating Recommendation After the Gate Passes
 
@@ -509,9 +509,9 @@ Primary accepted screenshots from this audit:
 - `08-interview-followup-desktop.png` — adaptive follow-up
 - `10-knowledge-files-result.png` — stuck compilation state
 - `11-signup-desktop.png` — account creation entry
-- `12-meos-desktop.png` — MeOS landing page
-- `13-meos-onboarding-desktop.png` — MeOS setup
-- `14-meos-preview-access-gate.png` — free-preview failure and overwritten field
+- `12-dossier-desktop.png` — Dossier landing page
+- `13-dossier-onboarding-desktop.png` — Dossier setup
+- `14-dossier-preview-access-gate.png` — free-preview failure and overwritten field
 - `15-pro-checkout-desktop.png` — Stripe checkout
 - `16-home-mobile.png` — mobile homepage
 - `17-mobile-navigation-open.png` — mobile menu

@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS team_waitlist (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS meos_comps (
+CREATE TABLE IF NOT EXISTS dossier_comps (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
   expires_at TIMESTAMPTZ NOT NULL,
@@ -85,8 +85,8 @@ CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_purchases_user_id ON purchases(user_id);
 CREATE INDEX IF NOT EXISTS idx_team_waitlist_email ON team_waitlist(email);
 
-INSERT INTO meos_comps (id, email, expires_at)
+INSERT INTO dossier_comps (id, email, expires_at)
 VALUES
-  ('meos-comp-courtnee', 'courtneeowens22@gmail.com', NOW() + INTERVAL '30 days'),
-  ('meos-comp-hipopmarkets', 'hipopmarkets@gmail.com', NOW() + INTERVAL '30 days')
+  ('dossier-comp-courtnee', 'courtneeowens22@gmail.com', NOW() + INTERVAL '30 days'),
+  ('dossier-comp-hipopmarkets', 'hipopmarkets@gmail.com', NOW() + INTERVAL '30 days')
 ON CONFLICT (email) DO NOTHING;

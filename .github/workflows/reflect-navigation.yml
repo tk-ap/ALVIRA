@@ -4,9 +4,9 @@ on:
   pull_request:
     paths:
       - 'src/components/Header.tsx'
-      - 'src/components/MeOSCTA.tsx'
+      - 'src/components/DossierCTA.tsx'
       - 'src/routes/app.tsx'
-      - 'src/routes/meos.tsx'
+      - 'src/routes/dossier.tsx'
       - 'tests/reflect-navigation.test.ts'
       - '.github/workflows/reflect-navigation.yml'
 

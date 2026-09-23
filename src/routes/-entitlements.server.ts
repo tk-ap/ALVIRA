@@ -13,14 +13,14 @@ export async function requireEntitlement(user: { id: string }, product: string):
   }
 }
 
-export function requireMeosPreview(user: { id: string }): void {
+export function requireDossierPreview(user: { id: string }): void {
   if (!user?.id) throw new Error("Authentication required.");
 }
 
-export async function requireMeos(user: { id: string; email: string; tier: string }): Promise<void> {
+export async function requireDossier(user: { id: string; email: string; tier: string }): Promise<void> {
   if (!user?.id) throw new Error("Authentication required.");
   // Core ALVIRA Reflect is part of ALVIRA rather than a separately purchased
-  // product. Existing meos_build / comp records remain valid in the database for
+  // product. Existing dossier_build / comp records remain valid in the database for
   // backward compatibility, while normal Free/Pro/Lifetime/Founding Beta limits
   // continue to govern Context count and interview usage elsewhere.
 }

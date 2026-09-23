@@ -11,9 +11,9 @@ function describeSurface(pathname: string): string {
   if (pathname.startsWith("/account")) return "Account";
   if (pathname.startsWith("/bridge")) return "Bridge";
   if (pathname.startsWith("/context")) return "Context";
-  if (pathname.startsWith("/meos")) return "Reflect";
+  if (pathname.startsWith("/dossier")) return "Reflect";
   if (pathname.startsWith("/app")) {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("offering") === "meos") return "Reflect";
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("offering") === "dossier") return "Reflect";
     return "Context";
   }
   return pathname === "/" ? "Homepage" : "ALVIRA";

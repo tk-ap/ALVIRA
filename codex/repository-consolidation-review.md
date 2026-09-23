@@ -14,14 +14,14 @@ The supplied map lists 20 active branches. The live repository currently contain
 
 Keep the Bridge product branch and paid-integration work as the integration layer. The new `codex/bridge-api-provider` branch adds the provider contract that lets Bridge consume ALVIRA context without duplicating the Context Engine.
 
-### 2. Context Engine / MEOS
+### 2. Context Engine / DOSSIER
 
 Review and consolidate:
 
-- `codex/meos-builder-kit`
-- `codex/meos-preserve-topic`
-- `codex/meos-entitlements`
-- `fix/meos-theme-overwrite`
+- `codex/dossier-builder-kit`
+- `codex/dossier-preserve-topic`
+- `codex/dossier-entitlements`
+- `fix/dossier-theme-overwrite`
 - related accessibility/theme branches only when their changes are still needed on `main`
 
 The highest priority is preserving user-entered context and avoiding destructive state changes.

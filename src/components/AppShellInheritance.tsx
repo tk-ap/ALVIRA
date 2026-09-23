@@ -6,7 +6,7 @@ const APP_SHELL_ROUTES = [
   "/context",
   "/dashboard",
   "/interview",
-  "/meos",
+  "/dossier",
   "/account",
   "/data",
   "/bridge",

@@ -10,7 +10,7 @@ const API_ENDPOINT = "https://alviratech.vercel.app/api/bridge/profiles";
 type ProfileSummary = {
   id: string;
   topic: string;
-  offering: "context" | "meos";
+  offering: "context" | "dossier";
   updated_at: string;
 };
 

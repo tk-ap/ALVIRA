@@ -3,12 +3,12 @@ import JSZip from "jszip";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "~/components/Header";
 import { TrustFooter } from "~/components/TrustFooter";
-import { getMeosProfiles, getCurrentUser, getEntitlements } from "./-auth";
+import { getDossierProfiles, getCurrentUser, getEntitlements } from "./-auth";
 import { trackEvent } from "./-tracking";
-import { compileMeosKnowledge, type MeosPortrait } from "./-meosCompiler";
-import { getMeosGraph } from "./-meosGraph";
+import { compileDossierKnowledge, type DossierPortrait } from "./-dossierCompiler";
+import { getDossierGraph } from "./-dossierGraph";
 
-export const Route = createFileRoute("/meos")({
+export const Route = createFileRoute("/dossier")({
   head: () => ({
     meta: [
       { title: "ALVIRA Reflect — Living Context Intelligence" },
@@ -19,13 +19,13 @@ export const Route = createFileRoute("/meos")({
       },
     ],
   }),
-  component: MeosPage,
+  component: DossierPage,
 });
 type Profile = {
   id: string;
   topic: string;
   state: unknown;
-  portrait: MeosPortrait | null;
+  portrait: DossierPortrait | null;
   updated_at: string;
 };
 const tabs = [
@@ -65,13 +65,13 @@ const steps = [
   "Return to Reflect as your Context changes",
 ];
 
-function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
+function DossierLanding({ canAccess = false }: { canAccess?: boolean }) {
   return (
     <div className="min-h-dvh">
       <Header />
       <main id="main-content">
         <section
-          id="meos-access"
+          id="dossier-access"
           className="mx-auto max-w-4xl px-6 pb-20 pt-20 text-center sm:pt-28"
         >
           <p className="font-mono text-xs uppercase tracking-[0.25em] text-system">
@@ -87,7 +87,7 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <a
-              href="/app?offering=meos"
+              href="/app?offering=dossier"
               className="inline-flex items-center rounded-md bg-system-dark px-5 py-3 font-mono text-sm font-semibold text-white transition hover:bg-system focus:outline-none focus:ring-2 focus:ring-system focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-950"
             >
               Start ALVIRA Reflect{" "}
@@ -96,7 +96,7 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
               </span>
             </a>
             <a
-              href="/app?offering=meos&preview=true"
+              href="/app?offering=dossier&preview=true"
               className="inline-flex items-center border border-system text-system-dark dark:text-system rounded-md px-5 py-3 font-mono text-sm"
             >
               Try Reflect Preview — free{" "}
@@ -106,7 +106,7 @@ function MeosLanding({ canAccess = false }: { canAccess?: boolean }) {
             </a>
             {canAccess && (
               <a
-                href="#meos-access"
+                href="#dossier-access"
                 className="inline-flex items-center rounded-md border border-system px-5 py-3 font-mono text-sm font-semibold text-system-dark dark:text-system"
               >
                 Open ALVIRA Reflect{" "}
@@ -261,7 +261,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     </p>
   );
 }
-function MeosPage() {
+function DossierPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selected, setSelected] = useState("");
   const [tab, setTab] = useState<(typeof tabs)[number]>("Portrait");
@@ -282,13 +282,13 @@ function MeosPage() {
         const reflectAuthorized = Boolean(
           user.isOwner ||
           ["free", "pro", "lifetime", "founding_beta"].includes(user.tier) ||
-          entitlements.includes("meos_build"),
+          entitlements.includes("dossier_build"),
         );
         if (reflectAuthorized) {
           setCanAccess(true);
         }
         if (authenticated || user.id) {
-          const result = await getMeosProfiles();
+          const result = await getDossierProfiles();
           setProfiles(result as Profile[]);
           setSelected((result[0] as Profile | undefined)?.id ?? "");
           setIsPreviewUser(!reflectAuthorized);
@@ -311,9 +311,9 @@ function MeosPage() {
       profile.portrait as { markdownFiles?: Record<string, string> } | null
     )?.markdownFiles;
     if (savedFiles && Object.keys(savedFiles).length > 0) return savedFiles;
-    return compileMeosKnowledge(
-      profile.state as Parameters<typeof compileMeosKnowledge>[0],
-      isPreviewUser ? getMeosGraph() : getMeosGraph(),
+    return compileDossierKnowledge(
+      profile.state as Parameters<typeof compileDossierKnowledge>[0],
+      isPreviewUser ? getDossierGraph() : getDossierGraph(),
     ).allFiles;
   }, [profile, isPreviewUser]);
   const download = (name: string, content: string) => {
@@ -322,16 +322,16 @@ function MeosPage() {
     a.download = name;
     a.click();
     URL.revokeObjectURL(a.href);
-    trackEvent("export_performed", { kind: "meos-file", output: name });
+    trackEvent("export_performed", { kind: "dossier-file", output: name });
   };
   const downloadAllMarkdown = async () => {
     if (!profile?.state) return;
     const files =
       markdownFiles && Object.keys(markdownFiles).length > 0
         ? markdownFiles
-        : compileMeosKnowledge(
-            profile.state as Parameters<typeof compileMeosKnowledge>[0],
-            isPreviewUser ? getMeosGraph() : getMeosGraph(),
+        : compileDossierKnowledge(
+            profile.state as Parameters<typeof compileDossierKnowledge>[0],
+            isPreviewUser ? getDossierGraph() : getDossierGraph(),
           ).allFiles;
     const zip = new JSZip();
     for (const [name, content] of Object.entries(files)) {
@@ -340,10 +340,10 @@ function MeosPage() {
     const blob = await zip.generateAsync({ type: "blob" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${(profile.topic || "meos").replace(/\s+/g, "-").toLowerCase()}-knowledge-files.zip`;
+    a.download = `${(profile.topic || "dossier").replace(/\s+/g, "-").toLowerCase()}-knowledge-files.zip`;
     a.click();
     URL.revokeObjectURL(a.href);
-    trackEvent("export_performed", { kind: "meos-bundle", output: "zip" });
+    trackEvent("export_performed", { kind: "dossier-bundle", output: "zip" });
   };
   if (loading)
     return (
@@ -358,7 +358,7 @@ function MeosPage() {
       </>
     );
   if (!authenticated || (!canAccess && profiles.length === 0))
-    return <MeosLanding canAccess={canAccess} />;
+    return <DossierLanding canAccess={canAccess} />;
   return (
     <div className="min-h-dvh">
       <Header />
@@ -412,7 +412,7 @@ function MeosPage() {
               appear here.
             </p>
             <a
-              href="/app?offering=meos"
+              href="/app?offering=dossier"
               className="mt-6 inline-block font-mono text-sm text-system"
             >
               Start your interview →

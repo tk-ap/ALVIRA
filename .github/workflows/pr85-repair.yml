@@ -22,12 +22,12 @@ jobs:
           from pathlib import Path
           p = Path('src/routes/app.tsx')
           s = p.read_text()
-          bad = 'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "meos" ? "meos" : "context",   isPreview );'
+          bad = 'const initialState = createInitialState(   tier,   trimmed || "My current chapter",   offering === "dossier" ? "dossier" : "context",   isPreview );'
           good = 'const initialState = createInitialState(existing.tier, existing.topic, offering, preview);'
           if bad not in s:
               raise SystemExit('Expected malformed seed initializer was not found')
           s = s.replace(bad, good, 1)
-          s = s.replace('disabled={!topic.trim()}', 'disabled={offering !== "meos" && !topic.trim()}')
+          s = s.replace('disabled={!topic.trim()}', 'disabled={offering !== "dossier" && !topic.trim()}')
           p.write_text(s)
           PY
           git diff --check

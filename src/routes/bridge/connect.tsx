@@ -16,7 +16,7 @@ type ProfileSummary = {
 };
 
 export const Route = createFileRoute("/bridge/connect")({
-  head: () => ({ meta: [{ title: "Connect ALVIRA — approve Context access" }, { name: "description", content: "Choose the ALVIRA Context an AI app may use." }] }),
+  head: () => ({ meta: [{ title: "Connect Bridge — ALVIRA" }, { name: "description", content: "Choose the ALVIRA Context a compatible AI client may be authorized to read." }] }),
   component: BridgeConnectPage,
 });
 
@@ -93,12 +93,12 @@ function BridgeConnectPage() {
         <main id="main-content" className="flex-1 px-6 py-14">
           <section className="mx-auto w-full max-w-xl">
             <ProductJourneyRail active="connect" />
-            <p className="font-mono text-xs uppercase tracking-widest text-system">Connect ALVIRA / approve access</p>
-            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">Approve exactly what this AI app may use.</h1>
-            <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">Select one Context. The connection receives that approved view—not every Context you have.</p>
+            <p className="font-mono text-xs uppercase tracking-widest text-system">&lt; bridge / approve &gt;</p>
+            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">An AI app is requesting access to your ALVIRA Context.</h1>
+            <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">Choose exactly what it may read. ALVIRA handles the authorization in the background; the destination still has to retrieve and incorporate the Context.</p>
 
             <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
-              <label htmlFor="bridge-context" className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Context this app may use</label>
+              <label htmlFor="bridge-context" className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Context this app may read</label>
               <select
                 id="bridge-context"
                 value={selectedProfileId}
@@ -115,7 +115,7 @@ function BridgeConnectPage() {
               </div>
 
               <a href={allowUrl} className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-system-dark px-5 py-3.5 font-semibold text-white transition hover:opacity-90 dark:bg-system">
-                Allow connection →
+                Authorize read access →
               </a>
               <a href="/bridge?connection=cancelled" className="mt-4 block text-center text-sm text-gray-500 underline dark:text-gray-400">Cancel</a>
             </div>
@@ -170,7 +170,7 @@ function BridgeConnectPage() {
 
           <div className="mt-8 rounded-xl border border-system/30 bg-system-soft/30 p-5 dark:bg-ink/20">
             <h2 className="font-semibold text-gray-900 dark:text-gray-100">How you will know it worked</h2>
-            <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">A successful app connection appears on your Bridge page as <strong>Connected</strong> with the app name, the Context it can read, and a Revoke button. If authorization fails, the connecting app receives a failure instead of partial access.</p>
+            <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">A successful authorization appears on your Bridge page as <strong>Connected</strong> with the app name, the Context it can read, and a Revoke button. Connected proves that the client exchanged its authorization code for an active read token; it does not by itself prove that the client incorporated the Context into a model response. If authorization fails, the connecting app receives a failure instead of partial access.</p>
           </div>
 
           <a href="/bridge" className="mt-6 block text-center font-mono text-sm text-system-dark underline dark:text-system">Back to ALVIRA Bridge</a>

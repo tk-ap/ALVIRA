@@ -5,7 +5,9 @@
 - Revision 11 remains the baseline owner-ratified ALVIRA product direction.
 - Revisions after 11 are team working hypotheses unless the owner explicitly ratifies them.
 - Explicitly labeled owner-ratified addenda made after Revision 11 are authoritative for their stated scope and supersede conflicting older guidance.
-- Current owner-ratified addendum: `docs/CONTEXT_INTELLIGENCE_ROADMAP.md` → **AI leverage guidance**, ratified 2026-09-02.
+- Owner-ratified addenda:
+  - `docs/CONTEXT_INTELLIGENCE_ROADMAP.md` → **AI leverage guidance**, ratified 2026-09-02.
+  - `docs/ALVIRA_CONNECT_DIRECTION.md` → **Connect ALVIRA / connected Context distribution**, ratified 2026-09-18.
 - Label post–Revision 11 assumptions when they influence recommendations or implementation.
 
 ## Update Requests
@@ -20,26 +22,60 @@ Agent-compatible Markdown should:
 - State when direction relies on a post–Revision 11 working hypothesis rather than owner-ratified direction.
 - Avoid relying on surrounding conversational context when the Markdown is intended to serve as an implementation brief.
 
-## ALVIRA Product Architecture: Context + Reflect + Bridge
+## ALVIRA Product Architecture: Context + Reflect + Connect
 
 This section is owner-ratified direction and supersedes the earlier separate-product framing for ALVIRA Bridge.
 
 - **ALVIRA Context** is the portable context engine: build, structure, and maintain what AI should know about the user.
 - **ALVIRA Reflect** is the private reflection experience: revisit, validate, and evolve the user's living understanding of themselves.
-- **ALVIRA Bridge** is a secondary capability inside ALVIRA: controlled distribution that carries selected ALVIRA context into external AI tools.
+- **Connect ALVIRA** is the customer-facing connected-Context experience: approve and use maintained ALVIRA Context in external AI tools.
+- **ALVIRA Bridge** is the underlying secure delivery capability used by Connect ALVIRA. It is infrastructure inside ALVIRA, not the primary customer-facing concept and not a standalone product.
 - Canonical product: `https://alviratech.vercel.app/`
-- Canonical Bridge UI: `/bridge` inside the main ALVIRA application.
+- Canonical connection-management surface: currently `/bridge` inside the main ALVIRA application; evolve this surface toward **Connect ALVIRA** language and experience.
 
-### Bridge Integration Requirement
+### Core Product Loop
 
-Keep Bridge visible but subordinate to the core ALVIRA context experience.
+Preserve this product loop in planning and implementation:
 
-- Main ALVIRA navigation and authenticated dashboard surfaces may link to the internal **Bridge** route.
-- Customer-facing mentions of direct integrations, MCP access, connecting external AI tools, or distributing an ALVIRA profile should route through the nested ALVIRA Bridge UI.
-- Bridge must reuse ALVIRA identity, navigation, profile source-of-truth, and permission language.
+**Interview once → maintain living Context in ALVIRA → connect approved Context to the user's preferred AI tools.**
+
+- Do not require a separate interview for each destination.
+- Do not create destination-specific Context stores that can drift from ALVIRA.
+- Prefer secure live retrieval over repeated manual copy/paste when a destination supports it.
+- Keep readable/exportable Context as an ownership and fallback path.
+- Connected tools should receive the minimum approved Context useful to the task rather than the entire raw Context by default.
+- The long-term authorization unit is an approved Context view/projection, not unconditional whole-profile access.
+- A named destination must not be presented as supported until its connect → approve → read → revoke lifecycle is verified end to end.
+
+### Context Ingest Modes: Human vs Delegated Agent
+
+This distinction is owner-ratified product direction.
+
+- **Context subject** and **Context contributor/actor** are separate identities. ALVIRA must know whether the subject is speaking directly or an authorized agent is contributing on the subject's behalf.
+- **Human/direct mode:** the subject contributes their own Context. Treat this as direct self-report; do not label it as agent-supplied.
+- **Delegated-agent mode:** an agent may complete or continue the Context interview on the subject's behalf only under explicit delegation. The session must visibly identify that an agent is contributing and persist actor provenance separately from the subject.
+- Preserve provenance equivalent to the current E2E contract: `actor_type=agent`, `actor_id`, `subject_id`, `delegated=true`, and `source_type` for the ingest path. The exact storage schema may evolve, but the distinction may not be lost.
+- Agent contributions must preserve epistemic state:
+  - **KNOWN** = supported by evidence the agent legitimately holds; it does **not** mean the subject personally confirmed it.
+  - **INFERRED** = agent reasoning or synthesis that is not confirmed by the subject; it must remain visibly marked and must never be silently promoted to fact.
+  - **UNKNOWN** = the agent lacks enough evidence; ALVIRA should record the gap/unknown rather than pressure the agent to invent an answer.
+- Compiled and stored Context must keep material contributor provenance and uncertainty. A later projection or connected Context view must not silently turn agent inference into subject-confirmed truth.
+- The subject remains the owner of the Context and must be able to inspect, correct, confirm, or supersede agent-contributed material.
+- **Connect/read permission is not ingest/write permission.** Giving an external AI access to approved Context does not authorize that AI to mutate canonical Context. Delegated agent ingest is a separate, explicit write/contribution mode.
+- Human and delegated-agent interviews may share the same interview engine, but their interaction cues, validation rules, provenance, and resulting evidence semantics may differ.
+
+### Connect / Bridge Integration Requirement
+
+- Main ALVIRA navigation and authenticated surfaces may link to the canonical connection-management experience.
+- Customer-facing integration language should prefer **Connect ALVIRA**, **Use ALVIRA with…**, and clear permission language over protocol terms.
+- MCP, OAuth, tokens, APIs, and Bridge internals belong in advanced/developer details unless required by the destination.
+- Bridge must reuse ALVIRA identity, navigation, Context/profile source-of-truth, and permission language.
 - Bridge must not create or imply a second independent profile store.
-- A separate Bridge deployment may remain as an implementation backend or migration dependency, but it must not be positioned as a standalone customer product.
-- Preserve the product relationship: **ALVIRA builds and reflects living context; Bridge carries approved context into other tools.**
+- Native plugins/connectors or pre-registered adapters may sit above Bridge when a destination provides a better one-click experience.
+- Remote Bridge/MCP is the default interoperability layer for compatible tools; Bridge API is the custom/server-side fallback; reviewed portable Context is the fallback when live connection is unavailable.
+- Browser extensions or prompt-injection helpers are optional fallback adapters, not the canonical architecture.
+- Preserve the product relationship: **ALVIRA builds, maintains, and reflects living Context; Connect ALVIRA carries approved Context into other tools; Bridge supplies the secure infrastructure underneath.**
+- See `docs/ALVIRA_CONNECT_DIRECTION.md` for binding requirements and implementation priorities.
 
 ## Owner-Approved Testing Policy
 
@@ -151,7 +187,7 @@ Before material planning or implementation:
 3. Resolve the ALVIRA product boundary before selecting agents or skills.
 4. Use Agent OS portable contracts when work crosses product, context, authorization, capability, or outcome boundaries.
 5. Keep ALVIRA as the authoritative source for living user context. Context never grants execution authority.
-6. Treat Bridge as the gated secondary ALVIRA delivery capability described above, not as a standalone product or a second context store.
+6. Treat Bridge as the gated secure delivery capability underneath Connect ALVIRA, not as a standalone product or a second context store.
 7. Route portfolio-level prioritization to ailhat; route shared workforce composition/execution through Agent OS; do not assign generic authorization intelligence to ALVIRA or Bridge.
 8. Preserve human gates for merge, production, secrets, destructive actions, and any other action required by Agent OS or local policy.
 

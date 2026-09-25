@@ -62,7 +62,9 @@ start)
     target=(-w "$monitor")
   fi
   # CPU fallback: VA-API encoding is unavailable on this machine.
-  gpu-screen-recorder "${target[@]}" -f 30 -k h264 -fallback-cpu-encoding yes -cursor yes \
+  # CPU encoding at full window size and 30fps starved the browser (the page froze mid-run),
+  # so default to 20fps at 1260x800; override with E2E_RECORD_SIZE / E2E_RECORD_FPS.
+  gpu-screen-recorder "${target[@]}" -f "${E2E_RECORD_FPS:-20}" -s "${E2E_RECORD_SIZE:-1260x800}" -k h264 -fallback-cpu-encoding yes -cursor yes \
     -c mp4 -o "$out" >"$run_dir/evidence/recorder-$label.log" 2>&1 &
   pid=$!
   # Wait up to 60s (time for TK to use the picker) for the file to appear.

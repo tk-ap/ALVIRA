@@ -24,8 +24,12 @@ SANDBOX_REF="${ALVIRA_E2E_SANDBOX_REF:-sandbox/review}"
 SANDBOX_BASELINE_FILE="${ALVIRA_E2E_SANDBOX_BASELINE_FILE:-docs/e2e/CANONICAL_SANDBOX_BASELINE}"
 RELEASE_FINGERPRINT_PATH="e2e-release.json"
 
-remote_ref_sha() {
-  git ls-remote origin "refs/heads/$1" | awk 'NR==1 { print $1 }'
+canonical_sandbox_sha() {
+  # The E2E parity target is the source actually published to the permanent
+  # here.now sandbox, not every later docs-only commit on sandbox/review.
+  git fetch -q origin "$SANDBOX_REF"
+  git show FETCH_HEAD:.agent-os/deployment.yaml 2>/dev/null \
+    | awk '/^[[:space:]]+source_ref:/ { print $2; exit }'
 }
 
 recorded_sandbox_sha() {
@@ -77,14 +81,14 @@ deploy)
   }
 
   e2e_sha=$(git rev-parse HEAD)
-  sandbox_sha=$(remote_ref_sha "$SANDBOX_REF")
+  sandbox_sha=$(canonical_sandbox_sha)
   baseline_sha=$(recorded_sandbox_sha)
-  [[ -n $sandbox_sha ]] || { echo "REFUSING: could not resolve origin/$SANDBOX_REF" >&2; exit 1; }
+  [[ $sandbox_sha =~ ^[0-9a-f]{40}$ ]] || { echo "REFUSING: could not resolve the published canonical sandbox source_ref from $SANDBOX_REF" >&2; exit 1; }
   [[ -n $baseline_sha ]] || { echo "REFUSING: no sandbox SHA recorded in $SANDBOX_BASELINE_FILE" >&2; exit 1; }
   [[ $baseline_sha == "$sandbox_sha" ]] || {
     echo "REFUSING: E2E overlay is stale relative to $SANDBOX_REF." >&2
     echo "recorded baseline: $baseline_sha" >&2
-    echo "current sandbox:   $sandbox_sha" >&2
+    echo "published sandbox: $sandbox_sha" >&2
     echo "Reconcile the latest canonical sandbox into the E2E overlay and update $SANDBOX_BASELINE_FILE before deploying." >&2
     exit 1
   }

@@ -242,7 +242,7 @@ export const Route = createFileRoute("/app")({
   head: () => ({
     meta: [{ title: 'ALVIRA Context' }, { name: "description", content: 'Build your portable AI context.' }],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined, preview: search.preview === "true" }),
+  validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined, preview: search.preview === "true", actor: search.actor === "agent" ? "agent" as const : undefined, actor_id: typeof search.actor_id === "string" && search.actor_id.trim() ? search.actor_id.trim().slice(0, 80) : undefined }),
   component: AppPage,
 });
 
@@ -416,7 +416,10 @@ function AppPage() {
   // so both groups remain available for that scope.
   const selectedGroups = TOPIC_GROUPS.filter((group) => group.topics.some((topicOption) => selectedTopics.includes(topicOption)));
   const activeGroup = selectedGroups.length === 1 ? selectedGroups[0] : null;
-  const { offering: offeringSearch, preview: previewSearch } = Route.useSearch();
+  const { offering: offeringSearch, preview: previewSearch, actor: actorSearch, actor_id: actorIdSearch } = Route.useSearch();
+  // Agent interview mode: an agent supplies context on the signed-in subject's behalf.
+  const agentMode = actorSearch === "agent";
+  const [knowledgeMark, setKnowledgeMark] = useState<"KNOWN" | "INFERRED">("KNOWN");
   const [offering, setOffering] = useState<"context" | "meos" | null>(offeringSearch === "meos" ? "meos" : "context");
   const [previewMode, setPreviewMode] = useState(offeringSearch === "meos" && previewSearch === true);
   const isPreview = offering === "meos" && previewMode;
@@ -475,14 +478,14 @@ function AppPage() {
       setOffering("meos");
       setPreviewMode(!meosAuthorized);
       if (meosAuthorized) {
-        navigate({ to: "/app", search: { offering: "meos", preview: false } });
+        navigate({ to: "/app", search: { offering: "meos", preview: false , actor: actorSearch, actor_id: actorIdSearch } });
       } else {
-        navigate({ to: "/app", search: { offering: "meos", preview: true } });
+        navigate({ to: "/app", search: { offering: "meos", preview: true , actor: actorSearch, actor_id: actorIdSearch } });
       }
     } else {
       setOffering("context");
       setPreviewMode(false);
-      navigate({ to: "/app", search: { offering: undefined, preview: false } });
+      navigate({ to: "/app", search: { offering: undefined, preview: false , actor: actorSearch, actor_id: actorIdSearch } });
     }
   };
 
@@ -622,6 +625,18 @@ function AppPage() {
       return () => window.clearTimeout(timer);
     }
   }, [state, offering, authUser]);
+  // Stamp agent provenance on the interview so it persists with drafts and saved profiles.
+  // One provenance record per page session keeps started_at stable across state updates.
+  const agentProvenanceRef = useRef<InterviewState["provenance"]>(undefined);
+  const withAgentProvenance = (next: InterviewState): InterviewState => {
+    if (!agentMode || !authUser || next.provenance?.actor_type === "agent") return next;
+    agentProvenanceRef.current ??= { actor_type: "agent", actor_id: actorIdSearch ?? null, subject_id: authUser.id, delegated: true, source_type: "interview", started_at: new Date().toISOString() };
+    return { ...next, provenance: agentProvenanceRef.current };
+  };
+  useEffect(() => {
+    if (state && agentMode && authUser && state.provenance?.actor_type !== "agent") setState(withAgentProvenance(state));
+  }, [agentMode, state, authUser]);
+
   // Check auth state, resume profile, and fetch limits
   useEffect(() => {
     let cancelled = false;
@@ -792,7 +807,7 @@ function AppPage() {
     setPreviewMode(draftPreview);
     setTopic(resumeDraft.topic);
     setTier(resumeDraft.state.tier);
-    const seeded = seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview);
+    const seeded = withAgentProvenance(seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview));
     setState(seeded);
     setResumeDraft(null);
     setSeededInfo("Your Context has already been generated. What has changed, or what would you like ALVIRA to know now?");
@@ -845,7 +860,7 @@ function AppPage() {
     setPreviewMode(profilePreview);
     setTopic(profile.topic);
     setTier(profile.tier as Tier);
-    const seeded = seedStateFromExisting(profile.state, activeOffering, profilePreview);
+    const seeded = withAgentProvenance(seedStateFromExisting(profile.state, activeOffering, profilePreview));
     const carried = Object.values(seeded.domains).filter((d) => d.covered).length;
     setState(seeded);
     setSeededInfo(
@@ -935,6 +950,7 @@ function AppPage() {
           history: currentState.history,
           tier: currentState.tier,
           isClarification,
+          delegatedAgent: currentState.provenance?.actor_type === "agent",
         },
       });
 
@@ -1011,7 +1027,7 @@ function AppPage() {
     setInterviewError("");
 
     const activeOffering = offering === "meos" ? "meos" : "context";
-    const initialState = createInitialState(tier, trimmed, activeOffering, isPreview);
+    const initialState = withAgentProvenance(createInitialState(tier, trimmed, activeOffering, isPreview));
 
     try {
       const result = await askNextQuestion(initialState, false, activeOffering);
@@ -1085,7 +1101,7 @@ function AppPage() {
     const seedTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
     const initialState = seedReviewOverlay && state
       ? { ...state, topic: seedTopic }
-      : createInitialState(tier, seedTopic, seedOffering, isPreview);
+      : withAgentProvenance(createInitialState(tier, seedTopic, seedOffering, isPreview));
     const domains = { ...initialState.domains };
 
     extraction.claims.forEach((claim, index) => {
@@ -1149,6 +1165,10 @@ function AppPage() {
     if (!trimmed || waiting || !state) return;
 
     const currentDomain = state.currentDomain;
+    // Agent answers carry KNOWN/INFERRED alongside each answer; human answers are unchanged.
+    const knowledgeFor = (domainId: string) => state.provenance?.actor_type === "agent"
+      ? { knowledge: [...(state.domains[domainId]?.knowledge ?? (state.domains[domainId]?.answers ?? []).map(() => "KNOWN" as const)), knowledgeMark] }
+      : {};
 
     const newHistory: Message[] = [...state.history, { role: "user", content: trimmed }];
 
@@ -1217,6 +1237,7 @@ function AppPage() {
           ...updatedDomains,
           [currentDomain]: {
             answers: [...existing, trimmed],
+            ...knowledgeFor(currentDomain),
             confidence: validation.confidence,
             covered: false,
           },
@@ -1234,6 +1255,7 @@ function AppPage() {
           ...updatedDomains,
           [currentDomain]: {
             answers: [...existing, trimmed],
+            ...knowledgeFor(currentDomain),
             confidence: validation.confidence,
             covered: false,
           },
@@ -1245,6 +1267,7 @@ function AppPage() {
           ...updatedDomains,
           [currentDomain]: {
             answers: [...existing, trimmed],
+            ...knowledgeFor(currentDomain),
             confidence: validation.confidence,
             covered:
               validation.confidence >= confThreshold &&
@@ -1297,8 +1320,37 @@ function AppPage() {
     }
   };
 
+  // Agent mode: the contributor lacks evidence for this domain. Move on without
+  // implying the domain is understood (Skip credits threshold confidence).
+  const handleUnknown = async () => {
+    if (waiting || !state || !state.currentDomain) return;
+    const currentDomain = state.currentDomain;
+    const updatedState: InterviewState = {
+      ...state,
+      domains: { ...state.domains, [currentDomain]: { ...state.domains[currentDomain], covered: true, confidence: 0, unknown: true } },
+      history: [...state.history, { role: "user", content: "Unknown — I don't have enough evidence to answer this on the subject's behalf." }],
+      currentDomain: null,
+    };
+    setState(updatedState);
+    setWaiting(true);
+    setInterviewError("");
+    try {
+      const result = await askNextQuestion(updatedState);
+      setState(result ?? { ...updatedState, currentDomain: null });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      if (msg !== "API key not configured") {
+        setInterviewError(msg);
+        setState(updatedState);
+      }
+    } finally {
+      setWaiting(false);
+    }
+  };
+
   const handleSkip = async () => {
     if (waiting || !state || !state.currentDomain) return;
+    if (state.provenance?.actor_type === "agent") return handleUnknown();
 
     const currentDomain = state.currentDomain;
     const updatedDomains = {
@@ -1757,7 +1809,7 @@ function AppPage() {
                     </div>
                   ) : (
                     <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 dark:bg-gray-100 text-xs font-bold text-white dark:text-gray-900">
-                      Y
+                      {state?.provenance?.actor_type === "agent" ? "A" : "Y"}
                     </div>
                   )}
                   {/* Bubble */}
@@ -1781,6 +1833,13 @@ function AppPage() {
             {showInsightCTA && (
               <div className="mb-4 border-t border-gray-100 dark:border-gray-800 pt-3">
                 <MeOSCTA placement="post-insight" variant="inline" />
+              </div>
+            )}
+
+            {state?.provenance?.actor_type === "agent" && (
+              <div data-testid="agent-provenance-banner" className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                <span className="font-semibold">Agent contributing context on behalf of {authUser?.email ?? "this account"}.</span>{" "}
+                Agent: <span className="font-mono">{state.provenance.actor_id ?? "unidentified"}</span> · delegated · answers are the agent's account, marked KNOWN or INFERRED.
               </div>
             )}
 
@@ -1834,7 +1893,7 @@ function AppPage() {
                       onClick={handleSkip}
                       className="font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-2 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 rounded"
                     >
-                      Skip →
+                      {state?.provenance?.actor_type === "agent" ? "Unknown →" : "Skip →"}
                     </button>
                   )}
                   <button
@@ -1923,6 +1982,14 @@ function AppPage() {
               )}
 
               {/* Text input */}
+              {hasGaps && state?.provenance?.actor_type === "agent" && (
+                <div className="mb-2 flex items-center gap-2 font-mono text-xs" role="radiogroup" aria-label="Knowledge state of this answer">
+                  <span className="text-gray-500 dark:text-gray-400">This answer is</span>
+                  {(["KNOWN", "INFERRED"] as const).map((mark) => (
+                    <button key={mark} type="button" role="radio" aria-checked={knowledgeMark === mark} onClick={() => setKnowledgeMark(mark)} className={`rounded border px-2 py-0.5 ${knowledgeMark === mark ? "border-amber-600 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200" : "border-gray-300 text-gray-500 dark:border-gray-600 dark:text-gray-400"}`}>{mark}</button>
+                  ))}
+                </div>
+              )}
               {hasGaps && (
                 <div className="flex gap-2 items-end">
                   <textarea

@@ -152,6 +152,8 @@ export function buildExperimentalQuestionPrompt(input: {
   tier: InterviewPromptTier;
   userName?: string;
   baselineFocus?: InterviewBaselineFocus[];
+  /** The respondent is an AI agent contributing context on the subject's behalf. */
+  delegatedAgent?: boolean;
 }): string {
   const hasUserContext = input.history.some(
     (message) => message.role === "user" && message.content.trim().length > 0,
@@ -190,7 +192,10 @@ Area: "${input.domain.label}"
 Why it matters / prompt hint: ${input.domain.promptHint}
 User type: ${tierLabel(input.tier)}
 ${input.userName?.trim() ? `User name: ${input.userName.trim()}. Address them by name naturally when useful, especially at the start or after resuming, but not mechanically on every turn.` : ""}
-
+${input.delegatedAgent ? `
+## Respondent: delegated agent
+The respondent is an AI agent contributing context on behalf of the person this Context describes, not the person themself. Ask about that person in the third person ("they"), never about the agent's own feelings or preferences. Prefer dense questions that can cover several aspects of the current area at once, and ask what is known, what is only inferred, and what is unknown. Accept "unknown" without pressing. Skip warmth and rapport-building; be efficient.
+` : ""}
 ${
   input.baselineFocus?.length
     ? `## Context Baseline gap map

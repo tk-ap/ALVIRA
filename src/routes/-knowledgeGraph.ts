@@ -10,6 +10,22 @@ export interface Message {
   content: string;
 }
 
+/** How well the contributor knows an answer. Agents must not present inference as the subject's fact. */
+export type KnowledgeState = "KNOWN" | "INFERRED" | "UNKNOWN";
+
+/**
+ * Session-level provenance: who is supplying this interview, and for whom.
+ * Prototype for the agent-to-AI E2E — not a delegation/authorization system.
+ */
+export interface InterviewProvenance {
+  actor_type: "human" | "agent";
+  actor_id: string | null;
+  subject_id: string | null;
+  delegated: boolean;
+  source_type: "interview";
+  started_at: string;
+}
+
 export interface InterviewState {
   tier: Tier;
   topic: string;
@@ -19,8 +35,13 @@ export interface InterviewState {
       answers: string[];
       confidence: number;
       covered: boolean;
+      /** Parallel to `answers`; absent for sessions recorded before provenance existed. */
+      knowledge?: KnowledgeState[];
+      /** Contributor recorded this domain as unknown rather than answering it. */
+      unknown?: boolean;
     }
   >;
+  provenance?: InterviewProvenance;
   history: Message[];
   currentDomain: string | null;
   contextSources?: import("~/lib/context-engine").ContextSource[];

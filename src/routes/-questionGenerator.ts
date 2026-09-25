@@ -13,6 +13,7 @@ interface GenerateInput {
   history: Message[];
   tier: Tier;
   isClarification?: boolean;
+  delegatedAgent?: boolean;
 }
 
 interface GenerateResult { question: string; }
@@ -36,6 +37,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
       history: d.history as Message[],
       tier: d.tier as Tier,
       isClarification: (d.isClarification as boolean) ?? false,
+      delegatedAgent: d.delegatedAgent === true,
     };
   })
   .handler(async ({ data }) => {
@@ -49,6 +51,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
       domain: data.domain,
       history: data.history,
       tier: data.tier,
+      delegatedAgent: data.delegatedAgent,
     });
 
     const response = await openai.chat.completions.create({

@@ -45,13 +45,25 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
 
     sections[domain.outputFile].push({
       label: domain.label,
-      content: domainState.answers,
+      content: domainState.answers.map((answer, i) =>
+        domainState.knowledge?.[i] === "INFERRED" ? `[inferred — not confirmed by the subject] ${answer}` : answer,
+      ),
     });
   }
 
   // Build each file
+  const provenance = state.provenance;
+  const provenanceNote =
+    provenance?.actor_type === "agent"
+      ? `\n> Supplied by an agent (${provenance.actor_id ?? "unidentified agent"}) on behalf of the subject${provenance.delegated ? ", under delegation" : ""}, via the ALVIRA interview. Statements are the agent's account of the subject, not first-person statements from the subject.\n`
+      : "";
+  const unknownDomains = graph.filter((d) => state.domains[d.id]?.unknown).map((d) => d.label);
+  const unknownNote = unknownDomains.length
+    ? `\n## Unknown\n\nThe contributor did not have enough evidence to answer: ${unknownDomains.join(", ")}.\n`
+    : "";
+
   const overview = buildFile(
-    `# Project: ${projectName}\n\n## Overview & Context\n\n_${tierLabel}-tier knowledge compiled by ALVIRA._\n`,
+    `# Project: ${projectName}\n\n## Overview & Context\n\n_${tierLabel}-tier knowledge compiled by ALVIRA._\n${provenanceNote}${unknownNote}`,
     sections.overview,
   );
 

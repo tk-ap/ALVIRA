@@ -1469,13 +1469,19 @@ function AppPage() {
       [currentDomain]: {
         ...state.domains[currentDomain],
         covered: true,
-        confidence: state.domains[currentDomain].confidence || confThreshold,
+        confidence: state.domains[currentDomain].confidence ?? 0,
+        skipped: true,
       },
     };
 
     const updatedState: InterviewState = {
       ...state,
       domains: updatedDomains,
+      history: [
+        ...state.history,
+        { role: "user", content: "Skip — move on." },
+        { role: "assistant", content: "Got it — we’ll leave that area unexplored for now and move on." },
+      ],
       currentDomain: null,
     };
 
@@ -2127,6 +2133,11 @@ function AppPage() {
                     </svg>
                   </button>
                 </div>
+              )}
+              {hasGaps && state?.provenance?.actor_type !== "agent" && (
+                <p className="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                  You can say “move on” to leave an area unexplored, or ask “what do you know about me so far?” at any point.
+                </p>
               )}
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "~/components/Header";
+import { StaticConnectSandbox } from "~/components/StaticSandboxSurfaces";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getCurrentUser, listProfiles } from "../-auth";
 
@@ -16,7 +17,10 @@ type ProfileSummary = {
 
 export const Route = createFileRoute("/bridge/connect")({
   head: () => ({ meta: [{ title: "Connect Bridge — ALVIRA" }, { name: "description", content: "Choose the ALVIRA Context a compatible AI client may be authorized to read." }] }),
-  component: BridgeConnectPage,
+  component:
+    import.meta.env.VITE_ALVIRA_STATIC_SANDBOX === "true"
+      ? StaticConnectSandbox
+      : BridgeConnectPage,
 });
 
 function BridgeConnectPage() {

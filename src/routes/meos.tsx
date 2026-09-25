@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import JSZip from "jszip";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "~/components/Header";
+import { StaticReflectSandbox } from "~/components/StaticSandboxSurfaces";
 import { TrustFooter } from "~/components/TrustFooter";
 import { getMeosProfiles, getCurrentUser, getEntitlements } from "./-auth";
 import { trackEvent } from "./-tracking";
@@ -19,7 +20,10 @@ export const Route = createFileRoute("/meos")({
       },
     ],
   }),
-  component: MeosPage,
+  component:
+    import.meta.env.VITE_ALVIRA_STATIC_SANDBOX === "true"
+      ? StaticReflectSandbox
+      : MeosPage,
 });
 type Profile = {
   id: string;

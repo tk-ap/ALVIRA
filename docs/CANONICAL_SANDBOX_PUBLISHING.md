@@ -26,6 +26,8 @@ Never publish a subdirectory, a route, or a historical variant to `mighty-ether-
 
 The Interview Lab route is a static product shell. It must state that generation, authentication, Context writes, and persistence remain in the server-backed Lab; it must never fabricate those capabilities.
 
+The static `/app/`, `/bridge/connect/`, and `/meos/` routes similarly present the product direction without calling authentication, database, OAuth, MCP, payment, or persistence endpoints. Their corresponding server-backed workflows remain available only in the real application.
+
 ## Legacy aliases and variant disposition
 
 | Historical branch                     | Disposition                                                              | Durable route      | Legacy URL behavior                                   |

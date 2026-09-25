@@ -12,14 +12,22 @@ if (!dir || process.argv.length !== 3) {
 
 const requiredPages = [
   { route: "/", file: "index.html", markers: ["ALVIRA"] },
-  { route: "/app/", file: "app/index.html", markers: ["ALVIRA"] },
+  {
+    route: "/app/",
+    file: "app/index.html",
+    markers: ["Static Context sandbox"],
+  },
   { route: "/context/", file: "context/index.html", markers: ["Context"] },
   {
     route: "/bridge/connect/",
     file: "bridge/connect/index.html",
-    markers: ["Connect"],
+    markers: ["Static Connect sandbox"],
   },
-  { route: "/meos/", file: "meos/index.html", markers: ["Reflect"] },
+  {
+    route: "/meos/",
+    file: "meos/index.html",
+    markers: ["Static Reflect sandbox"],
+  },
   {
     route: "/lab/interview/",
     file: "lab/interview/index.html",

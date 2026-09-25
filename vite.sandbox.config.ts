@@ -13,6 +13,9 @@ import tsConfigPaths from "vite-tsconfig-paths";
 // separately published sub-path variants.
 export default defineConfig({
   base: "/",
+  define: {
+    "import.meta.env.VITE_ALVIRA_STATIC_SANDBOX": JSON.stringify("true"),
+  },
   plugins: [
     tailwindcss(),
     tsConfigPaths({ projects: ["./tsconfig.json"] }),

@@ -10,6 +10,7 @@ import { ingestUrlSource } from "./-sourceIngestor";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
+import { StaticAppSandbox } from "~/components/StaticSandboxSurfaces";
 import { TrustFooter } from "~/components/TrustFooter";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
 import { LIFETIME_PRICE, STRIPE_LINKS } from "~/lib/pricing";
@@ -242,7 +243,10 @@ export const Route = createFileRoute("/app")({
     meta: [{ title: 'ALVIRA Context' }, { name: "description", content: 'Build your portable AI context.' }],
   }),
   validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined, preview: search.preview === "true" }),
-  component: AppPage,
+  component:
+    import.meta.env.VITE_ALVIRA_STATIC_SANDBOX === "true"
+      ? StaticAppSandbox
+      : AppPage,
 });
 
 // ── Auth prompt banner ──

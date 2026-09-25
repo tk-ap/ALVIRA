@@ -20,8 +20,8 @@ sandboxes:
     static_primary: true
     slug: mighty-ether-p6cn
     url: https://mighty-ether-p6cn.here.now/
-    current_version_id: 01M37PB6TPH1J4AM30B3Y9H9TD
-    source_ref: 57c59e2d838c948a8c1ee760125b6f1502ea7572
+    current_version_id: 01M3CYXN5PEGPPR2Y3MJ0MJN7Y
+    source_ref: 56bba49efb98679053c7753003c857ea9651a292
     canonical_routes:
       - /
       - /app/
@@ -35,14 +35,20 @@ sandboxes:
       /variants/context-portability/: /context/
       /variants/connect-loop/: /bridge/connect/
     verification:
-      state: pending
-      evidence_refs: []
+      state: verified
+      evidence_refs:
+        - "build: scripts/sandbox-build.sh completed one canonical dist/client inventory, content-marker, and static-backend-guard check"
+        - "desktop browser: root, /app/, /context/, /bridge/connect/, /meos/, and /lab/interview/ rendered with no console errors"
+        - "desktop browser: /lab/interview/ displayed the recovered immersive shell and its explicit unavailable-server boundary"
+        - "browser continuity: /variants/interview-shell/ resolved to /lab/interview/; Dossier, Context Portability, and Connect Loop legacy aliases resolved to their canonical routes"
+        - "mobile browser (390x844): root and /lab/interview/ rendered with responsive navigation and no console errors"
+        - "here.now permanent update: mighty-ether-p6cn version 01M3CYXN5PEGPPR2Y3MJ0MJN7Y"
     notes:
       - "Static UI build only. Sign-in, database, payments and API routes are unavailable in this sandbox and are not simulated."
       - "Canonical source is sandbox/review. Build once with scripts/sandbox-build.sh and publish only dist/client to the same slug; never create a replacement site."
       - "A permanent-slug publish must contain the complete canonical sandbox. Partial route or historical-variant publishes are prohibited."
       - "scripts/sandbox-verify.mjs runs from scripts/sandbox-build.sh and fails when a required route, expected content marker, or static-backend guard is missing."
-      - "Verification is pending: HTTP 200 checks on the root and a few routes only. No browser or mobile verification has been recorded."
+      - "Verification recorded 2026-09-25 against the permanent site: desktop and 390x844 mobile browser renders proved the required routes and explicit static backend boundary."
 
 historical_variant_dispositions:
   interview_shell:

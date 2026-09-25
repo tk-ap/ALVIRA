@@ -49,3 +49,17 @@ describe("agent interview provenance", () => {
     expect(buildExperimentalQuestionPrompt(base)).not.toContain("Respondent: delegated agent");
   });
 });
+
+import { detectTopicalMismatch, validateAnswer } from "../src/routes/-validation";
+
+describe("topical fit for current projects", () => {
+  const dense = "TK has several projects in flight and no hard deadlines recorded; income is the priority and the budget is zero, a firm constraint.";
+  test("plural project and deadline words count as on-topic", () => {
+    expect(detectTopicalMismatch("currentProjects", dense).mismatch).toBe(false);
+  });
+  test("delegated agents are not misfiled by keyword topicality", () => {
+    const offTopicForHuman = "Budget is zero and cost is a hard constraint; TK cannot spend money, a firm boundary on every tool choice.";
+    expect(detectTopicalMismatch("currentProjects", offTopicForHuman).mismatch).toBe(true);
+    expect(validateAnswer("currentProjects", offTopicForHuman, [], { delegatedAgent: true }).topicMismatch).toBeFalsy();
+  });
+});

@@ -1178,7 +1178,7 @@ function AppPage() {
 
     if (currentDomain) {
       const existing = updatedDomains[currentDomain]?.answers ?? [];
-      const validation = validateAnswer(currentDomain, trimmed, existing);
+      const validation = validateAnswer(currentDomain, trimmed, existing, { delegatedAgent: state.provenance?.actor_type === "agent" });
 
       if (validation.isUserQuestion) {
         setState({ ...state, history: newHistory, currentDomain });

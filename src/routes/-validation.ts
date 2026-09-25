@@ -100,8 +100,8 @@ const DOMAIN_TOPICALITY: Record<string, DomainSignalSpec> = {
   currentProjects: {
     label: "Current Projects",
     patterns: [
-      /\b(?:project|working on|building|developing|creating|producing|preparing|initiative|campaign)\b/i,
-      /\b(?:launch|deadline|due date|ship|release|milestone|this week|this month|right now|currently)\b/i,
+      /\b(?:projects?|working on|building|developing|creating|producing|preparing|initiatives?|campaigns?)\b/i,
+      /\b(?:launch(?:es|ed|ing)?|deadlines?|due dates?|ship(?:s|ped|ping)?|releases?|milestones?|this week|this month|right now|currently)\b/i,
     ],
   },
   identity: {
@@ -309,6 +309,7 @@ export function validateAnswer(
   domainId: string,
   answer: string,
   existingAnswers: string[],
+  options: { delegatedAgent?: boolean } = {},
 ): ValidationResult {
   const warnings: string[] = [];
   let score = 1.0;
@@ -337,7 +338,9 @@ export function validateAnswer(
   // ═══════════════════════════════════════════
   // Reuse the existing non-answer clarification route so drifted content is kept
   // in conversation history but never appended to the wrong domain's answers.
-  const topical = detectTopicalMismatch(domainId, trimmed);
+  // Delegated agents answer densely across several areas by design; keyword
+  // topicality would misfile those answers and keep them out of Context.
+  const topical = options.delegatedAgent ? { mismatch: false as const } : detectTopicalMismatch(domainId, trimmed);
   if (topical.mismatch) {
     return {
       confidence: 0,

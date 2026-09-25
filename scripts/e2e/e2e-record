@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# e2e-record — screen recording for agent-driven E2E runs on TK's Omarchy workstation.
+#
+#   e2e-record start --run-dir DIR [--label A-engineering|B-clean-demo] [--monitor]
+#   e2e-record stop  --run-dir DIR
+#   e2e-record status --run-dir DIR
+#
+# Default capture is ONE WINDOW (the Chromium test window) through the desktop
+# portal. The first run shows the portal picker once and TK selects the window;
+# the choice is saved and reused, so later runs start without a prompt.
+# Window capture is fail-closed: if it cannot start, nothing is recorded and the
+# script exits non-zero. Whole-monitor capture happens only with an explicit
+# --monitor, because it also records the terminal and anything else on screen.
+#
+# While recording, a persistent desktop banner says an E2E smoke test is running
+# and being recorded, so anyone at the workstation can see it. It is outside the
+# captured window, so it never appears in window recordings.
+set -euo pipefail
+
+BANNER_TITLE="● E2E SMOKE TEST — RECORDING"
+STATE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/alvira-e2e"
+PORTAL_TOKEN="$STATE_DIR/portal-session-token"
+
+cmd="${1:-}"; shift || true
+run_dir=""; label="A-engineering"; mode="window"
+while (($#)); do
+  case "$1" in
+    --run-dir) run_dir="$2"; shift 2 ;;
+    --label) label="$2"; shift 2 ;;
+    --monitor) mode="monitor"; shift ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+[[ -n $cmd && -n $run_dir ]] || { sed -n '3,6p' "$0" >&2; exit 2; }
+mkdir -p "$run_dir/recordings" "$run_dir/evidence" "$STATE_DIR"
+pid_file="$run_dir/evidence/recorder.pid"
+meta_file="$run_dir/evidence/recorder-$label.json"
+current_file="$run_dir/evidence/recorder.current"
+now() { date -u +%FT%TZ; }
+
+banner_on() {
+  omarchy-notification-send -u critical -t 0 -g 󰑊 "$BANNER_TITLE" \
+    "Workstation in use by an agent E2E test. Capture: $1. Started $(date +%H:%M). Please don't use this browser window." >/dev/null 2>&1 || true
+  omarchy-shell -q omarchy.indicators refresh >/dev/null 2>&1 || true
+}
+banner_off() {
+  omarchy-notification-dismiss "E2E SMOKE TEST" >/dev/null 2>&1 || true
+  omarchy-shell -q omarchy.indicators refresh >/dev/null 2>&1 || true
+}
+running() { [[ -f $pid_file ]] && kill -0 "$(cat "$pid_file")" 2>/dev/null; }
+
+case "$cmd" in
+start)
+  running && { echo "already recording (pid $(cat "$pid_file"))" >&2; exit 1; }
+  out="$run_dir/recordings/$label.mp4"
+  [[ -e $out ]] && { echo "refusing to overwrite $out" >&2; exit 1; }
+  if [[ $mode == window ]]; then
+    target=(-w portal -restore-portal-session yes -portal-session-token-filepath "$PORTAL_TOKEN")
+    [[ -f $PORTAL_TOKEN ]] || echo "First run: pick the Chromium test window in the portal dialog." >&2
+  else
+    monitor=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name')
+    target=(-w "$monitor")
+  fi
+  # CPU fallback: VA-API encoding is unavailable on this machine.
+  gpu-screen-recorder "${target[@]}" -f 30 -k h264 -fallback-cpu-encoding yes -cursor yes \
+    -c mp4 -o "$out" >"$run_dir/evidence/recorder-$label.log" 2>&1 &
+  pid=$!
+  # Wait up to 60s (time for TK to use the picker) for the file to appear.
+  for _ in $(seq 1 300); do
+    kill -0 "$pid" 2>/dev/null || break
+    [[ -s $out ]] && break
+    sleep 0.2
+  done
+  if ! kill -0 "$pid" 2>/dev/null || [[ ! -s $out ]]; then
+    kill -INT "$pid" 2>/dev/null || true
+    echo "recording did not start ($mode capture); nothing is being recorded. See $run_dir/evidence/recorder-$label.log" >&2
+    [[ $mode == window ]] && echo "Window capture failed closed. Use --monitor only if whole-screen capture is acceptable." >&2
+    exit 1
+  fi
+  echo "$pid" >"$pid_file"
+  echo "$meta_file" >"$current_file"
+  printf '{"label":"%s","mode":"%s","file":"%s","started_at":"%s"}\n' "$label" "$mode" "$out" "$(now)" >"$meta_file"
+  banner_on "$mode"
+  echo "recording $mode → $out (pid $pid)"
+  ;;
+stop)
+  running || { banner_off; echo "not recording" >&2; exit 1; }
+  pid=$(cat "$pid_file")
+  kill -INT "$pid"   # SIGINT lets gpu-screen-recorder finalize the MP4
+  for _ in $(seq 1 100); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  kill -0 "$pid" 2>/dev/null && { kill -9 "$pid"; echo "recorder had to be force-killed; file may be damaged" >&2; }
+  rm -f "$pid_file"
+  banner_off
+  meta_file=$(cat "$current_file"); rm -f "$current_file"
+  file=$(jq -r .file "$meta_file")
+  duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$file" 2>/dev/null || echo "")
+  jq --arg s "$(now)" --arg d "$duration" '. + {stopped_at: $s, duration_s: ($d | tonumber? // null)}' "$meta_file" >"$meta_file.tmp" && mv "$meta_file.tmp" "$meta_file"
+  echo "saved $file (${duration:-unknown}s)"
+  ;;
+status)
+  if running; then echo "recording (pid $(cat "$pid_file")): $(jq -c . "$(cat "$current_file")")"; else echo "not recording"; fi
+  ;;
+*) sed -n '3,6p' "$0" >&2; exit 2 ;;
+esac

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# e2e-env — safe build/deploy/inspect/reset for the ALVIRA agent-to-AI E2E preview.
+#
+#   scripts/e2e/e2e-env deploy       build a stamped E2E bundle, deploy it as a Preview, alias it
+#   scripts/e2e/e2e-env db-check     masked facts about the E2E database (never prints the URL)
+#   scripts/e2e/e2e-env state        what the test account currently holds (profiles, drafts, provenance)
+#   scripts/e2e/e2e-env reset --yes  delete the test account's Context, drafts and Bridge grants (E2E DB only)
+#
+# The E2E database URL lives in ~/.config/alvira/e2e-db.env (one line, DATABASE_URL=...),
+# written by TK. It is read with Python, never `source`d: the URL contains '&', which a
+# shell would treat as "run in background". The preview never sees the shared DATABASE_URL:
+# builds are stamped ALVIRA_E2E=1 and read ALVIRA_E2E_DATABASE_URL (a Vercel Preview
+# variable TK set) or refuse to start. See docs/e2e/AGENT_CONTEXT_E2E_RUNBOOK.md.
+set -euo pipefail
+cd "$(dirname "$0")/../.."
+
+ALIAS="${ALVIRA_E2E_ALIAS:-alvira-agent-e2e.vercel.app}"
+SCOPE="${ALVIRA_E2E_VERCEL_SCOPE:-alvira2}"
+ENV_FILE="${ALVIRA_E2E_DB_ENV:-$HOME/.config/alvira/e2e-db.env}"
+TEST_USER_EMAIL_LIKE="${ALVIRA_E2E_TEST_EMAIL_LIKE:-codex-smoke-%@example.com}"
+
+db_url() { python3 -c 'import os,sys;v=open(os.path.expanduser(sys.argv[1])).read().strip();sys.exit("bad env file") if not v.startswith("DATABASE_URL=") else print(v.split("=",1)[1])' "$ENV_FILE"; }
+mask() { sed -E 's#(postgres(ql)?://[^:]+:)[^@]+@#\1***@#g; s/npg_[A-Za-z0-9]+/***/g'; }
+q() { psql "$(db_url)" -Atc "$1" 2>&1 | mask; }
+
+require_e2e_db() {
+  # The E2E database is recognisable by content: its only users are test accounts.
+  local real
+  real=$(q "select count(*) from users where email not like '$TEST_USER_EMAIL_LIKE'")
+  [[ $real == 0 ]] || { echo "REFUSING: database has $real non-test users — this is not the E2E database" >&2; exit 1; }
+}
+
+case "${1:-}" in
+deploy)
+  [[ -f .vercel/project.json ]] && [[ $(jq -r .projectName .vercel/project.json) == alvira ]] || {
+    echo "Link first: npx vercel link --project alvira --scope $SCOPE --yes (then delete .env.local and revert .gitignore)." >&2
+    echo "Never run 'vercel deploy --yes' unlinked: it silently creates a new project." >&2; exit 1; }
+  require_e2e_db
+  DATABASE_URL="$(db_url)" ALVIRA_E2E=1 VERCEL_PROJECT_PRODUCTION_URL="$ALIAS" bash build-vercel.sh 2>&1 | mask | tail -5
+  git checkout -q -- bun.lock 2>/dev/null || true
+  grep -q "e2eBuild = true" .vercel/output/functions/render.func/index.mjs || { echo "bundle is not E2E-stamped; not deploying" >&2; exit 1; }
+  url=$(npx -y vercel@latest deploy --prebuilt --scope "$SCOPE" 2>&1 | grep -o -E 'https://alvira-[a-z0-9]+-[a-z0-9]+\.vercel\.app' | head -1)
+  [[ -n $url ]] || { echo "deploy failed (if an email said the commit author is not a team member, TK must add that email to their Vercel account)" >&2; exit 1; }
+  npx -y vercel@latest alias set "${url#https://}" "$ALIAS" --scope "$SCOPE" | tail -1
+  rm -f .env.local
+  health=$(curl -s "https://$ALIAS/api/health/ready")
+  echo "deployment $url → https://$ALIAS · health: $health"
+  [[ $health == *'"ready"'* ]] || { echo "not ready: the preview could not reach ALVIRA_E2E_DATABASE_URL" >&2; exit 1; }
+  ;;
+db-check)
+  python3 -c 'import os,sys,urllib.parse as u;v=open(os.path.expanduser(sys.argv[1])).read().strip();p=u.urlparse(v.split("=",1)[1]);print("urls:",v.count("://"),"| host:",(p.hostname or "")[:14]+"…","| query keys:",sorted(u.parse_qs(p.query)))' "$ENV_FILE"
+  echo "public tables: $(q "select count(*) from information_schema.tables where table_schema='public'")"
+  echo "users: $(q "select count(*) from users") (non-test: $(q "select count(*) from users where email not like '$TEST_USER_EMAIL_LIKE'"))"
+  ;;
+state)
+  require_e2e_db
+  echo "profiles:"; q "select id, left(topic,50), created_at, updated_at from profiles"
+  echo "drafts: $(q "select count(*) from interview_drafts")"
+  echo "active bridge grants: $(q "select count(*) from bridge_access_tokens where revoked_at is null")"
+  q "select state_json from profiles order by updated_at desc limit 1" | python3 -c '
+import json,sys
+raw=sys.stdin.read().strip()
+if not raw: sys.exit()
+s=json.loads(raw); k={}
+for d in s["domains"].values():
+    for m in d.get("knowledge") or []: k[m]=k.get(m,0)+1
+    if d.get("unknown"): k["UNKNOWN(area)"]=k.get("UNKNOWN(area)",0)+1
+print("latest profile provenance:",json.dumps(s.get("provenance"))); print("knowledge states:",k)'
+  ;;
+reset)
+  [[ ${2:-} == --yes ]] || { echo "reset deletes the test account's Context; rerun with --yes after TK agrees" >&2; exit 1; }
+  require_e2e_db
+  q "delete from bridge_access_tokens; delete from bridge_authorization_codes; delete from interview_drafts; delete from profiles;" >/dev/null
+  echo "reset done (test user kept, so no re-signup is needed):"; "$0" state
+  ;;
+*) sed -n '3,7p' "$0" >&2; exit 2 ;;
+esac

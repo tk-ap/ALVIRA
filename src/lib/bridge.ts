@@ -333,6 +333,33 @@ async function getRegisteredBridgeOAuthClient(clientId: string): Promise<BridgeO
   };
 }
 
+function loopbackRedirect(uri: string) {
+  try {
+    const parsed = new URL(uri);
+    const host = parsed.hostname.replace(/^\[|\]$/g, "");
+    if (parsed.protocol !== "http:" || !(host === "localhost" || host === "127.0.0.1" || host === "::1")) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+// Native clients bind an ephemeral loopback port at runtime, so a registered
+// loopback redirect matches any port (RFC 8252 section 7.3). Everything else must match exactly.
+export function bridgeRedirectAllowed(client: Pick<BridgeOAuthClient, "redirect_uris" | "application_type">, redirectUri: string) {
+  if (client.redirect_uris.includes(redirectUri)) return true;
+  if (client.application_type !== "native") return false;
+  const requested = loopbackRedirect(redirectUri);
+  if (!requested || requested.username || requested.password || requested.hash) return false;
+  return client.redirect_uris.some((uri) => {
+    const registered = loopbackRedirect(uri);
+    return !!registered
+      && registered.hostname === requested.hostname
+      && registered.pathname === requested.pathname
+      && registered.search === requested.search;
+  });
+}
+
 export async function getBridgeOAuthClient(clientId: string): Promise<BridgeOAuthClient | null> {
   await ensureBridgeSchema();
   if (parseCimdUrl(clientId)) return resolveCimdClient(clientId);
@@ -395,7 +422,7 @@ export async function exchangeBridgeAuthorizationCode(
     if (!expectedSecret || auth.clientSecret !== expectedSecret) throw new BridgeExchangeError("Invalid Bridge client credentials.", "invalid_client");
   } else {
     const client = await getBridgeOAuthClient(clientId);
-    if (!client || !client.redirect_uris.includes(redirectUri)) throw new BridgeExchangeError("Invalid Bridge client.", "invalid_client");
+    if (!client || !bridgeRedirectAllowed(client, redirectUri)) throw new BridgeExchangeError("Invalid Bridge client.", "invalid_client");
   }
 
   const db = getDb();

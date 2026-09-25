@@ -63,3 +63,21 @@ describe("topical fit for current projects", () => {
     expect(validateAnswer("currentProjects", offTopicForHuman, [], { delegatedAgent: true }).topicMismatch).toBeFalsy();
   });
 });
+
+import { detectUserQuestion } from "../src/routes/-validation";
+
+describe("user question detection", () => {
+  const longAnswer = "What TK has stated directly about priorities: execute first, govern only consequential boundaries, and verify the real live state before calling something done. They care about what is proven versus prototype and keep parked notes on the backlog.";
+  test("keeps short clarifying questions as questions", () => {
+    expect(detectUserQuestion("what do you mean by that")).toBe(true);
+    expect(detectUserQuestion("Can you give an example")).toBe(true);
+  });
+  test("does not discard a substantive answer that starts with or contains a question word", () => {
+    expect(detectUserQuestion(longAnswer)).toBe(false);
+    expect(validateAnswer("goals", longAnswer, []).isUserQuestion).toBe(false);
+  });
+  test("delegated agents ask questions only with an explicit question mark", () => {
+    expect(detectUserQuestion("what is known is below", { delegatedAgent: true })).toBe(false);
+    expect(detectUserQuestion("Should I answer for TK or wait?", { delegatedAgent: true })).toBe(true);
+  });
+});

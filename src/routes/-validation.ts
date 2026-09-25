@@ -274,12 +274,17 @@ export function detectTopicalMismatch(domainId: string, answer: string): Topical
  * Detect whether the user's input is actually a clarifying question
  * rather than an answer to the domain question.
  */
-export function detectUserQuestion(answer: string): boolean {
+export function detectUserQuestion(answer: string, options: { delegatedAgent?: boolean } = {}): boolean {
   const trimmed = answer.trim();
   const lower = trimmed.toLowerCase();
 
   // Ends with question mark
   if (trimmed.endsWith("?")) return true;
+
+  // Question-word heuristics only fit short replies. A substantive answer that
+  // happens to start with "What" or mention "what is" must not be discarded as
+  // a question; delegated agents ask questions only with an explicit "?".
+  if (options.delegatedAgent || trimmed.split(/\s+/).filter(Boolean).length > 25) return false;
 
   // Starts with a question word
   for (const start of QUESTION_STARTS) {
@@ -322,7 +327,7 @@ export function validateAnswer(
   // ═══════════════════════════════════════════
   // -1. User question detection (runs before everything — skip all validation)
   // ═══════════════════════════════════════════
-  const isUserQuestion = detectUserQuestion(trimmed);
+  const isUserQuestion = detectUserQuestion(trimmed, options);
   if (isUserQuestion) {
     return {
       confidence: 1.0,

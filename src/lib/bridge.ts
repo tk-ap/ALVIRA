@@ -132,12 +132,14 @@ for (const [network, prefix] of [
   ["192.168.0.0", 16], ["198.18.0.0", 15], ["198.51.100.0", 24], ["203.0.113.0", 24],
   ["224.0.0.0", 4], ["240.0.0.0", 4],
 ] as const) blockedMetadataAddresses.addSubnet(network, prefix, "ipv4");
+// No "::ffff:0:0/96" rule: BlockList matches every IPv4 address against it, and
+// IPv4-mapped IPv6 addresses are already checked against the IPv4 subnets above.
 for (const [network, prefix] of [
-  ["::", 128], ["::1", 128], ["::ffff:0:0", 96], ["fc00::", 7], ["fe80::", 10],
+  ["::", 128], ["::1", 128], ["fc00::", 7], ["fe80::", 10],
   ["ff00::", 8], ["2001:db8::", 32],
 ] as const) blockedMetadataAddresses.addSubnet(network, prefix, "ipv6");
 
-function publicMetadataAddress(address: string, family: number) {
+export function publicMetadataAddress(address: string, family: number) {
   return !blockedMetadataAddresses.check(address, family === 6 ? "ipv6" : "ipv4");
 }
 

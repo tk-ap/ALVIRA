@@ -20,6 +20,37 @@ ENV_FILE="${ALVIRA_E2E_DB_ENV:-$HOME/.config/alvira/e2e-db.env}"
 TEST_USER_EMAIL_LIKE="${ALVIRA_E2E_TEST_EMAIL_LIKE:-codex-smoke-%@example.com}"
 # TK's owner account may also exist in the E2E database (it unlocks /interview-lab on the preview).
 OWNER_EMAIL="${ALVIRA_E2E_OWNER_EMAIL:-tahlia.ashwood@gmail.com}"
+SANDBOX_REF="${ALVIRA_E2E_SANDBOX_REF:-sandbox/review}"
+SANDBOX_BASELINE_FILE="${ALVIRA_E2E_SANDBOX_BASELINE_FILE:-docs/e2e/CANONICAL_SANDBOX_BASELINE}"
+RELEASE_FINGERPRINT_PATH="e2e-release.json"
+
+remote_ref_sha() {
+  git ls-remote origin "refs/heads/$1" | awk 'NR==1 { print $1 }'
+}
+
+recorded_sandbox_sha() {
+  grep -Eo '[0-9a-f]{40}' "$SANDBOX_BASELINE_FILE" | head -1
+}
+
+release_matches_alias() {
+  local e2e_sha="$1" sandbox_sha="$2" release health
+  release=$(curl -fsS "https://$ALIAS/$RELEASE_FINGERPRINT_PATH" 2>/dev/null || true)
+  health=$(curl -fsS "https://$ALIAS/api/health/ready" 2>/dev/null || true)
+  [[ $health == *'"ready"'* ]] || return 1
+  RELEASE_JSON="$release" EXPECTED_E2E_SHA="$e2e_sha" EXPECTED_SANDBOX_SHA="$sandbox_sha" python3 - <<'PY'
+import json, os, sys
+try:
+    data = json.loads(os.environ.get("RELEASE_JSON", ""))
+except Exception:
+    sys.exit(1)
+ok = (
+    data.get("schema") == 1
+    and data.get("e2e_sha") == os.environ["EXPECTED_E2E_SHA"]
+    and data.get("sandbox_sha") == os.environ["EXPECTED_SANDBOX_SHA"]
+)
+sys.exit(0 if ok else 1)
+PY
+}
 
 db_url() { python3 -c 'import os,sys;v=open(os.path.expanduser(sys.argv[1])).read().strip();sys.exit("bad env file") if not v.startswith("DATABASE_URL=") else print(v.split("=",1)[1])' "$ENV_FILE"; }
 mask() { sed -E 's#(postgres(ql)?://[^:]+:)[^@]+@#\1***@#g; s/npg_[A-Za-z0-9]+/***/g'; }
@@ -39,9 +70,43 @@ deploy)
     echo "Link first: npx vercel link --project alvira --scope $SCOPE --yes (then delete .env.local and revert .gitignore)." >&2
     echo "Never run 'vercel deploy --yes' unlinked: it silently creates a new project." >&2; exit 1; }
   require_e2e_db
+  [[ -f $SANDBOX_BASELINE_FILE ]] || { echo "REFUSING: missing $SANDBOX_BASELINE_FILE" >&2; exit 1; }
+  [[ -z $(git status --porcelain --untracked-files=normal) ]] || {
+    echo "REFUSING: E2E deploys must come from a clean committed worktree so release fingerprints are reproducible." >&2
+    exit 1
+  }
+
+  e2e_sha=$(git rev-parse HEAD)
+  sandbox_sha=$(remote_ref_sha "$SANDBOX_REF")
+  baseline_sha=$(recorded_sandbox_sha)
+  [[ -n $sandbox_sha ]] || { echo "REFUSING: could not resolve origin/$SANDBOX_REF" >&2; exit 1; }
+  [[ -n $baseline_sha ]] || { echo "REFUSING: no sandbox SHA recorded in $SANDBOX_BASELINE_FILE" >&2; exit 1; }
+  [[ $baseline_sha == "$sandbox_sha" ]] || {
+    echo "REFUSING: E2E overlay is stale relative to $SANDBOX_REF." >&2
+    echo "recorded baseline: $baseline_sha" >&2
+    echo "current sandbox:   $sandbox_sha" >&2
+    echo "Reconcile the latest canonical sandbox into the E2E overlay and update $SANDBOX_BASELINE_FILE before deploying." >&2
+    exit 1
+  }
+
+  if release_matches_alias "$e2e_sha" "$sandbox_sha"; then
+    echo "reuse https://$ALIAS · no Vercel deployment created (E2E + canonical sandbox source unchanged and health is ready)"
+    exit 0
+  fi
+
   DATABASE_URL="$(db_url)" ALVIRA_E2E=1 VERCEL_PROJECT_PRODUCTION_URL="$ALIAS" bash build-vercel.sh 2>&1 | mask | tail -5
   git checkout -q -- bun.lock 2>/dev/null || true
   grep -q "e2eBuild = true" .vercel/output/functions/render.func/index.mjs || { echo "bundle is not E2E-stamped; not deploying" >&2; exit 1; }
+
+  cat > ".vercel/output/static/$RELEASE_FINGERPRINT_PATH" <<JSON
+{
+  "schema": 1,
+  "e2e_sha": "$e2e_sha",
+  "sandbox_ref": "$SANDBOX_REF",
+  "sandbox_sha": "$sandbox_sha"
+}
+JSON
+
   url=$(npx -y vercel@latest deploy --prebuilt --scope "$SCOPE" 2>&1 | grep -o -E 'https://alvira-[a-z0-9]+-[a-z0-9]+\.vercel\.app' | head -1)
   [[ -n $url ]] || { echo "deploy failed (if an email said the commit author is not a team member, TK must add that email to their Vercel account)" >&2; exit 1; }
   npx -y vercel@latest alias set "${url#https://}" "$ALIAS" --scope "$SCOPE" | tail -1

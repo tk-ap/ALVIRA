@@ -1,3 +1,3 @@
-# Last sandbox/review commit deliberately reconciled into the E2E overlay.
-# e2e-env deploy refuses when the remote sandbox/review head is newer.
+# Last published canonical sandbox source SHA deliberately reconciled into the E2E overlay.
+# e2e-env deploy refuses when sandbox/review records a different published source_ref.
 9b039c52df36eed61683c3ac45c9ee2751aeaff5

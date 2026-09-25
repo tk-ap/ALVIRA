@@ -18,15 +18,18 @@ ALIAS="${ALVIRA_E2E_ALIAS:-alvira-agent-e2e.vercel.app}"
 SCOPE="${ALVIRA_E2E_VERCEL_SCOPE:-alvira2}"
 ENV_FILE="${ALVIRA_E2E_DB_ENV:-$HOME/.config/alvira/e2e-db.env}"
 TEST_USER_EMAIL_LIKE="${ALVIRA_E2E_TEST_EMAIL_LIKE:-codex-smoke-%@example.com}"
+# TK's owner account may also exist in the E2E database (it unlocks /interview-lab on the preview).
+OWNER_EMAIL="${ALVIRA_E2E_OWNER_EMAIL:-tahlia.ashwood@gmail.com}"
 
 db_url() { python3 -c 'import os,sys;v=open(os.path.expanduser(sys.argv[1])).read().strip();sys.exit("bad env file") if not v.startswith("DATABASE_URL=") else print(v.split("=",1)[1])' "$ENV_FILE"; }
 mask() { sed -E 's#(postgres(ql)?://[^:]+:)[^@]+@#\1***@#g; s/npg_[A-Za-z0-9]+/***/g'; }
 q() { psql "$(db_url)" -Atc "$1" 2>&1 | mask; }
 
 require_e2e_db() {
-  # The E2E database is recognisable by content: its only users are test accounts.
+  # The E2E database is recognisable by content: its only users are test accounts
+  # (plus, optionally, TK's owner account). Production has real customers.
   local real
-  real=$(q "select count(*) from users where email not like '$TEST_USER_EMAIL_LIKE'")
+  real=$(q "select count(*) from users where email not like '$TEST_USER_EMAIL_LIKE' and lower(email) <> lower('$OWNER_EMAIL')")
   [[ $real == 0 ]] || { echo "REFUSING: database has $real non-test users — this is not the E2E database" >&2; exit 1; }
 }
 
@@ -50,7 +53,7 @@ deploy)
 db-check)
   python3 -c 'import os,sys,urllib.parse as u;v=open(os.path.expanduser(sys.argv[1])).read().strip();p=u.urlparse(v.split("=",1)[1]);print("urls:",v.count("://"),"| host:",(p.hostname or "")[:14]+"…","| query keys:",sorted(u.parse_qs(p.query)))' "$ENV_FILE"
   echo "public tables: $(q "select count(*) from information_schema.tables where table_schema='public'")"
-  echo "users: $(q "select count(*) from users") (non-test: $(q "select count(*) from users where email not like '$TEST_USER_EMAIL_LIKE'"))"
+  echo "users: $(q "select count(*) from users") (non-test, excluding owner: $(q "select count(*) from users where email not like '$TEST_USER_EMAIL_LIKE' and lower(email) <> lower('$OWNER_EMAIL')"))"
   ;;
 state)
   require_e2e_db
@@ -70,7 +73,9 @@ print("latest profile provenance:",json.dumps(s.get("provenance"))); print("know
 reset)
   [[ ${2:-} == --yes ]] || { echo "reset deletes the test account's Context; rerun with --yes after TK agrees" >&2; exit 1; }
   require_e2e_db
-  q "delete from bridge_access_tokens; delete from bridge_authorization_codes; delete from interview_drafts; delete from profiles;" >/dev/null
+  # Only the agent test account's state; TK's owner account (lab use) is left alone.
+  tu="(select id from users where email like '$TEST_USER_EMAIL_LIKE')"
+  q "delete from bridge_access_tokens where user_id in $tu; delete from bridge_authorization_codes where user_id in $tu; delete from interview_drafts where user_id in $tu; delete from profiles where user_id in $tu;" >/dev/null
   echo "reset done (test user kept, so no re-signup is needed):"; "$0" state
   ;;
 *) sed -n '3,7p' "$0" >&2; exit 2 ;;

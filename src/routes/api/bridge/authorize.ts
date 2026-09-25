@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   BridgeExchangeError,
   bridgeClientId,
+  bridgeRedirectAllowed,
   getBridgeOAuthClient,
   getBridgeUserFromSession,
   isBridgeDestination,
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/api/bridge/authorize")({
           const resource = url.searchParams.get("resource");
           const expectedResource = `${url.origin}/api/bridge/mcp`;
 
-          if (!client || !client.redirect_uris.includes(redirectUri)) {
+          if (!client || !bridgeRedirectAllowed(client, redirectUri)) {
             return Response.json({ error: "invalid_client" }, { status: 400 });
           }
           if (responseType !== "code") {

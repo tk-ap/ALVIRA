@@ -4,6 +4,7 @@ product_key: alvira-meos
 source:
   repository: tk-ap/ALVIRA
   production_branch: main
+  sandbox_branch: sandbox/review
 
 production:
   provider: vercel
@@ -21,17 +22,56 @@ sandboxes:
     url: https://mighty-ether-p6cn.here.now/
     current_version_id: 01M37PB6TPH1J4AM30B3Y9H9TD
     source_ref: 57c59e2d838c948a8c1ee760125b6f1502ea7572
+    canonical_routes:
+      - /
+      - /app/
+      - /context/
+      - /bridge/connect/
+      - /meos/
+      - /lab/interview/
+    legacy_aliases:
+      /variants/interview-shell/: /lab/interview/
+      /variants/dossier/: /meos/
+      /variants/context-portability/: /context/
+      /variants/connect-loop/: /bridge/connect/
     verification:
       state: pending
       evidence_refs: []
     notes:
       - "Static UI build only. Sign-in, database, payments and API routes are unavailable in this sandbox and are not simulated."
-      - "Build with scripts/sandbox-build.sh, then publish the output directory to the same slug; never create a replacement site."
+      - "Canonical source is sandbox/review. Build once with scripts/sandbox-build.sh and publish only dist/client to the same slug; never create a replacement site."
+      - "A permanent-slug publish must contain the complete canonical sandbox. Partial route or historical-variant publishes are prohibited."
+      - "scripts/sandbox-verify.mjs runs from scripts/sandbox-build.sh and fails when a required route, expected content marker, or static-backend guard is missing."
       - "Verification is pending: HTTP 200 checks on the root and a few routes only. No browser or mobile verification has been recorded."
+
+historical_variant_dispositions:
+  interview_shell:
+    source_ref: d9633ed04f88e99169af67364df97c6a4bbd1e5c
+    status: ported
+    canonical_route: /lab/interview/
+    legacy_route: /variants/interview-shell/
+    notes: "Retains the immersive Interview Engine Lab direction as a truthful static shell; generation, authentication, Context writes, and persistence remain server-backed."
+  dossier:
+    status: archived_reference
+    canonical_route: /meos/
+    legacy_route: /variants/dossier/
+    notes: "The branch's product-wide Dossier rename is not merged into the canonical sandbox; its legacy URL redirects to the current Reflect surface."
+  context_portability:
+    status: archived_reference
+    canonical_route: /context/
+    legacy_route: /variants/context-portability/
+    notes: "The branch was a homepage-positioning experiment, not an independent durable surface."
+  connect_loop:
+    status: archived_reference
+    canonical_route: /bridge/connect/
+    legacy_route: /variants/connect-loop/
+    notes: "The branch contains server-backed Bridge proposal work and is not merged into the static sandbox; its legacy URL redirects to the current Connect surface."
 
 rules:
   - sandbox-state-never-implies-production-state
   - sandbox-credentials-are-owner-level-or-external-secret-references-never-inline
   - stable-sandbox-slug-is-preferred-over-disposable-preview-urls
+  - permanent-here-now-publishes-must-contain-the-complete-canonical-sandbox
+  - historical-variant-branches-are-recovery-references-not-publish-sources
   - record-source-ref-and-verification-evidence-for-each-sandbox-version
   - browser-test-accounts-remain-product-specific-and-separate-from-provider-ownership

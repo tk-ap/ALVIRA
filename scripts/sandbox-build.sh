@@ -6,4 +6,6 @@ cd "$(dirname "$0")/.."
 bun install
 bunx vite build -c vite.sandbox.config.ts
 [ -f dist/client/index.html ] || cp dist/client/_shell.html dist/client/index.html
-echo "Static sandbox build ready: dist/client"
+node scripts/sandbox-postbuild.mjs dist/client
+node scripts/sandbox-verify.mjs dist/client
+echo "Canonical static sandbox build ready: dist/client"

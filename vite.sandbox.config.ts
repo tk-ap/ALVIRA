@@ -8,15 +8,22 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
-// SANDBOX_BASE lets a variant be published under a sub-path, e.g. /variants/dossier/.
+// The permanent sandbox is one complete site rooted at /.  Experiments that are
+// accepted into the sandbox must be normal routes in this one build, never
+// separately published sub-path variants.
 export default defineConfig({
-  base: process.env.SANDBOX_BASE || "/",
+  base: "/",
   plugins: [
     tailwindcss(),
     tsConfigPaths({ projects: ["./tsconfig.json"] }),
     tanstackStart({
       spa: { enabled: true },
-      prerender: { enabled: true, crawlLinks: true, autoSubfolderIndex: true, failOnError: false },
+      prerender: {
+        enabled: true,
+        crawlLinks: true,
+        autoSubfolderIndex: true,
+        failOnError: false,
+      },
     }),
     viteReact(),
   ],

@@ -81,3 +81,13 @@ describe("user question detection", () => {
     expect(detectUserQuestion("Should I answer for TK or wait?", { delegatedAgent: true })).toBe(true);
   });
 });
+
+import { detectGaps } from "../src/routes/-gapDetection";
+
+describe("unknown domains", () => {
+  test("a domain recorded as unknown is not re-asked", () => {
+    const s = state();
+    const gapIds = detectGaps(graph, s).map((g) => g.domain.id);
+    expect(gapIds).not.toContain("money");
+  });
+});

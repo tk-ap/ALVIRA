@@ -13,22 +13,26 @@ local:
     - alvira-profile-source-of-truth
     - connected-context-experience
     - nested-bridge-user-experience
+    - alvira-execution-request-and-review-experience
   produces:
     - approved-context
     - approved-context-view
     - provenanced-context
     - context-reference
     - context-update-candidate
+    - user-approved-execution-intent
   consumes:
     - user-provided-context
     - delegated-agent-provided-context
     - uploaded-context
     - verified-outcome-evidence-for-review
+    - execution-context-signals-for-reflect-review
   must_not_own:
     - portfolio-prioritization
     - canonical-workforce-routing
     - generic-authorization-intelligence
     - external-execution-harness
+    - agent-os-execution-persistence
   constraints:
     - context-is-not-authorization
     - interview-once-maintain-once-connect-many
@@ -45,6 +49,13 @@ local:
     - delegated-agent-inference-must-remain-marked
     - insufficient-agent-evidence-must-remain-unknown
     - connected-context-read-does-not-imply-context-write-authority
+    - commercial-entitlement-is-not-execution-authority
+    - agent-os-may-power-a-future-paid-execution-capability-inside-alvira
+    - agent-os-remains-shared-host-agnostic-infrastructure-not-an-alvira-sku
+    - native-execution-must-not-remove-portable-export-to-other-harnesses
+    - execution-evidence-must-pass-through-reflect-before-durable-context-promotion
+    - delegated-context-ingest-and-execution-authority-are-separate
+    - no-live-site-pricing-entitlement-or-production-execution-change-is-authorized-by-this-direction
     - shared-interview-engine-does-not-imply-one-mega-interview
     - app-interviews-context-reflect-uploads-auth-and-data-models-are-regression-sensitive
 
@@ -54,3 +65,4 @@ rules:
   local_metadata_must_not_redefine_canonical_role: true
   cross_product_writes_require_explicit_task_authorization: true
   connected_context_direction: docs/ALVIRA_CONNECT_DIRECTION.md
+  execution_direction: ALVIRA_AGENTOS_EXECUTION_DIRECTION.md

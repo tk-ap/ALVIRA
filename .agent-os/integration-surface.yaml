@@ -7,11 +7,17 @@ inbound:
   - from: agent-os-workforce
     contract: contracts/outcome-event.schema.json
     purpose: review verified outcomes as candidate context updates; never auto-ingest without ALVIRA rules
+  - from: agent-os-workforce
+    contract: contracts/context-signal.schema.json
+    purpose: review execution observations that may indicate stale, contradicted, ambiguous, missing, or over-broad context; never treat an agent observation as confirmed context
 
 outbound:
   - to: agent-os-workforce
+    contract: contracts/work-item.schema.json
+    trigger: a user-approved ALVIRA job is intentionally handed to governed execution
+  - to: agent-os-workforce
     contract: contracts/context-envelope.schema.json
-    trigger: governed work needs approved ALVIRA context
+    trigger: governed work needs approved least-privilege ALVIRA context
   - to: alvira-bridge
     contract: contracts/context-envelope.schema.json
     trigger: an approved ALVIRA Context view needs controlled delivery to an external AI tool
@@ -71,3 +77,10 @@ rules:
   context_delivery_does_not_grant_execution_authority: true
   external_destinations_may_read_only_explicitly_approved_context: true
   canonical_connected_context_direction: docs/ALVIRA_CONNECT_DIRECTION.md
+  commercial_entitlement_does_not_grant_execution_authority: true
+  delegated_context_ingest_does_not_grant_execution_authority: true
+  execution_observations_require_reflect_review_before_durable_context_change: true
+  agent_os_remains_host_and_context_provider_agnostic: true
+  alvira_native_execution_must_not_block_portable_export_to_other_harnesses: true
+  no_live_ui_pricing_entitlement_or_execution_change_authorized_by_this_manifest: true
+  execution_direction: ALVIRA_AGENTOS_EXECUTION_DIRECTION.md

@@ -197,3 +197,14 @@ Fixed on this branch: R1 (plural keywords misfiled answers), R2 (answers contain
 | Commit author email not on the Vercel team | CLI deploy blocked | TK added the email to their Vercel account; if it recurs, tell TK |
 | Clicked by coordinates after a scroll | Navigated away mid-answer | Use accessibility refs |
 | Took chat echo as proof an answer was saved | Two answers silently lost (R1/R2) | Verify persisted state |
+
+## 11. Founders-demo run (2026-09-25, run 02): what changed
+
+- **Use Brave, not Chromium.** Chromium quit on its own twice mid-run (09:47 and 13:59; clean exits, no crash or OOM), which TK says is a known issue with Chromium on this machine. Brave is Chromium-based, and both native hosts (`com.anthropic.claude_code_browser_extension`, `com.openai.codexextension`) are already registered under `~/.config/BraveSoftware/Brave-Browser/NativeMessagingHosts`. Use a dedicated Brave profile `alvira-e2e` with both extensions. The recorder's saved window choice does not follow a new window, so TK picks the window once more.
+- **Keep ChatGPT signed out in the recorded profile.** The Codex extension needs a ChatGPT sign-in, and a signed-in ChatGPT tab in the recorded window shows TK's chat history. Give Codex its own profile (for example `alvira-e2e-codex`), and close every tab you did not open before recording.
+- **A database reset does not clear the browser draft.** ALVIRA keeps `alvira:interview-draft:user:<id>:context` in localStorage, and it reappears in the Context Mirror after a DB reset (attempt 1 was voided for this). Before each take, on the preview origin run: `Object.keys(localStorage).filter(k=>k.startsWith('alvira:')).forEach(k=>localStorage.removeItem(k)); sessionStorage.clear()`, reload, and confirm there is no Context Mirror, popup or resume prompt.
+- **Don't type long answers keystroke by keystroke.** Under recording load, the per-key re-render of a 1,000-character answer froze the page (attempt 2). Set the textarea with the native value setter, dispatch `input`, then press Enter.
+- **Recorder load.** `e2e-record` now defaults to 20fps at 1260x800 (full-size 30fps CPU encoding used a whole core).
+- **Source the agent's context from TK's signed-in ChatGPT first,** with TK's go-ahead and off camera. Ask for a briefing with every item tagged stated or inferred and dated. My own notes were stale and missed major items, which is why TK's blind review scored the run-01 POST answer 2/5 on "would follow it".
+- **Sensitive context split.** In a recorded demo, file only non-sensitive context. Afterwards, off camera, add sensitive items (identity, housing and legal, exact finances) to the same profile, labelled sensitive with release conditions.
+- **Blind tests have three arms:** A anonymous, B signed-in ChatGPT (its own memory), C anonymous + ALVIRA brief. B is the real competitor. Capture it before anyone signs ChatGPT out of the profile.

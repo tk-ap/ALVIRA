@@ -152,12 +152,24 @@ function parseCimdUrl(clientId: string) {
   return parsed;
 }
 
-async function resolveMetadataAddress(url: URL) {
+type MetadataAddress = { address: string; family: number };
+
+// Hands the vetted addresses to the socket. Node and Bun call a custom lookup with
+// { all: true } (autoSelectFamily), which expects an array; a single address makes
+// every connection fail with ERR_INVALID_IP_ADDRESS.
+export function pinnedMetadataLookup(addresses: MetadataAddress[]) {
+  return (_hostname: string, options: { all?: boolean } | undefined, callback: (...args: unknown[]) => void) => {
+    if (options?.all) callback(null, addresses);
+    else callback(null, addresses[0].address, addresses[0].family);
+  };
+}
+
+async function resolveMetadataAddresses(url: URL): Promise<MetadataAddress[]> {
   const host = url.hostname.replace(/^\[|\]$/g, "");
   const literalFamily = isIP(host);
   if (literalFamily) {
     if (!publicMetadataAddress(host, literalFamily)) throw new BridgeExchangeError("Client metadata URL is not public.", "invalid_client");
-    return { address: host, family: literalFamily };
+    return [{ address: host, family: literalFamily }];
   }
 
   let addresses: Awaited<ReturnType<typeof lookup>>;
@@ -169,11 +181,11 @@ async function resolveMetadataAddress(url: URL) {
   if (!Array.isArray(addresses) || addresses.length === 0 || addresses.some((entry) => !publicMetadataAddress(entry.address, entry.family))) {
     throw new BridgeExchangeError("Client metadata URL is not public.", "invalid_client");
   }
-  return addresses[0];
+  return addresses;
 }
 
 async function fetchCimdDocument(url: URL) {
-  const pinned = await resolveMetadataAddress(url);
+  const pinned = await resolveMetadataAddresses(url);
   return await new Promise<Record<string, unknown>>((resolve, reject) => {
     const req = httpsRequest(url, {
       method: "GET",
@@ -183,9 +195,7 @@ async function fetchCimdDocument(url: URL) {
       },
       // Pin the vetted DNS result so a second lookup cannot rebind the request
       // onto loopback/private infrastructure after validation.
-      lookup: ((_hostname: string, _options: unknown, callback: (error: Error | null, address: string, family: number) => void) => {
-        callback(null, pinned.address, pinned.family);
-      }) as never,
+      lookup: pinnedMetadataLookup(pinned) as never,
     }, (response) => {
       const status = response.statusCode || 0;
       const contentType = response.headers["content-type"] || "";

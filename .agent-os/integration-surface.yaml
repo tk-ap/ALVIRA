@@ -1,4 +1,4 @@
-version: 0.1.0
+version: 0.2.0
 product_key: alvira-meos
 agent_os_repository: tk-ap/agent-os
 routing_source: registry/product-routing.yaml
@@ -14,7 +14,50 @@ outbound:
     trigger: governed work needs approved ALVIRA context
   - to: alvira-bridge
     contract: contracts/context-envelope.schema.json
-    trigger: approved ALVIRA context needs controlled delivery to an external tool
+    trigger: an approved ALVIRA Context view needs controlled delivery to an external AI tool
+
+context_ingest:
+  human:
+    actor: subject
+    provenance: direct-self-report
+  delegated_agent:
+    actor: agent
+    subject: alvira-user
+    requires:
+      - explicit-delegation
+      - distinct-actor-and-subject-identity
+      - persisted-contributor-provenance
+      - knowledge-state-per-contribution
+    provenance_fields:
+      - actor_type
+      - actor_id
+      - subject_id
+      - delegated
+      - source_type
+    knowledge_states:
+      KNOWN: supported-by-legitimately-held-agent-evidence-not-necessarily-subject-confirmed
+      INFERRED: agent-reasoning-not-confirmed-by-subject
+      UNKNOWN: insufficient-evidence-do-not-invent
+    canonical_write_authority: explicit-delegated-ingest-only
+  rules:
+    - agent-contributed-context-remains-reviewable-by-subject
+    - material-provenance-and-uncertainty-survive-context-projection
+    - connected-read-access-does-not-grant-ingest-or-write-access
+
+customer_flow:
+  canonical: interview once -> maintain living Context -> Connect ALVIRA -> approve Context view -> destination reads approved Context
+  customer_facing_name: Connect ALVIRA
+  delivery_infrastructure: ALVIRA Bridge
+  preferred_paths:
+    - native-plugin-or-connector-when-verified
+    - bridge-remote-connection
+    - bridge-api-for-custom-integrations
+    - reviewed-portable-context-fallback
+  prohibited_shortcuts:
+    - destination-specific-context-store
+    - silent-context-writeback
+    - manual-bearer-token-copy-in-normal-flow
+    - unverified-named-integration-claims
 
 cross_market:
   - trigger: a context observation becomes a portfolio-priority question
@@ -26,3 +69,5 @@ rules:
   cross_market_policy: policies/CROSS_MARKET_POLICY.md
   integration_claims_require_verified_implementation: true
   context_delivery_does_not_grant_execution_authority: true
+  external_destinations_may_read_only_explicitly_approved_context: true
+  canonical_connected_context_direction: docs/ALVIRA_CONNECT_DIRECTION.md

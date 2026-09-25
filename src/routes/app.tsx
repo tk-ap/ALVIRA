@@ -26,6 +26,7 @@ import {
 import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
+import { buildCapturedContextResponse, buildFirstRunIntro, buildWelcomeBackMessage, extractPreferredName, isInterviewRecallRequest, isMoveOnRequest } from "./-interviewConversation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
@@ -794,7 +795,10 @@ function AppPage() {
     setOffering(resumeDraft.offering);
     setTopic(resumeDraft.topic);
     setTier(resumeDraft.state.tier);
-    setState(resumeDraft.state);
+    const resumed = resumeDraft.state.provenance?.actor_type === "agent"
+      ? resumeDraft.state
+      : { ...resumeDraft.state, history: [...resumeDraft.state.history, { role: "assistant" as const, content: buildWelcomeBackMessage(resumeDraft.state, "resume") }] };
+    setState(resumed);
     setResumeDraft(null);
     setScreen("interview");
   };
@@ -807,7 +811,10 @@ function AppPage() {
     setPreviewMode(draftPreview);
     setTopic(resumeDraft.topic);
     setTier(resumeDraft.state.tier);
-    const seeded = withAgentProvenance(seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview));
+    const rawSeeded = withAgentProvenance(seedStateFromExisting(resumeDraft.state, activeOffering, draftPreview));
+    const seeded = rawSeeded.provenance?.actor_type === "agent"
+      ? rawSeeded
+      : { ...rawSeeded, userName: resumeDraft.state.userName, history: [...rawSeeded.history, { role: "assistant" as const, content: buildWelcomeBackMessage(resumeDraft.state, "update") }] };
     setState(seeded);
     setResumeDraft(null);
     setSeededInfo("Your Context has already been generated. What has changed, or what would you like ALVIRA to know now?");
@@ -860,7 +867,10 @@ function AppPage() {
     setPreviewMode(profilePreview);
     setTopic(profile.topic);
     setTier(profile.tier as Tier);
-    const seeded = withAgentProvenance(seedStateFromExisting(profile.state, activeOffering, profilePreview));
+    const rawSeeded = withAgentProvenance(seedStateFromExisting(profile.state, activeOffering, profilePreview));
+    const seeded = rawSeeded.provenance?.actor_type === "agent"
+      ? rawSeeded
+      : { ...rawSeeded, userName: profile.state.userName, history: [...rawSeeded.history, { role: "assistant" as const, content: buildWelcomeBackMessage(profile.state, "update") }] };
     const carried = Object.values(seeded.domains).filter((d) => d.covered).length;
     setState(seeded);
     setSeededInfo(
@@ -1028,6 +1038,16 @@ function AppPage() {
 
     const activeOffering = offering === "meos" ? "meos" : "context";
     const initialState = withAgentProvenance(createInitialState(tier, trimmed, activeOffering, isPreview));
+
+    if (initialState.provenance?.actor_type !== "agent") {
+      setState({
+        ...initialState,
+        introStage: "name",
+        history: [{ role: "assistant", content: "Before we start, what should I call you?" }],
+      });
+      setWaiting(false);
+      return;
+    }
 
     try {
       const result = await askNextQuestion(initialState, false, activeOffering);

@@ -29,6 +29,10 @@ export interface InterviewProvenance {
 export interface InterviewState {
   tier: Tier;
   topic: string;
+  /** Human-facing preferred name captured during the conversational intro. */
+  userName?: string;
+  /** Human first-run intro state; delegated-agent sessions skip this. */
+  introStage?: "name" | "complete";
   domains: Record<
     string,
     {
@@ -39,6 +43,8 @@ export interface InterviewState {
       knowledge?: KnowledgeState[];
       /** Contributor recorded this domain as unknown rather than answering it. */
       unknown?: boolean;
+      /** Human explicitly chose not to explore this domain in the current interview. */
+      skipped?: boolean;
     }
   >;
   provenance?: InterviewProvenance;

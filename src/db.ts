@@ -1,11 +1,12 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import { resolveDatabaseUrl } from "~/lib/database-url";
 
 type Sql = NeonQueryFunction<false, false>;
 let sql: Sql | null = null;
 
 export function getDb(): Sql {
   if (sql) return sql;
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = resolveDatabaseUrl();
   if (!connectionString) {
     throw new Error("DATABASE_URL is required. Connect a Postgres database before starting ALVIRA.");
   }

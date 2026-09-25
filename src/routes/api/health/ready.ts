@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { neon } from "@neondatabase/serverless";
+import { resolveDatabaseUrl } from "~/lib/database-url";
 
 /**
  * Readiness probe for orchestration/load balancers and post-deploy smoke tests.
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/api/health/ready")({
     handlers: {
       GET: async () => {
         try {
-          const connectionString = process.env.DATABASE_URL;
+          const connectionString = resolveDatabaseUrl();
           if (!connectionString) return Response.json({ status: "not_ready" }, { status: 503 });
           const sql = neon(connectionString);
           await sql.query("SELECT 1");

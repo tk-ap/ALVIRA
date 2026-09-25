@@ -36,7 +36,9 @@ cp -R dist/client .vercel/output/static
 rm -f .vercel/output/static/index.html   # SSR owns "/", not a static shell
 
 echo "[4/4] bundle SSR handler + deps into the render function"
+# E2E builds are stamped so the runtime refuses the shared (production) DATABASE_URL.
 bun build vercel-entry.ts --target node \
+  ${ALVIRA_E2E:+--define process.env.ALVIRA_E2E='"1"'} \
   --outfile .vercel/output/functions/render.func/index.mjs
 
 cat > .vercel/output/functions/render.func/.vc-config.json <<'JSON'

@@ -30,7 +30,7 @@ Report exactly what the evidence shows. Put failures and repairs in the report t
 
 ## 3. Environment (already set up once; verify, don't rebuild)
 
-- **Code:** branch `e2e/agent-interview-mode` in tk-ap/ALVIRA. It is PR #177 (Interview Engine Lab v2 in the real `/app`) + origin/main + the agent-mode slice and E2E fixes. **Prototype, never merge as-is.** Work from a dedicated worktree, e.g. `~/Work/alvira-agent-e2e-wt`.
+- **Code:** branch `e2e/agent-interview-mode` in tk-ap/ALVIRA. It is an executable **E2E overlay**, not an independent visual product fork: before a new canonical E2E release, reconcile the latest verified **published** `sandbox/review` UI/product baseline into this branch while preserving the isolated E2E database, agent-mode, provenance, Bridge and test instrumentation. The last deliberately reconciled sandbox SHA is recorded in `docs/e2e/CANONICAL_SANDBOX_BASELINE`. **Prototype, never merge as-is to production.** Work from a dedicated worktree, e.g. `~/Work/alvira-agent-e2e-wt`.
 - **Database:** Neon project `neon-canary-diamond`, **not** connected to any Vercel project. Its URL is in `~/.config/alvira/e2e-db.env`, mode 600, written by TK.
 - **Vercel:** team `alvira2`, project `alvira`. The Preview variable `ALVIRA_E2E_DATABASE_URL` points at Neon. The shared `DATABASE_URL` (Production **and** Preview) is **production** — the E2E build never reads it.
 - **Preview URL:** `https://alvira-agent-e2e.vercel.app` (alias, re-pointed on each deploy).
@@ -45,7 +45,17 @@ scripts/e2e/e2e-env state        # profiles, drafts, active Bridge grants, lates
 curl -s https://alvira-agent-e2e.vercel.app/api/health/ready   # {"status":"ready"}
 ```
 
-To deploy code changes, use only `scripts/e2e/e2e-env deploy`. It refuses an unlinked folder, refuses a non-test database, checks that the bundle is E2E-stamped, aliases the deploy and checks health.
+To deploy code changes, use only `scripts/e2e/e2e-env deploy`. It refuses an unlinked folder, a dirty/uncommitted worktree, a non-test database, an E2E overlay whose recorded canonical-sandbox baseline is behind the source SHA currently published by `sandbox/review` to the permanent here.now sandbox, or a bundle that is not E2E-stamped. Before building, it checks the current E2E alias release fingerprint and health; when the E2E commit and currently published canonical-sandbox source SHA already match a healthy alias, it **reuses the existing deployment instead of creating another Vercel deployment**. After a real deploy it stamps `/e2e-release.json`, aliases the preview and checks health.
+
+### E2E release-boundary rule
+
+The three release boundaries remain distinct:
+
+- `mighty-ether-p6cn.here.now` = canonical **static** sandbox from `sandbox/review`;
+- `alvira-agent-e2e.vercel.app` = latest reconciled sandbox experience + real isolated E2E capabilities;
+- `alviratech.vercel.app` = production from `main`.
+
+Do not point the E2E alias directly at a `sandbox/review` Vercel preview. Reconcile the sandbox UI into the E2E overlay, update `docs/e2e/CANONICAL_SANDBOX_BASELINE` to the exact verified sandbox SHA, then use `e2e-env deploy`. This keeps the test functional while preventing routine here.now design iterations from consuming Vercel deployments.
 
 ## 4. Recording
 

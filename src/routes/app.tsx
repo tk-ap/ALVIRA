@@ -1184,7 +1184,98 @@ function AppPage() {
     const trimmed = answer.trim();
     if (!trimmed || waiting || !state) return;
 
+    // Human first-run name capture happens before any substantive domain question.
+    if (state.provenance?.actor_type !== "agent" && state.introStage === "name") {
+      const userName = extractPreferredName(trimmed);
+      const userMessage: Message = { role: "user", content: trimmed };
+      if (!userName) {
+        setState({ ...state, history: [...state.history, userMessage, { role: "assistant", content: "What should I call you?" }] });
+        setAnswer("");
+        return;
+      }
+      const introState: InterviewState = {
+        ...state,
+        userName,
+        introStage: "complete",
+        history: [...state.history, userMessage, { role: "assistant", content: buildFirstRunIntro(userName) }],
+        currentDomain: null,
+      };
+      setState(introState);
+      setAnswer("");
+      setWaiting(true);
+      setInterviewError("");
+      try {
+        const result = await askNextQuestion(introState, false);
+        setState(result ?? { ...introState, currentDomain: null });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Something went wrong.";
+        if (msg !== "API key not configured") {
+          setInterviewError(msg);
+          setState(introState);
+        }
+      } finally {
+        setWaiting(false);
+      }
+      return;
+    }
+
+    // Recall reflects only structured captured Context. It never turns chat-only
+    // material into Context and it leaves the current interview domain open.
+    if (isInterviewRecallRequest(trimmed)) {
+      setState({
+        ...state,
+        history: [
+          ...state.history,
+          { role: "user", content: trimmed },
+          { role: "assistant", content: buildCapturedContextResponse(state, graph) },
+        ],
+      });
+      setAnswer("");
+      return;
+    }
+
     const currentDomain = state.currentDomain;
+
+    // Human "move on" language is a navigation choice, not an answer. Mark the
+    // domain skipped with zero confidence and advance without pretending it was understood.
+    if (state.provenance?.actor_type !== "agent" && currentDomain && isMoveOnRequest(trimmed)) {
+      const skippedState: InterviewState = {
+        ...state,
+        domains: {
+          ...state.domains,
+          [currentDomain]: {
+            ...state.domains[currentDomain],
+            covered: true,
+            confidence: state.domains[currentDomain]?.confidence ?? 0,
+            skipped: true,
+          },
+        },
+        history: [
+          ...state.history,
+          { role: "user", content: trimmed },
+          { role: "assistant", content: "Got it — we’ll leave that area unexplored for now and move on." },
+        ],
+        currentDomain: null,
+      };
+      setState(skippedState);
+      setAnswer("");
+      setWaiting(true);
+      setInterviewError("");
+      try {
+        const result = await askNextQuestion(skippedState, false);
+        setState(result ?? { ...skippedState, currentDomain: null });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Something went wrong.";
+        if (msg !== "API key not configured") {
+          setInterviewError(msg);
+          setState(skippedState);
+        }
+      } finally {
+        setWaiting(false);
+      }
+      return;
+    }
+
     // Agent answers carry KNOWN/INFERRED alongside each answer; human answers are unchanged.
     const knowledgeFor = (domainId: string) => state.provenance?.actor_type === "agent"
       ? { knowledge: [...(state.domains[domainId]?.knowledge ?? (state.domains[domainId]?.answers ?? []).map(() => "KNOWN" as const)), knowledgeMark] }

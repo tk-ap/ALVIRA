@@ -34,7 +34,7 @@ Report exactly what the evidence shows. Put failures and repairs in the report t
 - **Database:** Neon project `neon-canary-diamond`, **not** connected to any Vercel project. Its URL is in `~/.config/alvira/e2e-db.env`, mode 600, written by TK.
 - **Vercel:** team `alvira2`, project `alvira`. The Preview variable `ALVIRA_E2E_DATABASE_URL` points at Neon. The shared `DATABASE_URL` (Production **and** Preview) is **production** — the E2E build never reads it.
 - **Preview URL:** `https://alvira-agent-e2e.vercel.app` (alias, re-pointed on each deploy).
-- **Test account:** `codex-smoke-…@example.com`, already signed up on the preview. TK signs in; you never type the password.
+- **Test account:** `codex-smoke-…@example.com`, already signed up on the preview. TK signs in; you never type the password. In an E2E-stamped build this isolated account has the same test-access simulator as the live authorized test account (`actual / founder / free / pro / lifetime`) so tier behavior can be checked without inventing a production-only smoke tier.
 - **Browser:** Chromium profile `alvira-e2e`, never signed into ChatGPT or Google.
 
 Check the environment (the output is masked; never print the URL any other way):
@@ -164,7 +164,7 @@ Follow the brief's Final Report Format. Use `~/Work/alvira-e2e-runs/alvira-agent
 
 After a passing engineering run:
 1. Ask TK before resetting.
-2. `scripts/e2e/e2e-env reset --yes` deletes the profile, drafts and Bridge grants. It keeps the test user, so no re-signup is needed.
+2. `scripts/e2e/e2e-env reset --yes` deletes the test user's profiles, drafts and Bridge grants **and resets its interview usage counter to 0**. It keeps the test user and leaves the owner account alone, so no re-signup is needed. Tier simulation remains available through the same authorized test-access control used by the live test account.
 3. Re-run Phases 1–6 without debugging, recording with `--label B-clean-demo`.
 
 If anything breaks, stop the clean take, fix it in the engineering track, and start the clean take over.

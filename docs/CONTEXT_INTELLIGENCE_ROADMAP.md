@@ -148,6 +148,45 @@ Any implementation must preserve current interview, validation, persistence, and
 
 ## Near-term follow-up
 
+### Failure-triggered Context correction
+
+Owner-ratified 2026-09-08. This is the chosen answer to how maintained Context stays current
+for users who do not run agents.
+
+Maintenance framed as hygiene does not retain. Nobody returns to a product in order to tidy
+their own profile, and "your Context changes over time" is true without being a reason to
+come back. The forcing function has to be a moment where stale Context visibly costs the
+user something.
+
+That moment already exists and ALVIRA does not currently capture it: the user asks an AI
+something, and the answer is wrong about them.
+
+Proposed surface: a low-friction way to report that failure — paste back the answer their AI
+gave, or the prompt that produced it. ALVIRA then works out **which Context was missing,
+stale, contradicted, or ambiguous**, and asks one targeted question about it.
+
+Expected behavior:
+
+- The user reports a *symptom*, never a correction. "My AI said I work in retail" rather
+  than being asked to go and edit a profile field.
+- ALVIRA diagnoses which Context domain is implicated and asks about that one thing.
+- The resulting change follows the existing validation path: user-confirmed before it
+  becomes durable Context, with history and provenance preserved.
+- Nothing is inferred silently from the pasted material. It is evidence that prompts a
+  question, not a source that overwrites Context.
+
+Design principle: **elicitation triggered by observed failure, not by surveillance.** This
+deliberately keeps ALVIRA out of ambient capture. ALVIRA does not watch the user's AI usage;
+the user brings the failure to ALVIRA. That distinction is the same one that separates
+ALVIRA from ambient work-memory products, and it should not be weakened for convenience.
+
+Why this ordering: the mechanic is identical to agent-emitted drift signals (see deferred,
+below) but requires the user to have adopted nothing. It works for someone whose entire AI
+stack is one chat window, which is the majority of the addressable market today.
+
+Beta question: **Do users report AI failures back to ALVIRA when reporting is one step, and
+does answering the resulting question feel worth the interruption?**
+
 ### Saved-Context-aware interview reflection
 
 The current conversational reflection layer sees the active conversation history, while the Context Mirror can also show broader seeded/carried interview state. Complete the continuity model by allowing the reflection layer to reference relevant **previously saved or seeded Context** when it materially changes the interpretation of the user's newest answer.
@@ -164,6 +203,34 @@ Expected behavior:
 Beta question: **Do users notice and trust cross-session continuity when ALVIRA appropriately references what it already knew?**
 
 ## Intentionally deferred
+
+### Agent-emitted Context drift signals
+
+Kept deliberately in view for expansion or pivot, not scheduled.
+
+Where a user runs an agentic workflow, the executing agent can report Context problems
+directly instead of waiting for the human to notice. The agent emits a **signal** — what it
+observed, which Context item it relates to, how many times, with evidence — and never an
+edit. ALVIRA converts signals into questions; the user still confirms. Allowing agents to
+write Context back would turn confirmed Context into accumulated machine inference, which is
+precisely the property that distinguishes ALVIRA from ambient capture.
+
+A draft contract exists in the `tk-ap/agent-os` control plane as
+`contracts/context-signal.schema.json`, with a `context_signals` array added to
+`contracts/outcome-event.schema.json` as the return path. The draft has no field capable of
+carrying a replacement value, and `additionalProperties` is false so one cannot be added at
+runtime. `contracts/context-envelope.schema.json` already pins `context_origin` to the
+constant `alvira-context`, so the outbound half of this loop is defined.
+
+The reason this is deferred rather than built: it demonstrates beautifully and reproduces
+badly. Showing the full loop currently requires a multi-agent control plane the customer
+does not have, which makes it a compelling proof and a poor retention mechanism. It also
+represents a different customer — developers, agencies, and people running their own agents
+— with different pricing and a different first screen.
+
+Revisit as a deliberate segment decision if beta evidence shows Founding Beta users already
+running agentic workflows, or if failure-triggered correction above does not produce enough
+return visits. Do not drift into it because it is the case that demos well.
 
 ### Private ongoing Reflect companion
 
@@ -193,6 +260,9 @@ Password-protected dossier export remains a useful premium/privacy enhancement, 
 - Do users notice and trust cross-session continuity when ALVIRA appropriately references previously saved Context?
 - Do users understand AI possibilities better after the interview than before it?
 - Which surfaced AI leverage opportunities do users accept, reject, or edit?
+- Do users report AI failures back to ALVIRA when reporting is one step?
+- After a reported failure, does the diagnosed Context domain match what the user says was wrong?
+- How many Founding Beta users already run agentic workflows, and would they emit drift signals?
 - How often do users choose advise, collaborate, delegate, automate later, or human-only?
 - Does an AI Leverage Map create an immediate sense of value before or after profile completion?
 - Do users find context-grounded product recommendations useful without perceiving ALVIRA as a generic tool directory?

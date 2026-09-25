@@ -100,8 +100,8 @@ const DOMAIN_TOPICALITY: Record<string, DomainSignalSpec> = {
   currentProjects: {
     label: "Current Projects",
     patterns: [
-      /\b(?:project|working on|building|developing|creating|producing|preparing|initiative|campaign)\b/i,
-      /\b(?:launch|deadline|due date|ship|release|milestone|this week|this month|right now|currently)\b/i,
+      /\b(?:projects?|working on|building|developing|creating|producing|preparing|initiatives?|campaigns?)\b/i,
+      /\b(?:launch(?:es|ed|ing)?|deadlines?|due dates?|ship(?:s|ped|ping)?|releases?|milestones?|this week|this month|right now|currently)\b/i,
     ],
   },
   identity: {
@@ -280,6 +280,11 @@ export function detectUserQuestion(answer: string): boolean {
 
   // Ends with question mark
   if (trimmed.endsWith("?")) return true;
+
+  // Question-word heuristics only fit short replies. A substantive answer that
+  // happens to start with "What" or mention "what is" must not be discarded as
+  // a question to ALVIRA.
+  if (trimmed.split(/\s+/).filter(Boolean).length > 25) return false;
 
   // Starts with a question word
   for (const start of QUESTION_STARTS) {

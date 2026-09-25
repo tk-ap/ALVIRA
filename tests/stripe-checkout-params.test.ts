@@ -1,5 +1,5 @@
-import { describe, expect, test } from "bun:test";
-import { buildCheckoutSessionParams, PLAN_CONFIG } from "../src/lib/stripe-checkout-params";
+import { afterEach, describe, expect, test } from "bun:test";
+import { buildCheckoutSessionParams, PLAN_CONFIG, resolvePriceId } from "../src/lib/stripe-checkout-params";
 import type { User } from "../src/db";
 
 const baseUser = { id: "user_123", email: "buyer@example.com" } as User;
@@ -56,5 +56,56 @@ describe("Stripe Checkout session parameters", () => {
     expect(params.get("metadata[entitlement]")).toBe("lifetime");
     expect(params.get("metadata[plan]")).toBe("lifetime");
     expect(params.get("client_reference_id")).toBe("user_123");
+  });
+});
+
+
+const PRICE_VARS = [
+  "ALVIRA_STRIPE_PRICE_PRO_MONTHLY",
+  "ALVIRA_STRIPE_PRICE_PRO_ANNUAL",
+  "ALVIRA_STRIPE_PRICE_LIFETIME",
+] as const;
+
+describe("Stripe price overrides", () => {
+  afterEach(() => {
+    for (const name of PRICE_VARS) delete process.env[name];
+  });
+
+  test("defaults to the live catalog price when nothing is set", () => {
+    for (const plan of ["pro-monthly", "pro-annual", "lifetime"] as const) {
+      expect(resolvePriceId(plan)).toBe(PLAN_CONFIG[plan].priceId);
+    }
+  });
+
+  test("an override replaces the catalog price in the session params", () => {
+    process.env.ALVIRA_STRIPE_PRICE_LIFETIME = "price_test_lifetime123";
+    expect(resolvePriceId("lifetime")).toBe("price_test_lifetime123");
+    const params = buildCheckoutSessionParams(baseUser, "lifetime");
+    expect(params.get("line_items[0][price]")).toBe("price_test_lifetime123");
+  });
+
+  test("each plan reads only its own variable", () => {
+    process.env.ALVIRA_STRIPE_PRICE_LIFETIME = "price_test_lifetime123";
+    expect(resolvePriceId("pro-monthly")).toBe(PLAN_CONFIG["pro-monthly"].priceId);
+    expect(resolvePriceId("pro-annual")).toBe(PLAN_CONFIG["pro-annual"].priceId);
+  });
+
+  test("an empty or whitespace override is ignored, not treated as a price", () => {
+    process.env.ALVIRA_STRIPE_PRICE_LIFETIME = "   ";
+    expect(resolvePriceId("lifetime")).toBe(PLAN_CONFIG.lifetime.priceId);
+  });
+
+  test("surrounding whitespace is tolerated", () => {
+    process.env.ALVIRA_STRIPE_PRICE_LIFETIME = "  price_test_lifetime123  ";
+    expect(resolvePriceId("lifetime")).toBe("price_test_lifetime123");
+  });
+
+  // Failing closed matters more than failing helpfully here: falling back to the
+  // live price would open a real charge surface for someone who believed they
+  // had switched to test mode.
+  test("a malformed override throws instead of falling back to the live price", () => {
+    process.env.ALVIRA_STRIPE_PRICE_LIFETIME = "prod_NotAPrice";
+    expect(() => resolvePriceId("lifetime")).toThrow("Stripe checkout is not configured.");
+    expect(() => buildCheckoutSessionParams(baseUser, "lifetime")).toThrow();
   });
 });

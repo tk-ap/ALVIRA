@@ -17,7 +17,13 @@ function isOwnerUser(user: { email: string }): boolean { const ownerEmail = (pro
 const TEST_ACCESS_COOKIE = "alvira_test_access";
 type TestAccessMode = "actual" | "founder" | "free" | "pro" | "lifetime";
 const TEST_ACCESS_EMAILS = new Set(["codex-smoke-1786676512909@example.com", "alvira@agentmail.to"]);
-function isAccessTestUser(user: { email: string }): boolean { return isOwnerUser(user) || TEST_ACCESS_EMAILS.has(user.email.trim().toLowerCase()); }
+const E2E_TEST_ACCESS_EMAIL = /^codex-smoke-[^@]+@example\.com$/;
+function isAccessTestUser(user: { email: string }): boolean {
+  const email = user.email.trim().toLowerCase();
+  return isOwnerUser(user)
+    || TEST_ACCESS_EMAILS.has(email)
+    || (process.env.ALVIRA_E2E === "1" && E2E_TEST_ACCESS_EMAIL.test(email));
+}
 function testAccessCookieOptions() { const domain = process.env.ALVIRA_SESSION_COOKIE_DOMAIN?.trim(); return { path: "/", maxAge: SESSION_MAX_AGE, httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, ...(domain ? { domain } : {}) }; }
 function getTestAccessMode(user: { email: string }): TestAccessMode | null { if (!isAccessTestUser(user)) return null; let raw: string | null = null; try { raw = getCookie(TEST_ACCESS_COOKIE) ?? null; } catch {} if (raw === "actual" || raw === "founder" || raw === "free" || raw === "pro" || raw === "lifetime") return raw; return isOwnerUser(user) ? "founder" : "actual"; }
 function getEffectiveTier(user: { email: string; tier: string }): string { const mode = getTestAccessMode(user); return mode === "free" || mode === "pro" || mode === "lifetime" ? mode : user.tier; }

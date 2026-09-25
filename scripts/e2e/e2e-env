@@ -144,8 +144,8 @@ reset)
   require_e2e_db
   # Only the agent test account's state; TK's owner account (lab use) is left alone.
   tu="(select id from users where email like '$TEST_USER_EMAIL_LIKE')"
-  q "delete from bridge_access_tokens where user_id in $tu; delete from bridge_authorization_codes where user_id in $tu; delete from interview_drafts where user_id in $tu; delete from profiles where user_id in $tu;" >/dev/null
-  echo "reset done (test user kept, so no re-signup is needed):"; "$0" state
+  q "delete from bridge_access_tokens where user_id in $tu; delete from bridge_authorization_codes where user_id in $tu; delete from interview_drafts where user_id in $tu; delete from profiles where user_id in $tu; update users set interview_count = 0 where id in $tu;" >/dev/null
+  echo "reset done (test user kept, usage reset, so no re-signup is needed):"; "$0" state
   ;;
 *) sed -n '3,7p' "$0" >&2; exit 2 ;;
 esac

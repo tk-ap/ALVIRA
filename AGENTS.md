@@ -65,6 +65,22 @@ This section is an owner-ratified requirement, not a post–Revision 11 working 
 3. Regressions affecting the free workflow block release even when the same feature works for the owner profile.
 4. Owner-profile testing is performed when the change affects privileged access, paid entitlements, administrative behavior, or owner overrides.
 
+## E2E Release Boundary
+
+This section is owner-ratified release policy.
+
+- Treat `https://alvira-agent-e2e.vercel.app` as a separate E2E release boundary from both production and the static here.now sandbox.
+- Canonical static sandbox source: `sandbox/review`, published to the permanent here.now site.
+- E2E source: `e2e/agent-interview-mode`, which must act as an executable overlay on the latest deliberately reconciled **published canonical sandbox** experience while preserving isolated E2E-only runtime behavior.
+- Do not point `alvira-agent-e2e.vercel.app` directly at a `sandbox/review` Vercel preview.
+- Do not deploy the E2E alias from `main`.
+- Update the E2E alias only through the guarded E2E deployment path documented on `e2e/agent-interview-mode` (currently `scripts/e2e/e2e-env deploy`).
+- The guarded E2E deploy must preserve the isolated E2E database boundary and E2E stamping; it must never fall back to production `DATABASE_URL`.
+- Routine sandbox iteration belongs on here.now and must not create Vercel deployments. Create a new E2E Vercel deployment only for a meaningful E2E checkpoint after the latest published sandbox experience has been reconciled into the E2E overlay.
+- When the current healthy E2E deployment already represents the same E2E source and published sandbox baseline, reuse it rather than creating a duplicate Vercel deployment.
+- E2E verification, alias changes, or sandbox verification never imply a production release. Production remains `main` → `https://alviratech.vercel.app/` under the normal production release gate.
+- Never replace or repurpose the permanent here.now sandbox while updating the E2E boundary.
+
 ## Shared Repository Safety
 
 This repository may be accessed by multiple agents. Treat `main` as the stable integration branch.

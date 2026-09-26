@@ -146,6 +146,56 @@ Before implementation, define:
 
 Any implementation must preserve current interview, validation, persistence, and portability contracts unless a separate owner-approved migration explicitly changes them.
 
+## Owner-ratified direction — Context effectiveness receipts
+
+**Ratified:** 2026-09-26
+
+ALVIRA should measure not only whether Context was delivered, but whether the supplied Context was actually useful in the task where it was used.
+
+The preferred loop is:
+
+**approved Context → task-relevant Context view → destination incorporates it → task outcome → effectiveness evidence → future retrieval/Reflect signal**
+
+A **Context effectiveness receipt** is evidence about Context use. It is not new user Context and it must never silently promote an agent inference, model output, or successful task outcome into a durable fact about the user.
+
+Where evidence is available, a receipt should preserve at minimum:
+
+- Context/profile ID;
+- Context version and deterministic hash;
+- destination/client identity;
+- task or request class;
+- approved scope/view delivered;
+- retrieval and incorporation timestamps/status;
+- relevant outcome evidence;
+- whether the user had to re-explain, correct, or override supplied Context;
+- whether the Context-enabled result was preferred or continued from when a comparable baseline exists;
+- provenance for the effectiveness observation.
+
+Use receipts to answer questions such as:
+
+- Which Context repeatedly changes an AI response in a useful way?
+- Which Context is frequently ignored, corrected, or contradicted?
+- Which Context domains reduce re-explanation?
+- Which approved views are too broad or too thin for their tasks?
+- Which Context appears stale because it repeatedly contributes to failed or corrected outcomes?
+
+Guardrails:
+
+- Do not claim causality from one successful or failed run.
+- Do not rewrite canonical Context from an effectiveness receipt.
+- Repeated negative signals may trigger Reflect/correction review, not an automatic edit.
+- Preserve destination, model, task, version, and scope so usefulness is not generalized beyond the evidence.
+- Keep this compatible with the existing Context Lift metrics and the incorporation receipts in issue #179 rather than creating a parallel analytics system.
+- Prefer the smallest instrumentation that proves useful learning before building a generalized scoring layer.
+
+Design principle: **Context Intelligence should learn which Context helps, without confusing evidence about usefulness with truth about the person.**
+
+Beta questions:
+
+- Can ALVIRA show that specific approved Context reduced re-explanation or correction?
+- Do repeated effectiveness signals improve task-relevant retrieval without making Context feel opaque or over-automated?
+- Can a user inspect why ALVIRA considers a Context item useful, stale, or in need of review?
+
 ## Near-term follow-up
 
 ### Failure-triggered Context correction

@@ -6,9 +6,10 @@ import type { Domain, InterviewState } from "../src/routes/-knowledgeGraph";
 const SENSITIVE = "[SENSITIVE — release only for money, housing or scheduling decisions] Agent report: housing costs about $4,200/month.";
 
 describe("sensitive context", () => {
-  test("detects the leading label only", () => {
+  test("fails closed: a label anywhere makes the answer sensitive", () => {
     expect(isSensitive(SENSITIVE)).toBe(true);
-    expect(isSensitive("Budget is $0; see [SENSITIVE] notes elsewhere")).toBe(false);
+    expect(isSensitive("Budget is $0. [SENSITIVE — release only for scheduling] Caregiving Tue/Thu.")).toBe(true);
+    expect(isSensitive("Budget is $0; no car.")).toBe(false);
   });
 
   test("Bridge redaction removes sensitive answers and keeps knowledge marks aligned", () => {

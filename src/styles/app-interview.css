@@ -121,3 +121,11 @@ html[data-alvira-app-shell="true"] main:has(textarea[aria-label="Your answer"]) 
     animation: none !important;
   }
 }
+
+/* While the Context Mirror is docked on the right (xl+), reserve its width so it
+   never covers the answer box, Send, Unknown or Generate controls. */
+@media (min-width: 1280px) {
+  html[data-alvira-mirror="docked"] #main-content {
+    padding-right: 370px;
+  }
+}

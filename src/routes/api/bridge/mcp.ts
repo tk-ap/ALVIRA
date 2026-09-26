@@ -160,13 +160,13 @@ function validateProtocolRequest(request: Request, message: JsonRpcRequest): Req
   return { modern: true };
 }
 
-async function authorizedProfiles(request: Request) {
+async function authorizedProfiles(request: Request, options: { includeSensitive?: boolean } = {}) {
   const token = bearer(request);
   if (!token) return null;
   const principal = await getBridgePrincipal(token);
   if (!principal) return null;
   if (principal.destination && principal.destination !== "mcp") return null;
-  return getBridgeProfiles(principal.user_id, principal.selected_profile_id);
+  return getBridgeProfiles(principal.user_id, principal.selected_profile_id, options);
 }
 
 async function handlePost(request: Request) {
@@ -238,7 +238,10 @@ async function handlePost(request: Request) {
             description: "Read the user's existing ALVIRA Context. Bridge distributes Context; it does not regenerate it.",
             inputSchema: {
               type: "object",
-              properties: { profileId: { type: "string", description: "Optional ALVIRA profile ID. Defaults to the Context authorized for this connection." } },
+              properties: {
+                profileId: { type: "string", description: "Optional ALVIRA profile ID. Defaults to the Context authorized for this connection." },
+                include_sensitive: { type: "boolean", description: "Sensitive items (labelled [SENSITIVE — release only when …]) are withheld by default. Set true only when the current task genuinely needs them, and respect each item's release condition." },
+              },
               additionalProperties: false,
             },
           },
@@ -262,7 +265,8 @@ async function handlePost(request: Request) {
       }
       if (name === "get_alvira_context") {
         const profileId = typeof args.profileId === "string" ? args.profileId : null;
-        const profile = profileId ? profiles.find((item) => item.id === profileId) : profiles[0];
+        const source = args.include_sensitive === true ? (await authorizedProfiles(request, { includeSensitive: true })) ?? [] : profiles;
+        const profile = profileId ? source.find((item) => item.id === profileId) : source[0];
         if (!profile) {
           return json(rpcResult(id, {
             content: [{ type: "text", text: "No ALVIRA Context is available." }],

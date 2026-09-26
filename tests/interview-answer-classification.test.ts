@@ -27,3 +27,17 @@ describe("current projects topicality", () => {
     expect(detectTopicalMismatch("currentProjects", answer).mismatch).toBe(false);
   });
 });
+
+import { detectGaps } from "../src/routes/-gapDetection";
+import { getKnowledgeGraph } from "../src/routes/-knowledgeGraph";
+
+describe("skipped areas", () => {
+  test("an area the person skipped is not asked again immediately", () => {
+    const graph = getKnowledgeGraph("personal");
+    const domains = Object.fromEntries(graph.map((d) => [d.id, { answers: [] as string[], confidence: 0, covered: false }]));
+    const first = detectGaps(graph, { tier: "personal", topic: "t", domains, history: [], currentDomain: null } as never)[0].domain.id;
+    domains[first] = { answers: [], confidence: 0.9, covered: true, skipped: true } as never;
+    const next = detectGaps(graph, { tier: "personal", topic: "t", domains, history: [], currentDomain: null } as never)[0].domain.id;
+    expect(next).not.toBe(first);
+  });
+});

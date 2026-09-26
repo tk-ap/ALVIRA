@@ -36,6 +36,9 @@ export function detectGaps(
     const answerCount = domainState?.answers?.length ?? 0;
     const confidence = domainState?.confidence ?? 0;
 
+    // Skipped by the person: not a gap to re-ask right away.
+    if (domainState?.skipped) continue;
+
     // Fully covered: meets minAnswers AND confidence >= threshold
     if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) {
       continue;

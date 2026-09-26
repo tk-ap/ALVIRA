@@ -1,6 +1,7 @@
 // ── Knowledge Compiler: deterministic Markdown generation (NO LLM) ──
 
 import type { Domain, InterviewState } from "./-knowledgeGraph";
+import { isSensitive } from "~/lib/sensitivity";
 
 export interface MarkdownFiles {
   overview: string;
@@ -39,19 +40,23 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
     workflows: [],
   };
 
+  // Compiled files are copied into other AI tools, so sensitive items stay in the saved Context only.
+  let withheldSensitive = 0;
   for (const domain of graph) {
     const domainState = state.domains[domain.id];
     if (!domainState || domainState.answers.length === 0) continue;
+    const content = domainState.answers.filter((answer) => (isSensitive(answer) ? (withheldSensitive += 1, false) : true));
+    if (content.length === 0) continue;
 
-    sections[domain.outputFile].push({
-      label: domain.label,
-      content: domainState.answers,
-    });
+    sections[domain.outputFile].push({ label: domain.label, content });
   }
+  const sensitiveNote = withheldSensitive
+    ? `\n> ${withheldSensitive} sensitive ${withheldSensitive === 1 ? "item is" : "items are"} kept in the saved Context and withheld from these files. Connected tools receive them only when a task explicitly needs them.\n`
+    : "";
 
   // Build each file
   const overview = buildFile(
-    `# Project: ${projectName}\n\n## Overview & Context\n\n_${tierLabel}-tier knowledge compiled by ALVIRA._\n`,
+    `# Project: ${projectName}\n\n## Overview & Context\n\n_${tierLabel}-tier knowledge compiled by ALVIRA._\n${sensitiveNote}`,
     sections.overview,
   );
 

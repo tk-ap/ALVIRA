@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import { redactSensitiveDeep, redactSensitiveState } from "./sensitivity";
 import { lookup } from "node:dns/promises";
 import { BlockList, isIP } from "node:net";
 import { request as httpsRequest } from "node:https";
@@ -529,20 +530,33 @@ export async function revokeBridgeConnectionForUser(userId: string, connectionId
   return rows.length > 0;
 }
 
-export async function getBridgeProfiles(userId: string, selectedProfileId: string | null = null) {
+/**
+ * Sensitive Context items are withheld from every Bridge surface unless the caller explicitly
+ * asks (MCP `include_sensitive: true`), so a connected tool gets bounded Context by default.
+ */
+export async function getBridgeProfiles(userId: string, selectedProfileId: string | null = null, options: { includeSensitive?: boolean } = {}) {
   const rows = (await getDb().query(
     selectedProfileId
       ? "SELECT id, topic, offering, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = $1 AND id = $2 ORDER BY updated_at DESC"
       : "SELECT id, topic, offering, tier, state_json, portrait_json, updated_at FROM profiles WHERE user_id = $1 ORDER BY updated_at DESC",
     selectedProfileId ? [userId, selectedProfileId] : [userId],
   )) as Array<{ id: string; topic: string; offering: string; tier: string; state_json: string; portrait_json: string | null; updated_at: string }>;
-  return rows.map((row) => ({
-    id: row.id,
-    topic: row.topic,
-    offering: row.offering,
-    tier: row.tier,
-    state: JSON.parse(row.state_json),
-    portrait: row.portrait_json ? JSON.parse(row.portrait_json) : null,
-    updated_at: row.updated_at,
-  }));
+  return rows.map((row) => {
+    const state = JSON.parse(row.state_json);
+    const portrait = row.portrait_json ? JSON.parse(row.portrait_json) : null;
+    if (options.includeSensitive) {
+      return { id: row.id, topic: row.topic, offering: row.offering, tier: row.tier, state, portrait, updated_at: row.updated_at, sensitive_included: true };
+    }
+    const redacted = redactSensitiveState(state);
+    return {
+      id: row.id,
+      topic: row.topic,
+      offering: row.offering,
+      tier: row.tier,
+      state: redacted.state,
+      portrait: portrait ? redactSensitiveDeep(portrait) : null,
+      updated_at: row.updated_at,
+      withheld_sensitive: redacted.withheld,
+    };
+  });
 }

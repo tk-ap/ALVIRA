@@ -134,6 +134,12 @@ export function AppFirstRunClarity() {
     let frameOne = 0;
     let frameTwo = 0;
     let observer: MutationObserver | null = null;
+    // Browsers pause animation frames in background tabs, so a page opened in the background
+    // (or driven by an agent) would stay invisible. Reveal it after a short timeout regardless.
+    const revealFallback = window.setTimeout(() => {
+      const main = document.querySelector<HTMLElement>("main#main-content");
+      if (main && main.dataset.alviraClarityReady !== "true") finishFirstPaintClarity(main);
+    }, 1500);
 
     frameOne = window.requestAnimationFrame(() => {
       frameTwo = window.requestAnimationFrame(() => {
@@ -150,6 +156,7 @@ export function AppFirstRunClarity() {
       cancelled = true;
       window.cancelAnimationFrame(frameOne);
       window.cancelAnimationFrame(frameTwo);
+      window.clearTimeout(revealFallback);
       observer?.disconnect();
       const main = document.querySelector<HTMLElement>("main#main-content");
       if (main) {

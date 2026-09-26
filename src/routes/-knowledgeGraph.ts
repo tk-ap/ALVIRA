@@ -19,6 +19,8 @@ export interface InterviewState {
       answers: string[];
       confidence: number;
       covered: boolean;
+      /** The person chose to skip this domain for now; not re-asked until they add to it. */
+      skipped?: boolean;
     }
   >;
   history: Message[];

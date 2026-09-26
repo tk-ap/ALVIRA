@@ -208,3 +208,7 @@ Fixed on this branch: R1 (plural keywords misfiled answers), R2 (answers contain
 - **Source the agent's context from TK's signed-in ChatGPT first,** with TK's go-ahead and off camera. Ask for a briefing with every item tagged stated or inferred and dated. My own notes were stale and missed major items, which is why TK's blind review scored the run-01 POST answer 2/5 on "would follow it".
 - **Sensitive context split.** In a recorded demo, file only non-sensitive context. Afterwards, off camera, add sensitive items (identity, housing and legal, exact finances) to the same profile, labelled sensitive with release conditions.
 - **Blind tests have three arms:** A anonymous, B signed-in ChatGPT (its own memory), C anonymous + ALVIRA brief. B is the real competitor. Capture it before anyone signs ChatGPT out of the profile.
+
+## 12. Demo persona (use for anything that may be shown publicly)
+
+The E2E test account is bound to a **fictional persona, Wren Calloway**: see `docs/e2e/persona/PERSONA.md`. Recordings for the public site or ASHWOOD builds use Wren, never TK's real Context. The agent's source is `docs/e2e/persona/wren-source-briefing.md`, standing in for "what Wren's other AI knows". Use the persona's frozen demo prompt. TK's real Context belongs to TK's own account, not the test account.

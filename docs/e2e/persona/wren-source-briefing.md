@@ -23,8 +23,8 @@ Plays the role of "what Wren's existing AI assistant already knows". The agent u
 - [STATED | recent] Tools budget about $300/month in total.
 - [STATED | recent] No client calls on weekends. Fridays are studio days.
 - [STATED | recent] Laptop is slow; won't replace it until a new retainer is signed.
-- [STATED | recent] [SENSITIVE — release only for scheduling decisions] Cares for a parent on Tuesday and Thursday afternoons; unavailable for meetings then.
-- [STATED | recent] [SENSITIVE — release only for pricing or financial decisions] Carries about $18,000 of business debt from the kiln and studio build-out.
+- [STATED | recent] Cares for a parent on Tuesday and Thursday afternoons; unavailable for meetings then.
+- [STATED | recent] Carries about $18,000 of business debt from the kiln and studio build-out.
 
 ## How Wren decides
 - [STATED | recent] Reversible decisions: fast. Anything affecting income: a 24-hour pause and a spreadsheet.

@@ -6,7 +6,7 @@
 
 ## Why this persona
 
-Wren is an **AI power user with context-portability pain**, the audience ALVIRA targets. They use ChatGPT, Claude and Gemini weekly and re-explain the same background every time. Their life has enough real constraints that the right answer to "what should I focus on?" is obviously different once an AI knows them. It also includes two sensitive items, so a demo can show ALVIRA holding them back.
+Wren is an **AI power user with context-portability pain**, the audience ALVIRA targets. They use ChatGPT, Claude and Gemini weekly and re-explain the same background every time. Their life has enough real constraints that the right answer to "what should I focus on?" is obviously different once an AI knows them. Demos file everything as normal context: Wren is fictional, so hiding details would only make the demo harder to follow. The `[SENSITIVE — release only …]` tag is a real-user feature and is not used for Wren.
 
 ## Snapshot (as of the demo date)
 
@@ -18,9 +18,9 @@ Wren is an **AI power user with context-portability pain**, the audience ALVIRA 
 - **Constraints:** tools budget about $300/month; no client calls on weekends; Fridays protected for studio work; a slow laptop they don't want to replace until a retainer lands.
 - **How they decide:** reversible decisions fast; anything touching income gets a 24-hour pause and a spreadsheet; asks two trusted peers before raising rates.
 - **Preferences for AI help:** bullet points, a recommendation first, no motivational filler; show the trade-off, not every option.
-- **Sensitive (release only when relevant):**
-  - Caregiving for a parent on Tuesday and Thursday afternoons, not available for meetings then. *Release only for scheduling.*
-  - About $18,000 of business debt from the kiln and studio build-out. *Release only for pricing or financial decisions.*
+- **Personal constraints (fictional, filed as normal context in demos):**
+  - Caregiving for a parent on Tuesday and Thursday afternoons, not available for meetings then.
+  - About $18,000 of business debt from the kiln and studio build-out.
 - **Unknown / open:** whether to raise their rate from $95/hour this quarter; whether to hire a part-time studio assistant; what the spring drop will sell.
 
 ## Demo prompt (frozen)
@@ -29,7 +29,7 @@ Wren is an **AI power user with context-portability pain**, the audience ALVIRA 
 
 Without context, an AI gives generic time-management advice. With Wren's ALVIRA Context, it should:
 - sequence retainer outreach before the retainer ends;
-- protect Fridays and the caregiving afternoons (the latter only if scheduling is in scope, which it is here);
+- protect Fridays and the caregiving afternoons;
 - back-plan the March 15 launch;
 - stay within the $300 tools budget;
 - flag the open rate decision instead of deciding it for Wren.

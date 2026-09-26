@@ -39,6 +39,8 @@ export interface InterviewState {
       knowledge?: KnowledgeState[];
       /** Contributor recorded this domain as unknown rather than answering it. */
       unknown?: boolean;
+      /** The person chose to skip this domain for now; not re-asked until they add to it. */
+      skipped?: boolean;
     }
   >;
   provenance?: InterviewProvenance;

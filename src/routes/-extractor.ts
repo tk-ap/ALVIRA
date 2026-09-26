@@ -110,14 +110,16 @@ ${catalog}
 
 ## Rules
 1. Assign each claim to the single most fitting domainId from the catalog above. If no catalog domain fits, omit the claim.
-2. Write each claim as one concise, self-contained statement, in first person (individual) or organization voice, ready to be used directly as an interview answer. One idea per claim.
-3. confidence (0.0–1.0): how directly the document supports the claim. 0.9+ = explicitly stated; 0.5–0.8 = reasonably supported but implied, partial, or paraphrased; below 0.5 = too weak to include.
-4. evidence (optional): a short verbatim quote or phrase from the document that supports the claim.
-5. uncoveredDomains: the domain ids from the catalog that the document does not meaningfully address.
-6. summary: one sentence describing what the document covers and how complete it is.
+2. Write each claim as one concise, self-contained statement, ready to be used directly as an interview answer. One idea per claim. Keep the source's voice and attribution: if the person wrote about themself, use first person; if the document is written about the person by someone or something else (an agent's report, an AI export, a third party), keep it in the third person and keep who reported it (for example "Agent report from ChatGPT memory: TK has…"). Never turn a report about the person into a first-person statement by them.
+3. If the source labels an item as sensitive or gives a release condition (for example "[SENSITIVE — release only when …]"), keep that label verbatim at the start of the claim. Sensitive items are still claims: include them rather than silently dropping them.
+4. confidence (0.0–1.0): how directly the document supports the claim. 0.9+ = explicitly stated; 0.5–0.8 = reasonably supported but implied, partial, or paraphrased; below 0.5 = too weak to include.
+5. evidence (optional): a short verbatim quote or phrase from the document that supports the claim.
+6. uncoveredDomains: the domain ids from the catalog that the document does not meaningfully address.
+7. summary: one sentence describing what the document covers and how complete it is.
+8. omitted: every distinct item in the document that you did NOT turn into a claim, each as a short phrase with the reason (for example "home ZIP code: no fitting domain"). An empty list only if nothing was left out.
 
 Respond ONLY with a JSON object of the form:
-{"claims":[{"domainId":"...","text":"...","confidence":0.0,"evidence":"..."}],"uncoveredDomains":["..."],"summary":"..."}`;
+{"claims":[{"domainId":"...","text":"...","confidence":0.0,"evidence":"..."}],"uncoveredDomains":["..."],"summary":"...","omitted":["..."]}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -134,7 +136,7 @@ Respond ONLY with a JSON object of the form:
 
     const raw = response.choices[0]?.message?.content || "{}";
 
-    let parsed: { claims?: unknown; uncoveredDomains?: unknown; summary?: unknown };
+    let parsed: { claims?: unknown; uncoveredDomains?: unknown; summary?: unknown; omitted?: unknown };
     try {
       parsed = JSON.parse(raw);
     } catch {
@@ -177,5 +179,13 @@ Respond ONLY with a JSON object of the form:
         ? parsed.summary.trim().slice(0, 300)
         : "";
 
-    return { claims, uncoveredDomains, summary } as ExtractionResult;
+    // Say what was left out instead of dropping it silently.
+    const omitted = Array.isArray(parsed.omitted)
+      ? parsed.omitted.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim().slice(0, 160)).slice(0, 12)
+      : [];
+    const summaryWithOmissions = omitted.length
+      ? `${summary}${summary ? " " : ""}Not carried over (${omitted.length}): ${omitted.join("; ")}.`
+      : summary;
+
+    return { claims, uncoveredDomains, summary: summaryWithOmissions } as ExtractionResult;
   });

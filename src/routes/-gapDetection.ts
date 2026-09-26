@@ -37,7 +37,7 @@ export function detectGaps(
     const confidence = domainState?.confidence ?? 0;
 
     // Recorded as unknown by the contributor: not a gap to re-ask, and not covered.
-    if (domainState?.unknown) continue;
+    if (domainState?.unknown || domainState?.skipped) continue;
 
     // Fully covered: meets minAnswers AND confidence >= threshold
     if (answerCount >= domain.minAnswers && confidence >= confidenceThreshold) {

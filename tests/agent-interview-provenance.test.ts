@@ -91,3 +91,11 @@ describe("unknown domains", () => {
     expect(gapIds).not.toContain("money");
   });
 });
+
+describe("skipped domains", () => {
+  test("a domain the person skipped is not asked again immediately", () => {
+    const s = state();
+    s.domains.money = { answers: [], confidence: 0.9, covered: true, skipped: true };
+    expect(detectGaps(graph, s).map((g) => g.domain.id)).not.toContain("money");
+  });
+});

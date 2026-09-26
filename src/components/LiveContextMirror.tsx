@@ -6,8 +6,14 @@ type DraftState = {
   topic?: string;
   currentDomain?: string | null;
   generatedAt?: number;
+  provenance?: { actor_type?: string };
   domains?: Record<string, { answers?: string[]; confidence?: number; covered?: boolean }>;
 };
+
+/** Possibilities should inform, not interrupt: they wait for real context and get out of the way. */
+const CUE_MIN_ANSWERS = 3;
+const NOTICE_AUTO_HIDE_MS = 12_000;
+const CUE_SESSION_KEY = "alvira:opportunity-cue-shown";
 
 type DraftEnvelope = { state?: DraftState; offering?: string; topic?: string; savedAt?: number };
 type OpportunityFeedback = Record<string, "not_for_me">;
@@ -70,6 +76,12 @@ export function LiveContextMirror() {
   const [cueExpanded, setCueExpanded] = useState(false);
   const [feedback, setFeedback] = useState<OpportunityFeedback>({});
   const [recapOpen, setRecapOpen] = useState(false);
+  const [recapNotice, setRecapNotice] = useState(false);
+  const [cueShownThisSession, setCueShownThisSession] = useState(() => {
+    try { return typeof window !== "undefined" && window.sessionStorage.getItem(CUE_SESSION_KEY) === "1"; } catch { return false; }
+  });
+  const cueRef = useRef<HTMLElement | null>(null);
+  const noticeRef = useRef<HTMLElement | null>(null);
   const impressionRef = useRef<Set<string>>(new Set());
   const recapImpressionRef = useRef<number | null>(null);
 
@@ -78,7 +90,10 @@ export function LiveContextMirror() {
       const onApp = window.location.pathname === "/app";
       // The accessibility label is a stable marker for the actual interview screen.
       const activeInterview = Boolean(document.querySelector('textarea[aria-label="Your answer"]'));
-      setVisible(onApp);
+      // Only for a live interview or its compiled output; never on the start screen, where a
+      // leftover browser draft from an earlier or reset session would be shown as if current.
+      const screen = document.documentElement.dataset.alviraScreen;
+      setVisible(onApp && (screen === "interview" || screen === "output"));
       setInterviewActive(onApp && activeInterview);
       if (onApp) setDraft(readLiveDraft());
     };
@@ -119,7 +134,10 @@ export function LiveContextMirror() {
   );
 
   const generatedAt = draft?.state?.generatedAt;
-  const cueCandidate = interviewActive && !generatedAt
+  // Delegated agents fill the interview programmatically; floating cues only block their controls.
+  const agentSession = draft?.state?.provenance?.actor_type === "agent";
+  const answerCount = Object.values(draft?.state?.domains ?? {}).reduce((n, d) => n + (d.answers ?? []).filter(Boolean).length, 0);
+  const cueCandidate = interviewActive && !generatedAt && !agentSession && !cueShownThisSession && answerCount >= CUE_MIN_ANSWERS
     ? candidates.find((candidate) => !cueSeen.includes(candidate.id)) ?? null
     : null;
   const cueActive = visible && interviewActive && Boolean(cueCandidate);
@@ -143,13 +161,46 @@ export function LiveContextMirror() {
   useEffect(() => {
     if (!generatedAt || candidates.length === 0) return;
     const dismissedKey = `alvira:opportunity-recap-dismissed:${generatedAt}`;
-    if (window.sessionStorage.getItem(dismissedKey)) return;
-    setRecapOpen(true);
+    if (window.sessionStorage.getItem(dismissedKey) || agentSession) return;
+    // Never open the full-screen recap by itself; offer it in a small notice the user can ignore.
+    setRecapNotice(true);
     if (recapImpressionRef.current !== generatedAt) {
       recapImpressionRef.current = generatedAt;
       trackEvent("opportunity_recap_impression", { count: candidates.length });
     }
-  }, [generatedAt, candidates.length]);
+  }, [generatedAt, candidates.length, agentSession]);
+
+  // Record that the one in-session cue has been used, and let both small notices fade on their own.
+  useEffect(() => {
+    if (!cueCandidate) return;
+    try { window.sessionStorage.setItem(CUE_SESSION_KEY, "1"); } catch { /* best effort */ }
+    const t = window.setTimeout(() => { setCueShownThisSession(true); setCueExpanded(false); }, NOTICE_AUTO_HIDE_MS);
+    return () => window.clearTimeout(t);
+  }, [cueCandidate?.id]);
+  useEffect(() => {
+    if (!recapNotice) return;
+    const t = window.setTimeout(() => setRecapNotice(false), NOTICE_AUTO_HIDE_MS);
+    return () => window.clearTimeout(t);
+  }, [recapNotice]);
+
+  // Click anywhere else, or press Escape, to dismiss whichever possibility surface is open.
+  useEffect(() => {
+    if (!cueCandidate && !recapNotice && !recapOpen) return;
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (cueCandidate && cueRef.current && !cueRef.current.contains(target)) { setCueShownThisSession(true); setCueExpanded(false); }
+      if (recapNotice && noticeRef.current && !noticeRef.current.contains(target)) setRecapNotice(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (recapOpen) dismissRecap();
+      setRecapNotice(false);
+      if (cueCandidate) { setCueShownThisSession(true); setCueExpanded(false); }
+    };
+    document.addEventListener("pointerdown", onPointer, true);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("pointerdown", onPointer, true); document.removeEventListener("keydown", onKey); };
+  }, [cueCandidate?.id, recapNotice, recapOpen]);
 
   const persistNotForMe = (candidate: OpportunityCandidate) => {
     const next: OpportunityFeedback = { ...feedback, [candidate.id]: "not_for_me" };
@@ -167,12 +218,19 @@ export function LiveContextMirror() {
   };
 
   const dismissRecap = () => {
-    if (generatedAt) window.sessionStorage.setItem(`alvira:opportunity-recap-dismissed:${generatedAt}`, "1");
+    try { if (generatedAt) window.sessionStorage.setItem(`alvira:opportunity-recap-dismissed:${generatedAt}`, "1"); } catch { /* best effort */ }
     setRecapOpen(false);
+    setRecapNotice(false);
     trackEvent("opportunity_recap_dismiss", { count: candidates.length });
   };
 
-  if (!visible || items.length === 0) return null;
+  const docked = visible && items.length > 0;
+  useEffect(() => {
+    document.documentElement.dataset.alviraMirror = docked ? "docked" : "hidden";
+    return () => { document.documentElement.dataset.alviraMirror = "hidden"; };
+  }, [docked]);
+
+  if (!docked) return null;
 
   const currentDomain = draft?.state?.currentDomain;
   const panel = <div className="w-full border border-system/30 bg-ink-light/98 p-5 shadow-2xl backdrop-blur dark:bg-ink/98">
@@ -195,7 +253,14 @@ export function LiveContextMirror() {
     <aside className="fixed right-5 top-[88px] z-40 hidden w-[330px] xl:block" aria-label="Live Context Mirror">{panel}</aside>
     <button type="button" onClick={() => setOpen(true)} className="fixed bottom-5 left-5 z-40 border border-system/50 bg-ink px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-system shadow-lg xl:hidden">Context Mirror{candidates.length > 0 ? ` · ${candidates.length}` : ""}</button>
 
-    {cueCandidate && <aside className="fixed bottom-20 left-4 right-4 z-[65] ml-auto max-w-sm border border-system/40 bg-mineral p-4 shadow-2xl dark:bg-ink sm:left-auto sm:right-5" aria-live="polite" aria-label="AI-assisted possibility">
+    {recapNotice && candidates.length > 0 && !recapOpen && <aside ref={noticeRef} className="fixed bottom-20 left-4 right-4 z-[65] ml-auto max-w-sm border border-system/40 bg-mineral p-4 shadow-2xl dark:bg-ink sm:left-auto sm:right-5" aria-live="polite" aria-label="AI possibilities noticed">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-ink dark:text-mineral">{candidates.length} AI {candidates.length === 1 ? "possibility" : "possibilities"} noticed in your Context.</p>
+        <button type="button" onClick={() => { setRecapNotice(false); setRecapOpen(true); trackEvent("opportunity_recap_impression", { count: candidates.length }); }} className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] text-system-dark underline underline-offset-4 dark:text-system">View</button>
+      </div>
+    </aside>}
+
+    {cueCandidate && <aside ref={cueRef} className="fixed bottom-20 left-4 right-4 z-[65] ml-auto max-w-sm border border-system/40 bg-mineral p-4 shadow-2xl dark:bg-ink sm:left-auto sm:right-5" aria-live="polite" aria-label="AI-assisted possibility">
       <div className="flex items-start justify-between gap-3">
         <div><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-system-dark dark:text-system">Possible AI entry point</p><p className="mt-1 text-sm font-semibold text-ink dark:text-mineral">There may be an AI-assisted next step here.</p></div>
         <button type="button" onClick={() => dismissCue(cueCandidate)} aria-label="Dismiss possibility" className="px-1 text-sm text-warm-gray-dark dark:text-warm-gray">×</button>
@@ -208,7 +273,7 @@ export function LiveContextMirror() {
       </div>
     </aside>}
 
-    {recapOpen && candidates.length > 0 && <div className="fixed inset-0 z-[85] flex items-end bg-black/45 p-3 sm:items-center sm:justify-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="opportunity-recap-title">
+    {recapOpen && candidates.length > 0 && <div className="fixed inset-0 z-[85] flex items-end bg-black/45 p-3 sm:items-center sm:justify-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="opportunity-recap-title" onPointerDown={(event) => { if (event.target === event.currentTarget) dismissRecap(); }}>
       <div className="max-h-[82dvh] w-full max-w-2xl overflow-y-auto border border-system/35 bg-mineral p-5 shadow-2xl dark:bg-ink sm:p-7">
         <div className="flex items-start justify-between gap-4"><div><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-system-dark dark:text-system">From your Context</p><h2 id="opportunity-recap-title" className="mt-1 font-display text-3xl leading-none text-ink dark:text-mineral">Possibilities ALVIRA noticed.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-warm-gray-dark dark:text-warm-gray">These are optional ways AI might help with things you already described. They are possibilities, not instructions, and nothing happens until you choose one.</p></div><button type="button" onClick={dismissRecap} aria-label="Close possibilities" className="px-2 py-1 text-lg text-warm-gray-dark dark:text-warm-gray">×</button></div>
         <div className="mt-6 space-y-3">{candidates.slice(0, 4).map((candidate) => <article key={candidate.id} className="border border-ink/10 p-4 dark:border-mineral/10"><p className="font-mono text-[9px] uppercase tracking-[0.12em] text-warm-gray-dark dark:text-warm-gray">{labelFor(candidate.domainId)}</p><p className="mt-2 text-sm leading-6 text-ink dark:text-mineral">{candidate.suggestedUse}</p><p className="mt-2 line-clamp-2 text-xs leading-5 text-warm-gray-dark dark:text-warm-gray">From: “{candidate.sourceAnswer}”</p><div className="mt-3 flex gap-4 font-mono text-[10px] uppercase tracking-[0.08em]"><a href={candidateHref(candidate, topic)} onClick={() => trackEvent("opportunity_use", { source: "recap" })} className="text-system-dark underline underline-offset-4 dark:text-system">Use this →</a><button type="button" onClick={() => persistNotForMe(candidate)} className="text-warm-gray-dark underline underline-offset-4 dark:text-warm-gray">Not for me</button></div></article>)}</div>

@@ -29,6 +29,8 @@ function BridgeConnectPage() {
   const params = useMemo(() => typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams(), []);
   const oauthMode = params.get("mode") === "oauth";
   const requestedDestination = params.get("destination") === "api" ? "api" : "mcp";
+  // Set server-side from the registered client; the app chose this name itself, so label it as such.
+  const clientName = (params.get("client_name") ?? "").trim().slice(0, 120);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,7 +96,8 @@ function BridgeConnectPage() {
           <section className="mx-auto w-full max-w-xl">
             <ProductJourneyRail active="connect" />
             <p className="font-mono text-xs uppercase tracking-widest text-system">&lt; bridge / approve &gt;</p>
-            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">An AI app is requesting access to your ALVIRA Context.</h1>
+            <h1 className="mt-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">{oauthMode && clientName ? <>“{clientName}” is requesting access to your ALVIRA Context.</> : "An AI app is requesting access to your ALVIRA Context."}</h1>
+            {oauthMode && clientName && <p className="mt-2 font-mono text-xs text-gray-500 dark:text-gray-400">App name as registered by the requesting app.</p>}
             <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">Choose exactly what it may read. ALVIRA handles the authorization in the background; the destination still has to retrieve and incorporate the Context.</p>
 
             <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">

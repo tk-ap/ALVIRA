@@ -131,6 +131,7 @@ export function buildProductionClarificationPrompt(input: {
   userQuestion: string;
   domainLabel: string;
   history: InterviewPromptMessage[];
+  delegatedAgent?: boolean;
 }): string {
   return `You are ALVIRA, a Context Intelligence interviewer. The user's latest input cannot be safely treated as an answer to the specific area you were asking about.
 
@@ -139,8 +140,11 @@ The user's input: "${input.userQuestion}"
 
 There are two possible cases:
 1. The user is asking a clarifying question. Briefly explain what you meant, concretely.
-2. The user gave a declarative answer that appears to address a different area. Acknowledge that the information may still be useful, but explicitly say you will not file it under "${input.domainLabel}" yet. Briefly restate what this area is trying to understand. If the other area is obvious from the user's own words, you may name it conversationally (for example, "that sounds more like how you make decisions"), but do not pretend the classification is certain and do not silently move or save the statement elsewhere.
+2. The user asked what you know about them (or about the person they represent). Answer briefly and plainly from what they have actually said in this conversation, then stop.
+3. The user gave an answer that seems to be about something else. Thank them briefly, say in plain words that it's useful and you'll come back to it, and restate in one sentence what you're trying to understand right now. If the other topic is obvious from their words you may name it conversationally ("that sounds more like how you make decisions"), without pretending you're certain.
 
+Speak like a person, not a system: never mention filing, saving, areas, domains, categories, labels, confidence, or any other internal mechanics.
+${input.delegatedAgent ? "The user is an AI agent contributing on behalf of another person: refer to that person in the third person (\"they\"), not \"you\".\n" : ""}
 Use relevant conversation context only when it genuinely helps. Never invent facts. Keep the clarification to 2-3 sentences. Do NOT ask a new question here — the interview engine will ask the next targeted question separately.
 
 Respond ONLY with a JSON object: {"clarification": "your clarification here"}`;

@@ -98,11 +98,15 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
   const domains = { ...initialState.domains };
   for (const d of graph) {
     const existingAnswers = existing.domains?.[d.id]?.answers ?? [];
+    const prior = existing.domains?.[d.id];
     if (existingAnswers.length > 0) {
-      domains[d.id] = { answers: [...existingAnswers], confidence: 1, covered: true };
+      // Carry provenance marks forward; continuing must not erase KNOWN/INFERRED.
+      domains[d.id] = { answers: [...existingAnswers], ...(prior?.knowledge ? { knowledge: [...prior.knowledge] } : {}), confidence: 1, covered: true };
+    } else if (prior?.unknown) {
+      domains[d.id] = { answers: [], confidence: 0, covered: true, unknown: true };
     }
   }
-  return { ...initialState, domains };
+  return { ...initialState, domains, ...(existing.provenance ? { provenance: existing.provenance } : {}) };
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
@@ -236,6 +240,18 @@ const TOPIC_GROUPS = [
     ],
   },
 ] as const;
+
+// Starting points the person picks map to the areas the interview should ask about first.
+const STARTING_POINT_FOCUS: Array<[RegExp, string[]]> = [
+  [/communication style and decision-making/i, ["communication", "decisionFrameworks"]],
+  [/daily routines, habits/i, ["dailyLife", "processes"]],
+  [/values, boundaries/i, ["identity", "constraints"]],
+  [/key relationships/i, ["relationships", "peopleAndRoles"]],
+  [/goals, priorities/i, ["goals", "decisionFrameworks"]],
+];
+function focusDomainsForTopic(topic: string): string[] {
+  return STARTING_POINT_FOCUS.flatMap(([pattern, ids]) => (pattern.test(topic) ? ids : []));
+}
 
 // ── Page ──
 export const Route = createFileRoute("/app")({
@@ -405,6 +421,11 @@ function UpgradeModal({ onClose, reason, email }: { onClose: () => void; reason:
 function AppPage() {
   // Screen state: "start" | "seed-review" | "interview" | "output" | "api-error"
   const [screen, setScreen] = useState<"start" | "seed-review" | "interview" | "output" | "api-error">("start");
+  // Publish the current screen so shell widgets (the Context Mirror) show only for a live interview or its output.
+  useEffect(() => {
+    document.documentElement.dataset.alviraScreen = screen;
+    return () => { delete document.documentElement.dataset.alviraScreen; };
+  }, [screen]);
 
   // Start screen state
   const [topic, setTopic] = useState("");
@@ -444,6 +465,8 @@ function AppPage() {
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
   const [seedDecisions, setSeedDecisions] = useState<Record<number, { status: "agree" | "revise" | "skip"; text?: string }>>({});
   const [seededInfo, setSeededInfo] = useState<string | null>(null);
+  // "Update / add context" on a completed Context: accept free-form updates even when no area has gaps.
+  const [updateMode, setUpdateMode] = useState(false);
   const [seedSource, setSeedSource] = useState<"document" | "profile" | "source">("document");
   const [seedReviewOverlay, setSeedReviewOverlay] = useState(false);
   const seedOfferingRef = useRef<"context" | "meos">("context");
@@ -550,6 +573,7 @@ function AppPage() {
   const answerCount = state?.history.filter((message) => message.role === "user").length ?? 0;
   const gaps = state ? detectGaps(graph, state, confThreshold) : [];
   const hasGaps = gaps.length > 0;
+  const acceptsInput = hasGaps || updateMode;
   const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
   const mirrorItems = state
     ? graph.flatMap((domain) => {
@@ -811,12 +835,15 @@ function AppPage() {
     setState(seeded);
     setResumeDraft(null);
     setSeededInfo("Your Context has already been generated. What has changed, or what would you like ALVIRA to know now?");
+    setUpdateMode(true);
     setScreen("interview");
     setWaiting(true);
+    // With every area covered there is no gap to ask about; file free-form updates under Living Updates.
+    const updatesDomain = getKnowledgeGraph(seeded.tier).some((d) => d.id === "updates") ? "updates" : null;
     try {
       const result = await askNextQuestion(seeded, false, activeOffering);
       if (result) setState(result);
-      else setState({ ...seeded, currentDomain: null });
+      else setState({ ...seeded, currentDomain: updatesDomain });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong.";
       if (msg !== "API key not configured") setInterviewError(msg);
@@ -937,7 +964,9 @@ function AppPage() {
     const currentGaps = detectGaps(currentGraph, currentState, currentPlaybook.completion.minimumConfidence);
     if (currentGaps.length === 0) return null;
 
-    const topGap = currentGaps[0];
+    // Honour the chosen starting points: their areas come first, then the usual priority order.
+    const focus = focusDomainsForTopic(currentState.topic ?? "");
+    const topGap = currentGaps.find((gap) => focus.includes(gap.domain.id)) ?? currentGaps[0];
     const updatedState: InterviewState = {
       ...currentState,
       currentDomain: topGap.domain.id,
@@ -1079,7 +1108,13 @@ function AppPage() {
       setSeedSource("document");
       setExtraction(result);
       setSeedDecisions({});
-      setScreen("seed-review");
+      // Mid-interview (including "Update / add context"), review as an overlay on the live interview.
+      if (screen === "interview") {
+        setShowContextSources(false);
+        setSeedReviewOverlay(true);
+      } else {
+        setScreen("seed-review");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Could not extract knowledge from that file.";
       if (msg === "API key not configured") {
@@ -1099,8 +1134,11 @@ function AppPage() {
     const seedOffering = seedOfferingRef.current;
     const currentGraph = seedOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(tier);
     const seedTopic = topic.trim() || (seedOffering === "meos" ? "My current chapter" : "My AI context");
-    const initialState = seedReviewOverlay && state
-      ? { ...state, topic: seedTopic }
+    // Imported claims add to an interview that already has answers; they never replace it.
+    // (Replacing it here previously discarded a completed Context during "Update / add context".)
+    const hasExistingAnswers = Boolean(state && Object.values(state.domains).some((d) => d.answers.length > 0));
+    const initialState = state && (seedReviewOverlay || hasExistingAnswers)
+      ? { ...state, topic: state.topic || seedTopic }
       : withAgentProvenance(createInitialState(tier, seedTopic, seedOffering, isPreview));
     const domains = { ...initialState.domains };
 
@@ -1115,7 +1153,12 @@ function AppPage() {
       if (!existing.includes(text)) {
         // Approved claims are user-validated → confidence 1, covered true.
         // This is what lets gap detection skip the seeded domains (personal threshold 0.90).
-        domains[claim.domainId] = { answers: [...existing, text], confidence: 1, covered: true };
+        const prior = domains[claim.domainId];
+        // Keep KNOWN/INFERRED aligned with answers when the interview carries knowledge marks.
+        const knowledge = prior?.knowledge || initialState.provenance?.actor_type === "agent"
+          ? { knowledge: [...(prior?.knowledge ?? existing.map(() => "KNOWN" as const)), "KNOWN" as const] }
+          : {};
+        domains[claim.domainId] = { ...prior, answers: [...existing, text], ...knowledge, confidence: 1, covered: true, unknown: undefined };
       }
     });
 
@@ -1164,7 +1207,7 @@ function AppPage() {
     const trimmed = answer.trim();
     if (!trimmed || waiting || !state) return;
 
-    const currentDomain = state.currentDomain;
+    const currentDomain = state.currentDomain ?? (updateMode ? "updates" : null);
     // Agent answers carry KNOWN/INFERRED alongside each answer; human answers are unchanged.
     const knowledgeFor = (domainId: string) => state.provenance?.actor_type === "agent"
       ? { knowledge: [...(state.domains[domainId]?.knowledge ?? (state.domains[domainId]?.answers ?? []).map(() => "KNOWN" as const)), knowledgeMark] }
@@ -1194,6 +1237,7 @@ function AppPage() {
               domainLabel,
               history: newHistory,
               tier: state.tier,
+              delegatedAgent: state.provenance?.actor_type === "agent",
             },
           });
 
@@ -1359,6 +1403,8 @@ function AppPage() {
         ...state.domains[currentDomain],
         covered: true,
         confidence: state.domains[currentDomain].confidence || confThreshold,
+        // Without this, a skipped area with no answers is still a gap and is asked again at once.
+        skipped: true,
       },
     };
 
@@ -1982,7 +2028,7 @@ function AppPage() {
               )}
 
               {/* Text input */}
-              {hasGaps && state?.provenance?.actor_type === "agent" && (
+              {acceptsInput && state?.provenance?.actor_type === "agent" && (
                 <div className="mb-2 flex items-center gap-2 font-mono text-xs" role="radiogroup" aria-label="Knowledge state of this answer">
                   <span className="text-gray-500 dark:text-gray-400">This answer is</span>
                   {(["KNOWN", "INFERRED"] as const).map((mark) => (
@@ -1990,7 +2036,7 @@ function AppPage() {
                   ))}
                 </div>
               )}
-              {hasGaps && (
+              {acceptsInput && (
                 <div className="flex gap-2 items-end">
                   <textarea
                     ref={inputRef}
@@ -2228,7 +2274,7 @@ function AppPage() {
               <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                 {resumeDraft.state.generatedAt
                   ? `${resumeDraft.topic} has generated files. Add new context or tell ALVIRA what changed.`
-                  : `${resumeDraft.topic} · ${resumeDraft.state.history.filter((message) => message.role === "user").length} answers saved ${resumeDraft.source === "browser" ? "in this browser" : "to your account"}.`}
+                  : `${resumeDraft.topic} · ${Object.values(resumeDraft.state.domains ?? {}).reduce((n, d) => n + (d.answers ?? []).length, 0)} answers saved ${resumeDraft.source === "browser" ? "in this browser" : "to your account"}.`}
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={resumeDraft.state.generatedAt ? () => void handleUpdateGeneratedDraft() : handleResumeDraft} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500">

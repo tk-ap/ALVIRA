@@ -1,6 +1,7 @@
 // ── Knowledge Compiler: deterministic Markdown generation (NO LLM) ──
 
 import type { Domain, InterviewState } from "./-knowledgeGraph";
+import { isSensitive } from "~/lib/sensitivity";
 
 export interface MarkdownFiles {
   overview: string;
@@ -39,16 +40,18 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
     workflows: [],
   };
 
+  // Compiled files are copied into other AI tools, so sensitive items stay in the saved Context only.
+  let withheldSensitive = 0;
   for (const domain of graph) {
     const domainState = state.domains[domain.id];
     if (!domainState || domainState.answers.length === 0) continue;
+    const content = domainState.answers
+      .map((answer, i) => ({ answer, i }))
+      .filter(({ answer }) => (isSensitive(answer) ? (withheldSensitive += 1, false) : true))
+      .map(({ answer, i }) => (domainState.knowledge?.[i] === "INFERRED" ? `[inferred — not confirmed by the subject] ${answer}` : answer));
+    if (content.length === 0) continue;
 
-    sections[domain.outputFile].push({
-      label: domain.label,
-      content: domainState.answers.map((answer, i) =>
-        domainState.knowledge?.[i] === "INFERRED" ? `[inferred — not confirmed by the subject] ${answer}` : answer,
-      ),
-    });
+    sections[domain.outputFile].push({ label: domain.label, content });
   }
 
   // Build each file
@@ -57,13 +60,16 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
     provenance?.actor_type === "agent"
       ? `\n> Supplied by an agent (${provenance.actor_id ?? "unidentified agent"}) on behalf of the subject${provenance.delegated ? ", under delegation" : ""}, via the ALVIRA interview. Statements are the agent's account of the subject, not first-person statements from the subject.\n`
       : "";
+  const sensitiveNote = withheldSensitive
+    ? `\n> ${withheldSensitive} sensitive ${withheldSensitive === 1 ? "item is" : "items are"} kept in the saved Context and withheld from these files. Connected tools receive them only when a task explicitly needs them.\n`
+    : "";
   const unknownDomains = graph.filter((d) => state.domains[d.id]?.unknown).map((d) => d.label);
   const unknownNote = unknownDomains.length
     ? `\n## Unknown\n\nThe contributor did not have enough evidence to answer: ${unknownDomains.join(", ")}.\n`
     : "";
 
   const overview = buildFile(
-    `# Project: ${projectName}\n\n## Overview & Context\n\n_${tierLabel}-tier knowledge compiled by ALVIRA._\n${provenanceNote}${unknownNote}`,
+    `# Project: ${projectName}\n\n## Overview & Context\n\n_${tierLabel}-tier knowledge compiled by ALVIRA._\n${provenanceNote}${sensitiveNote}${unknownNote}`,
     sections.overview,
   );
 

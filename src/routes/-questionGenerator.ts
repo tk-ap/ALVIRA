@@ -77,7 +77,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
 
 export const generateClarification = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier };
+    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier; delegatedAgent?: boolean };
     if (!d.userQuestion || !d.domainLabel) throw new Error("User input and domain label are required.");
     if (!Array.isArray(d.history)) throw new Error("History is required.");
     return {
@@ -85,6 +85,7 @@ export const generateClarification = createServerFn({ method: "POST" })
       domainLabel: d.domainLabel as string,
       history: d.history as Message[],
       tier: d.tier as Tier,
+      delegatedAgent: d.delegatedAgent === true,
     };
   })
   .handler(async ({ data }) => {
@@ -94,6 +95,7 @@ export const generateClarification = createServerFn({ method: "POST" })
       userQuestion: data.userQuestion,
       domainLabel: data.domainLabel,
       history: data.history,
+      delegatedAgent: data.delegatedAgent,
     });
 
     const response = await openai.chat.completions.create({

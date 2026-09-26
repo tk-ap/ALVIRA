@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""Create a durable checksum manifest for approved ALVIRA E2E evidence.
+
+This script never copies raw evidence into Git. It hashes only explicitly selected
+run artifacts and can publish the resulting metadata manifest into the E2E branch.
+"""
+
+from __future__ import annotations
+
+import argparse
+import fnmatch
+import hashlib
+import json
+import re
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.parse import quote
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_MANIFEST_DIR = REPO_ROOT / "docs" / "e2e" / "evidence" / "manifests"
+
+
+def git_value(*args: str) -> str | None:
+    try:
+        return subprocess.check_output(
+            ["git", "-C", str(REPO_ROOT), *args], text=True, stderr=subprocess.DEVNULL
+        ).strip() or None
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def artifact_kind(relative_path: str) -> str:
+    lower = relative_path.lower()
+    if lower == "report.md" or lower.endswith("/report.md"):
+        return "report"
+    if "blind" in lower and lower.endswith((".md", ".json")):
+        return "blind-review"
+    if lower.startswith("recordings/") or lower.endswith((".mp4", ".mov", ".webm", ".mkv")):
+        return "recording"
+    if lower.startswith("screenshots/") or lower.endswith((".png", ".jpg", ".jpeg", ".webp")):
+        return "screenshot"
+    if "persistence" in lower or "state" in lower:
+        return "state-snapshot"
+    if "bridge" in lower or "request" in lower:
+        return "request-log"
+    if lower.startswith("outputs/"):
+        return "output"
+    return "other"
+
+
+def artifact_id(relative_path: str) -> str:
+    value = re.sub(r"[^a-zA-Z0-9._-]+", "-", relative_path).strip("-").lower()
+    return value or "artifact"
+
+
+def matches_any(value: str, patterns: list[str]) -> bool:
+    return any(fnmatch.fnmatch(value, pattern) for pattern in patterns)
+
+
+def resolve_selected(run_dir: Path, patterns: list[str]) -> list[Path]:
+    selected: dict[str, Path] = {}
+    for pattern in patterns:
+        matches = list(run_dir.glob(pattern))
+        if not matches:
+            candidate = run_dir / pattern
+            if candidate.exists():
+                matches = [candidate]
+        for path in matches:
+            resolved = path.resolve()
+            try:
+                resolved.relative_to(run_dir.resolve())
+            except ValueError as exc:
+                raise SystemExit(f"Refusing path outside run directory: {path}") from exc
+            if resolved.is_file():
+                rel = resolved.relative_to(run_dir.resolve()).as_posix()
+                selected[rel] = resolved
+    if not selected:
+        raise SystemExit("No files matched --include. Refusing to create an empty evidence manifest.")
+    return [selected[key] for key in sorted(selected)]
+
+
+def build_manifest(args: argparse.Namespace) -> dict:
+    run_dir = Path(args.run_dir).expanduser().resolve()
+    if not run_dir.is_dir():
+        raise SystemExit(f"Run directory not found: {run_dir}")
+
+    run_id = args.run_id or run_dir.name
+    selected = resolve_selected(run_dir, args.include)
+    artifacts = []
+
+    for path in selected:
+        rel = path.relative_to(run_dir).as_posix()
+        kind = artifact_kind(rel)
+        is_recording = kind == "recording"
+        non_sensitive = matches_any(rel, args.non_sensitive)
+        artifacts.append(
+            {
+                "artifact_id": artifact_id(rel),
+                "relative_path": rel,
+                "kind": kind,
+                "sha256": sha256_file(path),
+                "size_bytes": path.stat().st_size,
+                "storage_class": "external-private",
+                "locator": f"private://alvira-e2e-runs/{quote(run_id, safe='')}/{quote(rel, safe='/')}",
+                "visibility": "private",
+                "contains_sensitive_data": False if non_sensitive else True,
+                "approved_for_durable_reference": True,
+                "git_content_policy": "never" if is_recording else "metadata-only",
+                "notes": None,
+            }
+        )
+
+    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    manifest = {
+        "manifest_version": "1.0",
+        "manifest_id": f"alvira-e2e:{run_id}",
+        "run_id": run_id,
+        "source": {
+            "product": "ALVIRA",
+            "repository": "tk-ap/ALVIRA",
+            "environment": args.environment,
+            "commit_sha": git_value("rev-parse", "HEAD"),
+            "branch": git_value("branch", "--show-current"),
+            "harness": args.harness,
+            "executor": args.executor,
+        },
+        "verification_state": args.verification_state,
+        "approval": {
+            "status": "approved",
+            "approved_by": args.approved_by,
+            "approved_at": args.approved_at or now,
+            "scope_note": args.scope_note,
+        },
+        "summary": args.summary,
+        "artifacts": artifacts,
+        "supersedes_manifest_id": args.supersedes_manifest_id,
+        "generated_at": now,
+    }
+    return manifest
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Hash explicitly approved ALVIRA E2E run artifacts into a durable metadata manifest."
+    )
+    parser.add_argument("--run-dir", required=True)
+    parser.add_argument("--run-id")
+    parser.add_argument(
+        "--include",
+        action="append",
+        required=True,
+        help="Run-relative file or glob approved for durable reference. Repeat as needed.",
+    )
+    parser.add_argument(
+        "--non-sensitive",
+        action="append",
+        default=[],
+        help="Approved include-pattern that may be marked contains_sensitive_data=false.",
+    )
+    parser.add_argument("--approved-by", required=True)
+    parser.add_argument("--approved-at")
+    parser.add_argument("--scope-note")
+    parser.add_argument("--summary")
+    parser.add_argument("--supersedes-manifest-id")
+    parser.add_argument("--environment", default="alvira-agent-e2e.vercel.app")
+    parser.add_argument("--harness", default="claude-code")
+    parser.add_argument("--executor")
+    parser.add_argument(
+        "--verification-state",
+        required=True,
+        choices=["verified", "partially-verified", "failed", "blocked", "incomplete"],
+    )
+    parser.add_argument(
+        "--output",
+        help="Write a local manifest here. Defaults to <run-dir>/evidence/evidence-artifact-manifest.json.",
+    )
+    parser.add_argument(
+        "--publish",
+        action="store_true",
+        help="Also write the approved metadata manifest to docs/e2e/evidence/manifests/<run-id>.json.",
+    )
+    args = parser.parse_args()
+
+    manifest = build_manifest(args)
+    payload = json.dumps(manifest, indent=2, sort_keys=False) + "\n"
+
+    run_dir = Path(args.run_dir).expanduser().resolve()
+    output = Path(args.output).expanduser().resolve() if args.output else run_dir / "evidence" / "evidence-artifact-manifest.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(payload)
+    print(output)
+
+    if args.publish:
+        DEFAULT_MANIFEST_DIR.mkdir(parents=True, exist_ok=True)
+        repo_out = DEFAULT_MANIFEST_DIR / f"{manifest['run_id']}.json"
+        repo_out.write_text(payload)
+        print(repo_out)
+
+
+if __name__ == "__main__":
+    main()

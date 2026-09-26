@@ -28,6 +28,7 @@ import { detectGaps, countCovered, allRequiredCovered } from "./-gapDetection";
 import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
+import { displayableLatest } from "~/lib/sensitivity";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
@@ -574,7 +575,8 @@ function AppPage() {
   const confThreshold = playbook.completion.minimumConfidence;
   const coveredCount = state ? countCovered(graph, state, confThreshold) : 0;
   const totalDomains = graph.length;
-  const answerCount = state?.history.filter((message) => message.role === "user").length ?? 0;
+  // Answers actually stored in the Context (including ones carried over), not chat turns this session.
+  const answerCount = state ? Object.values(state.domains).reduce((n, d) => n + d.answers.length, 0) : 0;
   const gaps = state ? detectGaps(graph, state, confThreshold) : [];
   const hasGaps = gaps.length > 0;
   const acceptsInput = hasGaps || updateMode;
@@ -584,7 +586,8 @@ function AppPage() {
         const domainState = state.domains[domain.id];
         const answers = domainState?.answers?.map((item) => item.trim()).filter(Boolean) ?? [];
         if (answers.length === 0) return [];
-        const latest = answers[answers.length - 1];
+        // Previews are shown on screen (and in recordings): never display a sensitive item's text.
+        const latest = displayableLatest(answers);
         return [{
           label: domain.label,
           value: latest.length > 180 ? `${latest.slice(0, 177)}…` : latest,

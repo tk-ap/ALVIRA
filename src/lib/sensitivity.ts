@@ -15,6 +15,13 @@ export function isSensitive(text: string): boolean {
 type Domain = { answers?: string[]; knowledge?: string[]; [key: string]: unknown };
 type State = { domains?: Record<string, Domain>; history?: Array<{ role: string; content: string }>; [key: string]: unknown };
 
+/** For on-screen previews: the latest non-sensitive answer, or a placeholder if all are sensitive. */
+export function displayableLatest(answers: string[]): string {
+  const visible = answers.filter((answer) => !isSensitive(answer));
+  if (visible.length > 0) return visible[visible.length - 1];
+  return answers.length > 0 ? "Sensitive item saved — hidden from previews." : "";
+}
+
 /** Remove sensitive answers (keeping knowledge marks aligned) and mask them in the chat history. */
 export function redactSensitiveState<T extends State>(state: T): { state: T; withheld: number } {
   let withheld = 0;

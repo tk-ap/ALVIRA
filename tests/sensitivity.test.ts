@@ -36,3 +36,11 @@ describe("sensitive context", () => {
     expect(files.overview).toContain("1 sensitive item is kept in the saved Context");
   });
 });
+
+import { displayableLatest } from "../src/lib/sensitivity";
+describe("previews", () => {
+  test("never show a sensitive item's text", () => {
+    expect(displayableLatest(["No car.", SENSITIVE])).toBe("No car.");
+    expect(displayableLatest([SENSITIVE])).toBe("Sensitive item saved — hidden from previews.");
+  });
+});

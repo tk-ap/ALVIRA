@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { deriveOpportunityCandidates, opportunityFeedbackKey, type OpportunityCandidate } from "~/lib/opportunity-candidates";
 import { trackEvent } from "../routes/-tracking";
+import { displayableLatest, isSensitive } from "~/lib/sensitivity";
 
 type DraftState = {
   topic?: string;
@@ -122,14 +123,15 @@ export function LiveContextMirror() {
       .map(([id, value]) => ({
         id,
         label: labelFor(id),
-        text: (value.answers ?? []).filter(Boolean).at(-1) ?? "",
+        text: displayableLatest((value.answers ?? []).filter(Boolean)),
         status: value.covered || (value.confidence ?? 0) >= 0.9 ? "Captured" : "Developing",
       }))
       .slice(0, 6);
   }, [draft]);
 
   const candidates = useMemo(
-    () => deriveOpportunityCandidates(draft?.state).filter((candidate) => feedback[candidate.id] !== "not_for_me"),
+    // Suggestions quote their source answer, so never build one from a sensitive item.
+    () => deriveOpportunityCandidates(draft?.state).filter((candidate) => feedback[candidate.id] !== "not_for_me" && !isSensitive(candidate.sourceAnswer)),
     [draft, feedback],
   );
 

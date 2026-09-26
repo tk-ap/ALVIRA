@@ -26,7 +26,14 @@ export const Route = createFileRoute("/api/handoff/ledgato/start")({
           return Response.redirect(login, 302);
         }
 
-        const handoff = await createOwnerHandoff({ userId: owner.id, codeChallenge: challenge, state, returnPath: next });
+        const handoff = await createOwnerHandoff({
+          userId: owner.id,
+          sourceSessionId: owner.sessionId,
+          sourceSessionExpiresAt: owner.sessionExpiresAt,
+          codeChallenge: challenge,
+          state,
+          returnPath: next,
+        });
         return Response.redirect(handoff.url, 302);
       },
     },

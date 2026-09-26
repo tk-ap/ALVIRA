@@ -123,6 +123,13 @@ function applyFirstRunClarity() {
 export function AppFirstRunClarity() {
   const location = useLocation();
 
+  // The permanent here.now bundle has its own static /app surface.  This
+  // production-only first-paint copy pass mutates the route subtree after
+  // hydration; letting it inspect the static surface creates a competing DOM
+  // owner and can trigger a hydration warning.  Keep the static product view
+  // declarative and leave this enhancement to the server-backed application.
+  if (import.meta.env.VITE_ALVIRA_STATIC_SANDBOX === "true") return null;
+
   useEffect(() => {
     if (location.pathname !== "/app") return;
 

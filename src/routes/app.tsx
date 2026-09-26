@@ -10,6 +10,7 @@ import { ingestUrlSource } from "./-sourceIngestor";
 
 import { Header } from "~/components/Header";
 import { MeOSCTA } from "~/components/MeOSCTA";
+import { StaticAppSandbox } from "~/components/StaticSandboxSurfaces";
 import { TrustFooter } from "~/components/TrustFooter";
 import { LiveContextMirrorGraphic, ProductJourneyRail } from "~/components/ImmersiveExplainers";
 import { FrameworkSelector, BirthDataForm, ReviewPanel, ValidationCard, FRAMEWORKS, type FrameworkId } from "~/components/MeosOverlays";
@@ -259,7 +260,10 @@ export const Route = createFileRoute("/app")({
     meta: [{ title: 'ALVIRA Context' }, { name: "description", content: 'Build your portable AI context.' }],
   }),
   validateSearch: (search: Record<string, unknown>) => ({ offering: search.offering === "meos" ? "meos" as const : undefined, preview: search.preview === "true", actor: search.actor === "agent" ? "agent" as const : undefined, actor_id: typeof search.actor_id === "string" && search.actor_id.trim() ? search.actor_id.trim().slice(0, 80) : undefined }),
-  component: AppPage,
+  component:
+    import.meta.env.VITE_ALVIRA_STATIC_SANDBOX === "true"
+      ? StaticAppSandbox
+      : AppPage,
 });
 
 // ── Auth prompt banner ──

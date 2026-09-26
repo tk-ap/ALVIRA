@@ -899,12 +899,15 @@ function AppPage() {
         ? `Continuing from your saved profile — ${carried} ${carried === 1 ? "area was" : "areas were"} carried over. Answer the remaining questions to update and expand your knowledge.`
         : "Continuing from your saved profile. Tell me anything new you want to add.",
     );
+    // This is the dashboard's "Update / add context": accept updates even when every area is covered.
+    setUpdateMode(true);
     setScreen("interview");
     setWaiting(true);
+    const updatesDomain = getKnowledgeGraph(seeded.tier).some((d) => d.id === "updates") ? "updates" : null;
     try {
       const result = await askNextQuestion(seeded, false, activeOffering);
       if (result) setState(result);
-      else setState({ ...seeded, currentDomain: null });
+      else setState({ ...seeded, currentDomain: updatesDomain });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong.";
       if (msg !== "API key not configured") {

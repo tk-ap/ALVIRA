@@ -5,7 +5,9 @@
  * the person's saved Context but are withheld from compiled files and from Bridge responses
  * unless a caller explicitly asks for them.
  */
-const SENSITIVE_LABEL = /^\s*\[SENSITIVE\b/i;
+// Fail closed: a sensitive label anywhere in an answer makes the whole answer sensitive,
+// so a label embedded mid-answer can never leak its text into previews, files or the Bridge.
+const SENSITIVE_LABEL = /\[SENSITIVE\b/i;
 export const WITHHELD = "[withheld: sensitive — ask with include_sensitive only when the task needs it]";
 
 export function isSensitive(text: string): boolean {
@@ -36,7 +38,7 @@ export function redactSensitiveState<T extends State>(state: T): { state: T; wit
       ...(domain.knowledge ? { knowledge: domain.knowledge.filter((_, i) => keep[i]) } : {}),
     };
   }
-  const history = state.history?.map((message) => (isSensitive(message.content) || message.content.includes("[SENSITIVE") ? { ...message, content: WITHHELD } : message));
+  const history = state.history?.map((message) => (isSensitive(message.content) ? { ...message, content: WITHHELD } : message));
   return { state: { ...state, domains, ...(history ? { history } : {}) }, withheld };
 }
 

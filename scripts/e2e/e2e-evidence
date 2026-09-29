@@ -63,6 +63,14 @@ def artifact_id(relative_path: str) -> str:
     return value or "artifact"
 
 
+def validate_run_id(value: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", value):
+        raise SystemExit(
+            "Invalid run id: use 1-128 letters, numbers, '.', '_' or '-' and no path separators."
+        )
+    return value
+
+
 def matches_any(value: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatch(value, pattern) for pattern in patterns)
 
@@ -94,7 +102,7 @@ def build_manifest(args: argparse.Namespace) -> dict:
     if not run_dir.is_dir():
         raise SystemExit(f"Run directory not found: {run_dir}")
 
-    run_id = args.run_id or run_dir.name
+    run_id = validate_run_id(args.run_id or run_dir.name)
     selected = resolve_selected(run_dir, args.include)
     artifacts = []
 

@@ -219,6 +219,32 @@ Keep human-readable, inspectable Context export available.
 
 Portability is a fallback and ownership guarantee, not the preferred recurring workflow when a secure live connection is supported.
 
+### Agent-native activation contract
+
+**Owner-ratified:** 2026-09-26
+
+For compatible agents and coding/knowledge-work environments, Connect ALVIRA should support an install-once activation pattern that teaches the host **how to retrieve current approved ALVIRA Context when needed**.
+
+Activation must install a retrieval contract or adapter, not copy the user's living profile into durable agent instructions.
+
+Required behavior:
+
+- the durable host configuration may contain ALVIRA connection metadata, invocation guidance, and retrieval rules;
+- it must not embed a full static Context snapshot as the long-lived source of truth;
+- the agent should request the minimum approved Context relevant to the current task at task time;
+- retrieved Context must retain version/provenance/uncertainty semantics;
+- a later ALVIRA Context update must be available on a later read without reinstalling the integration;
+- revocation must stop subsequent retrieval;
+- any cache must be bounded and must not defeat revocation or cause stale Context to silently outrank ALVIRA;
+- read/activation permission does not imply proposal, delegated-ingest, or execution authority;
+- portable copy/export remains the fallback when a live retrieval path is unavailable.
+
+For coding-agent environments, a small skill, MCP configuration, project instruction, or equivalent adapter may be the activation surface. Its job is to tell the agent **when and how to ask ALVIRA for Context**, not to become another Context store.
+
+This extends issue #130's Connect Kit direction and should reuse the same canonical Bridge/Connect authorization path rather than creating a separate agent-specific service.
+
+Design principle: **install the connection once; retrieve current Context when the work requires it.**
+
 ## Relationship to existing work
 
 ### Existing Bridge infrastructure

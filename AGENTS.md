@@ -8,6 +8,8 @@
 - Owner-ratified addenda:
   - `docs/CONTEXT_INTELLIGENCE_ROADMAP.md` → **AI leverage guidance**, ratified 2026-09-02.
   - `docs/ALVIRA_CONNECT_DIRECTION.md` → **Connect ALVIRA / connected Context distribution**, ratified 2026-09-18.
+  - `docs/CONTEXT_INTELLIGENCE_ROADMAP.md` → **Context effectiveness receipts**, ratified 2026-09-26.
+  - `docs/ALVIRA_CONNECT_DIRECTION.md` → **agent-native activation contract**, ratified 2026-09-26.
 - Label post–Revision 11 assumptions when they influence recommendations or implementation.
 
 ## Update Requests
@@ -73,6 +75,7 @@ This distinction is owner-ratified product direction.
 - Bridge must not create or imply a second independent profile store.
 - Native plugins/connectors or pre-registered adapters may sit above Bridge when a destination provides a better one-click experience.
 - Remote Bridge/MCP is the default interoperability layer for compatible tools; Bridge API is the custom/server-side fallback; reviewed portable Context is the fallback when live connection is unavailable.
+- Agent-native activation must install a retrieval contract/adapter rather than a static copy of the user's full profile. Durable host instructions should describe when/how to request current minimum task-relevant Context and must preserve update/revocation semantics.
 - Browser extensions or prompt-injection helpers are optional fallback adapters, not the canonical architecture.
 - Preserve the product relationship: **ALVIRA builds, maintains, and reflects living Context; Connect ALVIRA carries approved Context into other tools; Bridge supplies the secure infrastructure underneath.**
 - See `docs/ALVIRA_CONNECT_DIRECTION.md` for binding requirements and implementation priorities.

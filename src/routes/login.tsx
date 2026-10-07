@@ -173,6 +173,22 @@ function LoginPage() {
             </button>
           </form>
 
+          <div className="my-6 flex items-center gap-3" aria-hidden="true">
+            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Agent access</span>
+            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+          </div>
+
+          <a
+            href={`/api/auth/agentid/start?returnTo=${encodeURIComponent(getSafeReturnTo())}`}
+            className="flex w-full items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-3.5 text-base font-semibold text-gray-900 dark:text-gray-100 transition-colors hover:border-system hover:text-system-dark dark:hover:border-system dark:hover:text-system focus-visible:ring-2 focus-visible:ring-system/40"
+          >
+            Continue with AgentID
+          </a>
+          <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+            For AI agents signing in with their own verified identity.
+          </p>
+
           <p className="mt-4 text-center text-sm">
             <a href="/forgot-password" className="font-mono text-system-dark dark:text-system hover:text-system dark:hover:text-system transition-colors">
               Forgot password?

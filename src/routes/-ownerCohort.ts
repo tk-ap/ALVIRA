@@ -420,3 +420,57 @@ export const sendFoundingBetaReservationInvite = createServerFn({ method: "POST"
 
     return { ok: true, sentAt, messageId: receipt.messageId ?? null };
   });
+
+const RESERVATION_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Validate an owner's request to move an unclaimed reservation to a corrected address. */
+export function parseReservationEmailChange(input: unknown): { fromEmail: string; toEmail: string } {
+  const d = (input ?? {}) as { fromEmail?: unknown; toEmail?: unknown };
+  const fromEmail = normalizeFoundingBetaEmail(String(d.fromEmail ?? ""));
+  const toEmail = normalizeFoundingBetaEmail(String(d.toEmail ?? ""));
+  if (!RESERVATION_EMAIL.test(fromEmail)) throw new Error("The current reservation email is invalid.");
+  if (!RESERVATION_EMAIL.test(toEmail) || toEmail.length > 254) throw new Error("Enter a valid new email address.");
+  if (fromEmail === toEmail) throw new Error("The new email is the same as the current one.");
+  return { fromEmail, toEmail };
+}
+
+export const changeFoundingBetaReservationEmail = createServerFn({ method: "POST" })
+  .validator(parseReservationEmailChange)
+  .handler(async ({ data }) => {
+    await requireOwner();
+    await ensureActivitySources();
+    const db = getDb();
+
+    // A reservation only applies at signup, so an address that already has an
+    // account would never receive it; that path is the application review.
+    const user = (await db.query(`SELECT id FROM users WHERE LOWER(TRIM(email))=$1 LIMIT 1`, [data.toEmail]))[0];
+    if (user) throw new Error("That address already has an ALVIRA account. Grant access through an application review instead.");
+    const existing = (await db.query(
+      `SELECT claimed_at, revoked_at FROM founding_beta_reservations WHERE email=$1 LIMIT 1`,
+      [data.toEmail],
+    ))[0] as { claimed_at: string | null; revoked_at: string | null } | undefined;
+    if (existing?.claimed_at) throw new Error("That address has already claimed a Founding Beta place.");
+    if (existing && !existing.revoked_at) throw new Error("That address already has an active reservation.");
+
+    // One statement: the new reservation is created only if this same
+    // statement withdrew the old one, so a claim racing this change can never
+    // leave two live reservations or move a claimed place.
+    const moved = await db.query(
+      `WITH withdrawn AS (
+         UPDATE founding_beta_reservations
+            SET revoked_at = NOW()
+          WHERE email = $1 AND claimed_at IS NULL AND revoked_at IS NULL
+          RETURNING email
+       )
+       INSERT INTO founding_beta_reservations (email, source, reserved_at)
+       SELECT $2, $3, NOW() FROM withdrawn
+       ON CONFLICT (email) DO UPDATE
+          SET source = EXCLUDED.source, reserved_at = NOW(), revoked_at = NULL,
+              invite_sent_at = NULL, invite_message_id = NULL
+        WHERE founding_beta_reservations.claimed_at IS NULL
+       RETURNING email`,
+      [data.fromEmail, data.toEmail, `email-change:${data.fromEmail}`.slice(0, 120)],
+    );
+    if (!moved[0]) throw new Error("The original reservation was already claimed, withdrawn, or changed. Refresh and review it.");
+    return { ok: true, email: data.toEmail };
+  });

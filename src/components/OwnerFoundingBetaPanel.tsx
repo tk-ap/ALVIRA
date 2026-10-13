@@ -2,6 +2,7 @@ import { useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  changeFoundingBetaReservationEmail,
   getOwnerCohortMetrics,
   retryFoundingBetaDecisionEmail,
   reviewFoundingBetaApplication,
@@ -44,6 +45,9 @@ export function OwnerFoundingBetaPanel() {
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [reviewNotice, setReviewNotice] = useState<string>("");
+  const [editingEmail, setEditingEmail] = useState<string | null>(null);
+  const [replacementEmail, setReplacementEmail] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
 
   const refresh = () => getOwnerCohortMetrics().then(setMetrics).catch(() => setDenied(true));
 
@@ -81,6 +85,21 @@ export function OwnerFoundingBetaPanel() {
     }
   };
 
+  const changeReservationEmail = async (fromEmail: string) => {
+    setChangingEmail(true);
+    setSendMessage((current) => ({ ...current, [fromEmail]: "" }));
+    try {
+      const result = await changeFoundingBetaReservationEmail({ data: { fromEmail, toEmail: replacementEmail } });
+      setEditingEmail(null);
+      setReplacementEmail("");
+      setSendMessage((current) => ({ ...current, [result.email]: `Moved from ${fromEmail}. Not invited yet.` }));
+      await refresh();
+    } catch (error) {
+      setSendMessage((current) => ({ ...current, [fromEmail]: error instanceof Error ? error.message : "The email could not be changed." }));
+    } finally {
+      setChangingEmail(false);
+    }
+  };
   const reviewApplication = async (applicationId: string, decision: "approve" | "deny") => {
     if (decision === "deny" && !window.confirm("Deny this Founding Beta application? No entitlement will be granted.")) return;
     setReviewingId(applicationId);
@@ -213,10 +232,37 @@ export function OwnerFoundingBetaPanel() {
                   {reservation.invite_sent_at ? <p className="mt-1 text-xs text-system-dark dark:text-system">Invited {formatDate(reservation.invite_sent_at)}</p> : null}
                   {sendMessage[reservation.email] ? <p className="mt-1 text-xs text-warm-gray-dark dark:text-warm-gray">{sendMessage[reservation.email]}</p> : null}
                 </div>
+                {editingEmail === reservation.email ? (
+                  <form
+                    className="flex flex-wrap items-center gap-2 sm:col-span-2"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void changeReservationEmail(reservation.email);
+                    }}
+                  >
+                    <label htmlFor="founding-beta-replacement-email" className="sr-only">New email for {reservation.email}</label>
+                    <input
+                      id="founding-beta-replacement-email"
+                      type="email"
+                      required
+                      autoFocus
+                      value={replacementEmail}
+                      onChange={(event) => setReplacementEmail(event.target.value)}
+                      placeholder="corrected@email.com"
+                      className="min-w-0 flex-1 border border-system/30 bg-transparent px-3 py-2 text-sm text-ink dark:text-mineral"
+                    />
+                    <button type="submit" disabled={changingEmail} className="border border-system/50 bg-system-soft/30 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-system-dark disabled:cursor-wait disabled:opacity-50 dark:text-system">{changingEmail ? "Saving…" : "Move reservation"}</button>
+                    <button type="button" onClick={() => { setEditingEmail(null); setReplacementEmail(""); }} className="border border-human/30 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-human-dark dark:text-human">Cancel</button>
+                  </form>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                    <button type="button" onClick={() => { setEditingEmail(reservation.email); setReplacementEmail(""); }} className="border border-warm-gray/30 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-warm-gray-dark dark:text-warm-gray">Change email</button>
                 {reservation.invite_sent_at ? (
                   <span className="border border-system/30 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-system-dark dark:text-system">Invited</span>
                 ) : (
                   <button type="button" onClick={() => void sendReservationInvite(reservation.email)} disabled={sendingTo === reservation.email} className="border border-system/40 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-system-dark transition hover:border-system disabled:cursor-wait disabled:opacity-50 dark:text-system">{sendingTo === reservation.email ? "Sending…" : "Send invitation"}</button>
+                )}
+                  </div>
                 )}
               </div>
             ))}

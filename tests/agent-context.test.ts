@@ -46,6 +46,11 @@ describe("app wiring", () => {
     expect(app).toContain("if (viewerIsAgent && !state?.agentContextOptIn)");
   });
 
+  test("the owner's opt-in survives Continue and Update / add context (E2E 2026-10-16)", () => {
+    const seed = app.slice(app.indexOf("function seedStateFromExisting"), app.indexOf("// ── Document parsing helpers"));
+    expect(seed).toContain("agentContextOptIn: true");
+  });
+
   test("pasted context goes through claim review and its source is added only on approval", () => {
     const paste = app.slice(app.indexOf("const handlePastedContext"), app.indexOf("const setAgentContextOptIn"));
     expect(paste).toContain('reviewExtractedText(pastedContext.trim(), uploadTopic, "source")');

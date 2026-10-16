@@ -107,7 +107,13 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
     }
   }
   // Keep the Context's sources (and the owner's link confirmations) when it is continued or updated.
-  return { ...initialState, domains, ...(existing.contextSources?.length ? { contextSources: [...existing.contextSources] } : {}) };
+  return {
+    ...initialState,
+    domains,
+    ...(existing.contextSources?.length ? { contextSources: [...existing.contextSources] } : {}),
+    // The owner's opt-in for agent-supplied AI context carries over too.
+    ...(existing.agentContextOptIn ? { agentContextOptIn: true } : {}),
+  };
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully

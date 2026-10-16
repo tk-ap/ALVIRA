@@ -1006,10 +1006,8 @@ function AppPage() {
     // recorded answer, so it passes the answered area explicitly.
     const limits = depthSettings(currentState.depth);
     // Areas that reached their answer cap without clearing the confidence bar are set aside, so
-    // they are not re-asked and the interview can finish.
-    const settled = isClarification
-      ? currentState
-      : setAsideCappedAreas(currentGraph, currentState, { confidenceThreshold: currentPlaybook.completion.minimumConfidence, limits });
+    // they are not re-asked and the interview can finish. This applies to clarifications too.
+    const settled = setAsideCappedAreas(currentGraph, currentState, { confidenceThreshold: currentPlaybook.completion.minimumConfidence, limits });
     const next = pickNextArea(currentGraph, settled, {
       answeredDomainId: answeredDomainId ?? currentState.currentDomain,
       confidenceThreshold: currentPlaybook.completion.minimumConfidence,

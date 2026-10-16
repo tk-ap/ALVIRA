@@ -119,3 +119,25 @@ describe("an area that stays below the confidence bar is not asked forever (E2E 
     expect(pickNextArea(GRAPH, stateFor("deep", { history, domains: capped }), { confidenceThreshold: THRESHOLD, limits: depthSettings("deep") })).toBeNull();
   });
 });
+
+describe("clarifications are bounded by the same cap (Codex review of df9cd12)", () => {
+  const unclear = (n: number) => ({ answers: Array.from({ length: n }, () => "what do you mean?"), confidence: 0, covered: false });
+  const history = [{ role: "assistant" as const, content: "Q" }, { role: "user" as const, content: "what do you mean?" }];
+  // Mirrors askNextQuestion: set capped areas aside, then pick with clarifying: true.
+  const nextAfterClarification = (depth: "fast" | "standard" | "deep", n: number) => {
+    const state = stateFor(depth, { history, domains: { decisionFrameworks: unclear(n) } });
+    const options = { confidenceThreshold: THRESHOLD, limits: depthSettings(depth) };
+    const settled = setAsideCappedAreas(areasForDepth(GRAPH, state), state, options);
+    return pickNextArea(areasForDepth(GRAPH, settled), settled, { ...options, answeredDomainId: "decisionFrameworks", clarifying: true });
+  };
+
+  test("below the cap, a clarification stays on the same area", () => {
+    expect(nextAfterClarification("standard", 1)).toMatchObject({ domain: { id: "decisionFrameworks" }, reason: "unresolved-follow-up" });
+  });
+
+  for (const depth of ["fast", "standard", "deep"] as const) {
+    test(`${depth}: at the cap, repeated clarifications move on`, () => {
+      expect(nextAfterClarification(depth, depthSettings(depth).maxUnresolvedAnswers)?.domain.id).not.toBe("decisionFrameworks");
+    });
+  }
+});

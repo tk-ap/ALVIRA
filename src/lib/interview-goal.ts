@@ -166,9 +166,11 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
   const answered = context.answeredDomainId ? graph.find((domain) => domain.id === context.answeredDomainId) : undefined;
   const limits = context.limits ?? STANDARD_LIMITS;
 
+  // A clarification stays on the area while it is below the depth's answer cap; at the cap it moves
+  // on like any other capped area (Codex review of df9cd12: repeated clarifications could loop).
   if (context.clarifying && answered) {
     const openGap = gaps.find((gap) => gap.domain.id === answered.id);
-    if (openGap) return { domain: answered, reason: "unresolved-follow-up" };
+    if (openGap && openGap.currentAnswers < limits.maxUnresolvedAnswers) return { domain: answered, reason: "unresolved-follow-up" };
   }
 
   if (answer !== undefined && answered) {
@@ -191,8 +193,13 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
     return { domain: sourcesGap.domain, reason: "sources" };
   }
 
+  // An area that already holds its depth's share of answers is not asked again, even if those
+  // answers were rated below the confidence bar (E2E 2026-10-16: Decision frameworks was asked 15
+  // times because, as a starting-point area, it ranked first every turn).
+  const askable = gaps.filter((gap) => gap.currentAnswers < limits.maxUnresolvedAnswers);
+  if (askable.length === 0) return null;
   const recent = recentUserAnswers(context.history);
-  const ranked = gaps
+  const ranked = askable
     .map((gap, index) => ({
       gap,
       index,
@@ -205,6 +212,24 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
     domain: top.gap.domain,
     reason: top.focus ? "starting-point" : top.relevance > 0 ? "relevance" : "priority",
   };
+}
+
+/**
+ * Areas still open after reaching the depth's answer cap are set aside (`skipped`), the same way an
+ * area with no new question to ask is, so the interview can finish instead of re-asking them.
+ * Returns the same state object when nothing changes.
+ */
+export function setAsideCappedAreas(
+  graph: Domain[],
+  state: InterviewState,
+  options: { confidenceThreshold?: number; limits?: FollowUpLimits },
+): InterviewState {
+  const max = (options.limits ?? STANDARD_LIMITS).maxUnresolvedAnswers;
+  const capped = detectGaps(graph, state, options.confidenceThreshold).filter((gap) => gap.currentAnswers >= max);
+  if (capped.length === 0) return state;
+  const domains = { ...state.domains };
+  for (const gap of capped) domains[gap.domain.id] = { ...domains[gap.domain.id], skipped: true };
+  return { ...state, domains };
 }
 
 /** The app's next-question step: gap detection plus `chooseNextArea`, shared with tests. */

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { pastedContextProblem, pastedContextSource } from "~/lib/agent-context";
 import { contributorFor, linksNeedingReview, redactAnswerLinks, sourcesFromAnswer } from "~/lib/source-links";
-import { describeInterviewGoal, pickNextArea } from "~/lib/interview-goal";
+import { describeInterviewGoal, pickNextArea, setAsideCappedAreas } from "~/lib/interview-goal";
 import { DEPTHS, DEPTH_ORDER, areasForDepth, depthSettings, parseDepth, type InterviewDepth } from "~/lib/interview-depth";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -933,13 +933,18 @@ function AppPage() {
     // the area just answered, then the chosen starting points, then the areas most
     // related to the goal and the latest answers. handleSend clears currentDomain after a
     // recorded answer, so it passes the answered area explicitly.
-    const next = pickNextArea(currentGraph, currentState, {
+    const limits = depthSettings(currentState.depth);
+    // Areas that reached their answer cap without clearing the confidence bar are set aside, so
+    // they are not re-asked and the interview can finish. This applies to clarifications too.
+    const settled = setAsideCappedAreas(currentGraph, currentState, { confidenceThreshold: currentPlaybook.completion.minimumConfidence, limits });
+    const next = pickNextArea(currentGraph, settled, {
       answeredDomainId: answeredDomainId ?? currentState.currentDomain,
       confidenceThreshold: currentPlaybook.completion.minimumConfidence,
       clarifying: isClarification,
-      limits: depthSettings(currentState.depth),
+      limits,
     });
-    if (!next) return null;
+    if (!next) return settled === currentState ? null : { ...settled, currentDomain: null };
+    currentState = settled;
     const goal = describeInterviewGoal(currentState.topic);
     const topGap = { domain: next.domain };
     const updatedState: InterviewState = {

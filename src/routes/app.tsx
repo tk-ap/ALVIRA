@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { contributorFor, linksNeedingReview, sourcesFromAnswer } from "~/lib/source-links";
+import { contributorFor, linksNeedingReview, redactAnswerLinks, sourcesFromAnswer } from "~/lib/source-links";
 import { describeInterviewGoal, pickNextArea } from "~/lib/interview-goal";
 import { DEPTHS, DEPTH_ORDER, areasForDepth, depthSettings, parseDepth, type InterviewDepth } from "~/lib/interview-depth";
 import { marked } from "marked";
@@ -1170,8 +1170,11 @@ function AppPage() {
   };
 
   const handleSend = async () => {
-    const trimmed = answer.trim();
-    if (!trimmed || waiting || !state) return;
+    // `rawAnswer` is read once for links; only the redacted text is stored, shown, compiled
+    // or sent to the question generator, so a private or credential-bearing URL never is.
+    const rawAnswer = answer.trim();
+    const trimmed = redactAnswerLinks(rawAnswer);
+    if (!rawAnswer || waiting || !state) return;
 
     const currentDomain = state.currentDomain ?? (updateMode ? "updates" : null);
 
@@ -1183,7 +1186,7 @@ function AppPage() {
 
     if (currentDomain) {
       const existing = updatedDomains[currentDomain]?.answers ?? [];
-      const validation = validateAnswer(currentDomain, trimmed, existing);
+      const validation = validateAnswer(currentDomain, rawAnswer, existing);
 
       if (validation.isUserQuestion) {
         setState({ ...state, history: newHistory, currentDomain });
@@ -1284,7 +1287,7 @@ function AppPage() {
     // recorded with who supplied them.
     // The local list mirrors state.contextSources (an effect syncs it back), so set it to the
     // full merged list — appending to a stale local copy could drop existing sources.
-    const newSources = sourcesFromAnswer(trimmed, state.contextSources ?? [], contributorFor(state));
+    const newSources = sourcesFromAnswer(rawAnswer, state.contextSources ?? [], contributorFor(state));
     const mergedSources = [...(state.contextSources ?? []), ...newSources];
     if (newSources.length > 0) setContextSources(mergedSources);
 

@@ -3,6 +3,10 @@
 // Any answer may carry links (a website, a repository, a profile, a doc). They are
 // captured as ContextSources with who added them, so any AI reading the Context can
 // see where the facts come from, and several contributors stay distinguishable.
+//
+// A link found in an answer is not known to be public: it is kept as "needs-review"
+// and only exported once the owner confirms it ("ready"). Links that carry credentials
+// (tokens, signatures) are never stored at all.
 
 import { classifySourceLocator, normalizeLocator, type ContextSource, type ContextSourceType, type SourceContributor } from "~/lib/context-engine";
 
@@ -40,6 +44,37 @@ export function sameLocator(a: string, b: string): boolean {
   return key(a) === key(b);
 }
 
+/** Query parameters that make a URL a credential: signed, tokenised or keyed links. */
+const CREDENTIAL_PARAM = /^(?:x-amz-[a-z-]+|x-goog-[a-z-]+|token|access_token|id_token|auth|authorization|sig|signature|key|api_?key|secret|password|pwd|code|session|sessionid|jwt|se|sp|sv|st)$/i;
+
+/** True when the URL carries a credential in its query, fragment or userinfo; such links are never stored. */
+export function carriesCredential(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (parsed.username || parsed.password) return true;
+    const params = [...parsed.searchParams.keys(), ...new URLSearchParams(parsed.hash.replace(/^#/, "")).keys()];
+    return params.some((name) => CREDENTIAL_PARAM.test(name));
+  } catch {
+    return false;
+  }
+}
+
+/** Hosts whose links are usually private shares, internal or not yet public. */
+const PRIVATE_HOST = /(^|\.)(docs\.google\.com|drive\.google\.com|notion\.so|notion\.site|dropbox\.com|box\.com|sharepoint\.com|onedrive\.live\.com|1drv\.ms|icloud\.com|figma\.com|airtable\.com|localhost)$/i;
+
+/** A reason to look twice before confirming this link as public, or undefined when none is obvious. */
+export function privateLinkReason(url: string): string | undefined {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (PRIVATE_HOST.test(host)) return "Often a private share link; confirm it is public before sharing.";
+    if (/^(?:10|127|192\.168|172\.(?:1[6-9]|2\d|3[01]))\./.test(host) || host.endsWith(".local") || host.endsWith(".internal")) return "A private network address.";
+    if (/(^|[.-])(staging|stage|preview|dev|test|internal|admin)[.-]/.test(host)) return "Looks like a staging or internal site.";
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** An explicit "no links" answer for the sources area. */
 export function isNoSourcesAnswer(text: string): boolean {
   return /^\s*(none|no(ne)?\s+(links?|sources?|urls?)|n\/?a|nothing( public)?( yet)?|not (yet|applicable))\b[\s.!]*$/i.test(text);
@@ -74,10 +109,21 @@ export function sourcesFromAnswer(
   now: string = new Date().toISOString(),
 ): ContextSource[] {
   return findLinks(text)
+    .filter((url) => !carriesCredential(url))
     .filter((url) => !existing.some((source) => sameLocator(source.locator, url)))
     .map((url) => {
       const type = classifySourceLocator(url);
-      return { id: crypto.randomUUID(), type, label: labelFor(url), locator: url, status: "queued" as const, addedAt: now, addedBy: contributor };
+      const reviewNote = privateLinkReason(url);
+      return {
+        id: crypto.randomUUID(),
+        type,
+        label: labelFor(url),
+        locator: url,
+        status: "needs-review" as const,
+        addedAt: now,
+        addedBy: contributor,
+        ...(reviewNote ? { reviewNote } : {}),
+      };
     });
 }
 
@@ -90,13 +136,21 @@ const TYPE_LABEL: Record<ContextSourceType, string> = {
   interview: "Interview",
 };
 
-/** A "Sources" section for the compiled Context, so any AI reading it can see and follow the links. */
+/** Links found in answers that the owner has not confirmed yet. */
+export function linksNeedingReview(sources: ContextSource[] | undefined): ContextSource[] {
+  return (sources ?? []).filter((source) => source.status === "needs-review" && /^https?:\/\//i.test(source.locator));
+}
+
+/**
+ * A "Sources" section for the compiled Context, so any AI reading it can see and follow the links.
+ * Only owner-confirmed ("ready") links are exported; links still awaiting review never are.
+ */
 export function sourcesMarkdown(sources: ContextSource[] | undefined): string {
-  const links = (sources ?? []).filter((source) => /^https?:\/\//i.test(source.locator));
+  const links = (sources ?? []).filter((source) => source.status === "ready" && /^https?:\/\//i.test(source.locator) && !carriesCredential(source.locator));
   if (links.length === 0) return "";
   const lines = links.map((source) => {
     const who = source.addedBy?.actor_type === "agent" ? `agent ${source.addedBy.actor_id ?? "(unnamed)"}` : source.addedBy ? "the person" : "unrecorded";
     return `- [${source.label}](${source.locator}) — ${TYPE_LABEL[source.type] ?? source.type}; added by ${who}, ${source.addedAt.slice(0, 10)}`;
   });
-  return `## Sources\n\nPublic links supplied during the interview. Treat them as evidence to check, not as confirmed facts.\n\n${lines.join("\n")}`;
+  return `## Sources\n\nPublic links the owner confirmed. Treat them as evidence to check, not as confirmed facts.\n\n${lines.join("\n")}`;
 }

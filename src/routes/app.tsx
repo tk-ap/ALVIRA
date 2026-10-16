@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { chooseNextGap, describeInterviewGoal } from "~/lib/interview-goal";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
@@ -236,17 +237,6 @@ const TOPIC_GROUPS = [
   },
 ] as const;
 
-// Starting points the person picks map to the areas the interview should ask about first.
-const STARTING_POINT_FOCUS: Array<[RegExp, string[]]> = [
-  [/communication style and decision-making/i, ["communication", "decisionFrameworks"]],
-  [/daily routines, habits/i, ["dailyLife", "processes"]],
-  [/values, boundaries/i, ["identity", "constraints"]],
-  [/key relationships/i, ["relationships", "peopleAndRoles"]],
-  [/goals, priorities/i, ["goals", "decisionFrameworks"]],
-];
-function focusDomainsForTopic(topic: string): string[] {
-  return STARTING_POINT_FOCUS.flatMap(([pattern, ids]) => (pattern.test(topic) ? ids : []));
-}
 
 // ── Page ──
 export const Route = createFileRoute("/app")({
@@ -895,9 +885,11 @@ function AppPage() {
     const currentGaps = detectGaps(currentGraph, currentState, currentPlaybook.completion.minimumConfidence);
     if (currentGaps.length === 0) return null;
 
-    // Honour the chosen starting points: their areas come first, then the usual priority order.
-    const focus = focusDomainsForTopic(currentState.topic ?? "");
-    const topGap = currentGaps.find((gap) => focus.includes(gap.domain.id)) ?? currentGaps[0];
+    // What the person chose or typed on /app steers the interview: follow up on the
+    // current thread while it needs more, then the chosen starting points, then the
+    // areas most related to the goal and the latest answers.
+    const goal = describeInterviewGoal(currentState.topic);
+    const topGap = chooseNextGap(currentGaps, { goal, history: currentState.history, currentDomain: currentState.currentDomain });
     const updatedState: InterviewState = {
       ...currentState,
       currentDomain: topGap.domain.id,
@@ -910,6 +902,7 @@ function AppPage() {
           history: currentState.history,
           tier: currentState.tier,
           isClarification,
+          goal: goal.summary,
         },
       });
 
@@ -1158,6 +1151,7 @@ function AppPage() {
               domainLabel,
               history: newHistory,
               tier: state.tier,
+              goal: describeInterviewGoal(state.topic).summary,
             },
           });
 

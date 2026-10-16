@@ -33,6 +33,7 @@ import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { displayableLatest } from "~/lib/sensitivity";
+import { buildProviderFiles, hasRecordedContent } from "~/lib/provider-files";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
@@ -1631,7 +1632,10 @@ function AppPage() {
           setPortraitError(true);
         }
       } else {
-        files = compileKnowledge(compileState, currentGraph);
+        const compiled = compileKnowledge(compileState, currentGraph);
+        // Every tab on the output screen has content: the five compiled files plus the AI Working
+        // Profile and one setup file per tool, built from them.
+        files = { ...compiled, ...buildProviderFiles(compiled, compileState.topic) };
       }
       const generatedState = { ...compileState, generatedAt: Date.now() };
       setState(generatedState);
@@ -1681,7 +1685,7 @@ function AppPage() {
           ["cursor-rules.md", generated.cursor],
         ];
     for (const [name, content] of fileMap) {
-      zip.file(name, content);
+      if (name === "overview.md" || hasRecordedContent(content)) zip.file(name, content);
     }
     if (state) {
       const exportGraph = offering === "meos"
@@ -1885,9 +1889,10 @@ function AppPage() {
 
   // ── Render: Output Screen ──
   if (screen === "output" && generated) {
+    // Only files with recorded content get a tab; Overview always stays as the landing tab.
     const outputFiles = offering === "meos"
       ? Object.keys(generated).map((key) => ({ key, label: key }))
-      : FILES;
+      : FILES.filter((f) => f.key === "overview" || hasRecordedContent(generated[f.key]));
     const activeContent = generated[activeTab] || "";
     return (
       <div className="min-h-dvh flex flex-col">

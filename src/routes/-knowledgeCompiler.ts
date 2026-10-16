@@ -97,14 +97,19 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
   );
 
   const sources = sourcesMarkdown(state.contextSources);
-  return { overview: sources ? `${overview.trimEnd()}\n\n${sources}\n` : overview, requirements, constraints, businessRules, workflows };
+  // Confirmed Sources are recorded content: when they are all the overview holds, drop the
+  // "nothing gathered" note so the overview is not treated as empty (Codex review of 39e6115).
+  const overviewBase = sources && sections.overview.length === 0 ? overview.replace(EMPTY_AREA_NOTE, "") : overview;
+  return { overview: sources ? `${overviewBase.trimEnd()}\n\n${sources}\n` : overview, requirements, constraints, businessRules, workflows };
 }
+
+const EMPTY_AREA_NOTE = "\n_No information gathered for this area yet._\n";
 
 function buildFile(header: string, sections: Section[]): string {
   let md = header;
 
   if (sections.length === 0) {
-    md += "\n_No information gathered for this area yet._\n";
+    md += EMPTY_AREA_NOTE;
     return md;
   }
 

@@ -9,6 +9,7 @@ import { getCurrentUser, listProfiles, deleteProfile, getInterviewDraft, getOwne
 import { compileInterviewMarkdown } from "./-meosCompiler";
 import { getMeosGraph } from "./-meosGraph";
 import { compileKnowledge } from "./-knowledgeCompiler";
+import { buildProviderFiles, hasRecordedContent } from "~/lib/provider-files";
 import { getKnowledgeGraph } from "./-knowledgeGraph";
 import { formatStableDate } from "~/lib/stable-date";
 
@@ -76,13 +77,21 @@ function DashboardPage() {
       const timeoutMs = 30_000;
       const filesPromise = profile.offering === "meos"
         ? Promise.resolve(compileInterviewMarkdown(state, getMeosGraph()).allFiles)
-        : Promise.resolve(compileKnowledge(state, getKnowledgeGraph(state.tier))).then((compiled) => ({
+        : Promise.resolve(compileKnowledge(state, getKnowledgeGraph(state.tier))).then((compiled) => {
+            const provider = buildProviderFiles(compiled, row.topic || state.topic || "");
+            return {
+            "ai-working-profile.md": provider.aiProfile,
             "overview.md": compiled.overview,
             "requirements.md": compiled.requirements,
             "constraints.md": compiled.constraints,
             "business-rules.md": compiled.businessRules,
             "workflows.md": compiled.workflows,
-          }));
+            "chatgpt-instructions.md": provider.chatgpt,
+            "claude-instructions.md": provider.claude,
+            "gemini-instructions.md": provider.gemini,
+            "cursor-rules.md": provider.cursor,
+            };
+          });
       const files = await Promise.race([
         filesPromise,
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Context export timed out after ${timeoutMs / 1000} seconds.`)), timeoutMs)),
@@ -91,7 +100,9 @@ function DashboardPage() {
         throw new Error("No Context files were generated for this saved Context.");
       }
       const zip = new JSZip();
-      Object.entries(files).forEach(([name, content]) => zip.file(name, content));
+      Object.entries(files)
+        .filter(([name, content]) => profile.offering === "meos" || name === "overview.md" || hasRecordedContent(content))
+        .forEach(([name, content]) => zip.file(name, content));
       const blob = await zip.generateAsync({ type: "blob" });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);

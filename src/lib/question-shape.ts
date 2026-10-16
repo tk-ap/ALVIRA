@@ -140,15 +140,31 @@ export function firstQuestionOnly(text: string): string {
   return lead ? `${lead} ${first}` : first;
 }
 
-/** A safe atomic question for the area when generation cannot produce one. */
-export function fallbackQuestion(areaLabel: string, hasGoal: boolean): string {
-  return `What is the one thing an AI most needs to know about ${areaLabel.toLowerCase()}${hasGoal ? " to help with this goal" : ""}?`;
+/** Safe atomic questions for the area, tried in order, when generation cannot produce one. */
+export function fallbackQuestions(areaLabel: string, hasGoal: boolean): string[] {
+  const area = areaLabel.toLowerCase();
+  const purpose = hasGoal ? " for this goal" : "";
+  return [
+    `What is the one thing an AI most needs to know about ${area}${purpose}?`,
+    `What would an AI be most likely to get wrong about ${area}${purpose}?`,
+    `What is still undecided about ${area}${purpose}?`,
+  ];
 }
 
-export type ShapeFallback = "trimmed" | "generic";
+/** The first safe fallback that is not a repeat of an earlier question, or null when all were used. */
+export function fallbackQuestion(areaLabel: string, hasGoal: boolean, history: Message[] = []): string | null {
+  return fallbackQuestions(areaLabel, hasGoal).find((candidate) => checkQuestionShape(candidate, history).ok) ?? null;
+}
+
+/**
+ * "exhausted": no new atomic question could be produced for this area (every candidate and fallback
+ * repeats an earlier question). The caller must not ask anything for the area — it moves on instead.
+ */
+export type ShapeFallback = "trimmed" | "generic" | "exhausted";
 
 export interface AtomicQuestionResult {
-  question: string;
+  /** null only when `fallback` is "exhausted". */
+  question: string | null;
   attempts: number;
   fallback?: ShapeFallback;
   /** Problems found in each rejected candidate, in order. */
@@ -182,5 +198,7 @@ export async function generateAtomicQuestion(options: {
     const trimmed = firstQuestionOnly(base);
     if (checkQuestionShape(trimmed, options.history).ok) return { question: trimmed, attempts: 2, fallback: "trimmed", rejected };
   }
-  return { question: fallbackQuestion(options.areaLabel, options.hasGoal), attempts: 2, fallback: "generic", rejected };
+  const generic = fallbackQuestion(options.areaLabel, options.hasGoal, options.history);
+  if (generic) return { question: generic, attempts: 2, fallback: "generic", rejected };
+  return { question: null, attempts: 2, fallback: "exhausted", rejected };
 }

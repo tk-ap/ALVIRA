@@ -30,7 +30,8 @@ interface GenerateInput {
 }
 
 interface GenerateResult {
-  question: string;
+  /** null when no new atomic question exists for the area (shape.fallback === "exhausted"). */
+  question: string | null;
   /** How the one-atomic-question check went: attempts used, fallback if any, rejected problems. */
   shape: Omit<AtomicQuestionResult, "question">;
 }

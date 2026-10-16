@@ -911,6 +911,18 @@ function AppPage() {
         },
       });
 
+      // No new atomic question exists for this area (every option repeats an earlier one):
+      // never re-ask — set the area aside and move to the next one.
+      if (result.question === null) {
+        const areaId = topGap.domain.id;
+        const existingArea = currentState.domains[areaId] ?? { answers: [], confidence: 0, covered: false };
+        return askNextQuestion(
+          { ...currentState, domains: { ...currentState.domains, [areaId]: { ...existingArea, skipped: true } } },
+          false,
+          forcedOffering,
+        );
+      }
+
       const newHistory: Message[] = [
         ...currentState.history,
         { role: "assistant", content: result.question },

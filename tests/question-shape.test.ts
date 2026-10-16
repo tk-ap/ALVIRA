@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   checkQuestionShape,
   fallbackQuestion,
+  fallbackQuestions,
   firstQuestionOnly,
   generateAtomicQuestion,
   isCompound,
@@ -153,6 +154,36 @@ describe("generateAtomicQuestion", () => {
     expect(result.fallback).toBe("generic");
     expect(result.question).toBe(fallbackQuestion("Communication", true));
     expect(result.rejected).toEqual([["compound", "duplicate"], ["compound", "duplicate"]]);
+  });
+
+  test("does not re-ask a generic fallback that was already used (Codex review of d085a38)", async () => {
+    const used = fallbackQuestion("Goals", true)!;
+    const result = await generateAtomicQuestion({
+      generate: async () => used,
+      history: asked(used),
+      areaLabel: "Goals",
+      hasGoal: true,
+    });
+    expect(result.fallback).toBe("generic");
+    expect(result.question).not.toBe(used);
+    expect(checkQuestionShape(result.question!, asked(used)).ok).toBe(true);
+  });
+
+  test("reports 'exhausted' instead of repeating when every fallback was already asked", async () => {
+    const all = fallbackQuestions("Goals", true);
+    const result = await generateAtomicQuestion({
+      generate: async () => all[0],
+      history: asked(...all),
+      areaLabel: "Goals",
+      hasGoal: true,
+    });
+    expect(result).toMatchObject({ question: null, fallback: "exhausted", attempts: 2 });
+  });
+
+  test("the fallback wordings are distinct from each other", () => {
+    const [a, b, c] = fallbackQuestions("Decision frameworks", true);
+    expect(checkQuestionShape(b, asked(a)).ok).toBe(true);
+    expect(checkQuestionShape(c, asked(a, b)).ok).toBe(true);
   });
 
   test("never calls the model more than twice", async () => {

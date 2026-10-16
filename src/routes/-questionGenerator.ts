@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import OpenAI from "openai";
 import type { Domain, Message, Tier } from "./-knowledgeGraph";
 import { followUpPromptSection, goalPromptSection, type NextAreaReason } from "~/lib/interview-goal";
+import { depthPromptSection, parseDepth, type InterviewDepth } from "~/lib/interview-depth";
 import { generateAtomicQuestion, type AtomicQuestionResult } from "~/lib/question-shape";
 
 interface GenerateInput {
@@ -15,6 +16,7 @@ interface GenerateInput {
   goal?: string;
   /** Set when the next question deliberately follows up on the latest answer. */
   followUp?: NextAreaReason;
+  depth?: InterviewDepth;
 }
 
 interface GenerateResult {
@@ -45,6 +47,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
       isClarification: (d.isClarification as boolean) ?? false,
       goal: typeof d.goal === "string" ? d.goal : "",
       followUp: d.followUp === "goal-follow-up" || d.followUp === "unresolved-follow-up" ? d.followUp : undefined,
+      depth: parseDepth(d.depth),
     };
   })
   .handler(async ({ data }) => {
@@ -83,6 +86,7 @@ The unresolved area you are probing: "${data.domain.label}" — ${data.domain.pr
 The user is ${tierLabel}.
 ${goalPromptSection(data.goal)}
 ${followUpPromptSection(data.followUp)}
+${depthPromptSection(data.depth)}
 
 Conversation so far:
 ---

@@ -115,6 +115,16 @@ export interface NextAreaContext {
   domains: InterviewState["domains"];
   /** True when ALVIRA is asking for clarification of the answered area. */
   clarifying?: boolean;
+  /** Follow-up limits for the chosen interview depth; defaults to the standard limits. */
+  limits?: FollowUpLimits;
+}
+
+export interface FollowUpLimits {
+  maxUnresolvedAnswers: number;
+  /** Areas that may receive goal follow-ups across the interview. */
+  maxGoalFollowUps: number;
+  /** Goal follow-ups allowed on one area. */
+  goalFollowUpsPerArea: number;
 }
 
 export type NextAreaReason = "unresolved-follow-up" | "goal-follow-up" | "sources" | "starting-point" | "relevance" | "priority";
@@ -128,6 +138,12 @@ export interface NextArea {
 export const MAX_UNRESOLVED_FOLLOW_UP_ANSWERS = 3;
 /** A resolved area gets at most one goal follow-up, and an interview at most this many. */
 export const MAX_GOAL_FOLLOW_UPS = 4;
+
+const STANDARD_LIMITS: FollowUpLimits = {
+  maxUnresolvedAnswers: MAX_UNRESOLVED_FOLLOW_UP_ANSWERS,
+  maxGoalFollowUps: MAX_GOAL_FOLLOW_UPS,
+  goalFollowUpsPerArea: 1,
+};
 
 function lastUserAnswer(history: Message[]): string | undefined {
   const last = history[history.length - 1];
@@ -148,6 +164,7 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
   if (gaps.length === 0) return null;
   const answer = lastUserAnswer(context.history);
   const answered = context.answeredDomainId ? graph.find((domain) => domain.id === context.answeredDomainId) : undefined;
+  const limits = context.limits ?? STANDARD_LIMITS;
 
   if (context.clarifying && answered) {
     const openGap = gaps.find((gap) => gap.domain.id === answered.id);
@@ -156,13 +173,13 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
 
   if (answer !== undefined && answered) {
     const openGap = gaps.find((gap) => gap.domain.id === answered.id);
-    if (openGap && openGap.currentAnswers > 0 && openGap.currentAnswers < MAX_UNRESOLVED_FOLLOW_UP_ANSWERS) {
+    if (openGap && openGap.currentAnswers > 0 && openGap.currentAnswers < limits.maxUnresolvedAnswers) {
       return { domain: answered, reason: "unresolved-follow-up" };
     }
     const answers = context.domains[answered.id]?.answers ?? [];
     const followUpsSoFar = Object.values(context.domains).filter((domain) => (domain?.answers?.length ?? 0) > 1).length;
     const goalWords = tokens(`${context.goal.startingPoints.join(" ")} ${context.goal.customGoal}`);
-    if (!openGap && answers.length === 1 && followUpsSoFar < MAX_GOAL_FOLLOW_UPS && overlap(tokens(answer), goalWords) > 0) {
+    if (!openGap && answers.length >= 1 && answers.length <= limits.goalFollowUpsPerArea && followUpsSoFar < limits.maxGoalFollowUps && overlap(tokens(answer), goalWords) > 0) {
       return { domain: answered, reason: "goal-follow-up" };
     }
   }
@@ -194,7 +211,7 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
 export function pickNextArea(
   graph: Domain[],
   state: InterviewState,
-  options: { answeredDomainId?: string | null; confidenceThreshold?: number; clarifying?: boolean },
+  options: { answeredDomainId?: string | null; confidenceThreshold?: number; clarifying?: boolean; limits?: FollowUpLimits },
 ): NextArea | null {
   const gaps = detectGaps(graph, state, options.confidenceThreshold);
   return chooseNextArea(graph, gaps, {
@@ -203,6 +220,7 @@ export function pickNextArea(
     answeredDomainId: options.answeredDomainId,
     domains: state.domains,
     clarifying: options.clarifying,
+    limits: options.limits,
   });
 }
 

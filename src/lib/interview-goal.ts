@@ -166,9 +166,11 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
   const answered = context.answeredDomainId ? graph.find((domain) => domain.id === context.answeredDomainId) : undefined;
   const limits = context.limits ?? STANDARD_LIMITS;
 
+  // A clarification stays on the area while it is below the depth's answer cap; at the cap it moves
+  // on like any other capped area (Codex review of df9cd12: repeated clarifications could loop).
   if (context.clarifying && answered) {
     const openGap = gaps.find((gap) => gap.domain.id === answered.id);
-    if (openGap) return { domain: answered, reason: "unresolved-follow-up" };
+    if (openGap && openGap.currentAnswers < limits.maxUnresolvedAnswers) return { domain: answered, reason: "unresolved-follow-up" };
   }
 
   if (answer !== undefined && answered) {

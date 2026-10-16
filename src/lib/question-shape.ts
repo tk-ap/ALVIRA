@@ -164,6 +164,11 @@ export function firstQuestionOnly(text: string): string {
   let first = question.slice(0, question.indexOf("?") + 1);
   const joined = first.match(JOINED_ASK);
   if (joined && joined.index !== undefined) first = `${first.slice(0, joined.index).replace(/[,;:\s]+$/, "")}?`;
+  // An "including A, B and C" list of separate asks: keep the ask before the list.
+  if (enumeratedAsks(first) >= 2) {
+    const list = ENUMERATION.exec(first);
+    if (list && list.index !== undefined && list.index > 0) first = `${first.slice(0, list.index).replace(/[,;:\s]+$/, "")}?`;
+  }
   return lead ? `${lead} ${first}` : first;
 }
 

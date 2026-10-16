@@ -221,6 +221,11 @@ describe("tighter checks (deep dive E2E 2026-10-16)", () => {
     ]) expect(isCompound(q)).toBe(false);
   });
 
+  test("the trim fallback keeps the ask before an enumerated list", () => {
+    expect(firstQuestionOnly(DEEP_Q28)).toBe("Could you describe TK's communication style?");
+    expect(checkQuestionShape(firstQuestionOnly(DEEP_Q28), []).ok).toBe(true);
+  });
+
   test("'as well as' joining a second question is compound", () => {
     expect(isCompound("How do they plan the week, as well as how do they review it?")).toBe(true);
   });

@@ -75,6 +75,30 @@ export function privateLinkReason(url: string): string | undefined {
   }
 }
 
+/** Placeholders left in a stored answer where a link was. They never contain a URL. */
+export const LINK_HELD = "[link held for owner review]";
+export const LINK_REMOVED = "[link removed: it carried a credential]";
+
+/**
+ * The answer text as it is stored and compiled: every link is replaced by a placeholder, so a
+ * link reaches the Context only as an owner-confirmed source and a credential never does.
+ * The original text is used once, by sourcesFromAnswer, before it is discarded.
+ */
+export function redactAnswerLinks(text: string): string {
+  return text.replace(LINK, (match, offset: number, whole: string) => {
+    if (offset > 0 && whole.charAt(offset - 1) === "@") return match; // an email address
+    const trailing = match.match(/[.,;:!?)\]]+$/)?.[0] ?? "";
+    const raw = trailing ? match.slice(0, -trailing.length) : match;
+    let url: string;
+    try {
+      url = new URL(normalizeLocator(raw)).toString();
+    } catch {
+      return match;
+    }
+    return (carriesCredential(url) ? LINK_REMOVED : LINK_HELD) + trailing;
+  });
+}
+
 /** An explicit "no links" answer for the sources area. */
 export function isNoSourcesAnswer(text: string): boolean {
   return /^\s*(none|no(ne)?\s+(links?|sources?|urls?)|n\/?a|nothing( public)?( yet)?|not (yet|applicable))\b[\s.!]*$/i.test(text);

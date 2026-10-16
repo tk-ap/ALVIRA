@@ -7,6 +7,14 @@ import {
   buildProductionClarificationPrompt,
 } from "~/lib/interview-prompts";
 import type { Domain, Message, Tier } from "./-knowledgeGraph";
+import { followUpPromptSection, goalPromptSection, type NextAreaReason } from "~/lib/interview-goal";
+
+/** Adds the goal (and follow-up) sections just before the prompt's final output instruction. */
+function withGoal(prompt: string, sections: string): string {
+  if (!sections.trim()) return prompt;
+  const marker = prompt.lastIndexOf("Respond ONLY with a JSON object");
+  return marker < 0 ? `${prompt}\n${sections}` : `${prompt.slice(0, marker)}${sections.trim()}\n\n${prompt.slice(marker)}`;
+}
 
 interface GenerateInput {
   domain: Domain;
@@ -14,6 +22,10 @@ interface GenerateInput {
   tier: Tier;
   isClarification?: boolean;
   delegatedAgent?: boolean;
+  /** What the person chose or typed on /app, as one plain-language line. */
+  goal?: string;
+  /** Set when the next question deliberately follows up on the latest answer. */
+  followUp?: NextAreaReason;
 }
 
 interface GenerateResult { question: string; }
@@ -38,6 +50,8 @@ export const generateQuestion = createServerFn({ method: "POST" })
       tier: d.tier as Tier,
       isClarification: (d.isClarification as boolean) ?? false,
       delegatedAgent: d.delegatedAgent === true,
+      goal: typeof d.goal === "string" ? d.goal : "",
+      followUp: d.followUp === "goal-follow-up" || d.followUp === "unresolved-follow-up" ? d.followUp : undefined,
     };
   })
   .handler(async ({ data }) => {
@@ -47,12 +61,15 @@ export const generateQuestion = createServerFn({ method: "POST" })
     // Prototype branch only: run the actual customer interview through the
     // latest Interview Lab v2 prompt so the immersive product journey is
     // testing the same interview behavior rather than a separate marketing shell.
-    const systemPrompt = buildExperimentalQuestionPrompt({
-      domain: data.domain,
-      history: data.history,
-      tier: data.tier,
-      delegatedAgent: data.delegatedAgent,
-    });
+    const systemPrompt = withGoal(
+      buildExperimentalQuestionPrompt({
+        domain: data.domain,
+        history: data.history,
+        tier: data.tier,
+        delegatedAgent: data.delegatedAgent,
+      }),
+      `${goalPromptSection(data.goal)}\n${followUpPromptSection(data.followUp)}`,
+    );
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -77,7 +94,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
 
 export const generateClarification = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier; delegatedAgent?: boolean };
+    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier; delegatedAgent?: boolean; goal?: string };
     if (!d.userQuestion || !d.domainLabel) throw new Error("User input and domain label are required.");
     if (!Array.isArray(d.history)) throw new Error("History is required.");
     return {
@@ -86,17 +103,21 @@ export const generateClarification = createServerFn({ method: "POST" })
       history: d.history as Message[],
       tier: d.tier as Tier,
       delegatedAgent: d.delegatedAgent === true,
+      goal: typeof d.goal === "string" ? d.goal : "",
     };
   })
   .handler(async ({ data }) => {
     if (!hasApiKey()) throw new Error("API key not configured");
     const openai = getOpenAIClient();
-    const systemPrompt = buildProductionClarificationPrompt({
-      userQuestion: data.userQuestion,
-      domainLabel: data.domainLabel,
-      history: data.history,
-      delegatedAgent: data.delegatedAgent,
-    });
+    const systemPrompt = withGoal(
+      buildProductionClarificationPrompt({
+        userQuestion: data.userQuestion,
+        domainLabel: data.domainLabel,
+        history: data.history,
+        delegatedAgent: data.delegatedAgent,
+      }),
+      data.goal ? `Their goal for this Context: ${data.goal}\nWhen you restate what you are trying to understand, tie it to that goal.` : "",
+    );
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

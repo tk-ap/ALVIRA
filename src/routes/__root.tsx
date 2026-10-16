@@ -3,7 +3,9 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
+  useRouterState,
 } from "@tanstack/react-router";
+import { canonicalUrl } from "~/lib/structured-data";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -38,8 +40,12 @@ export const Route = createRootRoute({
       { property: "og:title", content: "ALVIRA — Context before capability" },
       { property: "og:description", content: "AI can do almost anything. ALVIRA helps you understand what actually matters, then gives AI the context to help in a direction that fits you." },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://alviratech.vercel.app/alvira-logo-editorial-v2.png" },
-      { property: "og:url", content: "https://alviratech.vercel.app/" },
+      { property: "og:image", content: "https://alviratech.vercel.app/og/alvira-share.png" },
+      { property: "og:image:width", content: "1822" },
+      { property: "og:image:height", content: "863" },
+      { property: "og:image:alt", content: "ALVIRA — Context before capability" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://alviratech.vercel.app/og/alvira-share.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -104,9 +110,16 @@ function ThemeToggle() {
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
+  // One canonical (and og:url) per page, from the path, so shared and indexed URLs agree.
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const canonical = canonicalUrl(pathname);
   return (
     <html lang="en">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:url" content={canonical} />
+      </head>
       <body>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-5 focus:py-3 focus:font-mono focus:text-sm focus:font-semibold focus:text-mineral focus:shadow-xl dark:focus:bg-ink-light dark:focus:text-mineral-dark">Skip to main content</a>
         {children}

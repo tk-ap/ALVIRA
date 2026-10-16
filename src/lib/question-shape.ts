@@ -27,12 +27,19 @@ const AUX = "do|does|did|is|are|was|were|can|could|would|should|will|have|has";
  * A second ask joined onto the first: "…, and how …", "… and do they …", "… or what …".
  * "or" + an auxiliary is a single choice ("Is it fixed, or is it flexible?"), not a second ask.
  */
-const JOINED_ASK = new RegExp(`(?:[,;:]\\s*|\\s+)(?:(?:and|also|plus)\\s+(?:${WH}|${AUX})|or\\s+(?:${WH}))\\b`, "i");
+const JOINED_ASK = new RegExp(`(?:[,;:]\\s*|\\s+)(?:(?:and|also|plus|as well as)\\s+(?:${WH}|${AUX})|or\\s+(?:${WH}))\\b`, "i");
+/** Where a question starts listing parts: "Describe X, including A, B and C?" */
+const ENUMERATION = /,?\s*\b(?:including|such as|for example|e\.g\.|as well as|like)\b/i;
+/** A list item that is its own ask: a WH word, or a clause with its own subject ("formats they use"). */
+const CLAUSE_ITEM = new RegExp(`^(?:and\\s+|or\\s+)?(?:${WH})\\b|\\b(?:they|he|she|you|we|tk|their team)\\s+(?!and\\b|or\\b)[a-z]+`, "i");
 const STOPWORDS = new Set([
   "the", "and", "for", "are", "with", "that", "this", "they", "their", "them", "there", "what", "how", "why", "when",
   "where", "who", "which", "does", "did", "have", "has", "can", "could", "would", "should", "will", "about", "any",
   "into", "from", "your", "you", "its", "was", "were", "been", "being", "some", "such", "than", "then", "these",
   "those", "specific", "particular", "typically", "currently",
+  // Low-content verbs a rewording swaps freely ("criteria they use" / "criteria they consider").
+  "use", "uses", "used", "using", "make", "makes", "made", "making", "consider", "considers", "considered",
+  "considering", "take", "takes", "taken", "taking", "get", "gets", "getting", "tend", "tends",
 ]);
 
 /** Splits a generated response into the reflection and the question part. */
@@ -47,11 +54,31 @@ export function splitResponse(text: string): { lead: string; question: string } 
   return { lead: trimmed.slice(0, start).trim(), question: trimmed.slice(start).trim() };
 }
 
+/**
+ * Asks packed into a list after "including", "such as", …: "Describe their style, including how
+ * formal they are, any formats they use, and terminology they employ?" (E2E deep dive Q29). A list of
+ * plain examples ("such as websites, profiles, or docs") is one ask and passes.
+ */
+export function enumeratedAsks(sentence: string): number {
+  const match = ENUMERATION.exec(sentence);
+  if (!match || match.index === undefined) return 0;
+  const tail = sentence.slice(match.index + match[0].length).replace(/\?\s*$/, "");
+  return tail
+    .split(/,\s*|;\s*|\s+and\s+(?=(?:any|specific|the|their|what|how|which|who|when|where|why)\b)/i)
+    .map((item) => item.trim())
+    .filter((item) => item && CLAUSE_ITEM.test(item)).length;
+}
+
 export function isCompound(question: string): boolean {
   const marks = (question.match(/\?/g) ?? []).length;
   if (marks > 1) return true;
   const firstSentence = question.slice(0, question.indexOf("?") + 1 || undefined);
-  return JOINED_ASK.test(firstSentence);
+  return JOINED_ASK.test(firstSentence) || enumeratedAsks(firstSentence) >= 2;
+}
+
+/** Crude stem so verb and plural forms match: deciding/decide/decides → decid, changes/change → chang. */
+function stem(word: string): string {
+  return word.replace(/(?:ing|ied|ies|ed|es|s|e)$/, "").replace(/(.)\1$/, "$1");
 }
 
 function tokens(text: string): Set<string> {
@@ -61,7 +88,7 @@ function tokens(text: string): Set<string> {
       .replace(/[’']/g, "")
       .split(/[^a-z0-9]+/)
       .filter((word) => word.length >= 3 && !STOPWORDS.has(word))
-      .map((word) => word.replace(/(ies|es|s)$/, "")),
+      .map(stem),
   );
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   checkQuestionShape,
+  enumeratedAsks,
   fallbackQuestion,
   fallbackQuestions,
   firstQuestionOnly,
@@ -190,5 +191,51 @@ describe("generateAtomicQuestion", () => {
     let calls = 0;
     await generateAtomicQuestion({ generate: async () => (calls++, ""), history: [], areaLabel: "Goals", hasGoal: false });
     expect(calls).toBe(2);
+  });
+});
+
+// Real questions from the 2026-10-16 deep dive E2E run (evidence/deep-dive-run2.md).
+const DEEP_Q5 = "During TK's weekly review on Sundays, what specific criteria do they use to decide on changes in their Context?";
+const DEEP_Q6 = "What specific factors or criteria does TK consider when deciding which changes to make in the Context during their weekly review?";
+const DEEP_Q19 = "Could you provide some background on TK, including what they do, where they are based, and any relevant details about their family situation that might influence their decisions about income and employability?";
+const DEEP_Q28 = "Could you describe TK's communication style, including how formal or casual they tend to be, any preferred formats or channels they use, and specific terminology they might commonly employ?";
+
+describe("tighter checks (deep dive E2E 2026-10-16)", () => {
+  test("a reworded follow-up with swapped verbs is a duplicate (Q5 vs Q6)", () => {
+    expect(questionSimilarity(DEEP_Q5, DEEP_Q6)).toBeGreaterThanOrEqual(0.7);
+    expect(checkQuestionShape(DEEP_Q6, asked(DEEP_Q5)).problems).toContain("duplicate");
+  });
+
+  test("several asks packed into an 'including …' list are compound (Q19, Q28)", () => {
+    expect(isCompound(DEEP_Q28)).toBe(true);
+    expect(enumeratedAsks(DEEP_Q28)).toBe(3);
+    expect(isCompound(DEEP_Q19)).toBe(true);
+  });
+
+  test("a list of plain examples is still one ask", () => {
+    for (const q of [
+      "To ensure the central Context record adheres to any necessary constraints, are there specific rules, budgetary limits, legal requirements, or security measures TK must follow?",
+      "Can you describe any key partnerships, collaborations, or networks that TK relies on for support or opportunities?",
+      "Could you list any public links that TK considers important, such as websites, professional profiles, or documentation?",
+      "What recent changes, if any, have occurred in TK's work, projects, or personal goals that should be reflected in their Context?",
+      // Examples that contain clauses but no independent question (Codex review of f86c38f).
+      "Could you share public links, such as sites they maintain, profiles they use, or documents they publish?",
+      "Which tools matter most, such as apps they open daily and services they pay for?",
+    ]) expect(isCompound(q)).toBe(false);
+  });
+
+  test("the trim fallback keeps the ask before an enumerated list", () => {
+    expect(firstQuestionOnly(DEEP_Q28)).toBe("Could you describe TK's communication style?");
+    expect(checkQuestionShape(firstQuestionOnly(DEEP_Q28), []).ok).toBe(true);
+  });
+
+  test("'as well as' joining a second question is compound", () => {
+    expect(isCompound("How do they plan the week, as well as how do they review it?")).toBe(true);
+  });
+
+  test("different asks that share words are still not duplicates (Q12 vs Q27 of the run)", () => {
+    const q12 = "Are there specific market trends or industry changes that TK believes could impact their decisions on income and employability during their weekly reviews?";
+    const q27 = "How does TK prefer to receive information or updates about market trends or industry changes that could impact their income and employability decisions?";
+    expect(checkQuestionShape(q27, asked(q12)).problems).not.toContain("duplicate");
   });
 });

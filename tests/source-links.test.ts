@@ -33,6 +33,11 @@ describe("sourcesFromAnswer", () => {
     ]);
   });
 
+  test("keeps the page path in a website label (E2E: /career looked like the bare site)", () => {
+    const [career] = sourcesFromAnswer("https://ashwood-info.vercel.app/career", [], AGENT);
+    expect(career).toMatchObject({ type: "website", label: "ashwood-info.vercel.app/career" });
+  });
+
   test("skips links already recorded, even spelled differently", () => {
     const first = sourcesFromAnswer("https://github.com/tk-ap/ALVIRA", [], AGENT);
     expect(sourcesFromAnswer("GitHub.com/tk-ap/ALVIRA/", first, AGENT)).toEqual([]);

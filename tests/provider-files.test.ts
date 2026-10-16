@@ -68,3 +68,32 @@ describe("provider files", () => {
     }
   });
 });
+
+describe("a Context whose only content is a confirmed link (Codex review of 39e6115)", () => {
+  const sourcesOnly = {
+    tier: "personal",
+    topic: "TK — sources only",
+    domains: {},
+    history: [],
+    contextSources: [
+      { id: "a", type: "website", label: "alviratech.vercel.app", locator: "https://alviratech.vercel.app", status: "ready", addedAt: "2026-10-16T00:00:00Z", addedBy: { actor_type: "human" } },
+      { id: "b", type: "website", label: "docs.google.com", locator: "https://docs.google.com/document/d/PRIVATE123/edit", status: "needs-review", addedAt: "2026-10-16T00:00:00Z", addedBy: { actor_type: "human" } },
+    ],
+  } as unknown as InterviewState;
+  const files = compileKnowledge(sourcesOnly, getKnowledgeGraph("personal"));
+  const providers = buildProviderFiles(files, sourcesOnly.topic);
+
+  test("the overview counts as recorded and drops the 'nothing gathered' note", () => {
+    expect(hasRecordedContent(files.overview)).toBe(true);
+    expect(files.overview).not.toContain("_No information gathered for this area yet._");
+    expect(files.overview).toContain("## Sources");
+  });
+
+  test("every provider file carries the confirmed link and never the one awaiting review", () => {
+    for (const [name, content] of Object.entries(providers)) {
+      expect(content, name).toContain("https://alviratech.vercel.app");
+      expect(content, name).not.toContain("PRIVATE123");
+      expect(content, name).not.toContain("has not recorded anything");
+    }
+  });
+});

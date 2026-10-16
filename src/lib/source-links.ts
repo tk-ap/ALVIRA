@@ -54,12 +54,13 @@ export function contributorFor(state: unknown): SourceContributor {
     : { actor_type: "human" };
 }
 
-function labelFor(url: string, type: ContextSourceType): string {
+/** Host plus any path, so two pages on one site stay distinguishable (E2E: ".../career" read as the bare site). */
+function labelFor(url: string): string {
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.replace(/^www\./, "");
     const path = parsed.pathname.replace(/\/+$/, "");
-    return path && path !== "/" && type !== "website" ? `${host}${path}` : host;
+    return path ? `${host}${path}` : host;
   } catch {
     return url;
   }
@@ -76,7 +77,7 @@ export function sourcesFromAnswer(
     .filter((url) => !existing.some((source) => sameLocator(source.locator, url)))
     .map((url) => {
       const type = classifySourceLocator(url);
-      return { id: crypto.randomUUID(), type, label: labelFor(url, type), locator: url, status: "queued" as const, addedAt: now, addedBy: contributor };
+      return { id: crypto.randomUUID(), type, label: labelFor(url), locator: url, status: "queued" as const, addedAt: now, addedBy: contributor };
     });
 }
 

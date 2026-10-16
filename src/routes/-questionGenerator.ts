@@ -3,12 +3,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import OpenAI from "openai";
 import type { Domain, Message, Tier } from "./-knowledgeGraph";
+import { followUpPromptSection, goalPromptSection, type NextAreaReason } from "~/lib/interview-goal";
 
 interface GenerateInput {
   domain: Domain;
   history: Message[];
   tier: Tier;
   isClarification?: boolean;
+  /** What the person chose or typed on /app, as one plain-language line. */
+  goal?: string;
+  /** Set when the next question deliberately follows up on the latest answer. */
+  followUp?: NextAreaReason;
 }
 
 interface GenerateResult { question: string; }
@@ -32,6 +37,8 @@ export const generateQuestion = createServerFn({ method: "POST" })
       history: d.history as Message[],
       tier: d.tier as Tier,
       isClarification: (d.isClarification as boolean) ?? false,
+      goal: typeof d.goal === "string" ? d.goal : "",
+      followUp: d.followUp === "goal-follow-up" || d.followUp === "unresolved-follow-up" ? d.followUp : undefined,
     };
   })
   .handler(async ({ data }) => {
@@ -63,11 +70,13 @@ export const generateQuestion = createServerFn({ method: "POST" })
 - If two answers appear inconsistent, surface the tension neutrally instead of silently choosing one.
 - Avoid generic praise, therapy language, summaries that merely repeat the user's words, and long lectures.
 - The reflection should normally be 1-3 concise sentences. Then ask ONE specific question.
-- The next question must still focus on the current unresolved domain.
+- Keep the next question within the current unresolved area, approached through the person's goal and what they have already said.
 
 ## Current task
 The unresolved area you are probing: "${data.domain.label}" — ${data.domain.promptHint}
 The user is ${tierLabel}.
+${goalPromptSection(data.goal)}
+${followUpPromptSection(data.followUp)}
 
 Conversation so far:
 ---
@@ -75,7 +84,7 @@ ${conversationText || "(this is the first question)"}
 ---
 ${clarificationInstruction}
 
-${hasUserContext ? "Return a short context-aware reflection followed by one targeted question." : "This is the first question, so do not fabricate a reflection. Ask one targeted, conversational question."}
+${hasUserContext ? "Return a short context-aware reflection followed by one targeted question." : `This is the first question, so do not fabricate a reflection. Ask one targeted, conversational question${data.goal ? " that connects to their goal" : ""}.`}
 Do not mention internal domain IDs, confidence scores, the knowledge graph, or system mechanics.
 
 Respond ONLY with a JSON object: {"question": "the complete ALVIRA response, including the brief reflection when appropriate and then the single next question"}`;
@@ -103,7 +112,7 @@ Respond ONLY with a JSON object: {"question": "the complete ALVIRA response, inc
 
 export const generateClarification = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier };
+    const d = data as { userQuestion: string; domainLabel: string; history: Message[]; tier: Tier; goal?: string };
     if (!d.userQuestion || !d.domainLabel) throw new Error("User input and domain label are required.");
     if (!Array.isArray(d.history)) throw new Error("History is required.");
     return {
@@ -111,6 +120,7 @@ export const generateClarification = createServerFn({ method: "POST" })
       domainLabel: d.domainLabel as string,
       history: d.history as Message[],
       tier: d.tier as Tier,
+      goal: typeof d.goal === "string" ? d.goal : "",
     };
   })
   .handler(async ({ data }) => {
@@ -120,7 +130,7 @@ export const generateClarification = createServerFn({ method: "POST" })
 
 The area you were asking about: "${data.domainLabel}"
 The user's input: "${data.userQuestion}"
-
+${data.goal ? `Their goal for this Context: ${data.goal}\nWhen you restate what you are trying to understand, tie it to that goal.\n` : ""}
 There are three possible cases:
 1. The user is asking a clarifying question. Briefly explain what you meant, concretely.
 2. The user asked what you know about them. Answer briefly and plainly from what they have actually said in this conversation, then stop.

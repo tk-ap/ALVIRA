@@ -49,14 +49,13 @@ export function Header() {
 
   const closeMenu = () => setMenuOpen(false);
   const mobileCtaHref = user ? "/dashboard" : "/app";
-  const mobileCtaLabel = user ? "Dashboard" : "Start here";
+  const mobileCtaLabel = user ? "My Context" : "Start free";
   const isOwner = user?.email.trim().toLowerCase() === OWNER_EMAIL;
-  // Signed-in navigation carries more account destinations, so it stays compact
-  // until xl. Signed-out navigation switches at lg, matching the audit's ~1000px
-  // recommendation without forcing a crowded authenticated header.
-  const desktopNavClass = user ? "hidden items-center xl:flex" : "hidden items-center lg:flex";
-  const compactNavClass = user ? "flex items-center gap-2 xl:hidden" : "flex items-center gap-2 lg:hidden";
-  const mobileNavBreakpointClass = user ? "xl:hidden" : "lg:hidden";
+  // Both states now show at most four header items (signed in: My Context, Reflect,
+  // Connect, Account menu), so both switch to the full header at lg.
+  const desktopNavClass = "hidden items-center lg:flex";
+  const compactNavClass = "flex items-center gap-2 lg:hidden";
+  const mobileNavBreakpointClass = "lg:hidden";
 
   return (
     <>
@@ -71,36 +70,44 @@ export function Header() {
             </a>
 
             <div className={desktopNavClass}>
-              <nav aria-label="Primary navigation" className="flex items-center gap-5">
-                <a href="/#possibilities" className={desktopLinkClass}>How it helps</a>
-                <a href="/context" className={desktopLinkClass}>Context</a>
-                <a href="/partners" className={desktopLinkClass}>For organizations</a>
-                <a href="/pricing" className={desktopLinkClass}>Pricing</a>
-              </nav>
+              {user ? null : (
+                <nav aria-label="Primary navigation" className="flex items-center gap-5">
+                  <a href="/#possibilities" className={desktopLinkClass}>How it works</a>
+                  <a href="/app?offering=meos&preview=false" className={desktopLinkClass}>Reflect</a>
+                  <a href="/pricing" className={desktopLinkClass}>Pricing</a>
+                </nav>
+              )}
 
-              <div className="ml-10 flex items-center gap-4 border-l border-warm-gray/18 pl-10">
+              <div className={`flex items-center gap-4 ${user ? "" : "ml-10 border-l border-warm-gray/18 pl-10"}`}>
                 {user === undefined ? (
                   <div className="h-8 w-16 bg-gray-100 dark:bg-gray-800 animate-pulse" />
                 ) : user ? (
-                  <div className="flex items-center gap-4">
-                    <a href="/dashboard" className={desktopLinkClass}>Dashboard</a>
-                    <a href="/bridge" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Bridge</a>
-                    <a href="/build-brief" className={desktopLinkClass}>Build Brief</a>
-                    <a href="/history" className={desktopLinkClass}>History</a>
-                    <a href="/account" className={desktopLinkClass}>Account</a>
-                    <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${desktopLinkClass} min-h-11 disabled:opacity-50`}>{loggingOut ? "..." : "Logout"}</button>
-                  </div>
+                  <nav aria-label="Account navigation" className="flex items-center gap-5">
+                    <a href="/dashboard" className={desktopLinkClass}>My Context</a>
+                    <a href="/app?offering=meos&preview=false" className={desktopLinkClass}>Reflect</a>
+                    <a href="/bridge" className={`${desktopLinkClass} text-system-dark dark:text-system`}>Connect</a>
+                    <details className="relative">
+                      <summary className={`${desktopLinkClass} flex min-h-11 cursor-pointer list-none items-center gap-1`}>Account <span aria-hidden="true">▾</span></summary>
+                      <div className="absolute right-0 top-full z-50 mt-1 flex w-44 flex-col border border-warm-gray/18 bg-ink-light py-1 shadow-lg dark:bg-ink">
+                        <a href="/build-brief" className={`${desktopLinkClass} px-4 py-2`}>Build Brief</a>
+                        <a href="/history" className={`${desktopLinkClass} px-4 py-2`}>History</a>
+                        <a href="/account" className={`${desktopLinkClass} px-4 py-2`}>Settings</a>
+                        <button type="button" onClick={handleLogout} disabled={loggingOut} className={`${desktopLinkClass} px-4 py-2 text-left disabled:opacity-50`}>{loggingOut ? "..." : "Sign out"}</button>
+                      </div>
+                    </details>
+                  </nav>
                 ) : (
-                  <a href="/login" className={`${desktopLinkClass} min-h-11 flex items-center`}>Sign In</a>
+                  <>
+                    <a href="/login" className={`${desktopLinkClass} min-h-11 flex items-center`}>Sign in</a>
+                    <a
+                      href="/app"
+                      className="inline-flex min-h-10 items-center justify-center gap-2 border border-mineral-dark/25 bg-mineral-dark px-4 font-mono text-xs font-semibold uppercase tracking-[0.1em] text-ink-light transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:border-mineral/30 dark:bg-mineral dark:text-ink"
+                    >
+                      <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5 brightness-0 invert dark:invert-0" aria-hidden="true" />
+                      Start free
+                    </a>
+                  </>
                 )}
-
-                <a
-                  href={user ? "/dashboard" : "/app"}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 border border-mineral-dark/25 bg-mineral-dark px-4 font-mono text-xs font-semibold uppercase tracking-[0.1em] text-ink-light transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-system dark:border-mineral/25 dark:bg-mineral dark:text-ink"
-                >
-                  <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5 brightness-0 invert dark:invert-0" aria-hidden="true" />
-                  {user ? "Open ALVIRA" : "Start here"}
-                </a>
                 <ThemeToggle />
               </div>
             </div>
@@ -120,21 +127,18 @@ export function Header() {
               <img src="/brand/alvira-context-frame.svg" alt="" className="h-3.5 w-3.5" aria-hidden="true" />
               AI that starts with your context
             </div>
-            <a href="/#possibilities" onClick={closeMenu} className={mobileLinkClass}>What AI can help with</a>
-            <a href="/context" onClick={closeMenu} className={mobileLinkClass}>Context</a>
-            <a href="/app?offering=meos&preview=false" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Reflect</a>
-            <a href="/integrations" onClick={closeMenu} className={mobileLinkClass}>Use elsewhere</a>
-            <a href="/partners" onClick={closeMenu} className={mobileLinkClass}>For organizations</a>
-            <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>
-            {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>Dashboard</a> : null}
-            {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Bridge</a> : null}
+            {user ? null : <a href="/#possibilities" onClick={closeMenu} className={mobileLinkClass}>How it works</a>}
+            <a href="/app?offering=meos&preview=false" onClick={closeMenu} className={mobileLinkClass}>Reflect</a>
+            {user ? null : <a href="/pricing" onClick={closeMenu} className={mobileLinkClass}>Pricing</a>}
+            {user ? <a href="/dashboard" onClick={closeMenu} className={mobileLinkClass}>My Context</a> : null}
+            {user ? <a href="/bridge" onClick={closeMenu} className={`${mobileLinkClass} text-system-dark dark:text-system`}>Connect</a> : null}
             {user ? <a href="/build-brief" onClick={closeMenu} className={mobileLinkClass}>Build Brief</a> : null}
             {user ? <a href="/history" onClick={closeMenu} className={mobileLinkClass}>History</a> : null}
-            {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Account</a> : null}
+            {user ? <a href="/account" onClick={closeMenu} className={mobileLinkClass}>Settings</a> : null}
             {user ? (
-              <button type="button" onClick={() => { closeMenu(); void handleLogout(); }} disabled={loggingOut} className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}>{loggingOut ? "Logging out..." : "Logout"}</button>
+              <button type="button" onClick={() => { closeMenu(); void handleLogout(); }} disabled={loggingOut} className={`${mobileLinkClass} w-full text-left disabled:opacity-50`}>{loggingOut ? "Signing out..." : "Sign out"}</button>
             ) : user === null ? (
-              <a href="/login" onClick={closeMenu} className={mobileLinkClass}>Sign In</a>
+              <a href="/login" onClick={closeMenu} className={mobileLinkClass}>Sign in</a>
             ) : null}
           </nav>
         </div>

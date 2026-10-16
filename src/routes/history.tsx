@@ -68,7 +68,7 @@ function HistoryPage() {
           <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm-gray-dark dark:text-warm-gray">Selected Context</p><h2 className="mt-2 font-display text-3xl">{selected?.topic}</h2></div>
             <div className="flex flex-wrap items-center gap-3">
-              <a href={updateHref} className="inline-flex min-h-10 items-center justify-center border border-system bg-system-soft/35 px-4 py-2.5 font-mono text-xs font-semibold text-system-dark transition-colors hover:bg-system-soft dark:text-system">Update / add context →</a>
+              <a href={updateHref} className="inline-flex min-h-10 items-center justify-center border border-system bg-system-soft/35 px-4 py-2.5 font-mono text-xs font-semibold text-system-dark transition-colors hover:bg-system-soft dark:text-system">Update →</a>
               <a href="/integrations" className="font-mono text-xs text-system-dark underline decoration-system/35 underline-offset-4 dark:text-system">Reuse this Context →</a>
             </div>
           </div>

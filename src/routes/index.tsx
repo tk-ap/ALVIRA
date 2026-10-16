@@ -137,13 +137,13 @@ function Home() {
                 href="/app"
                 className="inline-flex min-h-13 items-center justify-center bg-[#191715] px-7 text-sm font-semibold text-[#f4f0e9] transition-opacity hover:opacity-85 dark:bg-[#f4f0e9] dark:text-[#191715]"
               >
-                Start with a conversation <span className="ml-3" aria-hidden="true">→</span>
+                Start free <span className="ml-3" aria-hidden="true">→</span>
               </a>
               <a
                 href="#possibilities"
                 className="inline-flex min-h-13 items-center justify-center border border-[#191715]/20 px-7 text-sm font-semibold text-[#4d453e] transition-colors hover:border-[#191715]/40 hover:text-[#191715] dark:border-white/20 dark:text-white/70 dark:hover:border-white/40 dark:hover:text-white"
               >
-                See what AI can help with
+                See examples
               </a>
             </div>
 
@@ -219,7 +219,7 @@ function Home() {
                   {activeHelp.explanation}
                 </p>
                 <a href="/app" className="mt-7 inline-flex min-h-11 items-center text-sm font-semibold text-system-dark underline decoration-system/35 underline-offset-4 hover:decoration-system dark:text-system">
-                  Try this with ALVIRA <span className="ml-2" aria-hidden="true">→</span>
+                  Try it <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               </div>
             </div>
@@ -389,7 +389,7 @@ function Home() {
 
               <div className="flex flex-col gap-3">
                 <a href="/app" className="inline-flex min-h-14 items-center justify-center bg-[#191715] px-8 text-sm font-semibold text-[#f4f0e9] transition-opacity hover:opacity-85 dark:bg-[#f4f0e9] dark:text-[#191715]">
-                  Start with a conversation <span className="ml-3" aria-hidden="true">→</span>
+                  Start free <span className="ml-3" aria-hidden="true">→</span>
                 </a>
                 <a href="/context" className="inline-flex min-h-11 items-center justify-center text-sm font-semibold text-system-dark underline decoration-system/35 underline-offset-4 hover:decoration-system dark:text-system">
                   Already have context? Bring it with you.

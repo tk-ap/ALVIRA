@@ -3,7 +3,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import OpenAI from "openai";
 import type { Domain, Message, Tier } from "./-knowledgeGraph";
-import { goalPromptSection } from "~/lib/interview-goal";
+import { followUpPromptSection, goalPromptSection, type NextAreaReason } from "~/lib/interview-goal";
 
 interface GenerateInput {
   domain: Domain;
@@ -12,6 +12,8 @@ interface GenerateInput {
   isClarification?: boolean;
   /** What the person chose or typed on /app, as one plain-language line. */
   goal?: string;
+  /** Set when the next question deliberately follows up on the latest answer. */
+  followUp?: NextAreaReason;
 }
 
 interface GenerateResult { question: string; }
@@ -36,6 +38,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
       tier: d.tier as Tier,
       isClarification: (d.isClarification as boolean) ?? false,
       goal: typeof d.goal === "string" ? d.goal : "",
+      followUp: d.followUp === "goal-follow-up" || d.followUp === "unresolved-follow-up" ? d.followUp : undefined,
     };
   })
   .handler(async ({ data }) => {
@@ -73,6 +76,7 @@ export const generateQuestion = createServerFn({ method: "POST" })
 The unresolved area you are probing: "${data.domain.label}" — ${data.domain.promptHint}
 The user is ${tierLabel}.
 ${goalPromptSection(data.goal)}
+${followUpPromptSection(data.followUp)}
 
 Conversation so far:
 ---

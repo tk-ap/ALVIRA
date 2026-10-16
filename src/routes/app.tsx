@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { chooseNextGap, describeInterviewGoal } from "~/lib/interview-goal";
+import { describeInterviewGoal, pickNextArea } from "~/lib/interview-goal";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
@@ -878,18 +878,22 @@ function AppPage() {
     }
   };
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
-  const askNextQuestion = async (currentState: InterviewState, isClarification = false, forcedOffering?: "context" | "meos") => {
+  const askNextQuestion = async (currentState: InterviewState, isClarification = false, forcedOffering?: "context" | "meos", answeredDomainId?: string | null) => {
     const activeOffering = forcedOffering ?? offering;
     const currentGraph = activeOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(currentState.tier);
     const currentPlaybook = activeOffering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
-    const currentGaps = detectGaps(currentGraph, currentState, currentPlaybook.completion.minimumConfidence);
-    if (currentGaps.length === 0) return null;
-
-    // What the person chose or typed on /app steers the interview: follow up on the
-    // current thread while it needs more, then the chosen starting points, then the
-    // areas most related to the goal and the latest answers.
+    // What the person chose or typed on /app steers the interview: bounded follow-ups on
+    // the area just answered, then the chosen starting points, then the areas most
+    // related to the goal and the latest answers. handleSend clears currentDomain after a
+    // recorded answer, so it passes the answered area explicitly.
+    const next = pickNextArea(currentGraph, currentState, {
+      answeredDomainId: answeredDomainId ?? currentState.currentDomain,
+      confidenceThreshold: currentPlaybook.completion.minimumConfidence,
+      clarifying: isClarification,
+    });
+    if (!next) return null;
     const goal = describeInterviewGoal(currentState.topic);
-    const topGap = chooseNextGap(currentGaps, { goal, history: currentState.history, currentDomain: currentState.currentDomain });
+    const topGap = { domain: next.domain };
     const updatedState: InterviewState = {
       ...currentState,
       currentDomain: topGap.domain.id,
@@ -903,6 +907,7 @@ function AppPage() {
           tier: currentState.tier,
           isClarification,
           goal: goal.summary,
+          followUp: !isClarification && (next.reason === "goal-follow-up" || next.reason === "unresolved-follow-up") ? next.reason : undefined,
         },
       });
 
@@ -1258,7 +1263,7 @@ function AppPage() {
     setInterviewError("");
 
     try {
-      const result = await askNextQuestion(updatedState, needsClarify);
+      const result = await askNextQuestion(updatedState, needsClarify, undefined, currentDomain);
       if (result) {
         setState(result);
       } else {

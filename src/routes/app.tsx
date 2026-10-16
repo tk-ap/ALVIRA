@@ -586,6 +586,16 @@ function AppPage() {
   const hasGaps = gaps.length > 0;
   const acceptsInput = hasGaps || updateMode;
   const requiredCovered = state ? allRequiredCovered(graph, state, confThreshold) : false;
+  // Generate once there is something to compile: a conversation under way, no open areas, answers
+  // already in the Context (a continued or updated Context starts with an empty conversation), or an
+  // owner-confirmed link. Regenerating after only confirming a link or adding a source is allowed.
+  const canGenerate = Boolean(
+    state &&
+      (state.history.length >= 2 ||
+        !hasGaps ||
+        answerCount > 0 ||
+        (state.contextSources ?? []).some((source) => source.status === "ready")),
+  );
 
   // ── Knowledge quality check ──
   // Warns when compiled files would be too thin to be useful.
@@ -1150,7 +1160,7 @@ function AppPage() {
     setInterviewError("");
 
     // Auto-run the next question so the interview continues with remaining gaps
-    // and history is populated (Generate requires history.length >= 2).
+    // and history is populated.
     try {
       const result = await askNextQuestion(seededState);
       if (result) {
@@ -1911,9 +1921,9 @@ function AppPage() {
                   <button
                     type="button"
                     onClick={() => handleGenerate()}
-                    disabled={compiling || !state || (state.history.length < 2 && hasGaps)}
+                    disabled={compiling || !canGenerate}
                     className={`font-mono text-xs transition-colors rounded px-1 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 ${
-                      state && (state.history.length >= 2 || !hasGaps)
+                      canGenerate
                         ? "text-emerald-700 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300"
                         : "text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     }`}

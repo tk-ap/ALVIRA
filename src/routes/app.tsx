@@ -771,7 +771,10 @@ function AppPage() {
     }
   };
 
+  // "Start over" clears the saved draft, so with unsaved progress it asks once on the page.
+  const [confirmStartOver, setConfirmStartOver] = useState(false);
   const handleStartOver = async () => {
+    setConfirmStartOver(false);
     const draftOffering = resumeDraft?.offering ?? offering ?? "context";
     try { window.localStorage.removeItem(
         getInterviewDraftKey(authUser?.id, draftOffering),
@@ -1632,18 +1635,16 @@ function AppPage() {
                     Source-backed instructions and portable setup files · {state?.topic || topic}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={downloadZip} className={btnSecondary}>
-                    <span className="font-mono text-xs">⬇ Download .zip</span>
-                  </button>
-                  {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnPrimary}>Download Builder Kit (beta)</button>}
-                  {savedProfileId && <a href="/bridge" className={btnSecondary}>Your context is ready — connect an AI tool →</a>}
-                  {authUser && (savedProfileId ? <a href="/dashboard" className={btnSecondary}>Profile saved → View dashboard</a> : <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Confirm & save profile"}</button>)}
-                  {savedProfileId && <a href={`/app?handoff=${savedProfileId}`} className={btnSecondary}>{offering === "meos" ? "Carry into AI Context" : "Continue into Reflect"} →</a>}
-                  {offering === "meos" && <a href="/app?offering=meos&preview=false" className={btnSecondary}>View ALVIRA Reflect →</a>}
-                  <button type="button" onClick={startNew} className={btnPrimary}>
-                    + Start new
-                  </button>
+                {/* One clear primary action per stage: Save before saving, Connect AI after. */}
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  {authUser && !savedProfileId && <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>{saving ? "Saving..." : "Save"}</button>}
+                  {savedProfileId && <a href="/bridge" className={btnPrimary}>Connect AI →</a>}
+                  {savedProfileId && <a href="/dashboard" className={btnSecondary}>My Context</a>}
+                  {savedProfileId && <a href={`/app?handoff=${savedProfileId}`} className={btnSecondary}>{offering === "meos" ? "Use in Context" : "Continue in Reflect"} →</a>}
+                  {offering === "meos" && <a href="/app?offering=meos&preview=false" className={btnSecondary}>Open Reflect</a>}
+                  {offering === "meos" && <button type="button" onClick={downloadMeosBuilderKit} className={btnSecondary}>Builder Kit (beta)</button>}
+                  <button type="button" onClick={downloadZip} className={btnSecondary}>Download .zip</button>
+                  <button type="button" onClick={startNew} className="min-h-11 px-3 text-sm font-medium text-gray-600 underline decoration-gray-400 underline-offset-4 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">Start new</button>
                 </div>
               </div>
 
@@ -1828,7 +1829,7 @@ function AppPage() {
                       onClick={handleSkip}
                       className="font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-2 py-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:focus-visible:ring-emerald-400/50 rounded"
                     >
-                      Skip →
+                      Don't know →
                     </button>
                   )}
                   <button
@@ -1841,7 +1842,7 @@ function AppPage() {
                         : "text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {compiling ? "Compiling..." : "Generate knowledge files →"}
+                    {compiling ? "Building..." : "Build my Context →"}
                   </button>
                 </div>
               </div>
@@ -2157,10 +2158,10 @@ function AppPage() {
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={resumeDraft.state.generatedAt ? () => void handleUpdateGeneratedDraft() : handleResumeDraft} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:bg-emerald-600 dark:hover:bg-emerald-500">
-                  {resumeDraft.state.generatedAt ? "Update / add context" : "Continue previous interview"}
+                  {resumeDraft.state.generatedAt ? "Update" : "Continue"}
                 </button>
-                <button type="button" onClick={() => void handleStartOver()} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:text-gray-100">
-                  Start a new interview
+                <button type="button" onClick={() => (resumeDraft.state.generatedAt || confirmStartOver ? void handleStartOver() : setConfirmStartOver(true))} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:text-gray-100">
+                  {confirmStartOver ? "Yes, clear draft and start over" : "Start over"}
                 </button>
               </div>
             </section>

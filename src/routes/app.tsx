@@ -118,6 +118,7 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
     domains,
     ...(existing.provenance ? { provenance: existing.provenance } : {}),
     ...(existing.contextSources?.length ? { contextSources: [...existing.contextSources] } : {}),
+    ...(existing.agentContextOptIn ? { agentContextOptIn: true } : {}),
   };
 }
 // ── Document parsing helpers (Upload-to-seed) ──

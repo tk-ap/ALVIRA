@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { pastedContextProblem, pastedContextSource } from "~/lib/agent-context";
 import { contributorFor, linksNeedingReview, redactAnswerLinks, sourcesFromAnswer } from "~/lib/source-links";
 import { describeInterviewGoal, pickNextArea } from "~/lib/interview-goal";
 import { DEPTHS, DEPTH_ORDER, areasForDepth, depthSettings, parseDepth, type InterviewDepth } from "~/lib/interview-depth";
@@ -106,7 +107,11 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
     }
   }
   // Keep the Context's sources (and the owner's link confirmations) when it is continued or updated.
-  return { ...initialState, domains, ...(existing.contextSources?.length ? { contextSources: [...existing.contextSources] } : {}) };
+  return {
+    ...initialState,
+    domains,
+    ...(existing.contextSources?.length ? { contextSources: [...existing.contextSources] } : {}),
+  };
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
@@ -448,6 +453,7 @@ function AppPage() {
   const [startError, setStartError] = useState("");
   const [contextSources, setContextSources] = useState<ContextSource[]>([]);
   const [contextSourceType, setContextSourceType] = useState<ContextSourceType>("website");
+  const [pastedContext, setPastedContext] = useState("");
   const [contextSourceLocator, setContextSourceLocator] = useState("");
   const [showContextSources, setShowContextSources] = useState(false);
   const [contextSessionNotice, setContextSessionNotice] = useState<string | null>(null);
@@ -1063,6 +1069,47 @@ function AppPage() {
   };
 
   // ── Upload-to-seed: parse file → extract claims → review screen ──
+  // Extract claims from text and open the claim review (screen, or overlay mid-interview).
+  const reviewExtractedText = async (text: string, uploadTopic: string, kind: "document" | "source") => {
+    const seedOffering = offering === "meos" ? "meos" : "context";
+    const result = await extractClaims({ data: { text, tier, topic: uploadTopic, offering: seedOffering } });
+    seedOfferingRef.current = seedOffering;
+    setSeedSource(kind);
+    setExtraction(result);
+    setSeedDecisions({});
+    // Mid-interview (including "Update / add context"), review as an overlay on the live interview.
+    if (screen === "interview") {
+      setShowContextSources(false);
+      setSeedReviewOverlay(true);
+    } else {
+      setScreen("seed-review");
+    }
+  };
+
+  // Existing AI context pasted by the person (memory, custom instructions, an export). It is
+  // reviewed claim by claim like a file; the source is recorded only when claims are approved.
+  const handlePastedContext = async () => {
+    const problem = pastedContextProblem(pastedContext);
+    if (problem) { setUploadError(problem); return; }
+    const uploadTopic = topic.trim() || "My AI context";
+    if (!topic.trim()) setTopic(uploadTopic);
+    setUploading(true);
+    setUploadError("");
+    setInterviewError("");
+    try {
+      pendingContextSourceRef.current = pastedContextSource(contributorFor(state));
+      await reviewExtractedText(pastedContext.trim(), uploadTopic, "source");
+      setPastedContext("");
+    } catch (err: unknown) {
+      pendingContextSourceRef.current = null;
+      const msg = err instanceof Error ? err.message : "Could not extract knowledge from that text.";
+      if (msg === "API key not configured") setScreen("api-error");
+      else setUploadError(msg);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file
@@ -1088,19 +1135,7 @@ function AppPage() {
       if (!text.trim()) {
         throw new Error("That file appears to be empty — nothing to extract.");
       }
-      const seedOffering = offering === "meos" ? "meos" : "context";
-      const result = await extractClaims({ data: { text, tier, topic: uploadTopic, offering: seedOffering } });
-      seedOfferingRef.current = seedOffering;
-      setSeedSource("document");
-      setExtraction(result);
-      setSeedDecisions({});
-      // Mid-interview (including "Update / add context"), review as an overlay on the live interview.
-      if (screen === "interview") {
-        setShowContextSources(false);
-        setSeedReviewOverlay(true);
-      } else {
-        setScreen("seed-review");
-      }
+      await reviewExtractedText(text, uploadTopic, "document");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Could not extract knowledge from that file.";
       if (msg === "API key not configured") {
@@ -1128,6 +1163,8 @@ function AppPage() {
       : createInitialState(tier, seedTopic, seedOffering, isPreview);
     const domains = { ...initialState.domains };
 
+    // A source (pasted AI context, a reviewed URL) is recorded only when at least one of its claims is approved.
+    let approvedClaims = 0;
     extraction.claims.forEach((claim, index) => {
       const decision = seedDecisions[index] ?? { status: claim.confidence >= 0.8 ? "agree" : "skip" };
       if (decision.status === "skip") return;
@@ -1135,6 +1172,7 @@ function AppPage() {
       const text =
         decision.status === "revise" && decision.text?.trim() ? decision.text.trim() : claim.text;
       if (!text) return;
+      approvedClaims += 1;
       const existing = domains[claim.domainId]?.answers ?? [];
       if (!existing.includes(text)) {
         // Approved claims are user-validated → confidence 1, covered true.
@@ -1179,7 +1217,7 @@ function AppPage() {
       if (seedSource === "source" && pendingContextSourceRef.current) {
         const approvedSource = pendingContextSourceRef.current;
         pendingContextSourceRef.current = null;
-        addContextSource(approvedSource);
+        if (approvedClaims > 0) addContextSource(approvedSource);
       }
     }
   };
@@ -1604,6 +1642,26 @@ function AppPage() {
 
   const pendingLinks = linksNeedingReview(state?.contextSources ?? contextSources);
   const attachedCount = (state?.contextSources ?? contextSources).length;
+
+  // Paste box for Existing AI context (a file can still be chosen instead).
+  const aiContextInput = (
+    <div className="space-y-2">
+      <textarea
+        value={pastedContext}
+        onChange={(event) => setPastedContext(event.target.value)}
+        rows={5}
+        aria-label="Existing AI context"
+        placeholder="Paste memory, custom instructions or a summary from ChatGPT, Claude or Gemini…"
+        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => void handlePastedContext()} disabled={uploading || !pastedContext.trim()} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & add"}</button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded-md border border-gray-300 px-3 py-2 text-xs dark:border-gray-700">Or choose a file</button>
+      </div>
+      <p className="text-[11px] text-gray-500 dark:text-gray-400">Each claim is reviewed before it becomes part of this Context.</p>
+    </div>
+  );
+
   const ownerCanReview = !viewerIsAgent;
   const linkReviewList = pendingLinks.length > 0 && (
     <div className="mt-3 space-y-2" aria-label="Links to review">
@@ -1632,7 +1690,7 @@ function AppPage() {
       <div className="flex items-start justify-between gap-4"><div><span className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">&lt;add-context /&gt;</span><h2 className="mt-1 text-sm font-semibold">Add context without leaving ALVIRA</h2><p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Sources stay attached to this session and are considered alongside what you tell ALVIRA. Add as many as you need before, during, or after the interaction.</p></div><button type="button" onClick={() => setShowContextSources((shown) => !shown)} className="shrink-0 rounded-md border border-gray-300 px-3 py-1.5 font-mono text-xs hover:border-emerald-500 dark:border-gray-700">{showContextSources ? "Hide" : "Add source"}</button></div>
       {attachedCount > 0 && <p className="mt-3 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">{attachedCount} source{attachedCount === 1 ? "" : "s"} attached</p>}
       {linkReviewList}
-      {showContextSources && <div className="mt-4 space-y-3"><div className="grid gap-2 sm:grid-cols-3">{CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-3 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 dark:border-gray-700"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}</div>{(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); void addContextUrl(); }} className="flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" disabled={uploading} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & attach"}</button></form>}{(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="text-xs text-gray-600 dark:text-gray-400">Choose a file from the upload control below; it will be reviewed before becoming part of your context.</p>}</div>}
+      {showContextSources && <div className="mt-4 space-y-3"><div className="grid gap-2 sm:grid-cols-3">{CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file") fileInputRef.current?.click(); }} className={`rounded-md border p-3 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 dark:border-gray-700"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}</div>{(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); void addContextUrl(); }} className="flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" disabled={uploading} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & attach"}</button></form>}{contextSourceType === "file" && <p className="text-xs text-gray-600 dark:text-gray-400">Choose a file from the upload control below; it will be reviewed before becoming part of your context.</p>}{contextSourceType === "ai-context" && aiContextInput}</div>}
       {contextSessionNotice && <p role="status" className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">{contextSessionNotice}</p>}
     </section>
   );
@@ -1647,10 +1705,11 @@ function AppPage() {
         <button type="button" onClick={() => setShowContextSources(false)} className="rounded px-2 py-1 font-mono text-[10px] text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Close</button>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        {CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-2.5 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}
+        {CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file") fileInputRef.current?.click(); }} className={`rounded-md border p-2.5 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}
       </div>
       {(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); void addContextUrl(); }} className="mt-3 flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" disabled={uploading || !contextSourceLocator.trim()} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & attach"}</button></form>}
-      {(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">Choose a file to extract and review before it becomes part of this Context.</p>}
+      {contextSourceType === "file" && <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">Choose a file to extract and review before it becomes part of this Context.</p>}
+      {contextSourceType === "ai-context" && <div className="mt-3">{aiContextInput}</div>}
       {linkReviewList}
       {uploadError && <p role="alert" className="mt-3 text-xs text-red-600 dark:text-red-400">{uploadError}</p>}
       {contextSessionNotice && <p role="status" className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">{contextSessionNotice}</p>}

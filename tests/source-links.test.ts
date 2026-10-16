@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { carriesCredential, contributorFor, findLinks, isNoSourcesAnswer, linksNeedingReview, privateLinkReason, sameLocator, sourcesFromAnswer, sourcesMarkdown } from "../src/lib/source-links";
+import { LINK_HELD, LINK_REMOVED, carriesCredential, contributorFor, redactAnswerLinks, findLinks, isNoSourcesAnswer, linksNeedingReview, privateLinkReason, sameLocator, sourcesFromAnswer, sourcesMarkdown } from "../src/lib/source-links";
 import { validateAnswer } from "../src/routes/-validation";
 import { pickNextArea } from "../src/lib/interview-goal";
 import { compileKnowledge } from "../src/routes/-knowledgeCompiler";
@@ -130,5 +130,51 @@ describe("private and credential-bearing links", () => {
   test("a stored link that carries a credential is never exported even if marked ready", () => {
     const leaked = { id: "1", type: "website" as const, label: "x", locator: "https://example.com/?access_token=abc", status: "ready" as const, addedAt: "2026-10-16T00:00:00Z" };
     expect(sourcesMarkdown([leaked])).toBe("");
+  });
+});
+
+describe("raw answers never carry links into state or files (Codex review of 51959d8)", () => {
+  const RAW =
+    "Provided by the agent: https://alviratech.vercel.app, the plan https://docs.google.com/document/d/PRIVATE123/edit and the export https://files.example.com/x.csv?access_token=SECRET42.";
+
+  test("redaction replaces each link with a placeholder and keeps punctuation and emails", () => {
+    expect(redactAnswerLinks(RAW)).toBe(
+      `Provided by the agent: ${LINK_HELD}, the plan ${LINK_HELD} and the export ${LINK_REMOVED}.`,
+    );
+    expect(redactAnswerLinks("Mail tk@ashwood.dev or see github.com/tk-ap/ALVIRA")).toBe(`Mail tk@ashwood.dev or see ${LINK_HELD}`);
+  });
+
+  test("the interview step (as in handleSend) keeps private and credential URLs out of state and every compiled file", () => {
+    // handleSend: links are read from the raw answer once, then only the redacted text is stored.
+    const contextSources = sourcesFromAnswer(RAW, [], AGENT);
+    const stored = redactAnswerLinks(RAW);
+    const state = {
+      tier: "personal",
+      topic: "Goal",
+      domains: {
+        goals: { answers: [stored], confidence: 1, covered: true },
+        sources: { answers: [stored], confidence: 1, covered: true },
+      },
+      history: [{ role: "assistant", content: "Which links?" }, { role: "user", content: stored }],
+      contextSources,
+    } as unknown as InterviewState;
+
+    const saved = JSON.stringify(state);
+    expect(saved).not.toContain("SECRET42");
+    expect(saved).not.toContain("access_token");
+    expect(JSON.stringify({ domains: state.domains, history: state.history })).not.toContain("PRIVATE123");
+
+    const files = Object.values(compileKnowledge(state, getKnowledgeGraph("personal"))).join("\n");
+    expect(files).not.toContain("PRIVATE123");
+    expect(files).not.toContain("SECRET42");
+    expect(files).not.toContain("alviratech.vercel.app");
+    expect(files).not.toContain("## Sources");
+
+    // Once the owner confirms the public site, only that link is exported.
+    const confirmed = { ...state, contextSources: contextSources.map((s) => (s.locator.includes("alviratech") ? { ...s, status: "ready" as const } : s)) };
+    const after = Object.values(compileKnowledge(confirmed, getKnowledgeGraph("personal"))).join("\n");
+    expect(after).toContain("https://alviratech.vercel.app");
+    expect(after).not.toContain("PRIVATE123");
+    expect(after).not.toContain("SECRET42");
   });
 });

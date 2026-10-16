@@ -46,6 +46,8 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
   for (const domain of graph) {
     const domainState = state.domains[domain.id];
     if (!domainState || domainState.answers.length === 0) continue;
+    // Links & sources compiles only owner-confirmed links (the Sources section), never its raw answers.
+    if (domain.id === "sources") continue;
     const content = domainState.answers
       .map((answer, i) => ({ answer, i }))
       .filter(({ answer }) => (isSensitive(answer) ? (withheldSensitive += 1, false) : true))

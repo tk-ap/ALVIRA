@@ -209,7 +209,10 @@ ${summary}
 - Treat this goal as the purpose of the whole interview. Ask about the current area in a way whose answer helps with this goal, and make the connection plain in your wording.
 - The point of the interview is to make this goal far clearer to any AI model that later reads this Context, and to get on record what someone else (a person or an agent) would need to pick the goal up if it were handed off. Draw out what an AI could not safely guess: what done looks like and how success is judged, priorities and tradeoffs, constraints, where things stand, decisions made and why, who is involved, the person's terms, open questions, and next steps. Ask for concrete, recordable facts, not general reflection.
 - Prefer the details the goal or earlier answers make relevant. Do not ask about family, health, home life, or daily routines unless the goal or an earlier answer brought them up.
-- If the latest answer opened a thread that matters for the goal and fits this area, follow that thread before asking something new.`;
+- If the latest answer opened a thread that matters for the goal and fits this area, follow that thread before asking something new.
+- If this is the first question, open by naming their goal in a few plain words, then ask about it.
+- Ask exactly one question: no compound or multi-part questions, and never repeat or rephrase a question already asked in this conversation.
+- Stay on the current area; bring in earlier answers only when they bear on it.`;
 }
 
 /** Extra instruction when the next question is a deliberate follow-up on the latest answer. */

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { contributorFor, findLinks, isNoSourcesAnswer, sameLocator, sourcesFromAnswer, sourcesMarkdown } from "../src/lib/source-links";
+import { carriesCredential, contributorFor, findLinks, isNoSourcesAnswer, linksNeedingReview, privateLinkReason, sameLocator, sourcesFromAnswer, sourcesMarkdown } from "../src/lib/source-links";
 import { validateAnswer } from "../src/routes/-validation";
 import { pickNextArea } from "../src/lib/interview-goal";
 import { compileKnowledge } from "../src/routes/-knowledgeCompiler";
@@ -78,8 +78,8 @@ describe("Links & sources area", () => {
 });
 
 describe("compiled Context", () => {
-  test("overview lists the sources with type and contributor", () => {
-    const sources = sourcesFromAnswer("https://github.com/tk-ap/ALVIRA", [], AGENT, "2026-10-16T00:00:00Z");
+  test("overview lists owner-confirmed sources with type and contributor", () => {
+    const sources = sourcesFromAnswer("https://github.com/tk-ap/ALVIRA", [], AGENT, "2026-10-16T00:00:00Z").map((s) => ({ ...s, status: "ready" as const }));
     const state = { tier: "personal", topic: "Goal", domains: { goals: { answers: ["x"], confidence: 1, covered: true } }, history: [], contextSources: sources } as unknown as InterviewState;
     const overview = compileKnowledge(state, getKnowledgeGraph("personal")).overview;
     expect(overview).toContain("## Sources");
@@ -88,5 +88,47 @@ describe("compiled Context", () => {
 
   test("no Sources section when there are no links", () => {
     expect(sourcesMarkdown([])).toBe("");
+  });
+
+  test("links found in answers are not exported until the owner confirms them (Codex review of b128eaa)", () => {
+    const sources = sourcesFromAnswer("https://alviratech.vercel.app and https://docs.google.com/document/d/abc/edit", [], AGENT);
+    expect(sources.map((s) => s.status)).toEqual(["needs-review", "needs-review"]);
+    expect(linksNeedingReview(sources)).toHaveLength(2);
+    expect(sourcesMarkdown(sources)).toBe("");
+    const state = { tier: "personal", topic: "Goal", domains: { goals: { answers: ["x"], confidence: 1, covered: true } }, history: [], contextSources: sources } as unknown as InterviewState;
+    expect(compileKnowledge(state, getKnowledgeGraph("personal")).overview).not.toContain("## Sources");
+
+    const confirmed = sources.map((s, i) => (i === 0 ? { ...s, status: "ready" as const } : s));
+    const section = sourcesMarkdown(confirmed);
+    expect(section).toContain("alviratech.vercel.app");
+    expect(section).not.toContain("docs.google.com");
+  });
+});
+
+describe("private and credential-bearing links", () => {
+  test("signed or tokenised URLs are never stored", () => {
+    const signed = "https://bucket.s3.amazonaws.com/report.pdf?X-Amz-Signature=abc&X-Amz-Credential=xyz";
+    const tokened = "https://example.com/share?token=s3cr3t";
+    expect(carriesCredential(signed)).toBe(true);
+    expect(carriesCredential(tokened)).toBe(true);
+    expect(carriesCredential("https://user:pass@example.com/")).toBe(true);
+    expect(carriesCredential("https://github.com/tk-ap/ALVIRA?tab=readme")).toBe(false);
+    expect(sourcesFromAnswer(`${signed} ${tokened} https://github.com/tk-ap/ALVIRA`, [], AGENT).map((s) => s.locator)).toEqual(["https://github.com/tk-ap/ALVIRA"]);
+  });
+
+  test("private share, staging and local links are flagged for a closer look", () => {
+    expect(privateLinkReason("https://docs.google.com/document/d/abc/edit")).toContain("private share");
+    expect(privateLinkReason("https://acme.notion.site/Plan-123")).toContain("private share");
+    expect(privateLinkReason("https://staging.acme.com/")).toContain("staging");
+    expect(privateLinkReason("http://192.168.1.10:3000/")).toContain("private network");
+    expect(privateLinkReason("https://web.dev/articles")).toBeUndefined();
+    expect(privateLinkReason("https://github.com/tk-ap/ALVIRA")).toBeUndefined();
+    const [drive] = sourcesFromAnswer("https://drive.google.com/file/d/abc/view", [], AGENT);
+    expect(drive).toMatchObject({ status: "needs-review", reviewNote: expect.stringContaining("private share") });
+  });
+
+  test("a stored link that carries a credential is never exported even if marked ready", () => {
+    const leaked = { id: "1", type: "website" as const, label: "x", locator: "https://example.com/?access_token=abc", status: "ready" as const, addedAt: "2026-10-16T00:00:00Z" };
+    expect(sourcesMarkdown([leaked])).toBe("");
   });
 });

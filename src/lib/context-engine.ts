@@ -23,6 +23,8 @@ export interface ContextSource {
   addedAt: string;
   /** Optional for sources added before contributors were recorded. */
   addedBy?: SourceContributor;
+  /** Why a link found in an answer needs a closer look before it is confirmed (e.g. a private share link). */
+  reviewNote?: string;
 }
 
 export interface ContextEvidence {

@@ -156,9 +156,41 @@ Count TK interventions by class: authentication, missing facts, ambiguous UI, br
 
 Score strictly, and state that you scored your own brief. Build `outputs/BLIND_REVIEW_FOR_TK.md` with PRE and POST as randomly assigned A/B, and seal the key in `evidence/blind_key.json`.
 
-## 7. Report
+## 7. Report + durable evidence registration
 
 Follow the brief's Final Report Format. Use `~/Work/alvira-e2e-runs/alvira-agent-e2e-20260925-01/REPORT.md` as the reference; it is private and local, so don't publish it. Keep "implemented during this test" separate from "recommended future architecture". The run is **INCOMPLETE** until both recordings exist and TK's blind review is recorded.
+
+After the run, do not leave the proof available only on the workstation. Register the exact approved artifacts through the AgentOS external-evidence contract:
+
+1. Review the run directory and determine the exact artifacts TK approves for durable reference.
+2. Do **not** commit the raw recordings, raw full Context, private screenshots, tokens, or other sensitive session material.
+3. Hash only the approved files and create the metadata manifest with `python3 scripts/e2e/e2e-evidence`.
+4. Review the generated JSON. Checksums, byte sizes, verification state, approval identity, and artifact list must match the actual run. Never fill missing evidence from memory.
+5. Re-run with `--publish` (or copy the reviewed manifest) so the approved metadata lands at `docs/e2e/evidence/manifests/<run-id>.json`.
+6. Link that committed manifest from the relevant AgentOS audit/outcome evidence when the run is part of governed work.
+7. A manifest makes the evidence identifiable and durable; it does **not** independently verify what is inside a recording. The reviewer still inspects the source artifact before claiming independent verification.
+
+Example after TK approves the exact list:
+
+```bash
+python3 scripts/e2e/e2e-evidence \
+  --run-dir "$DIR" \
+  --run-id "$RUN" \
+  --approved-by "TK" \
+  --verification-state incomplete \
+  --harness claude-code \
+  --executor claude-code \
+  --include REPORT.md \
+  --include outputs/PRE_ALVIRA_OUTPUT.md \
+  --include outputs/POST_ALVIRA_OUTPUT.md \
+  --include outputs/BLIND_REVIEW_FOR_TK.md \
+  --include evidence/persistence.md \
+  --include 'evidence/bridge/**' \
+  --include 'recordings/**' \
+  --publish
+```
+
+Use the run's **actual** verification state. The example says `incomplete` because a run remains incomplete until its required recordings and blind review exist. The script records approved artifacts as private external evidence by default and stores only metadata in Git.
 
 ## 8. Clean demo run
 

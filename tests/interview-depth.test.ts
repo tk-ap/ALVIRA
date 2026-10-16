@@ -34,6 +34,8 @@ describe("areasForDepth", () => {
     expect(ids).toContain("decisionFrameworks");
     expect(ids).toContain("sources");
     expect(ids).not.toContain("updates");
+    // Handoff core (E2E 2026-10-16 run dropped constraints and current projects).
+    for (const id of ["constraints", "currentProjects", "unknowns"]) expect(ids).toContain(id);
     expect(ids.length).toBe(FAST_TRACK_AREAS + 1);
   });
 

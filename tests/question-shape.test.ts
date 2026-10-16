@@ -218,6 +218,9 @@ describe("tighter checks (deep dive E2E 2026-10-16)", () => {
       "Can you describe any key partnerships, collaborations, or networks that TK relies on for support or opportunities?",
       "Could you list any public links that TK considers important, such as websites, professional profiles, or documentation?",
       "What recent changes, if any, have occurred in TK's work, projects, or personal goals that should be reflected in their Context?",
+      // Examples that contain clauses but no independent question (Codex review of f86c38f).
+      "Could you share public links, such as sites they maintain, profiles they use, or documents they publish?",
+      "Which tools matter most, such as apps they open daily and services they pay for?",
     ]) expect(isCompound(q)).toBe(false);
   });
 

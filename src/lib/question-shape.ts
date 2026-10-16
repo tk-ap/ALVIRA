@@ -30,6 +30,7 @@ const AUX = "do|does|did|is|are|was|were|can|could|would|should|will|have|has";
 const JOINED_ASK = new RegExp(`(?:[,;:]\\s*|\\s+)(?:(?:and|also|plus|as well as)\\s+(?:${WH}|${AUX})|or\\s+(?:${WH}))\\b`, "i");
 /** Where a question starts listing parts: "Describe X, including A, B and C?" */
 const ENUMERATION = /,?\s*\b(?:including|such as|for example|e\.g\.|as well as|like)\b/i;
+const WH_START = new RegExp(`^(?:${WH})\\b`, "i");
 /** A list item that is its own ask: a WH word, or a clause with its own subject ("formats they use"). */
 const CLAUSE_ITEM = new RegExp(`^(?:and\\s+|or\\s+)?(?:${WH})\\b|\\b(?:they|he|she|you|we|tk|their team)\\s+(?!and\\b|or\\b)[a-z]+`, "i");
 const STOPWORDS = new Set([
@@ -57,16 +58,21 @@ export function splitResponse(text: string): { lead: string; question: string } 
 /**
  * Asks packed into a list after "including", "such as", …: "Describe their style, including how
  * formal they are, any formats they use, and terminology they employ?" (E2E deep dive Q29). A list of
- * plain examples ("such as websites, profiles, or docs") is one ask and passes.
+ * examples with no independent WH question in it ("such as websites, profiles, or docs"; "such as sites
+ * they maintain, profiles they use") is one ask and passes.
  */
 export function enumeratedAsks(sentence: string): number {
   const match = ENUMERATION.exec(sentence);
   if (!match || match.index === undefined) return 0;
   const tail = sentence.slice(match.index + match[0].length).replace(/\?\s*$/, "");
-  return tail
+  const items = tail
     .split(/,\s*|;\s*|\s+and\s+(?=(?:any|specific|the|their|what|how|which|who|when|where|why)\b)/i)
-    .map((item) => item.trim())
-    .filter((item) => item && CLAUSE_ITEM.test(item)).length;
+    .map((item) => item.trim().replace(/^(?:and|or)\s+/i, ""))
+    .filter(Boolean);
+  // Separate asks need at least one independent question in the list ("how formal they are"); a list
+  // of descriptive examples ("sites they maintain, profiles they use") is one request (Codex review of f86c38f).
+  if (!items.some((item) => WH_START.test(item))) return 0;
+  return items.filter((item) => CLAUSE_ITEM.test(item)).length;
 }
 
 export function isCompound(question: string): boolean {

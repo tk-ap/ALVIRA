@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { contributorFor, sourcesFromAnswer } from "~/lib/source-links";
 import { describeInterviewGoal, pickNextArea } from "~/lib/interview-goal";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -1252,11 +1253,20 @@ function AppPage() {
       }
     }
 
+    // Links in any answer (websites, repositories, profiles) become Context sources,
+    // recorded with who supplied them.
+    // The local list mirrors state.contextSources (an effect syncs it back), so set it to the
+    // full merged list — appending to a stale local copy could drop existing sources.
+    const newSources = sourcesFromAnswer(trimmed, state.contextSources ?? [], contributorFor(state));
+    const mergedSources = [...(state.contextSources ?? []), ...newSources];
+    if (newSources.length > 0) setContextSources(mergedSources);
+
     const updatedState: InterviewState = {
       ...state,
       domains: updatedDomains,
       history: newHistory,
       currentDomain: needsClarify ? currentDomain : null,
+      ...(newSources.length > 0 ? { contextSources: mergedSources } : {}),
     };
 
     setState(updatedState);

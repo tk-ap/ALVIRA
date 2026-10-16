@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { DEPTHS, FAST_TRACK_AREAS, areasForDepth, depthPromptSection, depthSettings, parseDepth } from "../src/lib/interview-depth";
-import { pickNextArea } from "../src/lib/interview-goal";
+import { pickNextArea, setAsideCappedAreas } from "../src/lib/interview-goal";
 import { getKnowledgeGraph, getPlaybook, type InterviewState } from "../src/routes/-knowledgeGraph";
 
 const GRAPH = getKnowledgeGraph("personal");
@@ -89,5 +89,33 @@ describe("depthPromptSection", () => {
     expect(depthPromptSection("deep")).toContain("examples, numbers, names, dates");
     expect(depthPromptSection("standard")).toBe("");
     expect(depthPromptSection(undefined)).toBe("");
+  });
+});
+
+describe("an area that stays below the confidence bar is not asked forever (E2E deep dive 2026-10-16)", () => {
+  // Decision frameworks is a starting-point area for this topic; answers rated 0.8 never clear the 0.9 bar.
+  const lowConfidence = (n: number) => ({ answers: Array.from({ length: n }, (_, i) => `answer ${i}`), confidence: 0.8, covered: false });
+  const history = [{ role: "assistant" as const, content: "Q" }, { role: "user" as const, content: "answer" }];
+
+  for (const depth of ["fast", "standard", "deep"] as const) {
+    test(`${depth}: not re-picked once it holds its cap of answers`, () => {
+      const max = depthSettings(depth).maxUnresolvedAnswers;
+      const state = stateFor(depth, { history, domains: { goals: { answers: ["x"], confidence: 1, covered: true }, sources: { answers: ["none"], confidence: 1, covered: true }, decisionFrameworks: lowConfidence(max) } });
+      const next = pickNextArea(areasForDepth(GRAPH, state), state, { answeredDomainId: "decisionFrameworks", confidenceThreshold: THRESHOLD, limits: depthSettings(depth) });
+      expect(next?.domain.id).not.toBe("decisionFrameworks");
+    });
+  }
+
+  test("capped open areas are set aside, so the interview can finish", () => {
+    const state = stateFor("fast", { history, domains: { decisionFrameworks: lowConfidence(2) } });
+    const settled = setAsideCappedAreas(GRAPH, state, { confidenceThreshold: THRESHOLD, limits: depthSettings("fast") });
+    expect(settled.domains.decisionFrameworks.skipped).toBe(true);
+    expect(settled.domains.decisionFrameworks.answers).toHaveLength(2);
+    expect(setAsideCappedAreas(GRAPH, settled, { confidenceThreshold: THRESHOLD, limits: depthSettings("fast") })).toBe(settled);
+  });
+
+  test("returns null rather than re-asking when every open area is capped", () => {
+    const capped = Object.fromEntries(GRAPH.map((d) => [d.id, lowConfidence(4)]));
+    expect(pickNextArea(GRAPH, stateFor("deep", { history, domains: capped }), { confidenceThreshold: THRESHOLD, limits: depthSettings("deep") })).toBeNull();
   });
 });

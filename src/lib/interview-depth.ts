@@ -53,6 +53,13 @@ export const DEPTH_ORDER: InterviewDepth[] = ["fast", "standard", "deep"];
 /** Areas a fast-track interview asks about, besides "sources" (always kept). */
 export const FAST_TRACK_AREAS = 6;
 
+/**
+ * What someone picking the goal up would need first: the goal, its constraints, where
+ * things stand, and what is still open. Always in a fast track (when the tier has them).
+ * E2E 2026-10-16: ranking by word overlap alone dropped constraints and current projects.
+ */
+export const HANDOFF_CORE = ["goals", "constraints", "currentProjects", "unknowns"];
+
 export function parseDepth(value: unknown): InterviewDepth | undefined {
   return value === "fast" || value === "standard" || value === "deep" ? value : undefined;
 }
@@ -62,8 +69,8 @@ export function depthSettings(depth: InterviewDepth | undefined): DepthSettings 
 }
 
 /**
- * The areas this interview covers. Fast track keeps the chosen starting points' areas,
- * then the areas most related to the goal (required ones break ties), up to
+ * The areas this interview covers. Fast track keeps the chosen starting points' areas and
+ * the handoff core, then the areas most related to the goal (required ones break ties), up to
  * FAST_TRACK_AREAS, plus "sources". It is computed from the goal alone, so it does not
  * shift as answers come in; areas that already hold answers always stay in.
  */
@@ -75,7 +82,7 @@ export function areasForDepth(graph: Domain[], state: Pick<InterviewState, "topi
     .map((domain, index) => ({
       domain,
       index,
-      focus: goal.focusDomainIds.includes(domain.id) ? 1 : 0,
+      focus: goal.focusDomainIds.includes(domain.id) ? 2 : HANDOFF_CORE.includes(domain.id) ? 1 : 0,
       relevance: domainRelevance(domain, goal, []),
     }))
     .sort((a, b) => b.focus - a.focus || b.relevance - a.relevance || Number(b.domain.required) - Number(a.domain.required) || a.domain.priority - b.domain.priority || a.index - b.index);

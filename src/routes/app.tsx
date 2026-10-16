@@ -548,9 +548,11 @@ function AppPage() {
   }, [state, contextSources]);
 
   // Links found in answers stay "needs-review" until the owner confirms they are public;
-  // only confirmed links are exported. A delegated agent cannot confirm on the owner's behalf.
+  // only confirmed links are exported. A delegated agent viewing the page cannot confirm on the
+  // owner's behalf; this is about who is viewing now, not who started the interview.
+  const viewerIsAgent = false; // main has no delegated-agent viewer; agent mode must set this.
   const reviewLinkSource = (id: string, confirm: boolean) => {
-    if (contributorFor(state).actor_type === "agent") return;
+    if (viewerIsAgent) return;
     const base = state?.contextSources ?? contextSources;
     const next = confirm
       ? base.map((source) => (source.id === id ? { ...source, status: "ready" as const } : source))
@@ -1567,7 +1569,7 @@ function AppPage() {
   };
 
   const pendingLinks = linksNeedingReview(state?.contextSources ?? contextSources);
-  const ownerCanReview = contributorFor(state).actor_type !== "agent";
+  const ownerCanReview = !viewerIsAgent;
   const linkReviewList = pendingLinks.length > 0 && (
     <div className="mt-3 space-y-2" aria-label="Links to review">
       <p className="text-xs text-gray-600 dark:text-gray-400">

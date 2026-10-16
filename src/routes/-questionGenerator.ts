@@ -8,6 +8,7 @@ import {
 } from "~/lib/interview-prompts";
 import type { Domain, Message, Tier } from "./-knowledgeGraph";
 import { followUpPromptSection, goalPromptSection, type NextAreaReason } from "~/lib/interview-goal";
+import { generateAtomicQuestion, type AtomicQuestionResult } from "~/lib/question-shape";
 
 /** Adds the goal (and follow-up) sections just before the prompt's final output instruction. */
 function withGoal(prompt: string, sections: string): string {
@@ -28,7 +29,11 @@ interface GenerateInput {
   followUp?: NextAreaReason;
 }
 
-interface GenerateResult { question: string; }
+interface GenerateResult {
+  question: string;
+  /** How the one-atomic-question check went: attempts used, fallback if any, rejected problems. */
+  shape: Omit<AtomicQuestionResult, "question">;
+}
 
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY || "";
@@ -71,25 +76,37 @@ export const generateQuestion = createServerFn({ method: "POST" })
       `${goalPromptSection(data.goal)}\n${followUpPromptSection(data.followUp)}`,
     );
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
+    // Generate, check the shape (one atomic, non-repeating question), rewrite once with
+    // specific feedback, then fall back to a safe question (src/lib/question-shape.ts).
+    let lastRaw = "";
+    const generate = async (feedback?: string): Promise<string> => {
+      const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
         { role: "system", content: systemPrompt },
         { role: "user", content: "Continue the interview." },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.65,
-    });
+      ];
+      if (feedback) messages.push({ role: "assistant", content: lastRaw }, { role: "user", content: feedback });
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages,
+        response_format: { type: "json_object" },
+        temperature: 0.65,
+      });
+      lastRaw = response.choices[0]?.message?.content || "";
+      try {
+        const parsed = JSON.parse(lastRaw);
+        return typeof parsed.question === "string" && parsed.question ? parsed.question : lastRaw;
+      } catch {
+        return lastRaw;
+      }
+    };
 
-    const raw = response.choices[0]?.message?.content || "";
-    let question: string;
-    try {
-      const parsed = JSON.parse(raw);
-      question = parsed.question || raw;
-    } catch {
-      question = raw;
-    }
-    return { question } as GenerateResult;
+    const { question, ...shape } = await generateAtomicQuestion({
+      generate,
+      history: data.history,
+      areaLabel: data.domain.label,
+      hasGoal: Boolean(data.goal),
+    });
+    return { question, shape } as GenerateResult;
   });
 
 export const generateClarification = createServerFn({ method: "POST" })

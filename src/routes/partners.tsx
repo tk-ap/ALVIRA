@@ -36,6 +36,7 @@ function Partners() {
           <div className="mt-10 flex flex-wrap gap-3">
             <a href="mailto:alvira@agentmail.to?subject=ALVIRA%20design%20partner" className="border border-ink bg-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] text-mineral dark:border-mineral dark:bg-mineral dark:text-ink">Pilot ALVIRA with us</a>
             <a href="/founding-beta" className="border border-ink/30 px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] dark:border-mineral/30">Individual beta</a>
+            <a href="/website-review" className="border border-ink/30 px-5 py-3 font-mono text-xs uppercase tracking-[0.12em] dark:border-mineral/30">Website review pilot</a>
           </div>
         </section>
 

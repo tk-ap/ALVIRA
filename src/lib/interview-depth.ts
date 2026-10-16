@@ -60,6 +60,16 @@ export const FAST_TRACK_AREAS = 6;
  */
 export const HANDOFF_CORE = ["goals", "constraints", "currentProjects", "unknowns"];
 
+/**
+ * Areas that cover the same ground; a fast track asks only the first one it reaches.
+ * E2E 2026-10-16: Knowledge gaps and Unknowns produced two near-identical questions.
+ */
+export const SAME_GROUND: string[][] = [["unknowns", "knowledgeGaps"]];
+
+function sameGroundAs(id: string): string[] {
+  return SAME_GROUND.find((group) => group.includes(id))?.filter((other) => other !== id) ?? [];
+}
+
 export function parseDepth(value: unknown): InterviewDepth | undefined {
   return value === "fast" || value === "standard" || value === "deep" ? value : undefined;
 }
@@ -86,7 +96,12 @@ export function areasForDepth(graph: Domain[], state: Pick<InterviewState, "topi
       relevance: domainRelevance(domain, goal, []),
     }))
     .sort((a, b) => b.focus - a.focus || b.relevance - a.relevance || Number(b.domain.required) - Number(a.domain.required) || a.domain.priority - b.domain.priority || a.index - b.index);
-  const keep = new Set(ranked.slice(0, FAST_TRACK_AREAS).map((entry) => entry.domain.id));
+  const keep = new Set<string>();
+  for (const { domain } of ranked) {
+    if (keep.size >= FAST_TRACK_AREAS) break;
+    if (sameGroundAs(domain.id).some((other) => keep.has(other))) continue;
+    keep.add(domain.id);
+  }
   keep.add("sources");
   // No "updates" here: a fresh interview also starts with an empty history, so history cannot
   // tell a continuation apart (Codex review of c7a99f5). Continuing a saved profile reseeds it

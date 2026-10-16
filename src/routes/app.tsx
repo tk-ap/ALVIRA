@@ -420,6 +420,10 @@ function AppPage() {
   const [customTopic, setCustomTopic] = useState("");
   // How deep the interview goes; agents can preset it with ?depth=fast|standard|deep.
   const [depth, setDepth] = useState<InterviewDepth>("standard");
+  useEffect(() => {
+    const preset = parseDepth(new URLSearchParams(window.location.search).get("depth"));
+    if (preset) setDepth(preset);
+  }, []);
   const [chapterSuggestions, setChapterSuggestions] = useState<string[]>([]);
   const [tier, setTier] = useState<Tier>("personal");
   // A single active topic group locks the other group. Enterprise selects both,
@@ -681,8 +685,6 @@ function AppPage() {
             }
           } catch { /* malformed or unavailable draft */ }
         }
-        const presetDepth = parseDepth(new URLSearchParams(window.location.search).get("depth"));
-        if (presetDepth) setDepth(presetDepth);
         const profileId = new URLSearchParams(window.location.search).get("profile");
         if (profileId) {
           try {

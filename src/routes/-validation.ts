@@ -1,3 +1,4 @@
+import { findLinks, isNoSourcesAnswer } from "~/lib/source-links";
 // ── Validation: checks answer quality and returns confidence score ──
 
 export interface ValidationResult {
@@ -320,6 +321,10 @@ export function validateAnswer(
   let score = 1.0;
 
   const trimmed = answer.trim();
+  // A list of links (or an explicit "none") fully answers the Links & sources area.
+  if (domainId === "sources" && (findLinks(trimmed).length > 0 || isNoSourcesAnswer(trimmed))) {
+    return { confidence: 1, warnings: [], needsClarification: false, insufficientKnowledge: false, isUserQuestion: false };
+  }
   const words = trimmed.split(/\s+/).filter((w) => w.length > 0);
   const wordCount = words.length;
   const lower = trimmed.toLowerCase();

@@ -1,28 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { MAX_PASTED_CONTEXT_CHARS, pastedContextProblem, pastedContextSource, sourceOptionsFor } from "../src/lib/agent-context";
-import { CONTEXT_SOURCE_OPTIONS } from "../src/lib/context-engine";
+import { MAX_PASTED_CONTEXT_CHARS, pastedContextProblem, pastedContextSource } from "../src/lib/agent-context";
 import { sourcesMarkdown } from "../src/lib/source-links";
 
 const AGENT = { actor_type: "agent" as const, actor_id: "claude-code-opus-5.5" };
-const types = (options: { type: string }[]) => options.map((option) => option.type);
-
-describe("source options by viewer", () => {
-  test("the person sees the usual order", () => {
-    expect(types(sourceOptionsFor(false, false))).toEqual(types(CONTEXT_SOURCE_OPTIONS));
-    expect(types(sourceOptionsFor(false, true))).toEqual(types(CONTEXT_SOURCE_OPTIONS));
-  });
-
-  test("an agent the owner opted in sees Existing AI context first", () => {
-    const order = types(sourceOptionsFor(true, true));
-    expect(order[0]).toBe("ai-context");
-    expect(order).toHaveLength(CONTEXT_SOURCE_OPTIONS.length);
-  });
-
-  test("an agent without the opt-in is not offered Existing AI context", () => {
-    expect(types(sourceOptionsFor(true, false))).not.toContain("ai-context");
-  });
-});
+const app = readFileSync("src/routes/app.tsx", "utf8");
 
 describe("pasted AI context", () => {
   test("must be non-empty and within the size limit", () => {
@@ -36,24 +18,31 @@ describe("pasted AI context", () => {
     expect(source).toMatchObject({ type: "ai-context", status: "ready", addedBy: AGENT, label: "Existing AI context pasted by agent claude-code-opus-5.5" });
     expect(sourcesMarkdown([source])).toBe("");
   });
+
+  test("goes through claim review, shared with file upload", () => {
+    const paste = app.slice(app.indexOf("const handlePastedContext"), app.indexOf("const handleFileChange"));
+    expect(paste).toContain('reviewExtractedText(pastedContext.trim(), uploadTopic, "source")');
+    expect(app.slice(app.indexOf("const handleFileChange"))).toContain('reviewExtractedText(text, uploadTopic, "document")');
+  });
+
+  test("no agent opt-in or agent ordering until the viewer is server-enforced (Codex review of #216)", () => {
+    expect(app).not.toContain("agentContextOptIn");
+    expect(app).not.toContain("sourceOptionsFor");
+  });
 });
 
-describe("app wiring", () => {
-  const app = readFileSync("src/routes/app.tsx", "utf8");
+describe("a reviewed source is recorded only when a claim is approved (Codex review of #216)", () => {
+  const seed = app.slice(app.indexOf("const handleSeedContinue"), app.indexOf("const handleSend"));
 
-  test("only the owner can change the opt-in, and an agent cannot paste without it", () => {
-    expect(app).toContain("if (viewerIsAgent || !state) return; // only the owner decides");
-    expect(app).toContain("if (viewerIsAgent && !state?.agentContextOptIn)");
+  test("approved claims are counted and gate adding the pending source", () => {
+    expect(seed).toContain("let approvedClaims = 0;");
+    expect(seed).toContain("approvedClaims += 1;");
+    expect(seed).toContain("if (approvedClaims > 0) addContextSource(approvedSource);");
   });
 
-  test("the owner's opt-in survives Continue and Update / add context (E2E 2026-10-16)", () => {
-    const seed = app.slice(app.indexOf("function seedStateFromExisting"), app.indexOf("// ── Document parsing helpers"));
-    expect(seed).toContain("agentContextOptIn: true");
-  });
-
-  test("pasted context goes through claim review and its source is added only on approval", () => {
-    const paste = app.slice(app.indexOf("const handlePastedContext"), app.indexOf("const setAgentContextOptIn"));
-    expect(paste).toContain('reviewExtractedText(pastedContext.trim(), uploadTopic, "source")');
-    expect(paste).toContain("pendingContextSourceRef.current = pastedContextSource(");
+  test("skipping every claim clears the pending source without recording it", () => {
+    const tail = seed.slice(seed.indexOf("finally"));
+    expect(tail).toContain("pendingContextSourceRef.current = null;");
+    expect(tail).not.toMatch(/\n\s*addContextSource\(approvedSource\);/);
   });
 });

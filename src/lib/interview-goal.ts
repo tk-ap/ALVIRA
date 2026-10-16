@@ -207,6 +207,7 @@ export function goalPromptSection(goalSummary: string | undefined): string {
 ## Why this person is building their Context
 ${summary}
 - Treat this goal as the purpose of the whole interview. Ask about the current area in a way whose answer helps with this goal, and make the connection plain in your wording.
+- The point of the interview is to get explicit context on record that someone else (a person or an agent) would need to pick this goal up if it were handed off: where things stand, decisions made and why, constraints, who is involved, open questions, and next steps. Ask for concrete, recordable facts, not general reflection.
 - Prefer the details the goal or earlier answers make relevant. Do not ask about family, health, home life, or daily routines unless the goal or an earlier answer brought them up.
 - If the latest answer opened a thread that matters for the goal and fits this area, follow that thread before asking something new.`;
 }

@@ -39,6 +39,13 @@ describe("areasForDepth", () => {
     expect(ids.length).toBe(FAST_TRACK_AREAS + 1);
   });
 
+  test("fast track asks only one of two areas that cover the same ground (E2E: Knowledge gaps vs Unknowns)", () => {
+    const ids = areasForDepth(GRAPH, stateFor("fast", { history: [{ role: "assistant", content: "Q" }] })).map((d) => d.id);
+    expect(ids).toContain("unknowns");
+    expect(ids).not.toContain("knowledgeGaps");
+    expect(ids.length).toBe(FAST_TRACK_AREAS + 1);
+  });
+
   test("fast track does not shift as answers come in, and keeps answered areas", () => {
     const history = [{ role: "assistant" as const, content: "Q" }, { role: "user" as const, content: "My daily routine and family come first." }];
     const before = areasForDepth(GRAPH, stateFor("fast", { history })).map((d) => d.id);

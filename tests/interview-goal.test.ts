@@ -166,6 +166,9 @@ describe("goalPromptSection", () => {
     expect(section).toContain("follow that thread");
     expect(section).toContain("handed off");
     expect(section).toContain("far clearer to any AI model");
+    expect(section).toContain("open by naming their goal");
+    expect(section).toContain("Ask exactly one question");
+    expect(section).toContain("never repeat or rephrase a question");
     expect(section).toContain("concrete, recordable facts");
   });
 

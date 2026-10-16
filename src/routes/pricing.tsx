@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { softwareApplicationJsonLd } from "~/lib/structured-data";
 import { useState } from "react";
 import { Header } from "~/components/Header";
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/pricing")({
           "Free, Pro, Lifetime, and limited Founding Beta access for ALVIRA Context and Reflect.",
       },
     ],
+    scripts: [{ type: "application/ld+json", children: softwareApplicationJsonLd() }],
   }),
   component: Pricing,
 });

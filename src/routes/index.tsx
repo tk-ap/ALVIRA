@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { softwareApplicationJsonLd } from "~/lib/structured-data";
 import { useState } from "react";
 import { Header } from "~/components/Header";
 import { DossierOwnershipPositioning } from "~/components/DossierOwnershipPositioning";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/")({
           "AI can do almost anything. ALVIRA helps you understand what actually matters, then gives AI the context to help in a direction that fits you.",
       },
     ],
+    scripts: [{ type: "application/ld+json", children: softwareApplicationJsonLd() }],
   }),
   component: Home,
 });

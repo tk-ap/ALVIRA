@@ -165,6 +165,7 @@ describe("goalPromptSection", () => {
     expect(section).toContain("Do not ask about family, health, home life, or daily routines unless the goal or an earlier answer brought them up.");
     expect(section).toContain("follow that thread");
     expect(section).toContain("handed off");
+    expect(section).toContain("far clearer to any AI model");
     expect(section).toContain("concrete, recordable facts");
   });
 

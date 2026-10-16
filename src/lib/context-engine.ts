@@ -8,6 +8,12 @@ export type ContextSourceType =
 
 export type EvidenceState = "observed" | "inferred" | "confirmed" | "outdated";
 
+/** Who supplied a source: the person, or an identified agent contributing on their behalf. */
+export interface SourceContributor {
+  actor_type: "human" | "agent";
+  actor_id?: string;
+}
+
 export interface ContextSource {
   id: string;
   type: ContextSourceType;
@@ -15,6 +21,10 @@ export interface ContextSource {
   locator: string;
   status: "queued" | "ready" | "needs-review";
   addedAt: string;
+  /** Optional for sources added before contributors were recorded. */
+  addedBy?: SourceContributor;
+  /** Why a link found in an answer needs a closer look before it is confirmed (e.g. a private share link). */
+  reviewNote?: string;
 }
 
 export interface ContextEvidence {
@@ -58,8 +68,9 @@ export const CONTEXT_SOURCE_OPTIONS: Array<{
 
 const URL_TYPES: Array<[RegExp, ContextSourceType]> = [
   [/linkedin\.com/i, "professional"],
-  [/github\.com/i, "professional"],
-  [/(instagram|x\.com|twitter|tiktok|youtube)\.com/i, "social"],
+  [/(github|gitlab|bitbucket)\.(com|org)/i, "professional"],
+  // Hosts, not "<name>.com": the old pattern looked for "x.com.com", so x.com never matched.
+  [/(^|[/.])(instagram\.com|x\.com|twitter\.com|tiktok\.com|youtube\.com|youtu\.be|threads\.net|bsky\.app|substack\.com|medium\.com)(\/|$)/i, "social"],
   [/(shopify|myshopify)\.com/i, "website"],
 ];
 

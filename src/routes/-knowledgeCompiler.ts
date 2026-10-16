@@ -1,6 +1,7 @@
 // ── Knowledge Compiler: deterministic Markdown generation (NO LLM) ──
 
 import type { Domain, InterviewState } from "./-knowledgeGraph";
+import { sourcesMarkdown } from "~/lib/source-links";
 import { isSensitive } from "~/lib/sensitivity";
 
 export interface MarkdownFiles {
@@ -45,6 +46,8 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
   for (const domain of graph) {
     const domainState = state.domains[domain.id];
     if (!domainState || domainState.answers.length === 0) continue;
+    // Links & sources compiles only owner-confirmed links (the Sources section), never its raw answers.
+    if (domain.id === "sources") continue;
     const content = domainState.answers.filter((answer) => (isSensitive(answer) ? (withheldSensitive += 1, false) : true));
     if (content.length === 0) continue;
 
@@ -80,7 +83,8 @@ export function compileKnowledge(state: InterviewState, graph: Domain[]): Markdo
     sections.workflows,
   );
 
-  return { overview, requirements, constraints, businessRules, workflows };
+  const sources = sourcesMarkdown(state.contextSources);
+  return { overview: sources ? `${overview.trimEnd()}\n\n${sources}\n` : overview, requirements, constraints, businessRules, workflows };
 }
 
 function buildFile(header: string, sections: Section[]): string {

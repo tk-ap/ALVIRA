@@ -117,7 +117,7 @@ export interface NextAreaContext {
   clarifying?: boolean;
 }
 
-export type NextAreaReason = "unresolved-follow-up" | "goal-follow-up" | "starting-point" | "relevance" | "priority";
+export type NextAreaReason = "unresolved-follow-up" | "goal-follow-up" | "sources" | "starting-point" | "relevance" | "priority";
 
 export interface NextArea {
   domain: Domain;
@@ -165,6 +165,13 @@ export function chooseNextArea(graph: Domain[], gaps: Gap[], context: NextAreaCo
     if (!openGap && answers.length === 1 && followUpsSoFar < MAX_GOAL_FOLLOW_UPS && overlap(tokens(answer), goalWords) > 0) {
       return { domain: answered, reason: "goal-follow-up" };
     }
+  }
+
+  // After the first answer, ask once for the public links behind the goal (websites,
+  // repositories, profiles). They make the Context checkable by any AI that reads it.
+  const sourcesGap = gaps.find((gap) => gap.domain.id === "sources" && gap.currentAnswers === 0);
+  if (sourcesGap && context.history.some((message) => message.role === "user")) {
+    return { domain: sourcesGap.domain, reason: "sources" };
   }
 
   const recent = recentUserAnswers(context.history);

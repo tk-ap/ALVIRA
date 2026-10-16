@@ -222,6 +222,16 @@ const universalDomains: Domain[] = [
     priority: 50,
     outputFile: "requirements",
   },
+  {
+    id: "sources",
+    label: "Links & sources",
+    description: "Public links that show the goal and the work — websites, code repositories, professional and social profiles, docs — so any AI can check where the context comes from",
+    promptHint: "Ask for every public link an AI should see for this goal: websites, code repositories, professional and social profiles, docs or demos — one per line, with what each shows. If the respondent is an agent, ask it to list all relevant links it knows. 'None yet' is a valid answer.",
+    required: false,
+    minAnswers: 1,
+    priority: 15,
+    outputFile: "overview",
+  }
 ];
 
 // ── Personal-only domains (based on ALVIRA Playbook) ──

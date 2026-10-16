@@ -88,8 +88,9 @@ export function areasForDepth(graph: Domain[], state: Pick<InterviewState, "topi
     .sort((a, b) => b.focus - a.focus || b.relevance - a.relevance || Number(b.domain.required) - Number(a.domain.required) || a.domain.priority - b.domain.priority || a.index - b.index);
   const keep = new Set(ranked.slice(0, FAST_TRACK_AREAS).map((entry) => entry.domain.id));
   keep.add("sources");
-  // A continued profile starts with an empty conversation; keep the open update question.
-  if (state.history.length === 0) keep.add("updates");
+  // No "updates" here: a fresh interview also starts with an empty history, so history cannot
+  // tell a continuation apart (Codex review of c7a99f5). Continuing a saved profile reseeds it
+  // without a depth (seedStateFromExisting), so it runs at standard and keeps its update question.
   for (const [id, area] of Object.entries(state.domains)) if ((area?.answers?.length ?? 0) > 0) keep.add(id);
   return graph.filter((domain) => keep.has(domain.id));
 }

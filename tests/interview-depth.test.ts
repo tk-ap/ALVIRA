@@ -46,8 +46,11 @@ describe("areasForDepth", () => {
     expect(after).toEqual(GRAPH.map((d) => d.id).filter((id) => before.includes(id) || id === "dailyLife"));
   });
 
-  test("a continued fast profile keeps the open update question", () => {
-    expect(areasForDepth(GRAPH, stateFor("fast")).map((d) => d.id)).toContain("updates");
+  test("a fresh fast-track interview (empty history) does not include Updates (Codex review of c7a99f5)", () => {
+    const fresh = areasForDepth(GRAPH, stateFor("fast"));
+    expect(fresh.map((d) => d.id)).not.toContain("updates");
+    expect(fresh.length).toBe(FAST_TRACK_AREAS + 1);
+    expect(pickNextArea(fresh, stateFor("fast"), { confidenceThreshold: THRESHOLD, limits: depthSettings("fast") })?.domain.id).toBe("goals");
   });
 });
 

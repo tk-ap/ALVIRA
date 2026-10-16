@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { contributorFor, linksNeedingReview, redactAnswerLinks, sourcesFromAnswer } from "~/lib/source-links";
 import { describeInterviewGoal, pickNextArea } from "~/lib/interview-goal";
+import { DEPTHS, DEPTH_ORDER, areasForDepth, depthSettings, parseDepth, type InterviewDepth } from "~/lib/interview-depth";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
@@ -417,6 +418,12 @@ function AppPage() {
   const [topic, setTopic] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
+  // How deep the interview goes; agents can preset it with ?depth=fast|standard|deep.
+  const [depth, setDepth] = useState<InterviewDepth>("standard");
+  useEffect(() => {
+    const preset = parseDepth(new URLSearchParams(window.location.search).get("depth"));
+    if (preset) setDepth(preset);
+  }, []);
   const [chapterSuggestions, setChapterSuggestions] = useState<string[]>([]);
   const [tier, setTier] = useState<Tier>("personal");
   // A single active topic group locks the other group. Enterprise selects both,
@@ -562,7 +569,8 @@ function AppPage() {
   };
 
   // Computed values
-  const graph = state ? (offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(state.tier)) : [];
+  // Depth narrows the Context areas, so progress and "done" match what this interview will ask.
+  const graph = state ? (offering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : areasForDepth(getKnowledgeGraph(state.tier), state)) : [];
   const playbook = offering === "meos" ? getMeosPlaybook() : (state ? getPlaybook(state.tier) : getPlaybook("personal"));
   const confThreshold = playbook.completion.minimumConfidence;
   const coveredCount = state ? countCovered(graph, state, confThreshold) : 0;
@@ -898,7 +906,7 @@ function AppPage() {
   // ── Ask next question (picks top gap, calls LLM for phrasing) ──
   const askNextQuestion = async (currentState: InterviewState, isClarification = false, forcedOffering?: "context" | "meos", answeredDomainId?: string | null) => {
     const activeOffering = forcedOffering ?? offering;
-    const currentGraph = activeOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : getKnowledgeGraph(currentState.tier);
+    const currentGraph = activeOffering === "meos" ? (isPreview ? getMeosPreviewGraph() : getMeosGraph()) : areasForDepth(getKnowledgeGraph(currentState.tier), currentState);
     const currentPlaybook = activeOffering === "meos" ? getMeosPlaybook() : getPlaybook(currentState.tier);
     // What the person chose or typed on /app steers the interview: bounded follow-ups on
     // the area just answered, then the chosen starting points, then the areas most
@@ -908,6 +916,7 @@ function AppPage() {
       answeredDomainId: answeredDomainId ?? currentState.currentDomain,
       confidenceThreshold: currentPlaybook.completion.minimumConfidence,
       clarifying: isClarification,
+      limits: depthSettings(currentState.depth),
     });
     if (!next) return null;
     const goal = describeInterviewGoal(currentState.topic);
@@ -926,6 +935,7 @@ function AppPage() {
           isClarification,
           goal: goal.summary,
           followUp: !isClarification && (next.reason === "goal-follow-up" || next.reason === "unresolved-follow-up") ? next.reason : undefined,
+          depth: currentState.depth,
         },
       });
 
@@ -1014,7 +1024,10 @@ function AppPage() {
     setInterviewError("");
 
     const activeOffering = offering === "meos" ? "meos" : "context";
-    const initialState = createInitialState(tier, trimmed, activeOffering, isPreview);
+    const initialState: InterviewState = {
+      ...createInitialState(tier, trimmed, activeOffering, isPreview),
+      ...(activeOffering === "context" ? { depth } : {}),
+    };
 
     try {
       const result = await askNextQuestion(initialState, false, activeOffering);
@@ -1836,7 +1849,7 @@ function AppPage() {
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="font-mono text-xs text-gray-600 dark:text-gray-400">
-                  Starter profile progress · {answerCount} answer{answerCount === 1 ? "" : "s"}
+                  {state?.depth && state.depth !== "standard" ? `${DEPTHS[state.depth].label} · ` : ""}Starter profile progress · {answerCount} answer{answerCount === 1 ? "" : "s"}
                 </span>
                 {domainLabel && (
                   <span className="font-mono text-xs text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded">
@@ -2392,6 +2405,25 @@ function AppPage() {
 
 
             {offering && contextSourcePanel}
+
+            {/* Interview depth */}
+            {offering === "context" && (
+              <fieldset className="space-y-2">
+                <legend className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">How deep should ALVIRA go?</legend>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {DEPTH_ORDER.map((option) => (
+                    <label
+                      key={option}
+                      className={`cursor-pointer rounded-lg border px-3 py-2.5 transition-colors focus-within:ring-2 focus-within:ring-emerald-500/40 ${depth === option ? "border-emerald-600 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/40" : "border-gray-200 hover:border-gray-400 dark:border-gray-700 dark:hover:border-gray-500"}`}
+                    >
+                      <input type="radio" name="interview-depth" value={option} checked={depth === option} onChange={() => setDepth(option)} className="sr-only" />
+                      <span className="block font-mono text-xs font-semibold text-gray-900 dark:text-gray-100">{DEPTHS[option].label}</span>
+                      <span className="mt-1 block text-xs leading-snug text-gray-600 dark:text-gray-400">{DEPTHS[option].description}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
 
             {/* Start button */}
             <button

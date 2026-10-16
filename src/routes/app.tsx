@@ -111,7 +111,13 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
       domains[d.id] = { answers: [], confidence: 0, covered: true, unknown: true };
     }
   }
-  return { ...initialState, domains, ...(existing.provenance ? { provenance: existing.provenance } : {}) };
+  // Keep the Context's sources (and the owner's link confirmations) when it is continued or updated.
+  return {
+    ...initialState,
+    domains,
+    ...(existing.provenance ? { provenance: existing.provenance } : {}),
+    ...(existing.contextSources?.length ? { contextSources: [...existing.contextSources] } : {}),
+  };
 }
 // ── Document parsing helpers (Upload-to-seed) ──
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB cap — reject larger files gracefully
@@ -563,8 +569,11 @@ function AppPage() {
 
   useEffect(() => {
     if (!state || contextSources.length === 0) return;
+    // Only add what the interview is missing. The local list can be stale after a resume or update,
+    // so replacing the interview's list with it would drop sources it already holds.
     const existing = state.contextSources ?? [];
-    if (existing.length !== contextSources.length) setState({ ...state, contextSources });
+    const missing = contextSources.filter((source) => !existing.some((item) => item.id === source.id));
+    if (missing.length > 0) setState({ ...state, contextSources: [...existing, ...missing] });
   }, [state, contextSources]);
 
   // Links found in answers stay "needs-review" until the owner confirms they are public;
@@ -1704,6 +1713,7 @@ function AppPage() {
   };
 
   const pendingLinks = linksNeedingReview(state?.contextSources ?? contextSources);
+  const attachedCount = (state?.contextSources ?? contextSources).length;
   const ownerCanReview = !viewerIsAgent;
   const linkReviewList = pendingLinks.length > 0 && (
     <div className="mt-3 space-y-2" aria-label="Links to review">
@@ -1730,7 +1740,7 @@ function AppPage() {
   const contextSourcePanel = (
     <section className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex items-start justify-between gap-4"><div><span className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">&lt;add-context /&gt;</span><h2 className="mt-1 text-sm font-semibold">Add context without leaving ALVIRA</h2><p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">Sources stay attached to this session and are considered alongside what you tell ALVIRA. Add as many as you need before, during, or after the interaction.</p></div><button type="button" onClick={() => setShowContextSources((shown) => !shown)} className="shrink-0 rounded-md border border-gray-300 px-3 py-1.5 font-mono text-xs hover:border-emerald-500 dark:border-gray-700">{showContextSources ? "Hide" : "Add source"}</button></div>
-      {contextSources.length > 0 && <p className="mt-3 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">{contextSources.length} source{contextSources.length === 1 ? "" : "s"} attached</p>}
+      {attachedCount > 0 && <p className="mt-3 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">{attachedCount} source{attachedCount === 1 ? "" : "s"} attached</p>}
       {linkReviewList}
       {showContextSources && <div className="mt-4 space-y-3"><div className="grid gap-2 sm:grid-cols-3">{CONTEXT_SOURCE_OPTIONS.map((option) => <button key={option.type} type="button" onClick={() => { setContextSourceType(option.type); if (option.type === "interview") inputRef.current?.focus(); if (option.type === "file" || option.type === "ai-context") fileInputRef.current?.click(); }} className={`rounded-md border p-3 text-left ${contextSourceType === option.type ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-gray-200 dark:border-gray-700"}`}><span className="block text-xs font-semibold">{option.label}</span><span className="mt-1 block text-[10px] leading-relaxed text-gray-500">{option.examples}</span></button>)}</div>{(contextSourceType === "website" || contextSourceType === "professional" || contextSourceType === "social") && <form onSubmit={(event) => { event.preventDefault(); void addContextUrl(); }} className="flex gap-2"><input value={contextSourceLocator} onChange={(event) => setContextSourceLocator(event.target.value)} placeholder="https://…" aria-label="Context source URL" className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /><button type="submit" disabled={uploading} className="rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900">{uploading ? "Reading…" : "Review & attach"}</button></form>}{(contextSourceType === "file" || contextSourceType === "ai-context") && <p className="text-xs text-gray-600 dark:text-gray-400">Choose a file from the upload control below; it will be reviewed before becoming part of your context.</p>}</div>}
       {contextSessionNotice && <p role="status" className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">{contextSessionNotice}</p>}
@@ -1742,7 +1752,7 @@ function AppPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <span className="font-mono text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">&lt;add-context /&gt;</span>
-          {contextSources.length > 0 && <span className="ml-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">{contextSources.length} attached</span>}
+          {attachedCount > 0 && <span className="ml-2 font-mono text-[10px] text-gray-500 dark:text-gray-400">{attachedCount} attached</span>}
         </div>
         <button type="button" onClick={() => setShowContextSources(false)} className="rounded px-2 py-1 font-mono text-[10px] text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Close</button>
       </div>
@@ -2017,7 +2027,7 @@ function AppPage() {
                       aria-expanded={showContextSources}
                       className="rounded px-2 py-1 font-mono text-xs text-gray-600 transition-colors hover:text-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:text-gray-400 dark:hover:text-emerald-400 dark:focus-visible:ring-emerald-400/50"
                     >
-                      {showContextSources ? "Hide context" : contextSources.length > 0 ? `Add context · ${contextSources.length}` : "Add context"}
+                      {showContextSources ? "Hide context" : attachedCount > 0 ? `Add context · ${attachedCount}` : "Add context"}
                     </button>
                   )}
                   {hasGaps && state?.currentDomain && !waiting && (

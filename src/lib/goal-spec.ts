@@ -207,8 +207,12 @@ export function goalSpecJson(spec: GoalSpec, state: Pick<InterviewState, "topic"
     if (entry) fields[key] = { value: entry.text || null, basis: entry.basis, citations: entry.citations };
   }
   const by = spec.draftedBy;
+  // Fail closed (Codex review of 89c259e): an agent id is exported only as a plain identifier that is
+  // not marked sensitive; anything else is omitted. The server-issued identity from #200 replaces this.
+  const actorId = by && typeof by.actor_id === "string" ? by.actor_id.trim() : "";
+  const safeActorId = /^[A-Za-z0-9._:@-]{1,120}$/.test(actorId) && !isSensitive(actorId) ? actorId : "";
   const draftedBy = by && by.actor_type === "agent"
-    ? { actor_type: "agent", ...(typeof by.actor_id === "string" ? { actor_id: redactAnswerLinks(by.actor_id).slice(0, 120) } : {}) }
+    ? { actor_type: "agent", ...(safeActorId ? { actor_id: safeActorId } : {}) }
     : { actor_type: "human" };
   const draftedAt = typeof spec.draftedAt === "string" && !Number.isNaN(Date.parse(spec.draftedAt)) ? new Date(spec.draftedAt).toISOString() : null;
   return `${JSON.stringify({ schema: "alvira.goal-spec.v1", topic: safeGoalSpecTopic(state.topic), drafted_at: draftedAt, drafted_by: draftedBy, fields }, null, 2)}\n`;

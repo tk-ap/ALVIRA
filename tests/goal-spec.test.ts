@@ -253,6 +253,15 @@ describe("forged persisted goal spec (Codex review of 5c30da2)", () => {
     expect(JSON.stringify(parsed.drafted_by)).not.toContain("T0K");
   });
 
+  test("a sensitive or non-identifier agent id is omitted from drafted_by (Codex review of 89c259e)", () => {
+    for (const actor_id of ["[SENSITIVE] private identifier", "Jane Doe's phone 555 0100", "x".repeat(121)]) {
+      const parsed = JSON.parse(goalSpecJson({ ...forged, draftedBy: { actor_type: "agent", actor_id } } as typeof forged, state, citable));
+      expect(parsed.drafted_by).toEqual({ actor_type: "agent" });
+    }
+    const ok = JSON.parse(goalSpecJson({ ...forged, draftedBy: { actor_type: "agent", actor_id: "claude-code-opus-5.5" } } as typeof forged, state, citable));
+    expect(ok.drafted_by).toEqual({ actor_type: "agent", actor_id: "claude-code-opus-5.5" });
+  });
+
   test("a forged spec with nothing passing the gate releases nothing", () => {
     const onlyBad = { ...forged, fields: { goal: forged.fields.goal, constraints: forged.fields.constraints } } as typeof forged;
     expect(goalSpecReleasable(onlyBad, state, citable)).toBe(false);

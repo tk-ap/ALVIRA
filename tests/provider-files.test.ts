@@ -23,17 +23,19 @@ describe("provider files", () => {
   test("every output tab on the Context screen has content", () => {
     const app = readFileSync("src/routes/app.tsx", "utf8");
     const keys = [...app.slice(app.indexOf("const FILES = ["), app.indexOf("] as const;", app.indexOf("const FILES = ["))).matchAll(/key: "(\w+)"/g)].map((m) => m[1]);
-    expect(keys).toHaveLength(10);
+    // 10 compiled/provider files plus goal-spec.md, which only shows once the owner approves a field.
+    expect(keys).toHaveLength(11);
+    expect(keys.at(-1)).toBe("goalSpec");
     const files: Record<string, string> = { ...compiled, ...provider };
     // The tabs the output screen shows (same filter as app.tsx): each one has recorded content.
-    const shown = keys.filter((key) => key === "overview" || hasRecordedContent(files[key]));
+    const shown = keys.filter((key) => key !== "goalSpec" && (key === "overview" || hasRecordedContent(files[key])));
     expect(shown).toEqual(["aiProfile", "overview", "constraints", "chatgpt", "claude", "gemini", "cursor"]);
     for (const key of shown) expect(files[key]).toMatch(/One central Context record|No spending without approval/);
   });
 
   test("tabs and downloads skip areas with nothing recorded", () => {
     const app = readFileSync("src/routes/app.tsx", "utf8");
-    expect(app).toContain('FILES.filter((f) => f.key === "overview" || hasRecordedContent(generated[f.key]))');
+    expect(app).toContain('FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? goalSpecHasReleasedFields(state?.goalSpec) : hasRecordedContent(generated[f.key])))');
     expect(app).toContain('if (name === "overview.md" || hasRecordedContent(content)) zip.file(name, content);');
     expect(hasRecordedContent(compiled.workflows)).toBe(false);
     expect(hasRecordedContent(compiled.constraints)).toBe(true);

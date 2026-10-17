@@ -26,6 +26,8 @@ export interface InterviewState {
   history: Message[];
   currentDomain: string | null;
   contextSources?: import("~/lib/context-engine").ContextSource[];
+  /** Owner-reviewed goal spec drafted from this interview; only approved fields are exported. */
+  goalSpec?: import("~/lib/goal-spec").GoalSpec;
   /** How deep the interview goes; absent means "standard". */
   depth?: import("~/lib/interview-depth").InterviewDepth;
   /** Set after knowledge files have been generated so resume UI can offer an update flow. */

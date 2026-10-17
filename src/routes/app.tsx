@@ -31,6 +31,9 @@ import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { buildProviderFiles, hasRecordedContent } from "~/lib/provider-files";
+import { citableAnswers, goalSpecHasReleasedFields, goalSpecIsStale, goalSpecJson, goalSpecMarkdown, reviewGoalSpecField, storedAnswerCount, type GoalSpecKey } from "~/lib/goal-spec";
+import { draftGoalSpec } from "./-goalSpecGenerator";
+import { GoalSpecReview } from "~/components/GoalSpecReview";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
 import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
@@ -111,6 +114,8 @@ function seedStateFromExisting(existing: InterviewState, offering: "context" | "
     ...initialState,
     domains,
     ...(existing.contextSources?.length ? { contextSources: [...existing.contextSources] } : {}),
+    // The goal spec and its reviews carry over; it shows as out of date once answers change.
+    ...(existing.goalSpec ? { goalSpec: existing.goalSpec } : {}),
   };
 }
 // ── Document parsing helpers (Upload-to-seed) ──
@@ -227,6 +232,7 @@ const FILES = [
   { key: "claude", label: "claude-instructions.md" },
   { key: "gemini", label: "gemini-instructions.md" },
   { key: "cursor", label: "cursor-rules.md" },
+  { key: "goalSpec", label: "goal-spec.md" },
 ] as const;
 
 const TIERS: { value: Tier; label: string; description: string }[] = [
@@ -454,6 +460,8 @@ function AppPage() {
   const [contextSources, setContextSources] = useState<ContextSource[]>([]);
   const [contextSourceType, setContextSourceType] = useState<ContextSourceType>("website");
   const [pastedContext, setPastedContext] = useState("");
+  const [draftingGoalSpec, setDraftingGoalSpec] = useState(false);
+  const [goalSpecError, setGoalSpecError] = useState("");
   const [contextSourceLocator, setContextSourceLocator] = useState("");
   const [showContextSources, setShowContextSources] = useState(false);
   const [contextSessionNotice, setContextSessionNotice] = useState<string | null>(null);
@@ -569,6 +577,28 @@ function AppPage() {
   // only confirmed links are exported. A delegated agent viewing the page cannot confirm on the
   // owner's behalf; this is about who is viewing now, not who started the interview.
   const viewerIsAgent = false; // main has no delegated-agent viewer; agent mode must set this.
+
+  // ── Goal spec: drafted from the interview, reviewed field by field by the owner ──
+  const goalSpecCitable = state && offering !== "meos" ? citableAnswers(state, getKnowledgeGraph(state.tier)) : [];
+  const handleDraftGoalSpec = async () => {
+    if (!state || draftingGoalSpec) return;
+    setDraftingGoalSpec(true);
+    setGoalSpecError("");
+    try {
+      const spec = await draftGoalSpec({ data: { topic: state.topic, citable: goalSpecCitable, contributor: contributorFor(state), answerCount: storedAnswerCount(state) } });
+      setState((current) => (current ? { ...current, goalSpec: spec } : current));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      setGoalSpecError(msg === "API key not configured" ? "Drafting isn't available right now." : msg || "Couldn't draft the goal spec. Try again.");
+    } finally {
+      setDraftingGoalSpec(false);
+    }
+  };
+  // Only the owner releases a field; a delegated agent can draft but not approve.
+  const handleReviewGoalSpec = (key: GoalSpecKey, action: "approve" | "reject" | "edit" | "reset", editedValue?: string) => {
+    if (viewerIsAgent) return;
+    setState((current) => (current?.goalSpec ? { ...current, goalSpec: reviewGoalSpecField(current.goalSpec, key, action, editedValue) } : current));
+  };
   const reviewLinkSource = (id: string, confirm: boolean) => {
     if (viewerIsAgent) return;
     const base = state?.contextSources ?? contextSources;
@@ -1569,6 +1599,11 @@ function AppPage() {
     for (const [name, content] of fileMap) {
       if (name === "overview.md" || hasRecordedContent(content)) zip.file(name, content);
     }
+    // Only owner-approved goal-spec fields leave ALVIRA.
+    if (offering !== "meos" && state?.goalSpec && goalSpecHasReleasedFields(state.goalSpec)) {
+      zip.file("goal-spec.md", goalSpecMarkdown(state.goalSpec, goalSpecCitable, state));
+      zip.file("goal-spec.json", goalSpecJson(state.goalSpec, state));
+    }
     if (state) {
       const exportGraph = offering === "meos"
         ? (isPreview ? getMeosPreviewGraph() : getMeosGraph())
@@ -1764,8 +1799,9 @@ function AppPage() {
     // Only files with recorded content get a tab; Overview always stays as the landing tab.
     const outputFiles = offering === "meos"
       ? Object.keys(generated).map((key) => ({ key, label: key }))
-      : FILES.filter((f) => f.key === "overview" || hasRecordedContent(generated[f.key]));
-    const activeContent = generated[activeTab] || "";
+      : FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? goalSpecHasReleasedFields(state?.goalSpec) : hasRecordedContent(generated[f.key])));
+    const goalSpecContent = state?.goalSpec && goalSpecHasReleasedFields(state.goalSpec) ? goalSpecMarkdown(state.goalSpec, goalSpecCitable, state) : "";
+    const activeContent = activeTab === "goalSpec" ? goalSpecContent : generated[activeTab] || "";
     return (
       <div className="min-h-dvh flex flex-col">
         <Header />
@@ -1775,7 +1811,22 @@ function AppPage() {
         <main id="main-content" className="flex-1 py-8 px-6">
           <div className="mx-auto max-w-3xl">
             {offering && contextSourcePanel}
-            
+
+            {offering === "context" && state && (
+              <div className="mb-6">
+                <GoalSpecReview
+                  spec={state.goalSpec}
+                  citable={goalSpecCitable}
+                  canReview={!viewerIsAgent}
+                  stale={goalSpecIsStale(state.goalSpec, state)}
+                  drafting={draftingGoalSpec}
+                  error={goalSpecError}
+                  onDraft={() => void handleDraftGoalSpec()}
+                  onReview={handleReviewGoalSpec}
+                />
+              </div>
+            )}
+
             {offering && <input ref={fileInputRef} type="file" accept=".txt,.md,.docx,.zip" className="hidden" onChange={handleFileChange} />}
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

@@ -137,57 +137,81 @@ export function goalSpecIsStale(spec: GoalSpec | undefined, state: Pick<Intervie
   return Boolean(spec) && spec!.answerCount !== storedAnswerCount(state);
 }
 
-function released(field: GoalSpecField): boolean {
-  return field.review === "approved" || field.review === "edited";
+interface ReleasedEntry {
+  text: string;
+  citations: string[];
+  basis: "interview" | "owner";
 }
 
-/** The text that leaves ALVIRA for a released field. */
-function releasedText(field: GoalSpecField): string {
-  if (field.review === "edited") return field.editedValue ?? "";
-  return field.status === "stated" ? field.value : "";
+/**
+ * The one gate for anything leaving ALVIRA. The saved state is client-supplied, so every release is
+ * re-checked here, not trusted from review time (Codex review of 5c30da2): only approved or edited
+ * fields; text re-sanitized (links redacted, length capped); sensitive text withheld; citations kept
+ * only when they name a real citable answer; a "stated" field whose citations are all invalid is withheld.
+ */
+function releasedEntry(field: GoalSpecField | undefined, known: Set<string>): ReleasedEntry | null {
+  if (!field || (field.review !== "approved" && field.review !== "edited")) return null;
+  const edited = field.review === "edited";
+  const raw = edited ? field.editedValue : field.status === "stated" ? field.value : "";
+  const text = typeof raw === "string" ? redactAnswerLinks(raw.trim()).slice(0, MAX_FIELD_CHARS) : "";
+  if (isSensitive(text)) return null;
+  if (edited) return text ? { text, citations: [], basis: "owner" } : null;
+  const citations = Array.isArray(field.citations) ? [...new Set(field.citations.filter((id) => typeof id === "string" && known.has(id)))] : [];
+  if (text && citations.length === 0) return null;
+  return { text, citations, basis: "interview" };
 }
 
-export function goalSpecHasReleasedFields(spec: GoalSpec | undefined): boolean {
-  return Boolean(spec) && Object.values(spec!.fields).some(released);
+function knownIds(citable: CitableAnswer[]): Set<string> {
+  return new Set(citable.map((answer) => answer.id));
 }
 
-/** Fail closed: a spec drafted before the latest answers is not released until it is redrafted and re-reviewed. */
-export function goalSpecReleasable(spec: GoalSpec | undefined, state: Pick<InterviewState, "domains">): spec is GoalSpec {
-  return goalSpecHasReleasedFields(spec) && !goalSpecIsStale(spec, state);
+export function goalSpecHasReleasedFields(spec: GoalSpec | undefined, citable: CitableAnswer[]): boolean {
+  if (!spec || !spec.fields) return false;
+  const known = knownIds(citable);
+  return GOAL_SPEC_FIELDS.some(({ key }) => releasedEntry(spec.fields[key], known) !== null);
 }
 
-/** goal-spec.md: approved and edited fields only, each with what it rests on, plus confirmed sources. */
+/** Fail closed: nothing is released from a spec drafted before the latest answers, or with nothing that passes the release gate. */
+export function goalSpecReleasable(spec: GoalSpec | undefined, state: Pick<InterviewState, "domains">, citable: CitableAnswer[]): spec is GoalSpec {
+  return goalSpecHasReleasedFields(spec, citable) && !goalSpecIsStale(spec, state);
+}
+
+/** goal-spec.md: released fields only, each with what it rests on, plus confirmed sources. */
 export function goalSpecMarkdown(spec: GoalSpec, citable: CitableAnswer[], state: Pick<InterviewState, "topic" | "contextSources">): string {
   const labels = new Map(citable.map((answer) => [answer.id, answer.label]));
+  const known = knownIds(citable);
   const parts = [`# Goal spec: ${safeGoalSpecTopic(state.topic)}`, "", "Owner-approved statement of one goal, drafted from the ALVIRA interview. Each line says what it rests on; \"Not stated\" means the interview does not say, so do not assume it."];
   let withheld = 0;
   for (const { key, label } of GOAL_SPEC_FIELDS) {
-    const field = spec.fields[key];
-    if (!field || !released(field)) { withheld += 1; continue; }
-    const text = releasedText(field);
-    const basis = field.review === "edited"
+    const entry = releasedEntry(spec.fields?.[key], known);
+    if (!entry) { withheld += 1; continue; }
+    const basis = entry.basis === "owner"
       ? "Stated by the owner in review."
-      : field.citations.length
-        ? `From: ${field.citations.map((id) => labels.get(id) ?? id).join("; ")}.`
+      : entry.citations.length
+        ? `From: ${entry.citations.map((id) => labels.get(id) ?? id).join("; ")}.`
         : "";
-    parts.push("", `## ${label}`, "", text || "_Not stated in the interview._", ...(basis && text ? ["", `_${basis}_`] : []));
+    parts.push("", `## ${label}`, "", entry.text || "_Not stated in the interview._", ...(basis && entry.text ? ["", `_${basis}_`] : []));
   }
   const sources = sourcesMarkdown(state.contextSources);
   if (sources) parts.push("", sources);
-  if (withheld) parts.push("", `_${withheld} field${withheld === 1 ? " is" : "s are"} awaiting the owner's review or were rejected, and are not included._`);
+  if (withheld) parts.push("", `_${withheld} field${withheld === 1 ? " is" : "s are"} awaiting the owner's review, were rejected, or could not be released, and are not included._`);
   return `${parts.join("\n")}\n`;
 }
 
 /** goal-spec.json: the same released fields, structured for an agent or AgentOS to read. */
-export function goalSpecJson(spec: GoalSpec, state: Pick<InterviewState, "topic">): string {
+export function goalSpecJson(spec: GoalSpec, state: Pick<InterviewState, "topic">, citable: CitableAnswer[]): string {
+  const known = knownIds(citable);
   const fields: Record<string, { value: string | null; basis: "interview" | "owner"; citations: string[] }> = {};
   for (const { key } of GOAL_SPEC_FIELDS) {
-    const field = spec.fields[key];
-    if (!field || !released(field)) continue;
-    const text = releasedText(field);
-    fields[key] = { value: text || null, basis: field.review === "edited" ? "owner" : "interview", citations: field.review === "edited" ? [] : field.citations };
+    const entry = releasedEntry(spec.fields?.[key], known);
+    if (entry) fields[key] = { value: entry.text || null, basis: entry.basis, citations: entry.citations };
   }
-  return `${JSON.stringify({ schema: "alvira.goal-spec.v1", topic: safeGoalSpecTopic(state.topic), drafted_at: spec.draftedAt, drafted_by: spec.draftedBy, fields }, null, 2)}\n`;
+  const by = spec.draftedBy;
+  const draftedBy = by && by.actor_type === "agent"
+    ? { actor_type: "agent", ...(typeof by.actor_id === "string" ? { actor_id: redactAnswerLinks(by.actor_id).slice(0, 120) } : {}) }
+    : { actor_type: "human" };
+  const draftedAt = typeof spec.draftedAt === "string" && !Number.isNaN(Date.parse(spec.draftedAt)) ? new Date(spec.draftedAt).toISOString() : null;
+  return `${JSON.stringify({ schema: "alvira.goal-spec.v1", topic: safeGoalSpecTopic(state.topic), drafted_at: draftedAt, drafted_by: draftedBy, fields }, null, 2)}\n`;
 }
 
 /** The drafting prompt: one JSON object, every claim cited, unknown when not stated. */

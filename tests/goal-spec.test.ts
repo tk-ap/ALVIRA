@@ -99,7 +99,7 @@ describe("owner review and what leaves ALVIRA", () => {
   );
 
   test("nothing is released until the owner approves", () => {
-    expect(goalSpecHasReleasedFields(base)).toBe(false);
+    expect(goalSpecHasReleasedFields(base, citable)).toBe(false);
     expect(goalSpecMarkdown(base, citable, state)).toContain("10 fields are awaiting");
   });
 
@@ -114,7 +114,7 @@ describe("owner review and what leaves ALVIRA", () => {
     expect(md).toContain("_Stated by the owner in review._");
     expect(md).not.toContain("No spending without approval.");
     expect(md).toContain("8 fields are awaiting");
-    const json = JSON.parse(goalSpecJson(spec, state));
+    const json = JSON.parse(goalSpecJson(spec, state, citable));
     expect(Object.keys(json.fields)).toEqual(["goal", "done"]);
     expect(json.fields.done).toEqual({ value: "Both ChatGPT and Claude read it every Monday.", basis: "owner", citations: [] });
   });
@@ -152,8 +152,8 @@ describe("app wiring", () => {
   });
 
   test("goal-spec files are added to the download only when fields were approved", () => {
-    expect(app).toContain('if (offering !== "meos" && state && goalSpecReleasable(state.goalSpec, state)) {');
-    expect(app).toContain('zip.file("goal-spec.json", goalSpecJson(state.goalSpec, state));');
+    expect(app).toContain('if (offering !== "meos" && state && goalSpecReleasable(state.goalSpec, state, goalSpecCitable)) {');
+    expect(app).toContain('zip.file("goal-spec.json", goalSpecJson(state.goalSpec, state, goalSpecCitable));');
   });
 
   test("the spec and its reviews survive Continue and Update", () => {
@@ -169,13 +169,13 @@ describe("Codex review of 38b5ebd", () => {
   test("P0: the exported topic is redacted, and a sensitive topic is replaced", () => {
     expect(safeGoalSpecTopic("[SENSITIVE — money] Pay off debt")).toBe("My AI context");
     const linked = { ...state, topic: "Ship it, notes at https://files.example.com/a?token=SECRET9 and https://docs.google.com/document/d/PRIV1/edit" };
-    for (const out of [goalSpecMarkdown(approved, citable, linked), goalSpecJson(approved, linked)]) {
+    for (const out of [goalSpecMarkdown(approved, citable, linked), goalSpecJson(approved, linked, citable)]) {
       expect(out).not.toContain("SECRET9");
       expect(out).not.toContain("PRIV1");
     }
     const sensitive = { ...state, topic: "[SENSITIVE — money] Pay off debt" };
     expect(goalSpecMarkdown(approved, citable, sensitive)).toContain("# Goal spec: My AI context");
-    expect(goalSpecJson(approved, sensitive)).not.toContain("Pay off debt");
+    expect(goalSpecJson(approved, sensitive, citable)).not.toContain("Pay off debt");
   });
 
   test("P1: an edit carrying a sensitive label is refused", () => {
@@ -185,9 +185,9 @@ describe("Codex review of 38b5ebd", () => {
   });
 
   test("fail closed: an out-of-date spec is not released", () => {
-    expect(goalSpecReleasable(approved, state)).toBe(true);
+    expect(goalSpecReleasable(approved, state, citable)).toBe(true);
     const more = { ...state, domains: { ...state.domains, goals: { ...state.domains.goals, answers: [...state.domains.goals.answers, "New answer."] } } };
-    expect(goalSpecReleasable(approved, more)).toBe(false);
+    expect(goalSpecReleasable(approved, more, citable)).toBe(false);
   });
 
   test("P0: drafting is signed-in only and derives everything from the caller's own saved draft", () => {
@@ -202,5 +202,59 @@ describe("Codex review of 38b5ebd", () => {
     const app = readFileSync("src/routes/app.tsx", "utf8");
     expect(app).toContain("const spec = await draftGoalSpec();");
     expect(app).toContain('if (!authUser) { setGoalSpecError("Sign in to draft a goal spec."); return; }');
+  });
+});
+
+describe("forged persisted goal spec (Codex review of 5c30da2)", () => {
+  // The saved state is client-supplied; a crafted autosave can contain anything in goalSpec.
+  const forged = {
+    version: 1,
+    draftedAt: "not a date",
+    draftedBy: { actor_type: "agent", actor_id: "x https://evil.example.com/?token=T0K" },
+    answerCount: storedAnswerCount(state),
+    fields: {
+      goal: { value: "", citations: [], status: "unknown", review: "edited", editedValue: "[SENSITIVE] secret plan" },
+      done: { value: "Done when funded. https://files.example.com/a?access_token=ZZ9", citations: ["goals#1"], status: "stated", review: "approved" },
+      successMeasures: { value: "Invented measure.", citations: ["made-up#9", 42], status: "stated", review: "approved" },
+      constraints: { value: "[SENSITIVE] raw value", citations: ["constraints#0"], status: "stated", review: "approved" },
+      priorities: { value: "Income first.", citations: ["goals#0", "evil#1"], status: "stated", review: "approved" },
+    },
+  } as unknown as Parameters<typeof goalSpecMarkdown>[0];
+
+  const md = goalSpecMarkdown(forged, citable, state);
+  const json = goalSpecJson(forged, state, citable);
+
+  test("sensitive edited or stated text is never released", () => {
+    for (const out of [md, json]) {
+      expect(out).not.toContain("secret plan");
+      expect(out).not.toContain("raw value");
+      expect(out).not.toContain("SENSITIVE");
+    }
+  });
+
+  test("links in persisted values are redacted at release", () => {
+    for (const out of [md, json]) {
+      expect(out).not.toContain("ZZ9");
+      expect(out).not.toContain("access_token");
+    }
+  });
+
+  test("citations are kept only when they name a real answer; a stated field with none left is withheld", () => {
+    const parsed = JSON.parse(json);
+    expect(parsed.fields.successMeasures).toBeUndefined();
+    expect(parsed.fields.priorities.citations).toEqual(["goals#0"]);
+    expect(md).not.toContain("Invented measure.");
+    expect(md).not.toContain("evil#1");
+  });
+
+  test("drafted_by and drafted_at are sanitized", () => {
+    const parsed = JSON.parse(json);
+    expect(parsed.drafted_at).toBeNull();
+    expect(JSON.stringify(parsed.drafted_by)).not.toContain("T0K");
+  });
+
+  test("a forged spec with nothing passing the gate releases nothing", () => {
+    const onlyBad = { ...forged, fields: { goal: forged.fields.goal, constraints: forged.fields.constraints } } as typeof forged;
+    expect(goalSpecReleasable(onlyBad, state, citable)).toBe(false);
   });
 });

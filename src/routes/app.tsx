@@ -1602,9 +1602,9 @@ function AppPage() {
       if (name === "overview.md" || hasRecordedContent(content)) zip.file(name, content);
     }
     // Only owner-approved goal-spec fields leave ALVIRA.
-    if (offering !== "meos" && state && goalSpecReleasable(state.goalSpec, state)) {
+    if (offering !== "meos" && state && goalSpecReleasable(state.goalSpec, state, goalSpecCitable)) {
       zip.file("goal-spec.md", goalSpecMarkdown(state.goalSpec, goalSpecCitable, state));
-      zip.file("goal-spec.json", goalSpecJson(state.goalSpec, state));
+      zip.file("goal-spec.json", goalSpecJson(state.goalSpec, state, goalSpecCitable));
     }
     if (state) {
       const exportGraph = offering === "meos"
@@ -1801,8 +1801,8 @@ function AppPage() {
     // Only files with recorded content get a tab; Overview always stays as the landing tab.
     const outputFiles = offering === "meos"
       ? Object.keys(generated).map((key) => ({ key, label: key }))
-      : FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? Boolean(state && goalSpecReleasable(state.goalSpec, state)) : hasRecordedContent(generated[f.key])));
-    const goalSpecContent = state && goalSpecReleasable(state.goalSpec, state) ? goalSpecMarkdown(state.goalSpec, goalSpecCitable, state) : "";
+      : FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? Boolean(state && goalSpecReleasable(state.goalSpec, state, goalSpecCitable)) : hasRecordedContent(generated[f.key])));
+    const goalSpecContent = state && goalSpecReleasable(state.goalSpec, state, goalSpecCitable) ? goalSpecMarkdown(state.goalSpec, goalSpecCitable, state) : "";
     const activeContent = activeTab === "goalSpec" ? goalSpecContent : generated[activeTab] || "";
     return (
       <div className="min-h-dvh flex flex-col">

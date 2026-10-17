@@ -1,4 +1,6 @@
 import type { Domain, InterviewState } from "~/routes/-knowledgeGraph";
+import { releasedSources } from "~/lib/released-context";
+import { WITHHELD, isSensitive } from "~/lib/sensitivity";
 
 type Offering = "context" | "meos";
 
@@ -41,10 +43,12 @@ export function buildStructuredInterviewExport(
         label: domain.label,
         confidence: domainState?.confidence ?? 0,
         covered: domainState?.covered ?? false,
-        answers: [...(domainState?.answers ?? [])],
+        // Downloads are copied into other AI tools: sensitive answers are withheld, as in the .md files.
+        answers: (domainState?.answers ?? []).map((answer) => (isSensitive(answer) ? WITHHELD : answer)),
       };
     }),
-    sources: (state.contextSources ?? []).map((source) => ({
+    // Only owner-confirmed sources; links awaiting review never leave ALVIRA.
+    sources: releasedSources(state.contextSources).map((source) => ({
       type: source.type,
       label: source.label,
       locator: source.locator,

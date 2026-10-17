@@ -1,5 +1,5 @@
 import type { Domain, InterviewState } from "~/routes/-knowledgeGraph";
-import { releasedSources } from "~/lib/released-context";
+import { releasedSources, releasedTopic } from "~/lib/released-context";
 import { WITHHELD, isSensitive } from "~/lib/sensitivity";
 
 type Offering = "context" | "meos";
@@ -34,7 +34,7 @@ export function buildStructuredInterviewExport(
     schemaVersion: 1,
     product: "ALVIRA",
     offering,
-    topic: state.topic,
+    topic: releasedTopic(state.topic),
     tier: state.tier,
     domains: graph.map((domain) => {
       const domainState = state.domains[domain.id];

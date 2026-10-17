@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { redactSensitiveDeep } from "./sensitivity";
-import { releasedContextState } from "./released-context";
+import { releasedContextState, releasedTopic } from "./released-context";
 import { lookup } from "node:dns/promises";
 import { BlockList, isIP } from "node:net";
 import { request as httpsRequest } from "node:https";
@@ -565,11 +565,11 @@ export async function getBridgeProfiles(userId: string, selectedProfileId: strin
     const released = releasedContextState(JSON.parse(row.state_json), { includeSensitive: options.includeSensitive });
     const portrait = row.portrait_json ? JSON.parse(row.portrait_json) : null;
     if (options.includeSensitive) {
-      return { id: row.id, topic: row.topic, offering: row.offering, tier: row.tier, state: released.state, goal_spec: released.goal_spec, portrait, updated_at: row.updated_at, sensitive_included: true };
+      return { id: row.id, topic: releasedTopic(row.topic, { includeSensitive: true }), offering: row.offering, tier: row.tier, state: released.state, goal_spec: released.goal_spec, portrait, updated_at: row.updated_at, sensitive_included: true };
     }
     return {
       id: row.id,
-      topic: row.topic,
+      topic: releasedTopic(row.topic),
       offering: row.offering,
       tier: row.tier,
       state: released.state,

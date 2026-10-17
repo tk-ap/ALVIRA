@@ -9,9 +9,23 @@
 
 import type { ContextSource } from "~/lib/context-engine";
 import { citableAnswers, goalSpecJson, goalSpecReleasable } from "~/lib/goal-spec";
+import { WITHHELD, isSensitive } from "~/lib/sensitivity";
+import { redactAnswerLinks } from "~/lib/source-links";
 import { redactSensitiveState } from "~/lib/sensitivity";
 import { carriesCredential } from "~/lib/source-links";
 import { getKnowledgeGraph, type InterviewState, type Tier } from "~/routes/-knowledgeGraph";
+
+/**
+ * The topic as it may leave ALVIRA (Codex review of a5f9c55): links are always redacted, so an
+ * unreviewed or credential link can't ride along; a sensitive topic is withheld unless the caller
+ * explicitly asked for sensitive items.
+ */
+export function releasedTopic(topic: string | null | undefined, options: { includeSensitive?: boolean } = {}): string {
+  const text = (topic ?? "").trim();
+  if (!text) return "";
+  if (isSensitive(text) && !options.includeSensitive) return WITHHELD;
+  return redactAnswerLinks(text);
+}
 
 /** Owner-confirmed sources only; a link carrying a credential never leaves, even if marked ready. */
 export function releasedSources(sources: ContextSource[] | undefined): ContextSource[] {
@@ -40,7 +54,7 @@ export function releasedGoalSpec(state: InterviewState): ReleasedGoalSpec | null
  */
 export function releasedContextState(state: InterviewState, options: { includeSensitive?: boolean } = {}) {
   const { goalSpec: _draft, ...rest } = state;
-  const base = { ...rest, contextSources: releasedSources(state.contextSources) } as InterviewState;
+  const base = { ...rest, topic: releasedTopic(state.topic, options), contextSources: releasedSources(state.contextSources) } as InterviewState;
   if (options.includeSensitive) return { state: base, withheld: 0, goal_spec: releasedGoalSpec(state) };
   const shaped = redactSensitiveState(base as unknown as Parameters<typeof redactSensitiveState>[0]);
   return { state: shaped.state as unknown as InterviewState, withheld: shaped.withheld, goal_spec: releasedGoalSpec(state) };

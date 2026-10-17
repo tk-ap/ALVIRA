@@ -104,3 +104,35 @@ describe("structured download (context.json / context.toon)", () => {
     expect(json).not.toContain("Read by both AIs.");
   });
 });
+
+describe("the topic as it leaves ALVIRA (Codex review of a5f9c55)", () => {
+  const sensitive = { ...base, topic: "[SENSITIVE — money] private goal" } as InterviewState;
+  const linked = { ...base, topic: "Plan at https://docs.google.com/document/d/PRIVTOPIC/edit and https://x.example.com/a?token=TOPTOK" } as InterviewState;
+
+  test("a sensitive topic is withheld by default in Bridge state and the structured download", () => {
+    expect(JSON.stringify(releasedContextState(sensitive).state)).not.toContain("private goal");
+    expect(serializeInterviewJson(buildStructuredInterviewExport(sensitive, GRAPH, "context"))).not.toContain("private goal");
+  });
+
+  test("include_sensitive returns a sensitive topic", () => {
+    expect(releasedContextState(sensitive, { includeSensitive: true }).state.topic).toContain("private goal");
+  });
+
+  test("links in the topic never ride along, even with include_sensitive", () => {
+    for (const out of [
+      JSON.stringify(releasedContextState(linked).state),
+      JSON.stringify(releasedContextState(linked, { includeSensitive: true }).state),
+      serializeInterviewJson(buildStructuredInterviewExport(linked, GRAPH, "context")),
+    ]) {
+      expect(out).not.toContain("PRIVTOPIC");
+      expect(out).not.toContain("TOPTOK");
+    }
+  });
+
+  test("the Bridge's top-level profile topic uses the same sanitizer", () => {
+    const bridge = readFileSync("src/lib/bridge.ts", "utf8");
+    expect(bridge).toContain("topic: releasedTopic(row.topic),");
+    expect(bridge).toContain("topic: releasedTopic(row.topic, { includeSensitive: true }),");
+    expect(bridge).not.toMatch(/topic: row\.topic/);
+  });
+});

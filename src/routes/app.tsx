@@ -31,12 +31,11 @@ import { generateQuestion, generateClarification } from "./-questionGenerator";
 import { validateAnswer } from "./-validation";
 import { compileKnowledge } from "./-knowledgeCompiler";
 import { buildProviderFiles, hasRecordedContent } from "~/lib/provider-files";
-import { citableAnswers, goalSpecHasReleasedFields, goalSpecIsStale, goalSpecJson, goalSpecMarkdown, reviewGoalSpecField, storedAnswerCount, type GoalSpecKey } from "~/lib/goal-spec";
-import { draftGoalSpec } from "./-goalSpecGenerator";
+import { citableAnswers, goalSpecIsStale, goalSpecJson, goalSpecMarkdown, goalSpecReleasable, reviewGoalSpecField, type GoalSpecKey } from "~/lib/goal-spec";
 import { GoalSpecReview } from "~/components/GoalSpecReview";
 import { getMeosGraph, getMeosPreviewGraph, getMeosPlaybook } from "./-meosGraph";
 import { compileMeosKnowledge, generatePortrait, type MeosPortrait } from "./-meosCompiler";
-import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
+import { getCurrentUser, saveProfile, saveMeosPortrait, loadProfile, trackInterview, fetchUserLimits, autosaveInterview, draftGoalSpec, getInterviewDraft, clearInterviewDraft, getEntitlements } from "./-auth";
 // Max height (px) of the answer textarea before it scrolls instead of growing.
 const MAX_ANSWER_INPUT_HEIGHT = 160;
 
@@ -582,10 +581,13 @@ function AppPage() {
   const goalSpecCitable = state && offering !== "meos" ? citableAnswers(state, getKnowledgeGraph(state.tier)) : [];
   const handleDraftGoalSpec = async () => {
     if (!state || draftingGoalSpec) return;
+    if (!authUser) { setGoalSpecError("Sign in to draft a goal spec."); return; }
     setDraftingGoalSpec(true);
     setGoalSpecError("");
     try {
-      const spec = await draftGoalSpec({ data: { topic: state.topic, citable: goalSpecCitable, contributor: contributorFor(state), answerCount: storedAnswerCount(state) } });
+      // The server drafts from this account's saved interview only, so save the latest answers first.
+      await autosaveInterview({ data: { offering: "context", topic: state.topic, state } });
+      const spec = await draftGoalSpec();
       setState((current) => (current ? { ...current, goalSpec: spec } : current));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
@@ -1600,7 +1602,7 @@ function AppPage() {
       if (name === "overview.md" || hasRecordedContent(content)) zip.file(name, content);
     }
     // Only owner-approved goal-spec fields leave ALVIRA.
-    if (offering !== "meos" && state?.goalSpec && goalSpecHasReleasedFields(state.goalSpec)) {
+    if (offering !== "meos" && state && goalSpecReleasable(state.goalSpec, state)) {
       zip.file("goal-spec.md", goalSpecMarkdown(state.goalSpec, goalSpecCitable, state));
       zip.file("goal-spec.json", goalSpecJson(state.goalSpec, state));
     }
@@ -1799,8 +1801,8 @@ function AppPage() {
     // Only files with recorded content get a tab; Overview always stays as the landing tab.
     const outputFiles = offering === "meos"
       ? Object.keys(generated).map((key) => ({ key, label: key }))
-      : FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? goalSpecHasReleasedFields(state?.goalSpec) : hasRecordedContent(generated[f.key])));
-    const goalSpecContent = state?.goalSpec && goalSpecHasReleasedFields(state.goalSpec) ? goalSpecMarkdown(state.goalSpec, goalSpecCitable, state) : "";
+      : FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? Boolean(state && goalSpecReleasable(state.goalSpec, state)) : hasRecordedContent(generated[f.key])));
+    const goalSpecContent = state && goalSpecReleasable(state.goalSpec, state) ? goalSpecMarkdown(state.goalSpec, goalSpecCitable, state) : "";
     const activeContent = activeTab === "goalSpec" ? goalSpecContent : generated[activeTab] || "";
     return (
       <div className="min-h-dvh flex flex-col">

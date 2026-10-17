@@ -56,6 +56,13 @@ export interface CitableAnswer {
 const MAX_CITABLE = 120;
 const MAX_FIELD_CHARS = 1200;
 
+/** The topic as it may leave ALVIRA: links redacted; a sensitive topic is replaced with a neutral title. */
+export function safeGoalSpecTopic(topic: string | undefined | null): string {
+  const text = (topic ?? "").trim();
+  if (!text || isSensitive(text)) return "My AI context";
+  return redactAnswerLinks(text).slice(0, 200);
+}
+
 export function storedAnswerCount(state: Pick<InterviewState, "domains">): number {
   return Object.values(state.domains ?? {}).reduce((n, area) => n + (area?.answers?.length ?? 0), 0);
 }
@@ -68,7 +75,7 @@ export function storedAnswerCount(state: Pick<InterviewState, "domains">): numbe
 export function citableAnswers(state: Pick<InterviewState, "topic" | "domains">, graph: Domain[]): CitableAnswer[] {
   const out: CitableAnswer[] = [];
   const topic = (state.topic ?? "").trim();
-  if (topic && !isSensitive(topic)) out.push({ id: "topic", label: "Goal as entered", text: redactAnswerLinks(topic) });
+  if (topic && !isSensitive(topic)) out.push({ id: "topic", label: "Goal as entered", text: safeGoalSpecTopic(topic) });
   for (const domain of graph) {
     if (domain.id === "sources") continue;
     (state.domains?.[domain.id]?.answers ?? []).forEach((answer, index) => {
@@ -119,7 +126,8 @@ export function reviewGoalSpecField(
   else if (action === "reset") next = { value: field.value, citations: field.citations, status: field.status, review: "pending" };
   else {
     const text = redactAnswerLinks((editedValue ?? "").trim()).slice(0, MAX_FIELD_CHARS);
-    if (!text) return spec;
+    // Sensitive text never becomes releasable through an edit (Codex review of 38b5ebd).
+    if (!text || isSensitive(text)) return spec;
     next = { ...field, review: "edited", editedValue: text, reviewedAt: now };
   }
   return { ...spec, fields: { ...spec.fields, [key]: next } };
@@ -143,10 +151,15 @@ export function goalSpecHasReleasedFields(spec: GoalSpec | undefined): boolean {
   return Boolean(spec) && Object.values(spec!.fields).some(released);
 }
 
+/** Fail closed: a spec drafted before the latest answers is not released until it is redrafted and re-reviewed. */
+export function goalSpecReleasable(spec: GoalSpec | undefined, state: Pick<InterviewState, "domains">): spec is GoalSpec {
+  return goalSpecHasReleasedFields(spec) && !goalSpecIsStale(spec, state);
+}
+
 /** goal-spec.md: approved and edited fields only, each with what it rests on, plus confirmed sources. */
 export function goalSpecMarkdown(spec: GoalSpec, citable: CitableAnswer[], state: Pick<InterviewState, "topic" | "contextSources">): string {
   const labels = new Map(citable.map((answer) => [answer.id, answer.label]));
-  const parts = [`# Goal spec: ${(state.topic ?? "").trim() || "My AI context"}`, "", "Owner-approved statement of one goal, drafted from the ALVIRA interview. Each line says what it rests on; \"Not stated\" means the interview does not say, so do not assume it."];
+  const parts = [`# Goal spec: ${safeGoalSpecTopic(state.topic)}`, "", "Owner-approved statement of one goal, drafted from the ALVIRA interview. Each line says what it rests on; \"Not stated\" means the interview does not say, so do not assume it."];
   let withheld = 0;
   for (const { key, label } of GOAL_SPEC_FIELDS) {
     const field = spec.fields[key];
@@ -174,7 +187,7 @@ export function goalSpecJson(spec: GoalSpec, state: Pick<InterviewState, "topic"
     const text = releasedText(field);
     fields[key] = { value: text || null, basis: field.review === "edited" ? "owner" : "interview", citations: field.review === "edited" ? [] : field.citations };
   }
-  return `${JSON.stringify({ schema: "alvira.goal-spec.v1", topic: state.topic ?? "", drafted_at: spec.draftedAt, drafted_by: spec.draftedBy, fields }, null, 2)}\n`;
+  return `${JSON.stringify({ schema: "alvira.goal-spec.v1", topic: safeGoalSpecTopic(state.topic), drafted_at: spec.draftedAt, drafted_by: spec.draftedBy, fields }, null, 2)}\n`;
 }
 
 /** The drafting prompt: one JSON object, every claim cited, unknown when not stated. */

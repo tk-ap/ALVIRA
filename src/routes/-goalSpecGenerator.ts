@@ -1,55 +1,36 @@
-// ── Goal spec drafting (server) ──
-// Drafts every goal-spec field from the citable answers with the app's model, then normalizes the
-// draft on the server so a field without a real citation comes back "unknown".
+// ── Goal spec drafting (server only) ──
+// Called from the signed-in server function draftGoalSpec in -auth.ts, which loads the caller's
+// own saved interview draft; nothing the client sends is used (Codex review of 38b5ebd). Topic,
+// citable answers and answer count are derived here from that stored state, and the model's draft
+// is normalized so a field without a real citation comes back "unknown", links are redacted and
+// sensitive text is dropped.
 
-import { createServerFn } from "@tanstack/react-start";
 import OpenAI from "openai";
-import type { SourceContributor } from "~/lib/context-engine";
-import { goalSpecPrompt, normalizeGoalSpecDraft, type CitableAnswer, type GoalSpec } from "~/lib/goal-spec";
+import { citableAnswers, goalSpecPrompt, normalizeGoalSpecDraft, safeGoalSpecTopic, storedAnswerCount, type GoalSpec } from "~/lib/goal-spec";
+import { getKnowledgeGraph, type InterviewState, type Tier } from "./-knowledgeGraph";
 
-interface DraftInput {
-  topic: string;
-  citable: CitableAnswer[];
-  contributor: SourceContributor;
-  answerCount: number;
-}
+export async function draftGoalSpecFromState(state: InterviewState): Promise<GoalSpec> {
+  const tier: Tier = state.tier === "team" || state.tier === "enterprise" ? state.tier : "personal";
+  const citable = citableAnswers({ topic: state.topic ?? "", domains: state.domains ?? {} }, getKnowledgeGraph(tier));
+  if (citable.length === 0) throw new Error("There is nothing in the interview to draft from yet.");
+  if (!(process.env.OPENAI_API_KEY || "").length) throw new Error("API key not configured");
 
-export const draftGoalSpec = createServerFn({ method: "POST" })
-  .validator((data: unknown): DraftInput => {
-    const d = (data ?? {}) as Partial<DraftInput>;
-    if (!Array.isArray(d.citable)) throw new Error("Answers are required.");
-    const citable = d.citable
-      .filter((a): a is CitableAnswer => Boolean(a) && typeof a.id === "string" && typeof a.label === "string" && typeof a.text === "string")
-      .slice(0, 120)
-      .map((a) => ({ id: a.id.slice(0, 80), label: a.label.slice(0, 120), text: a.text.slice(0, 2000) }));
-    if (citable.length === 0) throw new Error("There is nothing in the interview to draft from yet.");
-    const contributor: SourceContributor = d.contributor?.actor_type === "agent"
-      ? { actor_type: "agent", ...(typeof d.contributor.actor_id === "string" ? { actor_id: d.contributor.actor_id.slice(0, 120) } : {}) }
-      : { actor_type: "human" };
-    return {
-      topic: typeof d.topic === "string" ? d.topic.slice(0, 600) : "",
-      citable,
-      contributor,
-      answerCount: Number.isFinite(d.answerCount) ? Number(d.answerCount) : 0,
-    };
-  })
-  .handler(async ({ data }): Promise<GoalSpec> => {
-    if (!(process.env.OPENAI_API_KEY || "").length) throw new Error("API key not configured");
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: goalSpecPrompt(data.topic, data.citable) },
-        { role: "user", content: "Draft the goal spec." },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.2,
-    });
-    let parsed: unknown = {};
-    try {
-      parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
-    } catch {
-      parsed = {};
-    }
-    return normalizeGoalSpecDraft(parsed, data.citable, data.contributor, data.answerCount);
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: goalSpecPrompt(safeGoalSpecTopic(state.topic), citable) },
+      { role: "user", content: "Draft the goal spec." },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.2,
   });
+  let parsed: unknown = {};
+  try {
+    parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
+  } catch {
+    parsed = {};
+  }
+  // The signed-in account is the drafter; a delegated-agent identity arrives with agent sign-in (#200).
+  return normalizeGoalSpecDraft(parsed, citable, { actor_type: "human" }, storedAnswerCount({ domains: state.domains ?? {} }));
+}

@@ -8,6 +8,8 @@ import {
   goalSpecJson,
   goalSpecMarkdown,
   goalSpecPrompt,
+  goalSpecReleasable,
+  safeGoalSpecTopic,
   normalizeGoalSpecDraft,
   reviewGoalSpecField,
   storedAnswerCount,
@@ -150,12 +152,55 @@ describe("app wiring", () => {
   });
 
   test("goal-spec files are added to the download only when fields were approved", () => {
-    expect(app).toContain("if (offering !== \"meos\" && state?.goalSpec && goalSpecHasReleasedFields(state.goalSpec)) {");
+    expect(app).toContain('if (offering !== "meos" && state && goalSpecReleasable(state.goalSpec, state)) {');
     expect(app).toContain('zip.file("goal-spec.json", goalSpecJson(state.goalSpec, state));');
   });
 
   test("the spec and its reviews survive Continue and Update", () => {
     const seed = app.slice(app.indexOf("function seedStateFromExisting"), app.indexOf("// ── Document parsing helpers"));
     expect(seed).toContain("goalSpec: existing.goalSpec");
+  });
+});
+
+describe("Codex review of 38b5ebd", () => {
+  const base = normalizeGoalSpecDraft({ fields: { goal: { value: "One central Context record.", citations: ["goals#0"] } } }, citable, OWNER, storedAnswerCount(state));
+  const approved = reviewGoalSpecField(base, "goal", "approve");
+
+  test("P0: the exported topic is redacted, and a sensitive topic is replaced", () => {
+    expect(safeGoalSpecTopic("[SENSITIVE — money] Pay off debt")).toBe("My AI context");
+    const linked = { ...state, topic: "Ship it, notes at https://files.example.com/a?token=SECRET9 and https://docs.google.com/document/d/PRIV1/edit" };
+    for (const out of [goalSpecMarkdown(approved, citable, linked), goalSpecJson(approved, linked)]) {
+      expect(out).not.toContain("SECRET9");
+      expect(out).not.toContain("PRIV1");
+    }
+    const sensitive = { ...state, topic: "[SENSITIVE — money] Pay off debt" };
+    expect(goalSpecMarkdown(approved, citable, sensitive)).toContain("# Goal spec: My AI context");
+    expect(goalSpecJson(approved, sensitive)).not.toContain("Pay off debt");
+  });
+
+  test("P1: an edit carrying a sensitive label is refused", () => {
+    const spec = reviewGoalSpecField(base, "constraints", "edit", "[SENSITIVE — money] Savings run out in March.");
+    expect(spec.fields.constraints.review).toBe("pending");
+    expect(goalSpecMarkdown(spec, citable, state)).not.toContain("Savings");
+  });
+
+  test("fail closed: an out-of-date spec is not released", () => {
+    expect(goalSpecReleasable(approved, state)).toBe(true);
+    const more = { ...state, domains: { ...state.domains, goals: { ...state.domains.goals, answers: [...state.domains.goals.answers, "New answer."] } } };
+    expect(goalSpecReleasable(approved, more)).toBe(false);
+  });
+
+  test("P0: drafting is signed-in only and derives everything from the caller's own saved draft", () => {
+    const auth = readFileSync("src/routes/-auth.ts", "utf8");
+    const at = auth.indexOf("export const draftGoalSpec");
+    const fn = auth.slice(at, auth.indexOf("\n", at));
+    expect(fn).toContain("const user = await requireUser();");
+    expect(fn).toContain("FROM interview_drafts WHERE user_id = $1 AND offering = 'context'\", [user.id]");
+    expect(fn).not.toContain(".validator(");
+    const server = readFileSync("src/routes/-goalSpecGenerator.ts", "utf8");
+    expect(server).toContain("citableAnswers({ topic: state.topic");
+    const app = readFileSync("src/routes/app.tsx", "utf8");
+    expect(app).toContain("const spec = await draftGoalSpec();");
+    expect(app).toContain('if (!authUser) { setGoalSpecError("Sign in to draft a goal spec."); return; }');
   });
 });

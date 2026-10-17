@@ -41,6 +41,7 @@ export function releasedGoalSpec(state: InterviewState): ReleasedGoalSpec | null
 export function releasedContextState(state: InterviewState, options: { includeSensitive?: boolean } = {}) {
   const { goalSpec: _draft, ...rest } = state;
   const base = { ...rest, contextSources: releasedSources(state.contextSources) } as InterviewState;
-  const shaped = options.includeSensitive ? { state: base, withheld: 0 } : redactSensitiveState(base);
-  return { state: shaped.state, withheld: shaped.withheld, goal_spec: releasedGoalSpec(state) };
+  if (options.includeSensitive) return { state: base, withheld: 0, goal_spec: releasedGoalSpec(state) };
+  const shaped = redactSensitiveState(base as unknown as Parameters<typeof redactSensitiveState>[0]);
+  return { state: shaped.state as unknown as InterviewState, withheld: shaped.withheld, goal_spec: releasedGoalSpec(state) };
 }

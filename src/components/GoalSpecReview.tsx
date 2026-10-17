@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GOAL_SPEC_FIELDS, type CitableAnswer, type GoalSpec, type GoalSpecKey } from "~/lib/goal-spec";
+import { isSensitive } from "~/lib/sensitivity";
 
 interface Props {
   spec: GoalSpec | undefined;
@@ -41,7 +42,7 @@ export function GoalSpecReview({ spec, citable, canReview, stale, drafting, erro
         </button>
       </div>
       {error && <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-400">{error}</p>}
-      {spec && stale && <p role="status" className="mt-3 text-sm text-amber-700 dark:text-amber-400">Your Context changed since this draft. Redraft to include the new answers; your reviews start over.</p>}
+      {spec && stale && <p role="status" className="mt-3 text-sm text-amber-700 dark:text-amber-400">Your Context changed since this draft, so nothing from it is shared until you redraft and review it again.</p>}
       {spec && !canReview && <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Drafted for the account owner, who reviews each field before it is shared.</p>}
       {spec && (
         <>
@@ -61,8 +62,9 @@ export function GoalSpecReview({ spec, citable, canReview, stale, drafting, erro
                     <div className="mt-2 space-y-2">
                       <label className="sr-only" htmlFor={`gs-${key}`}>{label}</label>
                       <textarea id={`gs-${key}`} value={draftText} onChange={(e) => setDraftText(e.target.value)} rows={3} className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" />
+                      {isSensitive(draftText) && <p className="text-xs text-red-700 dark:text-red-400">Text marked sensitive can't go into the goal spec.</p>}
                       <div className="flex flex-wrap gap-2">
-                        <button type="button" disabled={!draftText.trim()} onClick={() => { onReview(key, "edit", draftText); setEditing(null); }} className="min-h-11 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white disabled:opacity-50">Save and approve</button>
+                        <button type="button" disabled={!draftText.trim() || isSensitive(draftText)} onClick={() => { onReview(key, "edit", draftText); setEditing(null); }} className="min-h-11 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white disabled:opacity-50">Save and approve</button>
                         <button type="button" onClick={() => setEditing(null)} className="min-h-11 rounded-md border border-gray-300 px-3 text-sm dark:border-gray-700">Cancel</button>
                       </div>
                     </div>

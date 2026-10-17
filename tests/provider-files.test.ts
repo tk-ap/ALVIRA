@@ -35,7 +35,7 @@ describe("provider files", () => {
 
   test("tabs and downloads skip areas with nothing recorded", () => {
     const app = readFileSync("src/routes/app.tsx", "utf8");
-    expect(app).toContain('FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? goalSpecHasReleasedFields(state?.goalSpec) : hasRecordedContent(generated[f.key])))');
+    expect(app).toContain('FILES.filter((f) => f.key === "overview" || (f.key === "goalSpec" ? Boolean(state && goalSpecReleasable(state.goalSpec, state)) : hasRecordedContent(generated[f.key])))');
     expect(app).toContain('if (name === "overview.md" || hasRecordedContent(content)) zip.file(name, content);');
     expect(hasRecordedContent(compiled.workflows)).toBe(false);
     expect(hasRecordedContent(compiled.constraints)).toBe(true);

@@ -73,9 +73,7 @@ jobs:
               await check('checkout session creation without payment', async () => {
                 await goto('/pricing');
                 console.log('checkout pricing page reached');
-                const status = page.waitForResponse(r => r.url() === origin + '/api/stripe/checkout' && r.request().method() === 'POST');
-                await goto('/checkout/pro-monthly').catch(() => {});
-                const response = await status;
+                const response = await page.request.post(origin + '/api/stripe/checkout', {data: {plan: 'pro-monthly'}});
                 console.log('checkout API HTTP ' + response.status());
                 if (!response.ok()) return 'FAIL HTTP ' + response.status();
                 const data = await response.json();

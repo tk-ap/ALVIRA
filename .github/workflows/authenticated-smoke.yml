@@ -109,7 +109,18 @@ jobs:
                   }
                   throw new Error();
                 }
-                await page.reload();
+                await answer.fill('I edit a fictional community newsletter for neighbors. I prioritize timely stories, plain language, and actionable local information.');
+                await answer.press('Enter');
+                await page.waitForFunction(() => {
+                  const field = [...document.querySelectorAll('textarea')].find(el => el.placeholder.includes('Type your answer'));
+                  return field && !field.disabled && field.value === '';
+                });
+                console.log('interview sample answer submitted');
+                await goto('/dashboard');
+                await heading('Dashboard');
+                const draft = page.getByRole('link', { name: /Continue interview/i }).first();
+                await draft.waitFor();
+                await draft.click();
                 await answer.waitFor();
               });
               await check('sign-out and protected dashboard', async () => {

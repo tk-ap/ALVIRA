@@ -1,0 +1,52 @@
+name: ALVIRA authenticated smoke
+on:
+  push:
+    branches: [codex/authenticated-smoke-20261121]
+    paths: [.github/workflows/authenticated-smoke.yml]
+  workflow_dispatch:
+permissions: {}
+jobs:
+  sign-in:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Install browser runner
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx --no-install playwright install chromium
+      - name: Verify standard account sign-in and session persistence
+        env:
+          ALVIRA_TEST_PASSWORD: ${{ secrets.ALVIRA_TEST_PASSWORD }}
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const origin = 'https://alviratech.vercel.app';
+          let stage = 'credential availability';
+          let browser;
+          (async () => {
+            try {
+              if (!process.env.ALVIRA_TEST_PASSWORD) throw new Error();
+              stage = 'sign-in page';
+              browser = await chromium.launch();
+              const page = await browser.newPage();
+              await page.goto(origin + '/login?returnTo=%2Fdashboard');
+              if (new URL(page.url()).origin !== origin) throw new Error();
+              stage = 'sign-in and dashboard';
+              await page.locator('#email').fill('codex-smoke-1786676512909@example.com');
+              await page.locator('#password').fill(process.env.ALVIRA_TEST_PASSWORD);
+              await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+              await page.waitForURL(origin + '/dashboard');
+              await page.getByRole('heading', { name: 'History', exact: true }).waitFor();
+              stage = 'dashboard after reload';
+              await page.reload();
+              await page.getByRole('heading', { name: 'History', exact: true }).waitFor();
+              if (new URL(page.url()).pathname !== '/dashboard') throw new Error();
+              console.log('PASS: standard smoke account signed in and dashboard session persisted after reload.');
+            } catch {
+              console.error('FAIL at ' + stage + '.');
+              process.exitCode = 1;
+            } finally {
+              if (browser) await browser.close();
+            }
+          })();
+          NODE

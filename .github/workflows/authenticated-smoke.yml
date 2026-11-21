@@ -89,8 +89,20 @@ jobs:
               await check('interview start and reload', async () => {
                 await goto('/app');
                 const answer = page.getByPlaceholder(/Type your answer/);
+                const resume = page.getByRole('button', {name: 'Continue', exact: true});
+                const sample = 'I edit a fictional community newsletter for neighbors.';
+                const verifyResume = async () => {
+                  await answer.or(resume).first().waitFor({ timeout: 20000 });
+                  if (await resume.isVisible()) await resume.click();
+                  await answer.waitFor();
+                  await page.getByText(sample, {exact:false}).first().waitFor();
+                };
                 const start = page.getByRole('button', { name: /Start (the conversation|interview)/i });
-                await start.or(answer).first().waitFor();
+                await start.or(answer).or(resume).first().waitFor();
+                if (await resume.isVisible()) {
+                  await verifyResume();
+                  return 'PASS saved sample answer restored from account';
+                }
                 console.log('interview entry reached');
                 if (await answer.isVisible()) {
                   await page.reload();
@@ -121,7 +133,7 @@ jobs:
                 const draft = page.getByRole('link', { name: /Continue interview/i }).first();
                 await draft.waitFor();
                 await draft.click();
-                await answer.waitFor();
+                await verifyResume();
               });
               await check('sign-out and protected dashboard', async () => {
                 await goto('/account');

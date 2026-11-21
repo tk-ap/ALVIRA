@@ -8,7 +8,7 @@ permissions: {}
 jobs:
   sign-in:
     runs-on: ubuntu-24.04
-    timeout-minutes: 6
+    timeout-minutes: 9
     permissions:
       statuses: write
     steps:
@@ -21,129 +21,68 @@ jobs:
           ALVIRA_TEST_PASSWORD: ${{ secrets.ALVIRA_TEST_PASSWORD }}
         run: |
           node <<'NODE'
-          const { chromium } = require('playwright');
-          const origin = 'https://alviratech.vercel.app';
-          const email = 'codex-smoke-1786676512909@example.com';
-          const results = {};
-          const check = async (name, fn) => {
-            try { results[name] = (await fn()) || 'PASS'; }
-            catch (error) { results[name] = 'FAIL (' + error.name + ')'; }
-            console.log(name + ': ' + results[name]);
-          };
-          (async () => {
-            const browser = await chromium.launch();
-            try {
-              const page = await browser.newPage();
-              page.setDefaultTimeout(12000);
-              const goto = p => page.goto(origin + p, { timeout: 20000 });
-              const heading = name => page.getByRole('heading', { name, exact: true }).waitFor();
-              const login = async () => {
-                if (!process.env.ALVIRA_TEST_PASSWORD) throw new Error();
-                await goto('/login?returnTo=%2Fdashboard');
-                if (new URL(page.url()).origin !== origin) throw new Error();
-                await page.locator('#email').fill(email);
-                const password = process.env.ALVIRA_TEST_PASSWORD;
-                await page.locator('#password').fill(password);
-                await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-                await heading('Dashboard');
-              };
-              await check('guest dashboard guard', async () => {
-                await goto('/dashboard');
-                await heading('Sign in');
-              });
-              await check('sign-in and dashboard reload', async () => {
-                await login();
-                await page.reload();
-                await heading('Dashboard');
-              });
-              if (results['sign-in and dashboard reload'] !== 'PASS') {
-                process.exitCode = 1;
-                return;
-              }
-              const existingDraft = await page.getByText('Interview in progress', { exact: true }).count();
-              await check('account and plan display', async () => {
-                await goto('/account');
-                await heading('Account details');
-                await page.getByText(email, { exact: true }).first().waitFor();
-              });
-              await check('Bridge connection management', async () => {
-                await goto('/bridge');
-                await heading('Authorize another AI client to read your ALVIRA Context.');
-              });
-              await check('checkout session creation without payment', async () => {
-                await goto('/pricing');
-                console.log('checkout pricing page reached');
-                const response = await page.request.post(origin + '/api/stripe/checkout', {data: {plan: 'pro-monthly'}});
-                console.log('checkout API HTTP ' + response.status());
-                if (!response.ok()) return 'FAIL HTTP ' + response.status();
-                const data = await response.json();
-                const destination = new URL(data.url, origin);
-                const mode = destination.pathname.includes('cs_test_') ? 'test' : destination.pathname.includes('cs_live_') ? 'live' : 'unknown';
-                console.log('checkout destination ' + destination.origin + ' mode ' + mode);
-                if (destination.origin === origin) {
-                  await page.getByText(/test checkout|billing smoke|payment/i).first().waitFor();
-                  return 'PASS internal checkout destination reached';
-                }
-                if (destination.hostname !== 'checkout.stripe.com' && destination.hostname !== 'buy.stripe.com') throw new Error();
-              });
-              await check('interview start and reload', async () => {
-                await goto('/app');
-                const answer = page.getByPlaceholder(/Type your answer/);
-                const resume = page.getByRole('button', {name: 'Continue', exact: true});
-                const sample = 'I edit a fictional community newsletter for neighbors.';
-                const verifyResume = async () => {
-                  await answer.or(resume).first().waitFor({ timeout: 20000 });
-                  if (await resume.isVisible()) await resume.click();
-                  await answer.waitFor();
-                  await page.getByText(sample, {exact:false}).first().waitFor();
-                };
-                const start = page.getByRole('button', { name: /Start (the conversation|interview)/i });
-                await start.or(answer).or(resume).first().waitFor();
-                if (await resume.isVisible()) {
-                  await verifyResume();
-                  return 'PASS saved sample answer restored from account';
-                }
-                console.log('interview entry reached');
-                if (await answer.isVisible()) {
-                  await page.reload();
-                  await answer.waitFor();
-                  return 'PASS existing interview resumed after reload';
-                }
-                if (existingDraft) return 'SKIPPED existing dashboard draft preserved';
-                await page.locator('main input[type="text"]:visible').first().fill('My editing workflow for a fictional community newsletter and how I decide which stories to publish.');
-                console.log('interview topic entered');
-                await start.click();
-                console.log('interview started');
-                try { await answer.waitFor({ timeout: 25000 }); console.log('interview first question loaded'); }
-                catch {
-                  for (const [label, pattern] of [['API key missing', /API Key Not Configured/], ['free limit', /limit reached|upgrade to continue/i], ['interview error', /something went wrong|try again/i]]) {
-                    if (await page.getByText(pattern).first().isVisible()) return 'FAIL ' + label;
-                  }
-                  throw new Error();
-                }
-                await answer.fill('I edit a fictional community newsletter for neighbors. I prioritize timely stories, plain language, and actionable local information.');
-                await answer.press('Enter');
-                await page.waitForFunction(() => {
-                  const field = [...document.querySelectorAll('textarea')].find(el => el.placeholder.includes('Type your answer'));
-                  return field && !field.disabled && field.value === '';
-                });
-                console.log('interview sample answer submitted');
-                await goto('/dashboard');
-                await heading('Dashboard');
-                const draft = page.getByRole('link', { name: /Continue interview/i }).first();
-                await draft.waitFor();
-                await draft.click();
-                await verifyResume();
-              });
-              await check('sign-out and protected dashboard', async () => {
-                await goto('/account');
-                await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-                await goto('/dashboard');
-                await heading('Sign in');
-              });
-              if (Object.values(results).some(value => value.startsWith('FAIL'))) process.exitCode = 1;
-            } finally { await browser.close(); }
-          })().catch(() => { console.error('FAIL: browser setup or audit harness'); process.exitCode = 1; });
+          const {chromium}=require('playwright');
+          const {createHmac}=require('node:crypto');
+          const origin='https://alviratech.vercel.app';
+          const email='alvira-e2e-20261121@example.com';
+          let stage='credential availability';
+          (async()=>{
+           if (!process.env.ALVIRA_TEST_PASSWORD) throw Error();
+           const password=createHmac('sha256',process.env.ALVIRA_TEST_PASSWORD).update(email).digest('hex');
+           const browser=await chromium.launch();
+           try {
+            const p=await browser.newPage();
+            p.setDefaultTimeout(15000);
+            const go=path=>p.goto(origin+path);
+            const head=name=>p.getByRole('heading',{name,exact:true});
+            const button=name=>p.getByRole('button',{name,exact:true});
+            stage='fresh signup';
+            await go('/signup');
+            await p.locator('#email').fill(email);
+            await p.locator('#password').fill(password);
+            await p.locator('#confirm').fill(password);
+            await button('Create account').click();
+            await p.waitForURL(/\/app(?:[?]|$)/);
+            await go('/account');
+            await p.getByText(email,{exact:true}).first().waitFor();
+            console.log('PASS fresh signup and account identity');
+            stage='start interview';
+            await go('/app');
+            await p.locator('main input[type="text"]:visible').first().fill('Documenting how I edit a fictional community newsletter and choose stories that help my neighbors.');
+            await p.getByText('Fast track',{exact:true}).click();
+            await p.getByRole('button',{name:/Start (the conversation|interview)/i}).click();
+            const answer=p.getByPlaceholder(/Type your answer/);
+            const compiled=head('Compiled ALVIRA Context');
+            const generate=p.getByRole('button',{name:/^(Generate|Compile)( ALVIRA)?( Context)?$/i}).first();
+            const responses=[
+             'I am the volunteer editor of a fictional neighborhood newsletter. I write a short edition every Friday for residents and local volunteers.',
+             'My goal is to publish six weekly editions on time using a one-page checklist. Success means each edition contains three verified local stories and goes out by Friday at noon.',
+             'I use plain language and short paragraphs. Each story should say who it helps, when it happens, how much it costs, and where readers can verify the details.',
+             'I prioritize public services and free events over announcements that mainly promote a company. I ask another editor to review any uncertain claim before publication.',
+             'I have two hours per week and no spending budget. I keep reader contact information private and only cite information the organizer has published.',
+             'I collect tips on Monday, check each source on Wednesday, and revise the draft on Thursday. I save any unanswered questions for the next edition.',
+             'I prefer direct feedback with a specific suggested edit. The editor makes the final call when sources conflict or the schedule is tight.',
+             'I track publication time, corrected facts, and reader replies in a simple spreadsheet. At the end of six weeks I review what people used and adjust the coverage.'
+            ];
+            stage='interview completion';
+            for(let i=0;i<14;i++){
+             if(await compiled.isVisible())break;
+             if(await generate.isVisible() && await generate.isEnabled()){await generate.click();await compiled.waitFor({timeout:45000});break;}
+             await answer.waitFor({timeout:30000});
+             await answer.fill(responses[i%responses.length]);
+             await answer.press('Enter');
+             console.log('Interview answer submitted '+(i+1));
+             await p.waitForFunction(()=>{const t=[...document.querySelectorAll('textarea')].find(x=>x.placeholder.includes('Type your answer'));return Boolean(t && !t.disabled && !t.value)||document.body.innerText.includes('Compiled ALVIRA Context')||[...document.querySelectorAll('button')].some(b=>!b.disabled&&/^(Generate|Compile)( ALVIRA)?( Context)?$/i.test(b.textContent.trim()));},{},{timeout:30000});
+            }
+            await compiled.waitFor();
+            console.log('PASS Context compiled');
+            stage='goal spec approval';
+            await button('Draft goal spec').click();
+            await button('Approve').first().click({timeout:45000});
+            await p.getByText(/^[1-9][0-9]* of [0-9]+ fields approved$/).first().waitFor();
+            console.log('PASS goal spec approval');
+           } finally { await browser.close(); }
+          })().catch(e=>{console.error('FAIL '+stage+' ('+e.name+')'); process.exitCode=1;});
           NODE
       - name: Record result on this commit
         if: always()

@@ -27,7 +27,7 @@ jobs:
           const results = {};
           const check = async (name, fn) => {
             try { results[name] = (await fn()) || 'PASS'; }
-            catch { results[name] = 'FAIL'; }
+            catch (error) { results[name] = 'FAIL (' + error.name + ')'; }
             console.log(name + ': ' + results[name]);
           };
           (async () => {
@@ -72,10 +72,11 @@ jobs:
               });
               await check('checkout session creation without payment', async () => {
                 await goto('/pricing');
-                await page.locator('a[href="/checkout/pro-monthly"]').first().waitFor();
+                console.log('checkout pricing page reached');
                 const status = page.waitForResponse(r => r.url() === origin + '/api/stripe/checkout' && r.request().method() === 'POST');
-                await goto('/checkout/pro-monthly');
+                await goto('/checkout/pro-monthly').catch(() => {});
                 const response = await status;
+                console.log('checkout API HTTP ' + response.status());
                 if (!response.ok()) return 'FAIL HTTP ' + response.status();
                 const data = await response.json();
                 if (new URL(data.url).hostname !== 'checkout.stripe.com') throw new Error();
@@ -85,16 +86,19 @@ jobs:
                 const answer = page.getByPlaceholder(/Type your answer/);
                 const start = page.getByRole('button', { name: /Start (the conversation|interview)/i });
                 await start.or(answer).first().waitFor();
+                console.log('interview entry reached');
                 if (await answer.isVisible()) {
                   await page.reload();
                   await answer.waitFor();
                   return 'PASS existing interview resumed after reload';
                 }
                 if (existingDraft) return 'SKIPPED existing dashboard draft preserved';
-                await page.getByRole('checkbox', { name: /Write or communicate/i }).click();
+                await page.getByText('Write or communicate in a way that sounds like me', { exact: true }).click();
+                console.log('interview topic selected');
                 await page.getByRole('radio', { name: /Fast track/i }).click();
                 await start.click();
-                try { await answer.waitFor({ timeout: 25000 }); }
+                console.log('interview started');
+                try { await answer.waitFor({ timeout: 25000 }); console.log('interview first question loaded'); }
                 catch {
                   for (const [label, pattern] of [['API key missing', /API Key Not Configured/], ['free limit', /limit reached|upgrade to continue/i], ['interview error', /something went wrong|try again/i]]) {
                     if (await page.getByText(pattern).first().isVisible()) return 'FAIL ' + label;

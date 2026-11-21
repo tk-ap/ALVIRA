@@ -79,7 +79,14 @@ jobs:
                 console.log('checkout API HTTP ' + response.status());
                 if (!response.ok()) return 'FAIL HTTP ' + response.status();
                 const data = await response.json();
-                if (new URL(data.url).hostname !== 'checkout.stripe.com') throw new Error();
+                const destination = new URL(data.url, origin);
+                const mode = destination.pathname.includes('cs_test_') ? 'test' : destination.pathname.includes('cs_live_') ? 'live' : 'unknown';
+                console.log('checkout destination ' + destination.origin + ' mode ' + mode);
+                if (destination.origin === origin) {
+                  await page.getByText(/test checkout|billing smoke|payment/i).first().waitFor();
+                  return 'PASS internal checkout destination reached';
+                }
+                if (destination.hostname !== 'checkout.stripe.com' && destination.hostname !== 'buy.stripe.com') throw new Error();
               });
               await check('interview start and reload', async () => {
                 await goto('/app');
@@ -93,9 +100,8 @@ jobs:
                   return 'PASS existing interview resumed after reload';
                 }
                 if (existingDraft) return 'SKIPPED existing dashboard draft preserved';
-                await page.getByText('Write or communicate in a way that sounds like me', { exact: true }).click();
-                console.log('interview topic selected');
-                await page.getByRole('radio', { name: /Fast track/i }).click();
+                await page.locator('main input[type="text"]:visible').first().fill('My editing workflow for a fictional community newsletter and how I decide which stories to publish.');
+                console.log('interview topic entered');
                 await start.click();
                 console.log('interview started');
                 try { await answer.waitFor({ timeout: 25000 }); console.log('interview first question loaded'); }

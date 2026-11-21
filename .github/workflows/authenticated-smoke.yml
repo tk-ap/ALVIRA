@@ -21,73 +21,64 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
           npx --no-install playwright install chromium
-      - name: Verify disposable-account onboarding and Context
+      - name: Verify disposable-account Bridge retrieval and revocation
         env:
           ALVIRA_TEST_PASSWORD: ${{ secrets.ALVIRA_TEST_PASSWORD }}
         run: |
           node <<'NODE'
           const {chromium}=require('playwright');
-          const {createHmac}=require('node:crypto');
+          const {createHmac,createHash,randomBytes}=require('node:crypto');
           const origin='https://alviratech.vercel.app';
           const email='alvira-e2e-20261121@example.com';
-          let stage='credential availability';
+          let stage='QA account login';
           (async()=>{
-           if (!process.env.ALVIRA_TEST_PASSWORD) throw Error();
            const password=createHmac('sha256',process.env.ALVIRA_TEST_PASSWORD).update(email).digest('hex');
            const browser=await chromium.launch();
-           try {
+           try{
             const p=await browser.newPage();
-            p.setDefaultTimeout(15000);
-            const go=path=>p.goto(origin+path);
-            const head=name=>p.getByRole('heading',{name,exact:true});
-            const button=name=>p.getByRole('button',{name,exact:true});
-            stage='fresh signup';
-            await go('/signup');
+            await p.goto(origin+'/login?returnTo=%2Fdashboard');
             await p.locator('#email').fill(email);
             await p.locator('#password').fill(password);
-            await p.locator('#confirm').fill(password);
-            await button('Create account').click();
-            await p.waitForURL(/\/app(?:[?]|$)/);
-            await go('/account');
-            await p.getByText(email,{exact:true}).first().waitFor();
-            console.log('PASS fresh signup and account identity');
-            stage='start interview';
-            await go('/app');
-            await p.locator('main input[type="text"]:visible').first().fill('Documenting how I edit a fictional community newsletter and choose stories that help my neighbors.');
-            await p.getByText('Fast track',{exact:true}).click();
-            await p.getByRole('button',{name:/Start (the conversation|interview)/i}).click();
-            const answer=p.getByPlaceholder(/Type your answer/);
-            const compiled=head('Compiled ALVIRA Context');
-            const generate=p.getByRole('button',{name:/^(Generate|Compile)( ALVIRA)?( Context)?$/i}).first();
-            const responses=[
-             'I am the volunteer editor of a fictional neighborhood newsletter. I write a short edition every Friday for residents and local volunteers.',
-             'My goal is to publish six weekly editions on time using a one-page checklist. Success means each edition contains three verified local stories and goes out by Friday at noon.',
-             'I use plain language and short paragraphs. Each story should say who it helps, when it happens, how much it costs, and where readers can verify the details.',
-             'I prioritize public services and free events over announcements that mainly promote a company. I ask another editor to review any uncertain claim before publication.',
-             'I have two hours per week and no spending budget. I keep reader contact information private and only cite information the organizer has published.',
-             'I collect tips on Monday, check each source on Wednesday, and revise the draft on Thursday. I save any unanswered questions for the next edition.',
-             'I prefer direct feedback with a specific suggested edit. The editor makes the final call when sources conflict or the schedule is tight.',
-             'I track publication time, corrected facts, and reader replies in a simple spreadsheet. At the end of six weeks I review what people used and adjust the coverage.'
-            ];
-            stage='interview completion';
-            for(let i=0;i<14;i++){
-             if(await compiled.isVisible())break;
-             if(await generate.isVisible() && await generate.isEnabled()){await generate.click();await compiled.waitFor({timeout:45000});break;}
-             await answer.waitFor({timeout:30000});
-             await answer.fill(responses[i%responses.length]);
-             await answer.press('Enter');
-             console.log('Interview answer submitted '+(i+1));
-             await p.waitForFunction(()=>{const t=[...document.querySelectorAll('textarea')].find(x=>x.placeholder.includes('Type your answer'));return Boolean(t && !t.disabled && !t.value)||document.body.innerText.includes('Compiled ALVIRA Context')||[...document.querySelectorAll('button')].some(b=>!b.disabled&&/^(Generate|Compile)( ALVIRA)?( Context)?$/i.test(b.textContent.trim()));},{},{timeout:30000});
-            }
-            await compiled.waitFor();
-            console.log('PASS Context compiled');
-            stage='goal spec approval';
-            await button('Draft goal spec').click();
-            await button('Approve').first().click({timeout:45000});
-            await p.getByText(/^[1-9][0-9]* of [0-9]+ fields approved$/).first().waitFor();
-            console.log('PASS goal spec approval');
-           } finally { await browser.close(); }
-          })().catch(e=>{console.error('FAIL '+stage+' ('+e.name+')'); process.exitCode=1;});
+            await p.getByRole('button',{name:'Sign in',exact:true}).click();
+            await p.getByRole('heading',{name:'Dashboard',exact:true}).waitFor();
+            stage='OAuth registration';
+            const callback='http://127.0.0.1:8917/callback';
+            const clientName='ALVIRA disposable QA '+process.env.GITHUB_RUN_ID;
+            const registered=await p.request.post(origin+'/api/bridge/register',{data:{client_name:clientName,redirect_uris:[callback],application_type:'native',token_endpoint_auth_method:'none'}});
+            if(registered.status()!==201)throw Error();
+            const {client_id}=await registered.json();
+            const verifier=randomBytes(32).toString('base64url');
+            const state=randomBytes(24).toString('base64url');
+            const params=new URLSearchParams({client_id,redirect_uri:callback,response_type:'code',code_challenge:createHash('sha256').update(verifier).digest('base64url'),code_challenge_method:'S256',state,scope:'context:read profile:read'});
+            stage='user consent';
+            await p.route(callback+'**',route=>route.fulfill({status:200,body:'QA callback'}));
+            await p.goto(origin+'/api/bridge/authorize?'+params);
+            await p.getByRole('link',{name:/Authorize read access/i}).click({timeout:20000});
+            await p.waitForURL(callback+'?**');
+            const result=new URL(p.url()).searchParams;
+            if(result.get('state')!==state||!result.get('code'))throw Error();
+            stage='exchange OAuth code';
+            const tokenResponse=await p.request.post(origin+'/api/bridge/token',{form:{grant_type:'authorization_code',client_id,redirect_uri:callback,code_verifier:verifier,code:result.get('code')}});
+            if(!tokenResponse.ok())throw Error();
+            const {access_token}=await tokenResponse.json();
+            if(!access_token)throw Error();
+            const client=await browser.newContext();
+            const read=()=>client.request.post(origin+'/api/bridge/mcp',{headers:{Authorization:'Bearer '+access_token,Accept:'application/json, text/event-stream'},data:{jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'get_alvira_context',arguments:{}}}});
+            stage='retrieve approved goal spec from separate client';
+            const initial=await read();
+            const body=await initial.text();
+            if(!initial.ok()||!/"goal_spec"/.test(body)||!body.includes('newsletter'))throw Error();
+            console.log('PASS external client retrieved approved goal spec');
+            stage='revoke connection';
+            await p.goto(origin+'/bridge');
+            await p.getByText(clientName,{exact:true}).waitFor();
+            await p.getByRole('button',{name:'Revoke connection'}).click();
+            await p.getByText(clientName,{exact:true}).waitFor({state:'hidden'});
+            stage='verify revoked client rejected';
+            if((await read()).status()!==401)throw Error();
+            console.log('PASS revoked client rejected');
+           }finally{await browser.close();}
+          })().catch(e=>{console.error('FAIL '+stage+' ('+e.name+')');process.exitCode=1;});
           NODE
       - name: Record result on this commit
         if: always()
@@ -99,5 +90,5 @@ jobs:
           if [ "$JOB_STATUS" = success ]; then state=success; fi
           gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
             -f state="$state" -f context="ALVIRA authenticated smoke" \
-            -f description="Disposable-account onboarding and Context" \
+            -f description="Disposable-account Bridge retrieval and revocation" \
             -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
